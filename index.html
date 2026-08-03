@@ -640,12 +640,43 @@ function avgDist(a,b){
 // simulated messy-but-correct handwriting (reordered, jittered, merged/split/dropped/
 // extra strokes) always scored 88%+ in testing, while writing a wrong character —
 // including the shared-component case — never exceeded 67%. 75% sits in the gap.
+// A hand-drawn character is almost never the exact same size, or centered in the exact
+// same spot, as the reference character's idealized bounding box — writing it a bit
+// smaller, bigger, or off-center in the box is completely normal and has nothing to do
+// with whether it's the right character. Comparing raw canvas coordinates without
+// correcting for that (as an earlier version of this function did) means a perfectly
+// correct character can fail purely because it came out a little smaller/shifted — this
+// is what happened with a real "理" that looked fine but got rejected. So: rescale +
+// re-center the whole drawing to match the official character's bounding box first, and
+// only then compare stroke shapes/positions. This only removes size/position bias, not
+// shape — a wrong character's strokes still won't line up after normalizing.
+function getBounds(strokes){
+  let minX=Infinity, minY=Infinity, maxX=-Infinity, maxY=-Infinity;
+  for(const s of strokes) for(const p of s){
+    if(p.x<minX) minX=p.x; if(p.x>maxX) maxX=p.x;
+    if(p.y<minY) minY=p.y; if(p.y>maxY) maxY=p.y;
+  }
+  return { w:maxX-minX, h:maxY-minY, cx:(minX+maxX)/2, cy:(minY+maxY)/2 };
+}
+
+function normalizeToBounds(strokes, target){
+  const b = getBounds(strokes);
+  if(b.w < 1e-6 || b.h < 1e-6) return strokes; // degenerate (e.g. a single dot) — leave as-is
+  const scale = ((target.w/b.w) + (target.h/b.h)) / 2;
+  return strokes.map(s => s.map(p => ({
+    x: target.cx + (p.x - b.cx) * scale,
+    y: target.cy + (p.y - b.cy) * scale
+  })));
+}
+
 async function gradeDrawing(char){
   const data = await getCharData(char);
   const officialStrokes = (data.medians || []).map(medianToCanvasPoints);
-  const userStrokes = strokesPoints.filter(s => s.length > 1);
+  const rawUserStrokes = strokesPoints.filter(s => s.length > 1);
 
-  if(userStrokes.length === 0) return false;
+  if(rawUserStrokes.length === 0) return false;
+
+  const userStrokes = normalizeToBounds(rawUserStrokes, getBounds(officialStrokes));
 
   const strokeThreshold = CANVAS_SIZE * 0.08; // ~24px on a 300px canvas
   const resampledOfficial = officialStrokes.map(o => resample(o, 16));
