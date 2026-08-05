@@ -509,18 +509,6 @@ drawSvg.addEventListener('pointerup', endStroke);
 drawSvg.addEventListener('pointerleave', endStroke);
 drawSvg.addEventListener('pointercancel', endStroke);
 
-// Apple Pencil specifically: some in-app browsers (e.g. iPad file-viewer apps) watch raw
-// pen taps anywhere on screen to toggle their own reader chrome (show/hide the filename
-// bar, go fullscreen), completely independent of what the web page's touch-action/CSS
-// says — that's a host-app gesture layered on top of the WebView, not something normal
-// per-element handling reaches. This is the strongest thing a web page can still do about
-// it: capture EVERY pen pointer event at the document level, in the capture phase (so it
-// runs before any other handler, including the host app's if it also listens via the
-// same web-standard events), and preventDefault unconditionally — not just on the canvas.
-document.addEventListener('pointerdown', (e) => { if(e.pointerType === 'pen' && e.cancelable) e.preventDefault(); }, { capture:true, passive:false });
-document.addEventListener('pointerup', (e) => { if(e.pointerType === 'pen' && e.cancelable) e.preventDefault(); }, { capture:true, passive:false });
-document.addEventListener('pointermove', (e) => { if(e.pointerType === 'pen' && e.cancelable) e.preventDefault(); }, { capture:true, passive:false });
-
 // Some webviews (e.g. iPad file-viewer apps) don't honor the CSS overscroll-behavior
 // property and will still rubber-band/bounce the whole page on any drag. Block touchmove
 // document-wide as a belt-and-suspenders fix, except inside the settings panel (which needs
