@@ -721,6 +721,7 @@ async function gradeDrawing(char){
   // total ink that stroke represents.
   const usedUserIdx = new Set();
   let matchedLength = 0;
+  const diagLog = []; // TEMPORARY — see console logging below
   resampledOfficial.forEach((o, oi) => {
     const oRev = [...o].reverse();
     let bestDist = Infinity, bestIdx = -1, bestReversed = false;
@@ -731,15 +732,22 @@ async function gradeDrawing(char){
       const d = reversed ? dRev : dFwd;
       if(d < bestDist){ bestDist = d; bestIdx = idx; bestReversed = reversed; }
     });
-    if(bestIdx !== -1 && bestDist <= strokeThreshold &&
-       directionsCompatible(resampledUser[bestIdx], o, officialLengths[oi], bestReversed)){
+    const withinDist = bestIdx !== -1 && bestDist <= strokeThreshold;
+    const dirOk = withinDist && directionsCompatible(resampledUser[bestIdx], o, officialLengths[oi], bestReversed);
+    if(withinDist && dirOk){
       matchedLength += officialLengths[oi];
       usedUserIdx.add(bestIdx);
     }
+    diagLog.push({ officialStroke: oi, officialLen: Math.round(officialLengths[oi]), bestUserIdx: bestIdx, bestDist: bestIdx!==-1 ? Math.round(bestDist) : null, withinDistThreshold: withinDist, directionOk: withinDist ? dirOk : null, matched: withinDist && dirOk });
   });
 
   const coverage = matchedLength / totalLength;
-  return coverage >= 0.75;
+  const pass = coverage >= 0.75;
+  // TEMPORARY diagnostics — prints exactly why a drawing passed/failed, so grading
+  // inconsistency between visually-similar attempts can be root-caused from real data
+  // instead of guessing. Safe to remove once grading is confirmed stable.
+  console.log(`[diag-grade] char=${char} userStrokeCount=${rawUserStrokes.length} officialStrokeCount=${officialStrokes.length} coverage=${(coverage*100).toFixed(1)}% pass=${pass}`, diagLog);
+  return pass;
 }
 
 const progressPath = document.getElementById('progressPath');
