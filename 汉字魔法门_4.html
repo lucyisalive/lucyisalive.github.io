@@ -481,6 +481,8 @@ function svgPointFromEvent(e){
   return { x:(e.clientX-rect.left)*scaleX, y:(e.clientY-rect.top)*scaleY };
 }
 
+let capturedPointerId = null;
+
 drawSvg.addEventListener('pointerdown', (e) => {
   e.preventDefault();
   isDrawing = true;
@@ -494,7 +496,7 @@ drawSvg.addEventListener('pointerdown', (e) => {
   currentPath.setAttribute('stroke-linejoin', 'round');
   currentPath.setAttribute('d', `M ${pt.x} ${pt.y}`);
   drawSvg.appendChild(currentPath);
-  try{ drawSvg.setPointerCapture(e.pointerId); }catch(_){}
+  try{ drawSvg.setPointerCapture(e.pointerId); capturedPointerId = e.pointerId; }catch(_){}
 });
 drawSvg.addEventListener('pointermove', (e) => {
   if(!isDrawing) return;
@@ -504,10 +506,25 @@ drawSvg.addEventListener('pointermove', (e) => {
   stroke.push(pt);
   currentPath.setAttribute('d', currentPath.getAttribute('d') + ` L ${pt.x} ${pt.y}`);
 });
-function endStroke(e){ isDrawing = false; if(e && e.cancelable) e.preventDefault(); }
+// Pointer capture is *supposed* to auto-release on pointerup per spec, but real Apple
+// Pencil input on iPadOS has been observed leaving it stuck in some cases — when that
+// happens, every subsequent tap anywhere on the page (including on buttons like "写好了")
+// keeps getting silently redirected to this SVG instead of its real target, since the
+// browser still thinks this element has captured that pointer. Release it explicitly and
+// unconditionally on every possible end-of-stroke signal as a belt-and-suspenders fix.
+function endStroke(e){
+  isDrawing = false;
+  if(e && e.cancelable) e.preventDefault();
+  const pid = (e && e.pointerId != null) ? e.pointerId : capturedPointerId;
+  if(pid != null){
+    try{ drawSvg.releasePointerCapture(pid); }catch(_){}
+  }
+  capturedPointerId = null;
+}
 drawSvg.addEventListener('pointerup', endStroke);
 drawSvg.addEventListener('pointerleave', endStroke);
 drawSvg.addEventListener('pointercancel', endStroke);
+drawSvg.addEventListener('lostpointercapture', endStroke);
 
 // Some webviews (e.g. iPad file-viewer apps) don't honor the CSS overscroll-behavior
 // property and will still rubber-band/bounce the whole page on any drag. Block touchmove
