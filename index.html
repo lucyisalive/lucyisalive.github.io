@@ -202,34 +202,21 @@
     position:relative;
     box-shadow: 0 8px 24px rgba(0,0,0,.45);
     touch-action:none;
-    display:flex; align-items:center; justify-content:center;
-  }
-  /* This is a plain text field, not a custom drawing surface — writing happens through the
-     device's own Chinese handwriting keyboard (switch to it via the keyboard-globe icon),
-     and whatever character it recognizes lands in here automatically, just like typing.
-     That hands the actual recognition off to the OS's own (far more capable) handwriting
-     engine instead of us trying to judge hand-drawn ink ourselves. */
-  .hanzi-input{
-    position:relative; z-index:2;
-    width:100%; height:100%;
-    border:none; outline:none; background:transparent;
-    text-align:center;
-    font-size:170px;
-    color:var(--ink);
-    font-family:'Ma Shan Zheng', cursive, sans-serif;
-    padding:0;
-    caret-color: var(--seal);
+    /* A real 米字格 (rice-grid) frame like in a Chinese writing workbook — a solid outer
+       border plus the cross+diagonal guide lines — helps a kid judge proportion and where
+       a stroke should start/end relative to the whole square, not just draw freehand. */
+    border: 2px solid var(--grid);
   }
   .grid-lines{
     position:absolute; inset:0; pointer-events:none;
     background-image:
-      linear-gradient(var(--grid) 1px, transparent 1px),
-      linear-gradient(90deg, var(--grid) 1px, transparent 1px),
-      linear-gradient(45deg, var(--grid) 1px, transparent 1px),
-      linear-gradient(-45deg, var(--grid) 1px, transparent 1px);
+      linear-gradient(var(--grid) 1.5px, transparent 1.5px),
+      linear-gradient(90deg, var(--grid) 1.5px, transparent 1.5px),
+      linear-gradient(45deg, var(--grid) 1.5px, transparent 1.5px),
+      linear-gradient(-45deg, var(--grid) 1.5px, transparent 1.5px);
     background-size: 100% 100%, 100% 100%, 141.4% 141.4%, 141.4% 141.4%;
     background-position:center; background-repeat:no-repeat;
-    opacity:.55;
+    opacity:.7;
   }
   .write-target{ width:150px; height:150px; position:relative; z-index:2; }
 
@@ -373,8 +360,7 @@
         <div class="write-canvas-wrap" id="writeTile">
           <div class="pinyin-tag" id="pinyinTag"></div>
           <div class="grid-lines"></div>
-          <input type="text" id="hanziInput" class="hanzi-input" maxlength="4"
-            autocorrect="off" autocapitalize="off" autocomplete="off" spellcheck="false" enterkeyhint="done">
+          <svg id="drawSvg" viewBox="0 0 300 300" width="300" height="300" style="position:relative;z-index:2;touch-action:none;display:block;"></svg>
         </div>
         <div class="write-controls-row">
           <button class="game-btn btn-clear" id="clearBtn">擦掉重写</button>
@@ -433,6 +419,8 @@
   </div>
 </div>
 
+<script src="hanzi-data.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.7/dist/hanzi-writer.min.js"></script>
 <script>
 /* ============================================================
    汉字魔法门 — 默写版
@@ -481,15 +469,66 @@ let priorityConsumedToday = new Set(); // priority chars already served this ses
 let timerHandle = null;
 const TEACHING_STEPS = [5, 3, 1, 0]; // seconds character is shown before each retry; 0 = blind
 
-// ---------- writing surface: a real text input, filled in by the device's own Chinese
-// handwriting keyboard (switch to it via the keyboard-globe icon). Whatever character it
-// recognizes lands in here automatically, just like typing — recognition is entirely the
-// OS's job now, not ours. See gradeDrawing() further down for the (trivial) comparison.
-const hanziInput = document.getElementById('hanziInput');
+// ---------- freehand drawing surface (no standard strokes shown, no snapping) ----------
+const svgNS = 'http://www.w3.org/2000/svg';
+const drawSvg = document.getElementById('drawSvg');
+let strokesPoints = [];   // array of strokes, each stroke = array of {x,y}
+let currentPath = null;
+let isDrawing = false;
+const CANVAS_SIZE = 300;
+const CANVAS_PADDING = 28;
 
-function clearCanvas(){
-  hanziInput.value = '';
+function svgPointFromEvent(e){
+  const rect = drawSvg.getBoundingClientRect();
+  const scaleX = CANVAS_SIZE / rect.width;
+  const scaleY = CANVAS_SIZE / rect.height;
+  return { x:(e.clientX-rect.left)*scaleX, y:(e.clientY-rect.top)*scaleY };
 }
+
+let capturedPointerId = null;
+
+drawSvg.addEventListener('pointerdown', (e) => {
+  e.preventDefault();
+  isDrawing = true;
+  const pt = svgPointFromEvent(e);
+  strokesPoints.push([pt]);
+  currentPath = document.createElementNS(svgNS, 'path');
+  currentPath.setAttribute('stroke', '#22201C');
+  currentPath.setAttribute('stroke-width', '13');
+  currentPath.setAttribute('fill', 'none');
+  currentPath.setAttribute('stroke-linecap', 'round');
+  currentPath.setAttribute('stroke-linejoin', 'round');
+  currentPath.setAttribute('d', `M ${pt.x} ${pt.y}`);
+  drawSvg.appendChild(currentPath);
+  try{ drawSvg.setPointerCapture(e.pointerId); capturedPointerId = e.pointerId; }catch(_){}
+});
+drawSvg.addEventListener('pointermove', (e) => {
+  if(!isDrawing) return;
+  e.preventDefault();
+  const pt = svgPointFromEvent(e);
+  const stroke = strokesPoints[strokesPoints.length-1];
+  stroke.push(pt);
+  currentPath.setAttribute('d', currentPath.getAttribute('d') + ` L ${pt.x} ${pt.y}`);
+});
+// Pointer capture is *supposed* to auto-release on pointerup per spec, but real Apple
+// Pencil input on iPadOS has been observed leaving it stuck in some cases — when that
+// happens, every subsequent tap anywhere on the page (including on buttons like "写好了")
+// keeps getting silently redirected to this SVG instead of its real target, since the
+// browser still thinks this element has captured that pointer. Release it explicitly and
+// unconditionally on every possible end-of-stroke signal as a belt-and-suspenders fix.
+function endStroke(e){
+  isDrawing = false;
+  if(e && e.cancelable) e.preventDefault();
+  const pid = (e && e.pointerId != null) ? e.pointerId : capturedPointerId;
+  if(pid != null){
+    try{ drawSvg.releasePointerCapture(pid); }catch(_){}
+  }
+  capturedPointerId = null;
+}
+drawSvg.addEventListener('pointerup', endStroke);
+drawSvg.addEventListener('pointerleave', endStroke);
+drawSvg.addEventListener('pointercancel', endStroke);
+drawSvg.addEventListener('lostpointercapture', endStroke);
 
 // Some webviews (e.g. iPad file-viewer apps) don't honor the CSS overscroll-behavior
 // property and will still rubber-band/bounce the whole page on any drag. Block touchmove
@@ -510,11 +549,240 @@ document.addEventListener('pointerdown', () => {
   if(req && !document.fullscreenElement) req.call(el).catch(() => {});
 }, { once:true });
 
-// The device's handwriting keyboard already did the actual recognition — this just checks
-// whether what it inserted matches the target character. No stroke data, no geometry, no
-// network: the whole "is this the right character" question is the OS's problem now.
-function gradeDrawing(char){
-  return hanziInput.value.trim() === char;
+function clearCanvas(){
+  drawSvg.innerHTML = '';
+  strokesPoints = [];
+}
+
+// ---------- character stroke data (loaded once per character, used only for
+// grading in the background — never rendered on screen, so nothing leaks) ----------
+// Priority: (1) bundled in hanzi-data.js — instant, zero network, works even if the
+// device has no internet at all; (2) previously fetched + cached in localStorage —
+// also zero network after the first time; (3) live fetch from the CDN, with a hard
+// timeout so a blocked/hanging network request can never freeze the "写好了" button
+// forever — it fails fast instead, with a message asking to try again while online.
+const LOCAL_HANZI_CACHE_PREFIX = 'hanzi-char-cache-';
+const charDataCache = {};
+
+function withTimeout(promise, ms){
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error('联网获取生字数据超时')), ms);
+    promise.then(v => { clearTimeout(timer); resolve(v); }, e => { clearTimeout(timer); reject(e); });
+  });
+}
+
+async function getCharData(char){
+  if(charDataCache[char]) return charDataCache[char];
+
+  if(window.HANZI_LOCAL_DATA && window.HANZI_LOCAL_DATA[char]){
+    charDataCache[char] = window.HANZI_LOCAL_DATA[char];
+    return charDataCache[char];
+  }
+
+  try{
+    const cached = localStorage.getItem(LOCAL_HANZI_CACHE_PREFIX + char);
+    if(cached){
+      charDataCache[char] = JSON.parse(cached);
+      return charDataCache[char];
+    }
+  }catch(e){ /* localStorage unavailable or corrupt entry — fall through to network */ }
+
+  const data = await withTimeout(HanziWriter.loadCharacterData(char), 6000);
+  const toStore = { strokes: data.strokes, medians: data.medians };
+  charDataCache[char] = toStore;
+  try{ localStorage.setItem(LOCAL_HANZI_CACHE_PREFIX + char, JSON.stringify(toStore)); }catch(e){ /* storage full, not critical */ }
+  return toStore;
+}
+
+function medianToCanvasPoints(median){
+  const effective = CANVAS_SIZE - 2*CANVAS_PADDING;
+  const scale = effective/1024;
+  return median.map(([mx,my]) => ({
+    x: mx*scale + CANVAS_PADDING,
+    y: (1024-my)*scale + CANVAS_PADDING
+  }));
+}
+
+function resample(points, n){
+  if(points.length === 0) return new Array(n).fill({x:0,y:0});
+  if(points.length === 1) return new Array(n).fill(points[0]);
+  const cum = [0];
+  for(let i=1;i<points.length;i++){
+    cum.push(cum[i-1] + Math.hypot(points[i].x-points[i-1].x, points[i].y-points[i-1].y));
+  }
+  const total = cum[cum.length-1] || 1e-6;
+  const out = [];
+  for(let k=0;k<n;k++){
+    const target = total * k/(n-1);
+    let idx = 0;
+    while(idx < cum.length-2 && cum[idx+1] < target) idx++;
+    const segLen = (cum[idx+1]-cum[idx]) || 1e-6;
+    const t = Math.min(1, Math.max(0,(target-cum[idx])/segLen));
+    const p0 = points[idx], p1 = points[idx+1] || p0;
+    out.push({ x:p0.x+(p1.x-p0.x)*t, y:p0.y+(p1.y-p0.y)*t });
+  }
+  return out;
+}
+
+function avgDist(a,b){
+  let sum=0;
+  for(let i=0;i<a.length;i++) sum += Math.hypot(a[i].x-b[i].x, a[i].y-b[i].y);
+  return sum/a.length;
+}
+
+// Grades the ALREADY-drawn (however wobbly, however out-of-order) character against the
+// character's real stroke shapes, all at once, only when the child clicks "写好了".
+// Nothing is shown to the child mid-writing — this only runs afterward.
+//
+// Stroke ORDER is intentionally ignored: plenty of kids (and adults) know a character
+// perfectly but write the strokes in a different sequence than the standard 笔顺, and
+// that's not what this game is testing — only the finished result matters. So this is a
+// pure order-agnostic best-match: for each official stroke, is there some drawn stroke,
+// anywhere in the drawing, shaped and *positioned* like it (comparison is in raw canvas
+// coordinates, not shape-only, so a stroke in the wrong part of the character doesn't
+// count just because some other stroke looks the same in isolation).
+//
+// The one thing this can't fully rule out is genuinely writing a *different* character
+// that happens to share a component with the target (e.g. 注/柱 both contain 主) — that
+// will score higher than a pure scribble, since the shared strokes really do match. The
+// match-rate cutoff below is calibrated with that specific case as the ceiling to beat:
+// simulated messy-but-correct handwriting (reordered, jittered, merged/split/dropped/
+// extra strokes) always scored 88%+ in testing, while writing a wrong character —
+// including the shared-component case — never exceeded 67%. 75% sits in the gap.
+// A hand-drawn character is almost never the exact same size, or centered in the exact
+// same spot, as the reference character's idealized bounding box — writing it a bit
+// smaller, bigger, or off-center in the box is completely normal and has nothing to do
+// with whether it's the right character. Comparing raw canvas coordinates without
+// correcting for that (as an earlier version of this function did) means a perfectly
+// correct character can fail purely because it came out a little smaller/shifted — this
+// is what happened with a real "理" that looked fine but got rejected. So: rescale +
+// re-center the whole drawing to match the official character's bounding box first, and
+// only then compare stroke shapes/positions. This only removes size/position bias, not
+// shape — a wrong character's strokes still won't line up after normalizing.
+function getBounds(strokes){
+  let minX=Infinity, minY=Infinity, maxX=-Infinity, maxY=-Infinity;
+  for(const s of strokes) for(const p of s){
+    if(p.x<minX) minX=p.x; if(p.x>maxX) maxX=p.x;
+    if(p.y<minY) minY=p.y; if(p.y>maxY) maxY=p.y;
+  }
+  return { w:maxX-minX, h:maxY-minY, cx:(minX+maxX)/2, cy:(minY+maxY)/2 };
+}
+
+function normalizeToBounds(strokes, target){
+  const b = getBounds(strokes);
+  if(b.w < 1e-6 || b.h < 1e-6) return strokes; // degenerate (e.g. a single dot) — leave as-is
+  const scale = ((target.w/b.w) + (target.h/b.h)) / 2;
+  return strokes.map(s => s.map(p => ({
+    x: target.cx + (p.x - b.cx) * scale,
+    y: target.cy + (p.y - b.cy) * scale
+  })));
+}
+
+function strokeLength(pts){
+  let sum = 0;
+  for(let i=1;i<pts.length;i++) sum += Math.hypot(pts[i].x-pts[i-1].x, pts[i].y-pts[i-1].y);
+  return sum;
+}
+
+function strokeDirection(pts){
+  const dx = pts[pts.length-1].x - pts[0].x, dy = pts[pts.length-1].y - pts[0].y;
+  const mag = Math.hypot(dx,dy) || 1e-6;
+  return { x: dx/mag, y: dy/mag };
+}
+
+// A close point-distance match isn't always a real match: two SHORT strokes anywhere near
+// each other can look "close" purely because both are small, even if one is a horizontal
+// dash and the other a diagonal hook pointing a totally different way. Require the drawn
+// stroke's overall direction to be within ~60° of the official stroke's — skipped for tiny
+// official strokes (dots/hooks) where "direction" isn't a meaningful signal to begin with.
+function directionsCompatible(userResampled, officialResampled, officialRawLen, wasReversed){
+  if(officialRawLen < 20) return true;
+  const du = strokeDirection(userResampled);
+  let doo = strokeDirection(officialResampled);
+  if(wasReversed) doo = { x:-doo.x, y:-doo.y };
+  return (du.x*doo.x + du.y*doo.y) > 0.5;
+}
+
+async function gradeDrawing(char){
+  const data = await getCharData(char);
+  const officialStrokes = (data.medians || []).map(medianToCanvasPoints);
+  const rawUserStrokes = strokesPoints.filter(s => s.length > 1);
+
+  if(rawUserStrokes.length === 0) return false;
+
+  const userStrokes = normalizeToBounds(rawUserStrokes, getBounds(officialStrokes));
+
+  const strokeThreshold = CANVAS_SIZE * 0.08; // ~24px on a 300px canvas
+  const resampledOfficial = officialStrokes.map(o => resample(o, 16));
+  const resampledUser = userStrokes.map(u => resample(u, 16));
+  const officialLengths = officialStrokes.map(strokeLength);
+  const totalLength = officialLengths.reduce((a,b) => a+b, 0) || 1;
+
+  // Strokes don't count equally — a character's long, defining stroke (e.g. the vertical
+  // that pierces through 生) has to actually be there; skipping it shouldn't be forgiven
+  // just because a couple of short, incidental strokes matched elsewhere. So instead of
+  // "fraction of strokes matched", this weights each match by how much of the character's
+  // total ink that stroke represents.
+  const usedUserIdx = new Set();
+  const matchedOfficialIdx = new Set();
+  let matchedLength = 0;
+  const diagLog = []; // TEMPORARY — see console logging below
+  resampledOfficial.forEach((o, oi) => {
+    const oRev = [...o].reverse();
+    let bestDist = Infinity, bestIdx = -1, bestReversed = false;
+    resampledUser.forEach((u, idx) => {
+      if(usedUserIdx.has(idx)) return;
+      const dFwd = avgDist(u,o), dRev = avgDist(u,oRev);
+      const reversed = dRev < dFwd;
+      const d = reversed ? dRev : dFwd;
+      if(d < bestDist){ bestDist = d; bestIdx = idx; bestReversed = reversed; }
+    });
+    const withinDist = bestIdx !== -1 && bestDist <= strokeThreshold;
+    const dirOk = withinDist && directionsCompatible(resampledUser[bestIdx], o, officialLengths[oi], bestReversed);
+    if(withinDist && dirOk){
+      matchedLength += officialLengths[oi];
+      usedUserIdx.add(bestIdx);
+      matchedOfficialIdx.add(oi);
+    }
+    diagLog.push({ officialStroke: oi, officialLen: Math.round(officialLengths[oi]), bestUserIdx: bestIdx, bestDist: bestIdx!==-1 ? Math.round(bestDist) : null, withinDistThreshold: withinDist, directionOk: withinDist ? dirOk : null, matched: withinDist && dirOk });
+  });
+
+  // Second pass: fluid handwriting often draws two ADJACENT official strokes as one
+  // continuous pen motion (no lift between them) — very common, and not a mistake. If a
+  // consecutive pair is still unmatched, check whether some unused user stroke matches
+  // their concatenation instead of matching each alone.
+  for(let oi = 0; oi < officialStrokes.length - 1; oi++){
+    if(matchedOfficialIdx.has(oi) || matchedOfficialIdx.has(oi+1)) continue;
+    const mergedLen = officialLengths[oi] + officialLengths[oi+1];
+    const o = resample([...officialStrokes[oi], ...officialStrokes[oi+1]], 16);
+    const oRev = [...o].reverse();
+    let bestDist = Infinity, bestIdx = -1, bestReversed = false;
+    resampledUser.forEach((u, idx) => {
+      if(usedUserIdx.has(idx)) return;
+      const dFwd = avgDist(u,o), dRev = avgDist(u,oRev);
+      const reversed = dRev < dFwd;
+      const d = reversed ? dRev : dFwd;
+      if(d < bestDist){ bestDist = d; bestIdx = idx; bestReversed = reversed; }
+    });
+    const withinDist = bestIdx !== -1 && bestDist <= strokeThreshold;
+    const dirOk = withinDist && directionsCompatible(resampledUser[bestIdx], o, mergedLen, bestReversed);
+    if(withinDist && dirOk){
+      matchedLength += mergedLen;
+      usedUserIdx.add(bestIdx);
+      matchedOfficialIdx.add(oi);
+      matchedOfficialIdx.add(oi+1);
+      diagLog.push({ officialStroke: `${oi}+${oi+1} merged`, officialLen: Math.round(mergedLen), bestUserIdx: bestIdx, bestDist: Math.round(bestDist), withinDistThreshold: true, directionOk: true, matched: true });
+    }
+  }
+
+  const coverage = matchedLength / totalLength;
+  const pass = coverage >= 0.75;
+  // TEMPORARY diagnostics — prints exactly why a drawing passed/failed, so grading
+  // inconsistency between visually-similar attempts can be root-caused from real data
+  // instead of guessing. Safe to remove once grading is confirmed stable.
+  const diagLines = diagLog.map(d => `  official#${d.officialStroke} len=${d.officialLen} bestUserStroke=${d.bestUserIdx} dist=${d.bestDist} withinDist=${d.withinDistThreshold} dirOk=${d.directionOk} matched=${d.matched}`).join('\n');
+  console.log(`[diag-grade] char=${char} userStrokeCount=${rawUserStrokes.length} officialStrokeCount=${officialStrokes.length} coverage=${(coverage*100).toFixed(1)}% pass=${pass}\n${diagLines}`);
+  return pass;
 }
 
 const progressPath = document.getElementById('progressPath');
@@ -681,6 +949,7 @@ function presentDoor(item, mode, round){
   timerRing.style.display = 'none';
   showGlowChar('', false);
   pinyinTag.textContent = item.pinyin;
+  getCharData(item.char); // warm the cache in the background, nothing rendered from it
   renderProgressPath();
 
   if(mode === 'free'){
@@ -857,20 +1126,30 @@ function beginWritingPhase(item){
   writeSlot.style.display = 'flex';
   submitBtn.style.display = 'inline-block';
   clearBtn.style.display = 'inline-block';
-  hanziInput.focus(); // brings up the keyboard so writing can start right away
   if(statusLine.textContent === '' || statusLine.textContent.includes('看好')){
     statusLine.textContent = TEACHING_STEPS[stepIndex] > 0 ? '现在凭记忆写出来' : '不看字写出来';
   }
 }
 
-// Diagnostics on an earlier version of this page (real Apple Pencil taps on iPadOS) proved
-// 'click' never fires at all in that environment, even though 'pointerdown' fires reliably
-// — likely a WebKit-on-iPad quirk where touch-action:none (needed elsewhere to stop page
-// scroll/bounce) also suppresses the browser's synthesized click event, not just panning.
-// Rather than depend on 'click' at all, every button below responds to 'pointerup' directly
-// (confirmed to always fire), with 'click' kept as a second listener and a short dedupe
-// window so this also keeps working normally in any browser where click fires fine (desktop,
-// most others) without ever double-firing.
+// TEMPORARY diagnostics — logs every tap anywhere on the page (what element it actually
+// landed on) plus every stage the submit handler reaches, so a stuck "写好了" tap shows up
+// in the console without needing to type/paste anything. Safe to remove once the Apple
+// Pencil unresponsiveness issue is confirmed fixed.
+document.addEventListener('pointerdown', (e) => {
+  console.log('[diag] pointerdown on', e.target.id || e.target.className || e.target.tagName, 'type=', e.pointerType, 'submitBtn.disabled=', submitBtn.disabled, 'isDrawing=', isDrawing, 'capturedPointerId=', capturedPointerId);
+}, { capture:true });
+document.addEventListener('click', (e) => {
+  console.log('[diag] click on', e.target.id || e.target.className || e.target.tagName);
+}, { capture:true });
+
+// The diagnostics above proved 'click' never fires at all in this environment (real
+// Apple Pencil taps on iPadOS), even though 'pointerdown' fires reliably — likely a
+// WebKit-on-iPad quirk where touch-action:none (needed elsewhere to stop page scroll/
+// bounce) also suppresses the browser's synthesized click event, not just panning. Rather
+// than depend on 'click' at all, every button below responds to 'pointerup' directly —
+// which the diagnostics confirmed DOES fire — with 'click' kept as a second listener and
+// a short dedupe window, so this also keeps working normally in any browser where click
+// fires fine (desktop, most others) without ever double-firing.
 function onTap(el, handler){
   let lastFired = 0;
   function fire(e){
@@ -883,10 +1162,27 @@ function onTap(el, handler){
   el.addEventListener('click', fire);
 }
 
-onTap(submitBtn, function(){
+onTap(submitBtn, async function(){
+  console.log('[diag] submit handler START, disabled was', submitBtn.disabled);
   const item = currentItem;
-  const ok = gradeDrawing(item.char);
-  handleAttemptResult(ok);
+  submitBtn.disabled = true;
+  const priorStatus = statusLine.textContent;
+  statusLine.textContent = '正在检查...';
+  try{
+    console.log('[diag] about to gradeDrawing for char', item && item.char);
+    const ok = await gradeDrawing(item.char);
+    console.log('[diag] gradeDrawing resolved:', ok);
+    submitBtn.disabled = false;
+    statusLine.textContent = priorStatus;
+    handleAttemptResult(ok);
+  }catch(e){
+    console.log('[diag] gradeDrawing threw:', e && e.message);
+    // Could not load this character's stroke data at all (not bundled locally,
+    // no cached copy, and the live network fetch timed out/failed). This is NOT
+    // the same as "写错了" — don't burn a wrong-attempt strike, just let them retry.
+    submitBtn.disabled = false;
+    statusLine.textContent = '这个字还没有离线数据，需要联网一次才能批改，请连上网络后重试';
+  }
 });
 
 onTap(clearBtn, function(){
