@@ -703,6 +703,73 @@ function directionsCompatible(userResampled, officialResampled, officialRawLen, 
   return (du.x*doo.x + du.y*doo.y) > 0.5;
 }
 
+// Component decomposition for characters with a clean, verified 2-part structure — value
+// is the two components in ACTUAL STROKE ORDER, which isn't always the order an IDS
+// description lists them in (e.g. 辶-radical characters are conventionally written with
+// the enclosed part FIRST and 辶 LAST — opposite of how "⿺辶亦" reads). Sourced from
+// cjkvi-ids (github.com/cjkvi/cjkvi-ids) and cross-checked against our own stroke data:
+// each pair's individual stroke counts sum to exactly the whole character's stroke count,
+// and matching each component's concatenated shape against the corresponding half of the
+// real medians confirmed the order. Only covers characters we've actually verified this
+// way — unlisted characters just skip this pass and fall through to the regular one.
+const COMPONENT_DECOMP = {
+  '柱': ['木','主'], '注': ['氵','主'], '理': ['王','里'], '振': ['扌','辰'],
+  '救': ['求','攵'], '普': ['並','日'], '若': ['艹','右'], '裂': ['列','衣'],
+  '剩': ['乘','刂'], '迹': ['亦','辶'], '通': ['甬','辶'],
+};
+
+// Tries to match each known component as one semantic chunk (its full stroke range)
+// against the best run of unused user strokes, instead of leaving component-sized groups
+// to be discovered by blind windowed guessing. Mutates usedUserIdx/matchedOfficialIdx and
+// returns the matched length so the caller can add it to its running total; the regular
+// per-stroke and windowed-merge passes still run afterward on whatever's left, so this is
+// purely additive — a character with no decomposition data, or where the sanity check
+// fails, is graded exactly as before.
+function tryComponentMatch(char, officialStrokes, userStrokes, officialLengths, usedUserIdx, matchedOfficialIdx, strokeThreshold){
+  const parts = COMPONENT_DECOMP[char];
+  if(!parts) return 0;
+  const partsData = parts.map(p => window.HANZI_LOCAL_DATA && window.HANZI_LOCAL_DATA[p]);
+  if(partsData.some(d => !d)) return 0; // component stroke data not available locally — skip
+
+  const counts = partsData.map(d => d.medians.length);
+  if(counts.reduce((a,b)=>a+b,0) !== officialStrokes.length) return 0; // sanity check failed
+
+  let matchedLength = 0;
+  let cursor = 0;
+  for(let i=0;i<parts.length;i++){
+    const range = Array.from({length: counts[i]}, (_,k) => cursor+k);
+    cursor += counts[i];
+    if(range.some(idx => matchedOfficialIdx.has(idx))) continue;
+
+    const groupLen = range.reduce((s,idx) => s + officialLengths[idx], 0);
+    const o = resample(range.flatMap(idx => officialStrokes[idx]), 24);
+    const oRev = [...o].reverse();
+
+    let bestDist = Infinity, bestRun = null, bestReversed = false;
+    const maxRun = counts[i] + 2;
+    for(let runLen = 1; runLen <= maxRun; runLen++){
+      for(let start = 0; start <= userStrokes.length - runLen; start++){
+        const run = Array.from({length: runLen}, (_,k) => start+k);
+        if(run.some(idx => usedUserIdx.has(idx))) continue;
+        const u = resample(run.flatMap(idx => userStrokes[idx]), 24);
+        const dFwd = avgDist(u,o), dRev = avgDist(u,oRev);
+        const reversed = dRev < dFwd;
+        const d = reversed ? dRev : dFwd;
+        if(d < bestDist){ bestDist = d; bestRun = run; bestReversed = reversed; }
+      }
+    }
+    // A whole component is a bigger, more distinctive shape than a single short stroke, so
+    // it can afford a looser distance bar without becoming a false-positive risk the way
+    // loosening the single-stroke threshold would.
+    if(bestRun && bestDist <= strokeThreshold * 1.6){
+      matchedLength += groupLen;
+      bestRun.forEach(idx => usedUserIdx.add(idx));
+      range.forEach(idx => matchedOfficialIdx.add(idx));
+    }
+  }
+  return matchedLength;
+}
+
 async function gradeDrawing(char){
   const data = await getCharData(char);
   const officialStrokes = (data.medians || []).map(medianToCanvasPoints);
@@ -718,15 +785,16 @@ async function gradeDrawing(char){
   const officialLengths = officialStrokes.map(strokeLength);
   const totalLength = officialLengths.reduce((a,b) => a+b, 0) || 1;
 
+  const usedUserIdx = new Set();
+  const matchedOfficialIdx = new Set();
+  let matchedLength = tryComponentMatch(char, officialStrokes, userStrokes, officialLengths, usedUserIdx, matchedOfficialIdx, strokeThreshold);
+  const diagLog = matchedLength > 0 ? [{ officialStroke: 'component-match', officialLen: Math.round(matchedLength), bestUserIdx: '-', bestDist: '-', withinDistThreshold: true, directionOk: true, matched: true }] : []; // TEMPORARY — see console logging below
+
   // Strokes don't count equally — a character's long, defining stroke (e.g. the vertical
   // that pierces through 生) has to actually be there; skipping it shouldn't be forgiven
   // just because a couple of short, incidental strokes matched elsewhere. So instead of
   // "fraction of strokes matched", this weights each match by how much of the character's
   // total ink that stroke represents.
-  const usedUserIdx = new Set();
-  const matchedOfficialIdx = new Set();
-  let matchedLength = 0;
-  const diagLog = []; // TEMPORARY — see console logging below
   resampledOfficial.forEach((o, oi) => {
     const oRev = [...o].reverse();
     let bestDist = Infinity, bestIdx = -1, bestReversed = false;
