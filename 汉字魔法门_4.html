@@ -746,7 +746,8 @@ async function gradeDrawing(char){
   // TEMPORARY diagnostics — prints exactly why a drawing passed/failed, so grading
   // inconsistency between visually-similar attempts can be root-caused from real data
   // instead of guessing. Safe to remove once grading is confirmed stable.
-  console.log(`[diag-grade] char=${char} userStrokeCount=${rawUserStrokes.length} officialStrokeCount=${officialStrokes.length} coverage=${(coverage*100).toFixed(1)}% pass=${pass}`, diagLog);
+  const diagLines = diagLog.map(d => `  official#${d.officialStroke} len=${d.officialLen} bestUserStroke=${d.bestUserIdx} dist=${d.bestDist} withinDist=${d.withinDistThreshold} dirOk=${d.directionOk} matched=${d.matched}`).join('\n');
+  console.log(`[diag-grade] char=${char} userStrokeCount=${rawUserStrokes.length} officialStrokeCount=${officialStrokes.length} coverage=${(coverage*100).toFixed(1)}% pass=${pass}\n${diagLines}`);
   return pass;
 }
 
