@@ -845,7 +845,7 @@ async function gradeDrawing(char){
   // Whole-character passes over whatever the component pass didn't claim.
   const allOfficialIdx = officialStrokes.map((_,i) => i);
   const allUserIdx = userStrokes.map((_,i) => i);
-  perStrokePass(allOfficialIdx, allUserIdx, 1.0, null);
+  perStrokePass(allOfficialIdx, allUserIdx, 1.1, null);
   mergePass(allOfficialIdx, allUserIdx, 1.0, null);
 
   // Missing-stroke veto: in Chinese, one small stroke is often exactly what distinguishes
@@ -856,6 +856,8 @@ async function gradeDrawing(char){
   // absent — and a character with a missing stroke is a different character. Strokes the
   // user merged into a neighbor don't trigger this: the merge passes claim them first,
   // and even unclaimed ones usually have SOME nearby ink, unlike a truly absent stroke.
+  // (Bar tuned against real data: a genuinely-absent-but-substituted stroke measured 36,
+  // honest sloppy-but-present strokes measure 23-31 — 1.45x ≈ 35 splits them.)
   let missingStroke = null;
   resampledOfficial.forEach((o, oi) => {
     if(matchedOfficialIdx.has(oi) || missingStroke !== null) return;
@@ -864,18 +866,47 @@ async function gradeDrawing(char){
     resampledUser.forEach(u => {
       minDist = Math.min(minDist, avgDist(u,o), avgDist(u,oRev));
     });
-    if(minDist > strokeThreshold * 1.75){
+    if(minDist > strokeThreshold * 1.45){
       missingStroke = { oi, minDist: Math.round(minDist) };
     }
   });
 
+  // Stray-ink veto (the mirror image of the missing-stroke veto): writing EXTRA strokes
+  // also makes it a different character (生 plus an extra horizontal, 师 with a third
+  // left-side stroke — both real observed false-passes), but leftover user ink used to be
+  // silently ignored. A leftover user stroke is a stray if it's substantial (not a dot or
+  // flourish) and can't be explained as either (a) a re-trace right on top of an already-
+  // matched official stroke (tight bar — real retraces hug the line), or (b) the sloppy
+  // counterpart of a still-unmatched official stroke (loose bar, consistent with the
+  // missing-stroke veto's threshold). One stray stroke fails the character.
+  let strayStroke = null;
+  if(!missingStroke){
+    userStrokes.forEach((s, ui) => {
+      if(usedUserIdx.has(ui) || strayStroke !== null) return;
+      const len = strokeLength(s);
+      if(len < 40) return;
+      const u = resampledUser[ui];
+      let minToMatched = Infinity, minToUnmatched = Infinity;
+      resampledOfficial.forEach((o, oi) => {
+        const d = Math.min(avgDist(u,o), avgDist(u,[...o].reverse()));
+        if(matchedOfficialIdx.has(oi)) minToMatched = Math.min(minToMatched, d);
+        else minToUnmatched = Math.min(minToUnmatched, d);
+      });
+      if(minToMatched > strokeThreshold * 0.6 && minToUnmatched > strokeThreshold * 1.45){
+        strayStroke = { ui, len: Math.round(len), minToMatched: minToMatched === Infinity ? null : Math.round(minToMatched), minToUnmatched: minToUnmatched === Infinity ? null : Math.round(minToUnmatched) };
+      }
+    });
+  }
+
   const coverage = matchedLength / totalLength;
-  const pass = coverage >= 0.75 && !missingStroke;
+  const pass = coverage >= 0.75 && !missingStroke && !strayStroke;
   // TEMPORARY diagnostics — prints exactly why a drawing passed/failed, so grading
   // inconsistency between visually-similar attempts can be root-caused from real data
   // instead of guessing. Safe to remove once grading is confirmed stable.
   const diagLines = diagLog.map(d => `  official#${d.officialStroke} len=${d.officialLen} bestUserStroke=${d.bestUserIdx} dist=${d.bestDist} withinDist=${d.withinDistThreshold} dirOk=${d.directionOk} matched=${d.matched}`).join('\n');
-  const vetoLine = missingStroke ? `\n  MISSING-STROKE VETO: official#${missingStroke.oi} has no ink anywhere near it (minDist=${missingStroke.minDist})` : '';
+  let vetoLine = '';
+  if(missingStroke) vetoLine = `\n  MISSING-STROKE VETO: official#${missingStroke.oi} has no ink anywhere near it (minDist=${missingStroke.minDist})`;
+  if(strayStroke) vetoLine = `\n  STRAY-INK VETO: user stroke #${strayStroke.ui} (len=${strayStroke.len}) matches nothing (toMatched=${strayStroke.minToMatched}, toUnmatched=${strayStroke.minToUnmatched})`;
   console.log(`[diag-grade] char=${char} userStrokeCount=${rawUserStrokes.length} officialStrokeCount=${officialStrokes.length} coverage=${(coverage*100).toFixed(1)}% pass=${pass}${vetoLine}\n${diagLines}`);
   return pass;
 }
