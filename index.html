@@ -718,58 +718,6 @@ const COMPONENT_DECOMP = {
   '剩': ['乘','刂'], '迹': ['亦','辶'], '通': ['甬','辶'],
 };
 
-// Tries to match each known component as one semantic chunk (its full stroke range)
-// against the best run of unused user strokes, instead of leaving component-sized groups
-// to be discovered by blind windowed guessing. Mutates usedUserIdx/matchedOfficialIdx and
-// returns the matched length so the caller can add it to its running total; the regular
-// per-stroke and windowed-merge passes still run afterward on whatever's left, so this is
-// purely additive — a character with no decomposition data, or where the sanity check
-// fails, is graded exactly as before.
-function tryComponentMatch(char, officialStrokes, userStrokes, officialLengths, usedUserIdx, matchedOfficialIdx, strokeThreshold){
-  const parts = COMPONENT_DECOMP[char];
-  if(!parts) return 0;
-  const partsData = parts.map(p => window.HANZI_LOCAL_DATA && window.HANZI_LOCAL_DATA[p]);
-  if(partsData.some(d => !d)) return 0; // component stroke data not available locally — skip
-
-  const counts = partsData.map(d => d.medians.length);
-  if(counts.reduce((a,b)=>a+b,0) !== officialStrokes.length) return 0; // sanity check failed
-
-  let matchedLength = 0;
-  let cursor = 0;
-  for(let i=0;i<parts.length;i++){
-    const range = Array.from({length: counts[i]}, (_,k) => cursor+k);
-    cursor += counts[i];
-    if(range.some(idx => matchedOfficialIdx.has(idx))) continue;
-
-    const groupLen = range.reduce((s,idx) => s + officialLengths[idx], 0);
-    const o = resample(range.flatMap(idx => officialStrokes[idx]), 24);
-    const oRev = [...o].reverse();
-
-    let bestDist = Infinity, bestRun = null, bestReversed = false;
-    const maxRun = counts[i] + 2;
-    for(let runLen = 1; runLen <= maxRun; runLen++){
-      for(let start = 0; start <= userStrokes.length - runLen; start++){
-        const run = Array.from({length: runLen}, (_,k) => start+k);
-        if(run.some(idx => usedUserIdx.has(idx))) continue;
-        const u = resample(run.flatMap(idx => userStrokes[idx]), 24);
-        const dFwd = avgDist(u,o), dRev = avgDist(u,oRev);
-        const reversed = dRev < dFwd;
-        const d = reversed ? dRev : dFwd;
-        if(d < bestDist){ bestDist = d; bestRun = run; bestReversed = reversed; }
-      }
-    }
-    // A whole component is a bigger, more distinctive shape than a single short stroke, so
-    // it can afford a looser distance bar without becoming a false-positive risk the way
-    // loosening the single-stroke threshold would.
-    if(bestRun && bestDist <= strokeThreshold * 1.6){
-      matchedLength += groupLen;
-      bestRun.forEach(idx => usedUserIdx.add(idx));
-      range.forEach(idx => matchedOfficialIdx.add(idx));
-    }
-  }
-  return matchedLength;
-}
-
 async function gradeDrawing(char){
   const data = await getCharData(char);
   const officialStrokes = (data.medians || []).map(medianToCanvasPoints);
@@ -787,76 +735,148 @@ async function gradeDrawing(char){
 
   const usedUserIdx = new Set();
   const matchedOfficialIdx = new Set();
-  let matchedLength = tryComponentMatch(char, officialStrokes, userStrokes, officialLengths, usedUserIdx, matchedOfficialIdx, strokeThreshold);
-  const diagLog = matchedLength > 0 ? [{ officialStroke: 'component-match', officialLen: Math.round(matchedLength), bestUserIdx: '-', bestDist: '-', withinDistThreshold: true, directionOk: true, matched: true }] : []; // TEMPORARY — see console logging below
+  let matchedLength = 0;
+  const diagLog = []; // TEMPORARY — see console logging below
 
-  // Strokes don't count equally — a character's long, defining stroke (e.g. the vertical
-  // that pierces through 生) has to actually be there; skipping it shouldn't be forgiven
-  // just because a couple of short, incidental strokes matched elsewhere. So instead of
-  // "fraction of strokes matched", this weights each match by how much of the character's
-  // total ink that stroke represents.
-  resampledOfficial.forEach((o, oi) => {
-    const oRev = [...o].reverse();
-    let bestDist = Infinity, bestIdx = -1, bestReversed = false;
-    resampledUser.forEach((u, idx) => {
-      if(usedUserIdx.has(idx)) return;
-      const dFwd = avgDist(u,o), dRev = avgDist(u,oRev);
-      const reversed = dRev < dFwd;
-      const d = reversed ? dRev : dFwd;
-      if(d < bestDist){ bestDist = d; bestIdx = idx; bestReversed = reversed; }
-    });
-    const withinDist = bestIdx !== -1 && bestDist <= strokeThreshold;
-    const dirOk = withinDist && directionsCompatible(resampledUser[bestIdx], o, officialLengths[oi], bestReversed);
-    if(withinDist && dirOk){
-      matchedLength += officialLengths[oi];
-      usedUserIdx.add(bestIdx);
-      matchedOfficialIdx.add(oi);
-    }
-    diagLog.push({ officialStroke: oi, officialLen: Math.round(officialLengths[oi]), bestUserIdx: bestIdx, bestDist: bestIdx!==-1 ? Math.round(bestDist) : null, withinDistThreshold: withinDist, directionOk: withinDist ? dirOk : null, matched: withinDist && dirOk });
-  });
-
-  // Second+ pass: fluid handwriting often draws several ADJACENT official strokes as one
-  // continuous pen motion (no lift between them) — this is common for a whole component,
-  // not just two strokes, especially with a fast/cursive personal writing style. We don't
-  // have real radical/component data to know exactly which strokes belong together, so
-  // this approximates it by trying every run of 2, 3, then 4 consecutive still-unmatched
-  // official strokes and checking whether their concatenation matches some unused user
-  // stroke — a bit more distance tolerance for bigger merged runs, since a longer combined
-  // shape naturally has more room for small deviations to add up.
-  for(let windowSize = 2; windowSize <= 4; windowSize++){
-    for(let oi = 0; oi <= officialStrokes.length - windowSize; oi++){
-      const idxRange = Array.from({length: windowSize}, (_, k) => oi + k);
-      if(idxRange.some(i => matchedOfficialIdx.has(i))) continue;
-      const mergedLen = idxRange.reduce((s,i) => s + officialLengths[i], 0);
-      const o = resample(idxRange.flatMap(i => officialStrokes[i]), 16);
+  // Per-stroke matching over a restricted set of official/user stroke indices, so the same
+  // logic serves both the whole-character pass and the verify-inside-a-component pass.
+  // Strokes don't count equally — a character's long, defining stroke has to actually be
+  // there — so each match is credited by the official stroke's length, not counted as 1.
+  function perStrokePass(officialIdxList, userIdxList, thresholdScale, label){
+    officialIdxList.forEach(oi => {
+      if(matchedOfficialIdx.has(oi)) return;
+      const o = resampledOfficial[oi];
       const oRev = [...o].reverse();
       let bestDist = Infinity, bestIdx = -1, bestReversed = false;
-      resampledUser.forEach((u, idx) => {
+      userIdxList.forEach(idx => {
         if(usedUserIdx.has(idx)) return;
+        const u = resampledUser[idx];
         const dFwd = avgDist(u,o), dRev = avgDist(u,oRev);
         const reversed = dRev < dFwd;
         const d = reversed ? dRev : dFwd;
         if(d < bestDist){ bestDist = d; bestIdx = idx; bestReversed = reversed; }
       });
-      const mergedThreshold = strokeThreshold * (1 + 0.12*(windowSize-2));
-      const withinDist = bestIdx !== -1 && bestDist <= mergedThreshold;
-      const dirOk = withinDist && directionsCompatible(resampledUser[bestIdx], o, mergedLen, bestReversed);
+      const withinDist = bestIdx !== -1 && bestDist <= strokeThreshold * thresholdScale;
+      const dirOk = withinDist && directionsCompatible(resampledUser[bestIdx], o, officialLengths[oi], bestReversed);
       if(withinDist && dirOk){
-        matchedLength += mergedLen;
+        matchedLength += officialLengths[oi];
         usedUserIdx.add(bestIdx);
-        idxRange.forEach(i => matchedOfficialIdx.add(i));
-        diagLog.push({ officialStroke: `${idxRange.join('+')} merged(${windowSize})`, officialLen: Math.round(mergedLen), bestUserIdx: bestIdx, bestDist: Math.round(bestDist), withinDistThreshold: true, directionOk: true, matched: true });
+        matchedOfficialIdx.add(oi);
+      }
+      diagLog.push({ officialStroke: label ? `${oi}(${label})` : oi, officialLen: Math.round(officialLengths[oi]), bestUserIdx: bestIdx, bestDist: bestIdx!==-1 ? Math.round(bestDist) : null, withinDistThreshold: withinDist, directionOk: withinDist ? dirOk : null, matched: withinDist && dirOk });
+    });
+  }
+
+  // Windowed merge matching (several CONSECUTIVE official strokes drawn as one continuous
+  // pen motion), likewise restricted to given index sets so it can run inside a component.
+  function mergePass(officialIdxList, userIdxList, thresholdScale, label){
+    for(let windowSize = 2; windowSize <= 4; windowSize++){
+      for(let s = 0; s + windowSize <= officialIdxList.length; s++){
+        const idxRange = officialIdxList.slice(s, s + windowSize);
+        if(idxRange.some((v,k) => k > 0 && v !== idxRange[k-1] + 1)) continue; // must be consecutive
+        if(idxRange.some(i => matchedOfficialIdx.has(i))) continue;
+        const mergedLen = idxRange.reduce((sum,i) => sum + officialLengths[i], 0);
+        const o = resample(idxRange.flatMap(i => officialStrokes[i]), 16);
+        const oRev = [...o].reverse();
+        let bestDist = Infinity, bestIdx = -1, bestReversed = false;
+        userIdxList.forEach(idx => {
+          if(usedUserIdx.has(idx)) return;
+          const u = resampledUser[idx];
+          const dFwd = avgDist(u,o), dRev = avgDist(u,oRev);
+          const reversed = dRev < dFwd;
+          const d = reversed ? dRev : dFwd;
+          if(d < bestDist){ bestDist = d; bestIdx = idx; bestReversed = reversed; }
+        });
+        // A concatenated multi-stroke path naturally deviates more from a single drawn
+        // stroke than stroke-vs-stroke comparison does (the pen travels between the
+        // strokes), so merges get a somewhat looser bar, growing a little with run size.
+        const mergedThreshold = strokeThreshold * thresholdScale * (1.2 + 0.12*(windowSize-2));
+        const withinDist = bestIdx !== -1 && bestDist <= mergedThreshold;
+        const dirOk = withinDist && directionsCompatible(resampledUser[bestIdx], o, mergedLen, bestReversed);
+        if(withinDist && dirOk){
+          matchedLength += mergedLen;
+          usedUserIdx.add(bestIdx);
+          idxRange.forEach(i => matchedOfficialIdx.add(i));
+          diagLog.push({ officialStroke: `${idxRange.join('+')} merged(${windowSize}${label ? ','+label : ''})`, officialLen: Math.round(mergedLen), bestUserIdx: bestIdx, bestDist: Math.round(bestDist), withinDistThreshold: true, directionOk: true, matched: true });
+        }
       }
     }
   }
 
+  // Component pass: for characters with verified decomposition data, locate each REAL
+  // semantic component (its whole-shape silhouette, generous 1.6x bar since a whole
+  // component is a distinctive shape) — but crucially, finding the component only decides
+  // WHERE to look. Credit still comes from verifying the component's strokes individually
+  // (with a mildly relaxed bar, since we already know we're in the right region). An
+  // earlier version credited the whole component in one lump on the silhouette match
+  // alone, which let a character with a wrong-but-similar component sail through.
+  const parts = COMPONENT_DECOMP[char];
+  if(parts){
+    const partsData = parts.map(p => window.HANZI_LOCAL_DATA && window.HANZI_LOCAL_DATA[p]);
+    if(!partsData.some(d => !d) && partsData.map(d => d.medians.length).reduce((a,b)=>a+b,0) === officialStrokes.length){
+      const counts = partsData.map(d => d.medians.length);
+      let cursor = 0;
+      for(let i=0;i<parts.length;i++){
+        const range = Array.from({length: counts[i]}, (_,k) => cursor+k);
+        cursor += counts[i];
+        if(range.some(idx => matchedOfficialIdx.has(idx))) continue;
+
+        const o = resample(range.flatMap(idx => officialStrokes[idx]), 24);
+        const oRev = [...o].reverse();
+        let bestDist = Infinity, bestRun = null;
+        const maxRun = counts[i] + 2;
+        for(let runLen = 1; runLen <= maxRun; runLen++){
+          for(let start = 0; start + runLen <= userStrokes.length; start++){
+            const run = Array.from({length: runLen}, (_,k) => start+k);
+            if(run.some(idx => usedUserIdx.has(idx))) continue;
+            const u = resample(run.flatMap(idx => userStrokes[idx]), 24);
+            const d = Math.min(avgDist(u,o), avgDist(u,oRev));
+            if(d < bestDist){ bestDist = d; bestRun = run; }
+          }
+        }
+        if(bestRun && bestDist <= strokeThreshold * 1.6){
+          perStrokePass(range, bestRun, 1.3, parts[i]);
+          mergePass(range, bestRun, 1.15, parts[i]);
+        }
+      }
+    }
+  }
+
+  // Whole-character passes over whatever the component pass didn't claim.
+  const allOfficialIdx = officialStrokes.map((_,i) => i);
+  const allUserIdx = userStrokes.map((_,i) => i);
+  perStrokePass(allOfficialIdx, allUserIdx, 1.0, null);
+  mergePass(allOfficialIdx, allUserIdx, 1.0, null);
+
+  // Missing-stroke veto: in Chinese, one small stroke is often exactly what distinguishes
+  // two characters (师/帅, 玉/王, 大/太) — but a short stroke carries so little of the
+  // total ink that length-weighted coverage barely notices it's gone. So regardless of
+  // coverage: if some official stroke is still unmatched AND nothing the user drew comes
+  // even loosely near it (well beyond the normal matching bar), that stroke is simply
+  // absent — and a character with a missing stroke is a different character. Strokes the
+  // user merged into a neighbor don't trigger this: the merge passes claim them first,
+  // and even unclaimed ones usually have SOME nearby ink, unlike a truly absent stroke.
+  let missingStroke = null;
+  resampledOfficial.forEach((o, oi) => {
+    if(matchedOfficialIdx.has(oi) || missingStroke !== null) return;
+    const oRev = [...o].reverse();
+    let minDist = Infinity;
+    resampledUser.forEach(u => {
+      minDist = Math.min(minDist, avgDist(u,o), avgDist(u,oRev));
+    });
+    if(minDist > strokeThreshold * 1.75){
+      missingStroke = { oi, minDist: Math.round(minDist) };
+    }
+  });
+
   const coverage = matchedLength / totalLength;
-  const pass = coverage >= 0.75;
+  const pass = coverage >= 0.75 && !missingStroke;
   // TEMPORARY diagnostics — prints exactly why a drawing passed/failed, so grading
   // inconsistency between visually-similar attempts can be root-caused from real data
   // instead of guessing. Safe to remove once grading is confirmed stable.
   const diagLines = diagLog.map(d => `  official#${d.officialStroke} len=${d.officialLen} bestUserStroke=${d.bestUserIdx} dist=${d.bestDist} withinDist=${d.withinDistThreshold} dirOk=${d.directionOk} matched=${d.matched}`).join('\n');
-  console.log(`[diag-grade] char=${char} userStrokeCount=${rawUserStrokes.length} officialStrokeCount=${officialStrokes.length} coverage=${(coverage*100).toFixed(1)}% pass=${pass}\n${diagLines}`);
+  const vetoLine = missingStroke ? `\n  MISSING-STROKE VETO: official#${missingStroke.oi} has no ink anywhere near it (minDist=${missingStroke.minDist})` : '';
+  console.log(`[diag-grade] char=${char} userStrokeCount=${rawUserStrokes.length} officialStrokeCount=${officialStrokes.length} coverage=${(coverage*100).toFixed(1)}% pass=${pass}${vetoLine}\n${diagLines}`);
   return pass;
 }
 
