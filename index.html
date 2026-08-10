@@ -1099,7 +1099,27 @@ document.addEventListener('click', (e) => {
   console.log('[diag] click on', e.target.id || e.target.className || e.target.tagName);
 }, { capture:true });
 
-submitBtn.addEventListener('click', async function(){
+// The diagnostics above proved 'click' never fires at all in this environment (real
+// Apple Pencil taps on iPadOS), even though 'pointerdown' fires reliably — likely a
+// WebKit-on-iPad quirk where touch-action:none (needed elsewhere to stop page scroll/
+// bounce) also suppresses the browser's synthesized click event, not just panning. Rather
+// than depend on 'click' at all, every button below responds to 'pointerup' directly —
+// which the diagnostics confirmed DOES fire — with 'click' kept as a second listener and
+// a short dedupe window, so this also keeps working normally in any browser where click
+// fires fine (desktop, most others) without ever double-firing.
+function onTap(el, handler){
+  let lastFired = 0;
+  function fire(e){
+    const now = Date.now();
+    if(now - lastFired < 400) return;
+    lastFired = now;
+    handler(e);
+  }
+  el.addEventListener('pointerup', fire);
+  el.addEventListener('click', fire);
+}
+
+onTap(submitBtn, async function(){
   console.log('[diag] submit handler START, disabled was', submitBtn.disabled);
   const item = currentItem;
   submitBtn.disabled = true;
@@ -1122,15 +1142,15 @@ submitBtn.addEventListener('click', async function(){
   }
 });
 
-clearBtn.addEventListener('click', function(){
+onTap(clearBtn, function(){
   clearCanvas();
 });
 
-continueBtn.addEventListener('click', function(){
+onTap(continueBtn, function(){
   loadNextDoor();
 });
 
-restartBtn.addEventListener('click', function(){
+onTap(restartBtn, function(){
   state.daysElapsed += 1;
   passedCount = 0;
   pendingRetests = [];
@@ -1142,8 +1162,8 @@ restartBtn.addEventListener('click', function(){
 });
 
 // ---------- settings panel ----------
-settingsBtn.addEventListener('click', () => panelOverlay.classList.add('show'));
-closePanelBtn.addEventListener('click', () => panelOverlay.classList.remove('show'));
+onTap(settingsBtn, () => panelOverlay.classList.add('show'));
+onTap(closePanelBtn, () => panelOverlay.classList.remove('show'));
 
 function renderQueueList(){
   queueList.innerHTML = state.priorityQueue.map((p, i) => `
@@ -1154,14 +1174,14 @@ function renderQueueList(){
   `).join('') || '<div style="font-size:12px;color:#8a8272;">暂无今日优先字</div>';
 
   queueList.querySelectorAll('.del').forEach(el => {
-    el.addEventListener('click', () => {
+    onTap(el, () => {
       state.priorityQueue.splice(Number(el.dataset.i), 1);
       renderQueueList();
     });
   });
 }
 
-addCharBtn.addEventListener('click', () => {
+onTap(addCharBtn, () => {
   const c = charInput.value.trim();
   const p = pinyinInput.value.trim();
   const w = wordInput.value.trim();
@@ -1176,7 +1196,7 @@ dailyCountInput.addEventListener('change', () => {
   if(v > 0) state.dailyCount = v;
 });
 
-saveProgressBtn.addEventListener('click', () => {
+onTap(saveProgressBtn, () => {
   const dataStr = JSON.stringify(state, null, 2);
   const blob = new Blob([dataStr], {type:'application/json'});
   const url = URL.createObjectURL(blob);
@@ -1190,7 +1210,7 @@ saveProgressBtn.addEventListener('click', () => {
   URL.revokeObjectURL(url);
 });
 
-loadProgressBtn.addEventListener('click', () => fileInput.click());
+onTap(loadProgressBtn, () => fileInput.click());
 fileInput.addEventListener('change', (e) => {
   const file = e.target.files[0];
   if(!file) return;
