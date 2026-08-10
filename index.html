@@ -1088,17 +1088,32 @@ function beginWritingPhase(item){
   }
 }
 
+// TEMPORARY diagnostics — logs every tap anywhere on the page (what element it actually
+// landed on) plus every stage the submit handler reaches, so a stuck "写好了" tap shows up
+// in the console without needing to type/paste anything. Safe to remove once the Apple
+// Pencil unresponsiveness issue is confirmed fixed.
+document.addEventListener('pointerdown', (e) => {
+  console.log('[diag] pointerdown on', e.target.id || e.target.className || e.target.tagName, 'type=', e.pointerType, 'submitBtn.disabled=', submitBtn.disabled, 'isDrawing=', isDrawing, 'capturedPointerId=', capturedPointerId);
+}, { capture:true });
+document.addEventListener('click', (e) => {
+  console.log('[diag] click on', e.target.id || e.target.className || e.target.tagName);
+}, { capture:true });
+
 submitBtn.addEventListener('click', async function(){
+  console.log('[diag] submit handler START, disabled was', submitBtn.disabled);
   const item = currentItem;
   submitBtn.disabled = true;
   const priorStatus = statusLine.textContent;
   statusLine.textContent = '正在检查...';
   try{
+    console.log('[diag] about to gradeDrawing for char', item && item.char);
     const ok = await gradeDrawing(item.char);
+    console.log('[diag] gradeDrawing resolved:', ok);
     submitBtn.disabled = false;
     statusLine.textContent = priorStatus;
     handleAttemptResult(ok);
   }catch(e){
+    console.log('[diag] gradeDrawing threw:', e && e.message);
     // Could not load this character's stroke data at all (not bundled locally,
     // no cached copy, and the live network fetch timed out/failed). This is NOT
     // the same as "写错了" — don't burn a wrong-attempt strike, just let them retry.
