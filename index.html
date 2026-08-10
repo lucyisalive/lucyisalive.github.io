@@ -209,12 +209,12 @@
   }
   .grid-lines{
     position:absolute; inset:0; pointer-events:none;
-    background-image:
-      linear-gradient(var(--grid) 1.5px, transparent 1.5px),
-      linear-gradient(90deg, var(--grid) 1.5px, transparent 1.5px),
-      linear-gradient(45deg, var(--grid) 1.5px, transparent 1.5px),
-      linear-gradient(-45deg, var(--grid) 1.5px, transparent 1.5px);
-    background-size: 100% 100%, 100% 100%, 141.4% 141.4%, 141.4% 141.4%;
+    /* An actual small SVG (cross + both diagonals, guaranteed centered) instead of the
+       linear-gradient hack this used to use — that technique draws its line starting at
+       the box's top/left edge by default, not through the center, so the "guide lines"
+       were invisibly hugging the border the whole time instead of crossing the middle. */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cg stroke='%23D98A82' stroke-width='1.4' fill='none'%3E%3Cline x1='50' y1='0' x2='50' y2='100'/%3E%3Cline x1='0' y1='50' x2='100' y2='50'/%3E%3Cline x1='0' y1='0' x2='100' y2='100'/%3E%3Cline x1='100' y1='0' x2='0' y2='100'/%3E%3C/g%3E%3C/svg%3E");
+    background-size: 100% 100%;
     background-position:center; background-repeat:no-repeat;
     opacity:.7;
   }
