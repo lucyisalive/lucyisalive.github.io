@@ -720,6 +720,7 @@ async function gradeDrawing(char){
   // "fraction of strokes matched", this weights each match by how much of the character's
   // total ink that stroke represents.
   const usedUserIdx = new Set();
+  const matchedOfficialIdx = new Set();
   let matchedLength = 0;
   const diagLog = []; // TEMPORARY — see console logging below
   resampledOfficial.forEach((o, oi) => {
@@ -737,9 +738,38 @@ async function gradeDrawing(char){
     if(withinDist && dirOk){
       matchedLength += officialLengths[oi];
       usedUserIdx.add(bestIdx);
+      matchedOfficialIdx.add(oi);
     }
     diagLog.push({ officialStroke: oi, officialLen: Math.round(officialLengths[oi]), bestUserIdx: bestIdx, bestDist: bestIdx!==-1 ? Math.round(bestDist) : null, withinDistThreshold: withinDist, directionOk: withinDist ? dirOk : null, matched: withinDist && dirOk });
   });
+
+  // Second pass: fluid handwriting often draws two ADJACENT official strokes as one
+  // continuous pen motion (no lift between them) — very common, and not a mistake. If a
+  // consecutive pair is still unmatched, check whether some unused user stroke matches
+  // their concatenation instead of matching each alone.
+  for(let oi = 0; oi < officialStrokes.length - 1; oi++){
+    if(matchedOfficialIdx.has(oi) || matchedOfficialIdx.has(oi+1)) continue;
+    const mergedLen = officialLengths[oi] + officialLengths[oi+1];
+    const o = resample([...officialStrokes[oi], ...officialStrokes[oi+1]], 16);
+    const oRev = [...o].reverse();
+    let bestDist = Infinity, bestIdx = -1, bestReversed = false;
+    resampledUser.forEach((u, idx) => {
+      if(usedUserIdx.has(idx)) return;
+      const dFwd = avgDist(u,o), dRev = avgDist(u,oRev);
+      const reversed = dRev < dFwd;
+      const d = reversed ? dRev : dFwd;
+      if(d < bestDist){ bestDist = d; bestIdx = idx; bestReversed = reversed; }
+    });
+    const withinDist = bestIdx !== -1 && bestDist <= strokeThreshold;
+    const dirOk = withinDist && directionsCompatible(resampledUser[bestIdx], o, mergedLen, bestReversed);
+    if(withinDist && dirOk){
+      matchedLength += mergedLen;
+      usedUserIdx.add(bestIdx);
+      matchedOfficialIdx.add(oi);
+      matchedOfficialIdx.add(oi+1);
+      diagLog.push({ officialStroke: `${oi}+${oi+1} merged`, officialLen: Math.round(mergedLen), bestUserIdx: bestIdx, bestDist: Math.round(bestDist), withinDistThreshold: true, directionOk: true, matched: true });
+    }
+  }
 
   const coverage = matchedLength / totalLength;
   const pass = coverage >= 0.75;
