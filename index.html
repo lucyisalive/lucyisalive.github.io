@@ -718,6 +718,7 @@ const COMPONENT_DECOMP = {
 };
 
 // ---------- geometry helpers ----------
+function clamp01(v){ return v < 0 ? 0 : (v > 1 ? 1 : v); }
 function ptDist(a, b){ return Math.hypot(a.x-b.x, a.y-b.y); }
 
 function centroidOf(pts){
@@ -737,8 +738,15 @@ function bboxOf(strokes){
 }
 
 function angDiff(a, b){
-  let d = Math.abs(a-b) % 360;
+  const d = Math.abs(a-b) % 360;
   return d > 180 ? 360-d : d;
+}
+
+function normDeg(deg){
+  let a = deg % 360;
+  if(a > 180) a -= 360;
+  if(a < -180) a += 360;
+  return a;
 }
 
 // Overall direction via principal axis (PCA) — far more robust to wobble than the
@@ -754,15 +762,7 @@ function pcaAngle(pts){
   const a = pts[0], b = pts[pts.length-1];
   const chord = Math.atan2(b.y-a.y, b.x-a.x) * 180/Math.PI;
   if(angDiff(deg, chord) > 90) deg += 180;
-  return deg;
-}
-
-// Direction of the stroke's final quarter — this is what distinguishes 竖钩 from 竖:
-// the hook flicks the tail in a very different direction from the stroke body.
-function tailAngle(pts){
-  const n = pts.length;
-  const a = pts[Math.max(0, n-4)], b = pts[n-1];
-  return Math.atan2(b.y-a.y, b.x-a.x) * 180/Math.PI;
+  return normDeg(deg);
 }
 
 // Position- and scale-free shape signature: centroid to origin, RMS radius to 1.
@@ -792,9 +792,9 @@ function alignClusterUniform(cluster, target){
   })));
 }
 
-// Hungarian algorithm (optimal assignment, O(n^3)) — replaces the old greedy matching
-// whose "musical chairs" mispairings on parallel same-looking strokes caused cascades
-// of false failures on characters like 生 and the 王 radical.
+// Hungarian algorithm (optimal assignment, O(n^3)) — replaces greedy matching, whose
+// "musical chairs" mispairings on parallel same-looking strokes caused cascades of
+// false failures on characters like 生 and the 王 radical.
 function hungarian(cost){
   const n = cost.length;
   const u = new Array(n+1).fill(0), v = new Array(n+1).fill(0);
@@ -842,76 +842,169 @@ function* partitionsOf(k, m, maxGroup){
   yield* rec(0, m, []);
 }
 
-// Is this user stroke, drawn where it is, an acceptable rendition of this official
-// stroke (or merged official run)? Strict on stroke identity (shape, direction, tail,
-// relative length), generous on position — matching how a person judges "knows the
-// character" vs "happens to have neat handwriting".
-function matchStrokePair(userPts, officialPts, compDiag, merged, mergedParts){
+// ============================================================
+// The categorical layer: what KIND of stroke is this?
+//
+// This is the half of the judgment that gets a hard veto, because these are the
+// discrete facts that decide whether it's the right character at all: a 提 is not a
+// 横, a 竖钩 is not a 竖, a stroke with a corner is not a straight one. Everything
+// continuous (how neat, how straight, exactly where) is scored instead — see
+// strokeQuality below. Getting this split wrong is what made the previous version
+// brittle: it hard-gated six continuous measurements per stroke, so eleven strokes
+// meant sixty-six chances to be failed by a hair.
+//
+// Every check here is CONFIDENCE-GATED: a stroke sitting in the gap between two
+// categories is "ambiguous" and can never trigger a veto. Only a confident-vs-
+// confident disagreement fails.
+// ============================================================
+
+// Ink on paper has no direction: a line at θ and the same line at θ+180 are identical.
+// So classification works on the UNDIRECTED orientation, folded into [0,180). Bands
+// that named 提 and 撇 separately were self-contradictory for exactly this reason —
+// they are the same orientation family — and that inconsistency was misreading the
+// reference 横 strokes (which sit at -7°..-13°, i.e. 167°..173° undirected) as 撇.
+// Gaps between bands are ambiguous zones and can never trigger a veto.
+const ORIENT_BANDS = [
+  { name:'横',  lo:0,   hi:12  },
+  { name:'横',  lo:168, hi:180 },
+  { name:'斜捺', lo:28,  hi:60  },  // "\" falling diagonal
+  { name:'竖',  lo:78,  hi:102 },
+  { name:'斜撇', lo:112, hi:154 },  // "/" rising diagonal — 撇 and 提 both live here
+];
+function dirBucket(deg){
+  let a = normDeg(deg);
+  if(a < 0) a += 180;            // fold to undirected orientation
+  if(a >= 180) a -= 180;
+  for(const b of ORIENT_BANDS) if(a >= b.lo && a <= b.hi) return b.name;
+  return null; // ambiguous — never vetoes
+}
+
+// Turning profile. Smoothed first and measured over quarter-stroke spans: a few px of
+// hand jitter across a short window otherwise reads as a corner, which was vetoing
+// perfectly ordinary strokes as soon as any noise was present.
+function strokeProfile(pts){
+  const r = resample(pts, 25);
+  const sm = r.map((p, i) => {
+    const a = r[Math.max(0, i-1)], b = r[Math.min(r.length-1, i+1)];
+    return { x:(a.x+p.x+b.x)/3, y:(a.y+p.y+b.y)/3 };
+  });
+  const ang = (a, b) => Math.atan2(sm[b].y-sm[a].y, sm[b].x-sm[a].x) * 180/Math.PI;
+  const W = 6; // quarter of the stroke
+  const dirs = [];
+  for(let i=0;i+W<sm.length;i++) dirs.push(ang(i, i+W));
+  const turns = [];
+  for(let i=0;i+W<dirs.length;i++) turns.push(angDiff(dirs[i], dirs[i+W]));
+  return {
+    firstDir: dirs[0],
+    midTurn:  turns.length ? Math.max(...turns) : 0, // a 折 somewhere along the body
+    hookTurn: angDiff(ang(20, 24), ang(6, 18)),      // last ~17% vs the middle half: a 钩
+  };
+}
+
+function tri(v, yes, no){ return v > yes ? true : (v < no ? false : null); }
+
+// Returns a veto reason string, or null if the two strokes are categorically
+// compatible (or too ambiguous to judge).
+function classVeto(userPts, officialPts, charDiag){
+  const lu = strokeLength(userPts), lo = strokeLength(officialPts);
+  const dotBar = charDiag * 0.14;
+  const uDot = lu < dotBar, oDot = lo < dotBar;
+  if(uDot !== oDot){
+    // Only confident when the "long" one is unmistakably long.
+    return Math.max(lu, lo) > dotBar * 2 ? 'dot-vs-stroke' : null;
+  }
+  if(uDot) return null; // two dots: a dot has no meaningful direction or shape
+
+  const pu = strokeProfile(userPts), po = strokeProfile(officialPts);
+
+  // A 折 or a 钩 is a feature of a LONG stroke. On a short mark every bit of curve
+  // reads as a corner or a hook, so judging those there is noise, not evidence.
+  const longEnough = Math.min(lu, lo) > charDiag * 0.20;
+
+  if(longEnough){
+    // Thresholds read off the reference set after smoothing: plain strokes turn 9-38,
+    // genuine 折/钩 strokes turn 85-138, so the bands sit either side of that gap.
+    const uCorner = tri(pu.midTurn, 75, 50), oCorner = tri(po.midTurn, 75, 50);
+    if(uCorner !== null && oCorner !== null && uCorner !== oCorner) return 'corner';
+
+    // 竖钩 vs 竖 — the product explicitly wants these kept apart.
+    const uHook = tri(pu.hookTurn, 70, 45), oHook = tri(po.hookTurn, 70, 45);
+    if(uHook !== null && oHook !== null && uHook !== oHook) return 'hook';
+  }
+
+  // Direction family. For strokes with a corner, compare the opening segment;
+  // otherwise the whole-stroke principal axis.
+  const useFirst = longEnough && (tri(pu.midTurn, 75, 50) === true || tri(po.midTurn, 75, 50) === true);
+  const du = useFirst ? pu.firstDir : pcaAngle(resample(userPts, 16));
+  const dov = useFirst ? po.firstDir : pcaAngle(resample(officialPts, 16));
+  const bo = dirBucket(dov), bu = dirBucket(du);
+  if(!bo || !bu) return null; // one of them sits between categories
+  if(bo === bu) return null;
+  return `dir(${bu}≠${bo})`;
+}
+
+// ============================================================
+// The continuous layer: how well written is it?
+//
+// Everything here is penmanship — neatness, placement, proportion. It can never fail
+// a stroke on its own; it produces a 0..1 quality that is averaged over the component.
+// A single wobbly stroke among ten good ones lowers the average slightly and passes,
+// which is exactly how a person grades.
+// ============================================================
+function strokeQuality(userPts, officialPts, compDiag, merged, isDot){
   const ru = resample(userPts, 16), ro = resample(officialPts, 16);
   const nu = shapeNormalize(ru), no = shapeNormalize(ro);
   const dF = shapeDist(nu, no), dR = shapeDist([...nu].reverse(), no);
-  const reversed = dR < dF; // ink on paper has no direction — accept strokes drawn backwards
+  const reversed = dR < dF;
   const rms = reversed ? dR : dF;
   const ruo = reversed ? [...ru].reverse() : ru;
   const dirDiff = angDiff(pcaAngle(ruo), pcaAngle(ro));
-  const tailDiff = angDiff(tailAngle(ruo), tailAngle(ro));
   const lu = strokeLength(userPts), lo = strokeLength(officialPts);
   const lenRatio = lu / Math.max(lo, 1e-6);
   const posDist = ptDist(centroidOf(ru), centroidOf(ro)) / compDiag;
-  const tiny = lo < 35; // dots: direction/tail are noise at this size, relax those
 
-  const rmsMax  = merged ? 0.42 : (tiny ? 0.55 : 0.38);
-  const dirMax  = tiny ? 70 : (merged ? 40 : 22); // 22° keeps 提(~25-35°) and 横(~0-8°) apart
-  const tailMax = tiny ? 999 : (merged ? 95 : 75); // 75° keeps 竖钩's hooked tail apart from 竖
-  const lenMin  = tiny ? 0.25 : (merged ? 0.55 : 0.45);
-  // The dot-size length relaxation is for honest dots drawn a bit long — not for long
-  // ink (e.g. two dots fused into one mark) posing as a dot.
-  const lenMax  = tiny ? (lu < 55 ? 3.2 : 2.2) : 2.4;
-  const posMax  = 0.5; // half the component diagonal — position is nearly free
+  const sShape = clamp01(1 - rms / (merged ? 1.15 : 0.95));
+  const sPos   = clamp01(1 - posDist / 0.62);
+  const sLen   = clamp01(1 - Math.abs(Math.log(Math.max(lenRatio, 1e-3))) / Math.log(3.4));
+  const sDir   = clamp01(1 - dirDiff / (merged ? 95 : 75));
 
-  // A merged run must actually SPAN the run's extent: a plain 竖 offered as "竖+短横
-  // merged" (i.e. 帅 pretending to be 师) covers none of the horizontal extent.
-  let extentOk = true;
-  if(merged){
-    const bu = bboxOf([userPts]), bo = bboxOf([officialPts]);
-    extentOk = (bo.w < 30 || bu.w / bo.w >= 0.5) && (bo.h < 30 || bu.h / bo.h >= 0.5);
-    // The user's single motion must actually pass through EVERY constituent stroke of
-    // the group — otherwise "merged" becomes a loophole that absorbs a genuinely
-    // MISSING stroke adjacent to a long one (e.g. 学 minus one short stroke was
-    // sneaking through as "merged with 冖").
-    if(extentOk && mergedParts && mergedParts.length > 1){
-      const ru32 = resample(userPts, 32);
-      for(const sub of mergedParts){
-        const rs = resample(sub, 12);
-        let acc = 0;
-        for(const p of rs){
-          let best = Infinity;
-          for(const q of ru32){
-            const d = Math.hypot(p.x-q.x, p.y-q.y);
-            if(d < best) best = d;
-          }
-          acc += best;
-        }
-        if(acc / rs.length > 18){ extentOk = false; break; }
+  // A dot's shape and direction are noise — only "is there a small mark about here".
+  const q = isDot ? (0.62*sPos + 0.38*sLen)
+                  : (0.28*sShape + 0.24*sPos + 0.20*sLen + 0.28*sDir);
+
+  return { q, rms:+rms.toFixed(2), dirDiff:Math.round(dirDiff),
+           lenRatio:+lenRatio.toFixed(2), posDist:+posDist.toFixed(2), reversed };
+}
+
+// A merged official run is only a valid explanation if the user's single motion
+// actually passes through EVERY stroke in the run — otherwise "merged" becomes a
+// loophole that swallows a genuinely missing stroke. Median (not mean) distance, so
+// the rounded corner where two strokes join doesn't count against an honest merge.
+function mergeCovers(userPts, parts, charDiag){
+  const ru = resample(userPts, 32);
+  for(const sub of parts){
+    const rs = resample(sub, 12);
+    const ds = rs.map(p => {
+      let best = Infinity;
+      for(const q of ru){
+        const d = Math.hypot(p.x-q.x, p.y-q.y);
+        if(d < best) best = d;
       }
-    }
+      return best;
+    });
+    const sorted = [...ds].sort((a,b) => a-b);
+    // Median keeps an honest merge's rounded corner from counting against it; the max
+    // is what stops a genuinely MISSING stroke from hiding behind its long neighbour,
+    // which only ever brushes past part of it.
+    if(sorted[Math.floor(sorted.length/2)] > charDiag * 0.045) return false;
+    if(Math.max(...ds) > charDiag * 0.11) return false;
   }
-
-  const ok = rms <= rmsMax && dirDiff <= dirMax && tailDiff <= tailMax
-          && lenRatio >= lenMin && lenRatio <= lenMax && posDist <= posMax && extentOk;
-  const cost = rms + dirDiff/60 + tailDiff/240
-             + Math.abs(Math.log(Math.max(lenRatio, 1e-3))) * 0.5
-             + posDist * 0.9 + (extentOk ? 0 : 2);
-  return { ok, cost, merged: !!merged, reversed,
-    rms: +rms.toFixed(2), dirDiff: Math.round(dirDiff), tailDiff: Math.round(tailDiff),
-    lenRatio: +lenRatio.toFixed(2), posDist: +posDist.toFixed(2) };
+  return true;
 }
 
 // An extra user stroke drawn right on top of another is a re-trace — a correction
-// habit, not a concept error. "On top" is checked by in-place point-to-point overlap
-// (a genuinely superimposed stroke sits within a few px along its whole length),
-// which a merely-nearby parallel stroke (e.g. an EXTRA horizontal squeezed between
-// two real ones, or a stray vertical near a 撇) does not satisfy.
+// habit, not a concept error. "On top" means in-place point-to-point overlap along
+// the whole length, which a merely-nearby parallel stroke does not satisfy.
 function dropOneRetrace(users, compDiag, notes){
   const bar = Math.max(compDiag * 0.05, 10);
   for(let i=0;i<users.length;i++) for(let j=i+1;j<users.length;j++){
@@ -931,11 +1024,10 @@ function dropOneRetrace(users, compDiag, notes){
   return false;
 }
 
-// Candidate ways to rejoin two user strokes whose ends nearly touch (one stroke drawn
-// with a pen lift). Returned sorted by gap; the caller EXPLORES candidates and keeps a
-// join only if the component actually matches afterwards — a greedy "always join the
-// smallest gap" wrongly fused strokes that legitimately touch (very common inside
-// characters) while the real split pair sat one candidate further down the list.
+// Candidate rejoins for two user strokes whose ends nearly touch (one stroke drawn
+// with a pen lift). Explored with verification by the caller rather than applied
+// greedily — strokes legitimately touch all over a character, so the smallest gap is
+// often not the real split.
 function joinCandidates(users, compDiag){
   const bar = Math.max(compDiag * 0.09, 13);
   const out = [];
@@ -951,27 +1043,36 @@ function joinCandidates(users, compDiag){
       { gap: ptDist(A[0], B[0]),                   make: () => [...[...A].reverse(), ...B] },
     ];
     let best = null;
-    for(const c of combos){
-      if(best === null || c.gap < best.gap) best = c;
-    }
-    if(best.gap <= bar) out.push({ gap: best.gap, make: best.make, i, j });
+    for(const c of combos) if(best === null || c.gap < best.gap) best = c;
+    const near = Math.min(bar, 0.30 * Math.min(strokeLength(A), strokeLength(B)));
+    if(best.gap > near) continue;
+    const joined = best.make();
+    const r = resample(joined, 13);
+    const mid = Math.floor(r.length/2);
+    const dIn  = Math.atan2(r[mid].y-r[mid-2].y, r[mid].x-r[mid-2].x)*180/Math.PI;
+    const dOut = Math.atan2(r[mid+2].y-r[mid].y, r[mid+2].x-r[mid].x)*180/Math.PI;
+    if(angDiff(dIn, dOut) > 60) continue; // kink at the seam: two real strokes, not one
+    out.push({ gap: best.gap, make: best.make, i, j });
   }
   out.sort((a,b) => a.gap - b.gap);
   return out.slice(0, 5);
 }
 
-// Match one component: explain extras (retraces dropped outright; splits explored as
-// candidate rejoins, kept only if the component then matches), explain shortfalls
-// (merged consecutive strokes), then require EVERY official stroke to have an
-// acceptable user counterpart under globally optimal pairing.
-function matchComponent(officialStrokes, userStrokesIn, label, diag){
+const Q_BAR = 0.55;   // component's average stroke quality
+const Q_FLOOR = 0.20; // no single stroke may be this far gone
+
+// Match one component: explain extras (re-traces dropped; pen-lift splits explored),
+// explain shortfalls (consecutive strokes merged into one motion), then require every
+// official stroke to have a categorically-compatible counterpart under globally
+// optimal pairing, with the component's average penmanship above the bar.
+function matchComponent(officialStrokes, userStrokesIn, label, charDiag, diag){
   const k = officialStrokes.length;
   const compDiag = Math.max(bboxOf(officialStrokes).diag, 1);
 
   function matchExact(users, notes){
     const m = users.length;
-    if(m === 0) return { pass: false, head: 'FAIL no-ink', pairs: [] };
-    if(k - m > 5) return { pass: false, head: `FAIL too-few-strokes (${m} vs ${k})`, pairs: [] };
+    if(m === 0) return { pass:false, head:'FAIL no-ink', rows:[] };
+    if(k - m > 5) return { pass:false, head:`FAIL too-few-strokes (${m} vs ${k})`, rows:[] };
     let best = null;
     for(const part of partitionsOf(k, m, 4)){
       const virt = part.map(([s, e]) => ({
@@ -980,56 +1081,64 @@ function matchComponent(officialStrokes, userStrokesIn, label, diag){
         merged: e - s > 1,
         label: e - s > 1 ? `${s}..${e-1}` : `${s}`
       }));
-      const evals = users.map(u => virt.map(o => matchStrokePair(u.pts, o.pts, compDiag, o.merged, o.parts)));
-      const assign = hungarian(evals.map(row => row.map(r => r.cost)));
-      let total = 0, allOk = true;
-      const pairs = assign.map((col, row) => {
-        const r = evals[row][col];
-        total += r.cost;
-        if(!r.ok) allOk = false;
-        return { u: users[row].id, o: virt[col].label, r };
-      });
-      if(best === null || (allOk && !best.allOk) || (allOk === best.allOk && total < best.total)){
-        best = { total, allOk, pairs };
-      }
+      const cells = users.map(u => virt.map(o => {
+        const isDot = !o.merged && strokeLength(o.pts) < charDiag * 0.14;
+        const qq = strokeQuality(u.pts, o.pts, compDiag, o.merged, isDot);
+        let veto = o.merged ? (mergeCovers(u.pts, o.parts, charDiag) ? null : 'merge-not-covered')
+                            : classVeto(u.pts, o.pts, charDiag);
+        // Re-joining the two halves of one stroke must not INFLATE it: the pieces add
+        // up to about the original. If the "split" explanation only works by making the
+        // stroke half again as long, the second piece was really a separate mark — this
+        // is what let an extra dot fuse onto 氵's last stroke and disappear.
+        if(!veto && u.id.includes('+') && qq.lenRatio > 1.3) veto = 'join-inflates-length';
+        return { ...qq, veto, isDot };
+      }));
+      // Cost drives the assignment: a categorical veto is expensive so the optimizer
+      // prefers pairings that are legal, but quality still breaks ties.
+      const assign = hungarian(cells.map(row => row.map(c => (1 - c.q) + (c.veto ? 3 : 0))));
+      const rows = assign.map((col, row) => ({ u: users[row].id, o: virt[col].label, c: cells[row][col] }));
+      const vetoes = rows.filter(r => r.c.veto).length;
+      const meanQ = rows.reduce((s, r) => s + r.c.q, 0) / rows.length;
+      const minQ  = Math.min(...rows.map(r => r.c.q));
+      const cand = { vetoes, meanQ, minQ, rows,
+                     pass: vetoes === 0 && meanQ >= Q_BAR && minQ >= Q_FLOOR };
+      if(best === null || cand.vetoes < best.vetoes ||
+         (cand.vetoes === best.vetoes && cand.meanQ > best.meanQ)) best = cand;
     }
+    const why = best.vetoes ? `veto×${best.vetoes}`
+              : (best.meanQ < Q_BAR ? `avgQ=${best.meanQ.toFixed(2)}<${Q_BAR}`
+              : (best.minQ < Q_FLOOR ? `oneStrokeQ=${best.minQ.toFixed(2)}<${Q_FLOOR}` : ''));
     return {
-      pass: best.allOk,
-      head: `${best.allOk ? 'PASS' : 'FAIL'}${notes.length ? ' (' + notes.join(' ') + ')' : ''}`,
-      pairs: best.pairs
+      pass: best.pass,
+      head: `${best.pass ? 'PASS' : 'FAIL ' + why} avgQ=${best.meanQ.toFixed(2)}${notes.length ? ' (' + notes.join(' ') + ')' : ''}`,
+      rows: best.rows
     };
   }
 
   function attempt(users, notes, depth){
     if(users.length <= k) return matchExact(users, notes);
-    if(depth > 4){
-      return { pass: false, head: `FAIL extra-stroke (${users.length} strokes vs ${k} expected)`, pairs: [] };
-    }
+    if(depth > 4) return { pass:false, head:`FAIL extra-stroke (${users.length} vs ${k})`, rows:[] };
     const work = users.map(u => ({ ...u }));
     const preNotes = [...notes];
-    if(dropOneRetrace(work, compDiag, preNotes)){
-      return attempt(work, preNotes, depth + 1);
-    }
+    if(dropOneRetrace(work, compDiag, preNotes)) return attempt(work, preNotes, depth + 1);
     const cands = joinCandidates(users, compDiag);
     let firstFail = null;
     for(const cand of cands){
       const joined = users.slice();
       const idA = joined[cand.i].id, idB = joined[cand.j].id;
-      const merged = { pts: cand.make(), id: idA+'+'+idB };
       joined.splice(cand.j, 1);
-      joined.splice(cand.i, 1, merged);
+      joined.splice(cand.i, 1, { pts: cand.make(), id: idA+'+'+idB });
       const res = attempt(joined, [...notes, `joined:${idA}+${idB}`], depth + 1);
       if(res.pass) return res;
       if(firstFail === null) firstFail = res;
     }
-    if(firstFail) return firstFail;
-    return { pass: false, head: `FAIL extra-stroke (${users.length} strokes vs ${k} expected${notes.length ? '; ' + notes.join(' ') : ''})`, pairs: [] };
+    return firstFail || { pass:false, head:`FAIL extra-stroke (${users.length} vs ${k})`, rows:[] };
   }
 
-  const res = attempt(userStrokesIn.map((pts, i) => ({ pts, id: 'u'+i })), [], 0);
+  const res = attempt(userStrokesIn.map((pts, i) => ({ pts, id:'u'+i })), [], 0);
   diag.push(`comp=${label} ${res.head}`);
-  for(const p of res.pairs){
-    diag.push(`  ${p.u}<->official#${p.o} ok=${p.r.ok?1:0} rms=${p.r.rms} dir=${p.r.dirDiff} tail=${p.r.tailDiff} len=${p.r.lenRatio} pos=${p.r.posDist}${p.r.merged?' merged':''}${p.r.reversed?' rev':''}`);
+  for(const r of res.rows){
+    diag.push(`  ${r.u}<->official#${r.o} q=${r.c.q.toFixed(2)}${r.c.veto ? ' VETO:'+r.c.veto : ''} rms=${r.c.rms} dir=${r.c.dirDiff} len=${r.c.lenRatio} pos=${r.c.posDist}${r.c.isDot?' dot':''}`);
   }
   return { pass: res.pass };
 }
@@ -1040,9 +1149,9 @@ async function gradeDrawing(char){
   const rawUser = strokesPoints.filter(s => s.length > 1);
   if(rawUser.length === 0) return false;
 
-  // Whole-character normalization: writing the whole character small/large/off-center
-  // is never an error.
+  // Writing the whole character small/large/off-centre is never an error.
   const user = normalizeToBounds(rawUser, getBounds(officialAll));
+  const charDiag = Math.max(bboxOf(officialAll).diag, 1);
 
   // Structure layer: split official strokes into components.
   let comps = null;
@@ -1061,10 +1170,10 @@ async function gradeDrawing(char){
       }
     }
   }
-  if(!comps) comps = [{ label: '全字', strokes: officialAll }];
+  if(!comps) comps = [{ label:'全字', strokes: officialAll }];
 
   // Cluster each user stroke to the component of its nearest official stroke, keeping
-  // an ambiguity score so borderline strokes can be re-assigned if grading fails.
+  // an ambiguity ratio so borderline strokes can be re-assigned if grading fails.
   const flat = [];
   comps.forEach((c, ci) => c.strokes.forEach(o => flat.push({ ci, r: resample(o, 16) })));
   const assignInfo = user.map(u => {
@@ -1093,7 +1202,7 @@ async function gradeDrawing(char){
         return;
       }
       const aligned = alignClusterUniform(cluster, bboxOf(c.strokes));
-      if(!matchComponent(c.strokes, aligned, c.label, diag).pass) pass = false;
+      if(!matchComponent(c.strokes, aligned, c.label, charDiag, diag).pass) pass = false;
     });
     return { pass, diag };
   }
