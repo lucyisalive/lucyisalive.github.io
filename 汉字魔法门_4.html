@@ -843,45 +843,19 @@ function* partitionsOf(k, m, maxGroup){
 }
 
 // ============================================================
-// The categorical layer: what KIND of stroke is this?
+// Stroke identity signals.
 //
-// This is the half of the judgment that gets a hard veto, because these are the
-// discrete facts that decide whether it's the right character at all: a 提 is not a
-// 横, a 竖钩 is not a 竖, a stroke with a corner is not a straight one. Everything
-// continuous (how neat, how straight, exactly where) is scored instead — see
-// strokeQuality below. Getting this split wrong is what made the previous version
-// brittle: it hard-gated six continuous measurements per stroke, so eleven strokes
-// meant sixty-six chances to be failed by a hair.
-//
-// Every check here is CONFIDENCE-GATED: a stroke sitting in the gap between two
-// categories is "ambiguous" and can never trigger a veto. Only a confident-vs-
-// confident disagreement fails.
+// Everything a stroke "is" turns out to be continuous once you measure real
+// handwriting: how hooked a tail is, how slanted a 撇 is — these are matters of
+// degree, and hard-gating them failed honest writing on a hair's breadth. So the
+// only hard veto left in the whole grader is STROKE COUNT per component (see
+// matchComponent). Identity is expressed as multiplier penalties on stroke quality
+// instead: ordinary variation costs nothing, a decisively wrong stroke collapses to
+// zero and trips the per-stroke floor.
 // ============================================================
 
-// Ink on paper has no direction: a line at θ and the same line at θ+180 are identical.
-// So classification works on the UNDIRECTED orientation, folded into [0,180). Bands
-// that named 提 and 撇 separately were self-contradictory for exactly this reason —
-// they are the same orientation family — and that inconsistency was misreading the
-// reference 横 strokes (which sit at -7°..-13°, i.e. 167°..173° undirected) as 撇.
-// Gaps between bands are ambiguous zones and can never trigger a veto.
-const ORIENT_BANDS = [
-  { name:'横',  lo:0,   hi:12  },
-  { name:'横',  lo:168, hi:180 },
-  { name:'斜捺', lo:28,  hi:60  },  // "\" falling diagonal
-  { name:'竖',  lo:78,  hi:102 },
-  { name:'斜撇', lo:112, hi:154 },  // "/" rising diagonal — 撇 and 提 both live here
-];
-function dirBucket(deg){
-  let a = normDeg(deg);
-  if(a < 0) a += 180;            // fold to undirected orientation
-  if(a >= 180) a -= 180;
-  for(const b of ORIENT_BANDS) if(a >= b.lo && a <= b.hi) return b.name;
-  return null; // ambiguous — never vetoes
-}
-
-// Turning profile. Smoothed first and measured over quarter-stroke spans: a few px of
-// hand jitter across a short window otherwise reads as a corner, which was vetoing
-// perfectly ordinary strokes as soon as any noise was present.
+// Turning/direction profile. Smoothed first and measured over quarter-stroke spans:
+// a few px of hand jitter across a short window otherwise reads as a corner.
 function strokeProfile(pts){
   const r = resample(pts, 25);
   const sm = r.map((p, i) => {
@@ -889,58 +863,11 @@ function strokeProfile(pts){
     return { x:(a.x+p.x+b.x)/3, y:(a.y+p.y+b.y)/3 };
   });
   const ang = (a, b) => Math.atan2(sm[b].y-sm[a].y, sm[b].x-sm[a].x) * 180/Math.PI;
-  const W = 6; // quarter of the stroke
-  const dirs = [];
-  for(let i=0;i+W<sm.length;i++) dirs.push(ang(i, i+W));
-  const turns = [];
-  for(let i=0;i+W<dirs.length;i++) turns.push(angDiff(dirs[i], dirs[i+W]));
   return {
-    firstDir: dirs[0],
-    midTurn:  turns.length ? Math.max(...turns) : 0, // a 折 somewhere along the body
-    hookTurn: angDiff(ang(20, 24), ang(6, 18)),      // last ~17% vs the middle half: a 钩
+    tailDir:  ang(20, 24),                  // where the last ~17% is heading
+    bodyDir:  ang(6, 18),                   // where the middle half is heading
+    hookTurn: angDiff(ang(20, 24), ang(6, 18)),
   };
-}
-
-function tri(v, yes, no){ return v > yes ? true : (v < no ? false : null); }
-
-// Returns a veto reason string, or null if the two strokes are categorically
-// compatible (or too ambiguous to judge).
-function classVeto(userPts, officialPts, charDiag){
-  const lu = strokeLength(userPts), lo = strokeLength(officialPts);
-  const dotBar = charDiag * 0.14;
-  const uDot = lu < dotBar, oDot = lo < dotBar;
-  if(uDot !== oDot){
-    // Only confident when the "long" one is unmistakably long.
-    return Math.max(lu, lo) > dotBar * 2 ? 'dot-vs-stroke' : null;
-  }
-  if(uDot) return null; // two dots: a dot has no meaningful direction or shape
-
-  const pu = strokeProfile(userPts), po = strokeProfile(officialPts);
-
-  // A 折 or a 钩 is a feature of a LONG stroke. On a short mark every bit of curve
-  // reads as a corner or a hook, so judging those there is noise, not evidence.
-  const longEnough = Math.min(lu, lo) > charDiag * 0.20;
-
-  if(longEnough){
-    // Thresholds read off the reference set after smoothing: plain strokes turn 9-38,
-    // genuine 折/钩 strokes turn 85-138, so the bands sit either side of that gap.
-    const uCorner = tri(pu.midTurn, 75, 50), oCorner = tri(po.midTurn, 75, 50);
-    if(uCorner !== null && oCorner !== null && uCorner !== oCorner) return 'corner';
-
-    // 竖钩 vs 竖 — the product explicitly wants these kept apart.
-    const uHook = tri(pu.hookTurn, 70, 45), oHook = tri(po.hookTurn, 70, 45);
-    if(uHook !== null && oHook !== null && uHook !== oHook) return 'hook';
-  }
-
-  // Direction family. For strokes with a corner, compare the opening segment;
-  // otherwise the whole-stroke principal axis.
-  const useFirst = longEnough && (tri(pu.midTurn, 75, 50) === true || tri(po.midTurn, 75, 50) === true);
-  const du = useFirst ? pu.firstDir : pcaAngle(resample(userPts, 16));
-  const dov = useFirst ? po.firstDir : pcaAngle(resample(officialPts, 16));
-  const bo = dirBucket(dov), bu = dirBucket(du);
-  if(!bo || !bu) return null; // one of them sits between categories
-  if(bo === bu) return null;
-  return `dir(${bu}≠${bo})`;
 }
 
 // ============================================================
@@ -969,10 +896,29 @@ function strokeQuality(userPts, officialPts, compDiag, merged, isDot){
   const sDir   = clamp01(1 - dirDiff / (merged ? 95 : 75));
 
   // A dot's shape and direction are noise — only "is there a small mark about here".
-  const q = isDot ? (0.62*sPos + 0.38*sLen)
-                  : (0.28*sShape + 0.24*sPos + 0.20*sLen + 0.28*sDir);
+  let q = isDot ? (0.62*sPos + 0.38*sLen)
+                : (0.28*sShape + 0.24*sPos + 0.20*sLen + 0.28*sDir);
 
-  return { q, rms:+rms.toFixed(2), dirDiff:Math.round(dirDiff),
+  // Hook direction. WHETHER a stroke has a hook is decided from the reference alone —
+  // clean data, so no noisy threshold on the child's side — and then it is only asked
+  // WHICH WAY the tail points, never how sharp the turn is. That distinction matters:
+  // a naturally curved 撇 has a swung tail but points the same way as the reference,
+  // while a hook flicked to the wrong side (a specific difficulty for this player)
+  // points somewhere else entirely, and gets caught regardless of how neat it is.
+  let tailDiff = null;
+  if(!isDot && !merged){
+    const po = strokeProfile(officialPts);
+    if(po.hookTurn > 55){
+      const pu = strokeProfile(ruo);
+      tailDiff = angDiff(pu.tailDir, po.tailDir);
+      q *= clamp01(1 - Math.max(0, tailDiff - 40) / 50);
+    }
+  }
+  // Overall slant: free up to 45° (measured honest variation tops out around 26°),
+  // then falls away fast, so a stroke aimed somewhere genuinely different collapses.
+  if(!isDot) q *= clamp01(1 - Math.max(0, dirDiff - 45) / 55);
+
+  return { q, rms:+rms.toFixed(2), dirDiff:Math.round(dirDiff), tailDiff: tailDiff===null?null:Math.round(tailDiff),
            lenRatio:+lenRatio.toFixed(2), posDist:+posDist.toFixed(2), reversed };
 }
 
@@ -993,11 +939,11 @@ function mergeCovers(userPts, parts, charDiag){
       return best;
     });
     const sorted = [...ds].sort((a,b) => a-b);
-    // Median keeps an honest merge's rounded corner from counting against it; the max
-    // is what stops a genuinely MISSING stroke from hiding behind its long neighbour,
-    // which only ever brushes past part of it.
-    if(sorted[Math.floor(sorted.length/2)] > charDiag * 0.045) return false;
-    if(Math.max(...ds) > charDiag * 0.11) return false;
+    // Median tolerates the rounded corner an honest one-motion merge leaves behind; the
+    // 80th percentile is what stops a genuinely MISSING stroke from hiding behind its
+    // long neighbour, since then it is not a few points that are far but nearly all.
+    if(sorted[Math.floor(sorted.length/2)] > charDiag * 0.055) return false;
+    if(sorted[Math.floor(sorted.length*0.8)] > charDiag * 0.13) return false;
   }
   return true;
 }
@@ -1059,7 +1005,12 @@ function joinCandidates(users, compDiag){
 }
 
 const Q_BAR = 0.55;   // component's average stroke quality
-const Q_FLOOR = 0.20; // no single stroke may be this far gone
+// No single stroke may be this far gone, however good the rest are — this is what
+// catches one decisively wrong stroke in an otherwise well-written character. Measured
+// over ~66 randomised honest attempts the worst single stroke scored 0.42, while a
+// stroke aimed the wrong way scored 0.24-0.27 and a hook flicked to the wrong side 0.00,
+// so the line sits in the gap between them.
+const Q_FLOOR = 0.35;
 
 // Match one component: explain extras (re-traces dropped; pen-lift splits explored),
 // explain shortfalls (consecutive strokes merged into one motion), then require every
@@ -1084,8 +1035,7 @@ function matchComponent(officialStrokes, userStrokesIn, label, charDiag, diag){
       const cells = users.map(u => virt.map(o => {
         const isDot = !o.merged && strokeLength(o.pts) < charDiag * 0.14;
         const qq = strokeQuality(u.pts, o.pts, compDiag, o.merged, isDot);
-        let veto = o.merged ? (mergeCovers(u.pts, o.parts, charDiag) ? null : 'merge-not-covered')
-                            : classVeto(u.pts, o.pts, charDiag);
+        let veto = o.merged && !mergeCovers(u.pts, o.parts, charDiag) ? 'merge-not-covered' : null;
         // Re-joining the two halves of one stroke must not INFLATE it: the pieces add
         // up to about the original. If the "split" explanation only works by making the
         // stroke half again as long, the second piece was really a separate mark — this
@@ -1138,7 +1088,7 @@ function matchComponent(officialStrokes, userStrokesIn, label, charDiag, diag){
   const res = attempt(userStrokesIn.map((pts, i) => ({ pts, id:'u'+i })), [], 0);
   diag.push(`comp=${label} ${res.head}`);
   for(const r of res.rows){
-    diag.push(`  ${r.u}<->official#${r.o} q=${r.c.q.toFixed(2)}${r.c.veto ? ' VETO:'+r.c.veto : ''} rms=${r.c.rms} dir=${r.c.dirDiff} len=${r.c.lenRatio} pos=${r.c.posDist}${r.c.isDot?' dot':''}`);
+    diag.push(`  ${r.u}<->official#${r.o} q=${r.c.q.toFixed(2)}${r.c.veto ? ' VETO:'+r.c.veto : ''} rms=${r.c.rms} dir=${r.c.dirDiff}${r.c.tailDiff!==null?' tail='+r.c.tailDiff:''} len=${r.c.lenRatio} pos=${r.c.posDist}${r.c.isDot?' dot':''}`);
   }
   return { pass: res.pass };
 }
