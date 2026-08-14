@@ -780,6 +780,19 @@ function shapeDist(a, b){
   return s/a.length;
 }
 
+// Nearest-point (Chamfer) distance, used for strokes with a corner. Comparing point i to
+// point i pairs the two strokes by distance travelled, which assumes the corner falls at
+// the same fraction along both — write 子's 横撇 with a shorter horizontal arm and every
+// point after the corner is compared against the wrong part of the reference. Measured on
+// real ink: an honest 横撇 scores 0.66 that way but 0.28 by nearest point, while a stroke
+// genuinely of another kind stays high (捺 offered for 撇: 0.82).
+function chamferDist(a, b){
+  let s = 0;
+  for(const p of a){ let m=Infinity; for(const q of b){ const d=Math.hypot(p.x-q.x,p.y-q.y); if(d<m) m=d; } s+=m; }
+  for(const q of b){ let m=Infinity; for(const p of a){ const d=Math.hypot(p.x-q.x,p.y-q.y); if(d<m) m=d; } s+=m; }
+  return s/(a.length+b.length);
+}
+
 // Uniform (angle-preserving) alignment of a user cluster onto its component's box —
 // per-component, so "wrote the radical smaller/lower than standard" stops mattering.
 function alignClusterUniform(cluster, target){
@@ -863,10 +876,19 @@ function strokeProfile(pts){
     return { x:(a.x+p.x+b.x)/3, y:(a.y+p.y+b.y)/3 };
   });
   const ang = (a, b) => Math.atan2(sm[b].y-sm[a].y, sm[b].x-sm[a].x) * 180/Math.PI;
+  // Turning across the body, measured between quarter-stroke spans: this is how a 折
+  // (a real corner, as in 横撇 or 横折) is told from an ordinary curve. Reference glyphs
+  // measure 9-38 for plain strokes and 85-138 for genuine 折/钩.
+  const W = 6;
+  const dirs = [];
+  for(let i=0;i+W<sm.length;i++) dirs.push(ang(i, i+W));
+  let midTurn = 0;
+  for(let i=0;i+W<dirs.length;i++) midTurn = Math.max(midTurn, angDiff(dirs[i], dirs[i+W]));
   return {
     tailDir:  ang(20, 24),                  // where the last ~17% is heading
     bodyDir:  ang(6, 18),                   // where the middle half is heading
     hookTurn: angDiff(ang(20, 24), ang(6, 18)),
+    midTurn,
   };
 }
 
@@ -881,7 +903,14 @@ function strokeProfile(pts){
 function strokeQuality(userPts, officialPts, compDiag, merged, isDot){
   const ru = resample(userPts, 16), ro = resample(officialPts, 16);
   const nu = shapeNormalize(ru), no = shapeNormalize(ro);
-  const dF = shapeDist(nu, no), dR = shapeDist([...nu].reverse(), no);
+  // A stroke with a real corner (横撇, 横折…) needs the corner-tolerant comparison, and
+  // its overall direction is not a usable signal at all: the principal axis of an L
+  // depends on the ratio of its two arms, so drawing one arm slightly longer swings it
+  // right across. Real ink: the reference 子's 横撇 reads 1 degree, an honest rendition
+  // of it 143 — a 142-degree "error" between two strokes of the same shape.
+  const cornered = Math.max(strokeProfile(officialPts).midTurn, strokeProfile(userPts).midTurn) > 65;
+  const dF = cornered ? chamferDist(nu, no) : shapeDist(nu, no);
+  const dR = cornered ? dF : shapeDist([...nu].reverse(), no);
   const reversed = dR < dF;
   const rms = reversed ? dR : dF;
   const ruo = reversed ? [...ru].reverse() : ru;
@@ -895,9 +924,18 @@ function strokeQuality(userPts, officialPts, compDiag, merged, isDot){
   // scored dir=2 while its shape distance was 0.86, nothing alike, and still passed).
   // What actually distinguishes a real merge is the shape, so it carries the weight and
   // gets a tighter bar: honest merges measure rms <= 0.35, this bogus one 0.86.
+  // A short stroke is inherently less certain in BOTH angle and proportion: the same few
+  // pixels of hand variation turn into a bigger angle, and a bigger length ratio, the
+  // shorter the stroke is. Writing a 52px stroke 15px short is a ratio of 0.71; doing the
+  // same to a 180px stroke is 0.92. So both allowances scale inversely with length — a
+  // 45px stroke gets roughly twice the latitude of a 90px one.
+  const lenFrac    = lo / Math.max(compDiag, 1);
+  const shortScale = Math.min(Math.max(0.35 / Math.max(lenFrac, 1e-3), 1), 2.2);
+
   const sShape = clamp01(1 - rms / (merged ? 0.85 : 0.95));
-  const sDir   = clamp01(1 - dirDiff / (merged ? 95 : 75));
-  const wShape = merged ? 0.80 : 0.55, wDir = merged ? 0.20 : 0.45;
+  const sDir   = clamp01(1 - dirDiff / ((merged ? 95 : 75) * shortScale));
+  const wShape = cornered ? 1.0 : (merged ? 0.80 : 0.55);
+  const wDir   = cornered ? 0.0 : (merged ? 0.20 : 0.45);
 
   // Only SHAPE and DIRECTION are evidence that this is the right stroke. Position and
   // length are not: any mark of roughly the right size in roughly the right area earns
@@ -907,7 +945,7 @@ function strokeQuality(userPts, officialPts, compDiag, merged, isDot){
   // when fine, subtracting only once the stroke is placed or sized implausibly.
   const posFactor = clamp01(1 - Math.max(0, posDist - 0.28) / 0.45);
   const lenOff    = Math.abs(Math.log(Math.max(lenRatio, 1e-3)));
-  const lenFactor = clamp01(1 - Math.max(0, lenOff - Math.log(1.6)) / 0.7);
+  const lenFactor = clamp01(1 - Math.max(0, lenOff - Math.log(1.6)*shortScale) / 0.7);
 
   // A dot's shape and direction are noise — only "is there a small mark about here".
   let q = isDot ? clamp01(1 - posDist/0.62) * clamp01(1 - Math.max(0, lenOff - Math.log(2.2))/0.9)
@@ -936,7 +974,7 @@ function strokeQuality(userPts, officialPts, compDiag, merged, isDot){
   }
   // Overall slant: free up to 45° (measured honest variation tops out around 26°),
   // then falls away fast, so a stroke aimed somewhere genuinely different collapses.
-  if(!isDot) q *= clamp01(1 - Math.max(0, dirDiff - 45) / 55);
+  if(!isDot && !cornered) q *= clamp01(1 - Math.max(0, dirDiff - 45*shortScale) / 55);
 
   return { q, rms:+rms.toFixed(2), dirDiff:Math.round(dirDiff), tailDiff: tailDiff===null?null:Math.round(tailDiff),
            lenRatio:+lenRatio.toFixed(2), posDist:+posDist.toFixed(2), reversed };
