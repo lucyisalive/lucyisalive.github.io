@@ -936,36 +936,50 @@ function strokeQuality(userPts, officialPts, compDiag, merged, isDot){
            lenRatio:+lenRatio.toFixed(2), posDist:+posDist.toFixed(2), reversed };
 }
 
-// A merged official run is only a valid explanation if the user's single motion
-// actually passes through EVERY stroke in the run — otherwise "merged" becomes a
-// loophole that swallows a genuinely missing stroke. Median (not mean) distance, so
-// the rounded corner where two strokes join doesn't count against an honest merge.
+// A merged official run is only a valid explanation if the single motion can be CUT
+// INTO CONSECUTIVE PIECES, one per stroke in the run, each matching its stroke in shape
+// and sitting where that stroke belongs. Asking instead (as this did) whether every
+// reference point has ink nearby cannot tell "wrote it a bit small" from "left it out":
+// real ink written 28% short measured 8.4% median distance, and a genuinely absent
+// stroke 8.3% — indistinguishable. Shape comparison is scale-free, so a compact version
+// still matches; and requiring position pins down the case shape alone cannot judge,
+// where a character repeats a stroke (halving 里's long bottom 横 yields two shapes that
+// each look exactly like a 横, but they are not where the missing 横 belongs).
+//
+// Cost is the worse of the two, each divided by its own tolerance, so 1.0 means a piece
+// sits exactly at the limit. Measured: honest merges (including real device ink) score
+// 0.26-0.87, merges hiding an absent stroke 1.05-2.77.
 function mergeCovers(userPts, parts, charDiag){
-  const ru = resample(userPts, 32);
-  for(const sub of parts){
-    const rs = resample(sub, 12);
-    const ds = rs.map(p => {
-      let best = Infinity;
-      for(const q of ru){
-        const d = Math.hypot(p.x-q.x, p.y-q.y);
-        if(d < best) best = d;
-      }
-      return best;
-    });
-    const sorted = [...ds].sort((a,b) => a-b);
-    // Thresholds measured, not guessed. Writing two strokes as one motion cannot hug
-    // both references exactly — the pen blends them, and the reference glyph's own
-    // styling (子's 竖钩 leans left where a writer may go straight down) adds a steady
-    // offset along the whole stroke. Across honest merges, including real ink from the
-    // device, the median distance runs 0.3-6.1% of the character diagonal and the 80th
-    // percentile 2.5-6.8%; where a stroke is genuinely ABSENT and its neighbour is being
-    // offered in its place, the median is 8.3-38% and the 80th percentile 12.9-57%.
-    // These sit in the gap. (The old 5.5% median cut through the honest range and was
-    // failing a correctly written 学 by two pixels.)
-    if(sorted[Math.floor(sorted.length/2)] > charDiag * 0.072) return false;
-    if(sorted[Math.floor(sorted.length*0.8)] > charDiag * 0.095) return false;
+  if(parts.length < 2) return true;
+  const ru = resample(userPts, 40);
+  const k = parts.length;
+  const refShape = parts.map(p => shapeNormalize(resample(p, 16)));
+  const refMid   = parts.map(p => centroidOf(resample(p, 16)));
+
+  function pieceCost(seg, i){
+    const rs = resample(seg, 16);
+    const ns = shapeNormalize(rs);
+    const shape = Math.min(shapeDist(ns, refShape[i]), shapeDist([...ns].reverse(), refShape[i]));
+    const place = ptDist(centroidOf(rs), refMid[i]) / charDiag;
+    return Math.max(shape / 0.75, place / 0.13);
   }
-  return true;
+
+  let best = Infinity;
+  (function search(start, idx, worst){
+    if(best <= 0.95) return; // already good enough to accept
+    if(idx === k-1){
+      if(ru.length - start < 4) return;
+      best = Math.min(best, Math.max(worst, pieceCost(ru.slice(start), idx)));
+      return;
+    }
+    for(let end = start + 4; end <= ru.length - 4*(k-1-idx); end += 3){
+      const w = Math.max(worst, pieceCost(ru.slice(start, end), idx));
+      if(w >= best) continue;
+      search(end, idx+1, w);
+    }
+  })(0, 0, 0);
+
+  return best <= 0.95;
 }
 
 // An extra user stroke drawn right on top of another is a re-trace — a correction
