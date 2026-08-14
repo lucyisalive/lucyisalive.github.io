@@ -890,8 +890,14 @@ function strokeQuality(userPts, officialPts, compDiag, merged, isDot){
   const lenRatio = lu / Math.max(lo, 1e-6);
   const posDist = ptDist(centroidOf(ru), centroidOf(ro)) / compDiag;
 
-  const sShape = clamp01(1 - rms / (merged ? 1.15 : 0.95));
+  // For a MERGED pair the overall direction is weak evidence — two strokes concatenated
+  // average out to some direction that a wrong stroke can coincide with (a bogus merge
+  // scored dir=2 while its shape distance was 0.86, nothing alike, and still passed).
+  // What actually distinguishes a real merge is the shape, so it carries the weight and
+  // gets a tighter bar: honest merges measure rms <= 0.35, this bogus one 0.86.
+  const sShape = clamp01(1 - rms / (merged ? 0.85 : 0.95));
   const sDir   = clamp01(1 - dirDiff / (merged ? 95 : 75));
+  const wShape = merged ? 0.80 : 0.55, wDir = merged ? 0.20 : 0.45;
 
   // Only SHAPE and DIRECTION are evidence that this is the right stroke. Position and
   // length are not: any mark of roughly the right size in roughly the right area earns
@@ -905,7 +911,7 @@ function strokeQuality(userPts, officialPts, compDiag, merged, isDot){
 
   // A dot's shape and direction are noise — only "is there a small mark about here".
   let q = isDot ? clamp01(1 - posDist/0.62) * clamp01(1 - Math.max(0, lenOff - Math.log(2.2))/0.9)
-                : (0.55*sShape + 0.45*sDir) * posFactor * lenFactor;
+                : (wShape*sShape + wDir*sDir) * posFactor * lenFactor;
 
   // Hook direction. WHETHER a stroke has a hook is decided from the reference alone —
   // clean data, so no noisy threshold on the child's side — and then it is only asked
@@ -947,11 +953,17 @@ function mergeCovers(userPts, parts, charDiag){
       return best;
     });
     const sorted = [...ds].sort((a,b) => a-b);
-    // Median tolerates the rounded corner an honest one-motion merge leaves behind; the
-    // 80th percentile is what stops a genuinely MISSING stroke from hiding behind its
-    // long neighbour, since then it is not a few points that are far but nearly all.
-    if(sorted[Math.floor(sorted.length/2)] > charDiag * 0.055) return false;
-    if(sorted[Math.floor(sorted.length*0.8)] > charDiag * 0.13) return false;
+    // Thresholds measured, not guessed. Writing two strokes as one motion cannot hug
+    // both references exactly — the pen blends them, and the reference glyph's own
+    // styling (子's 竖钩 leans left where a writer may go straight down) adds a steady
+    // offset along the whole stroke. Across honest merges, including real ink from the
+    // device, the median distance runs 0.3-6.1% of the character diagonal and the 80th
+    // percentile 2.5-6.8%; where a stroke is genuinely ABSENT and its neighbour is being
+    // offered in its place, the median is 8.3-38% and the 80th percentile 12.9-57%.
+    // These sit in the gap. (The old 5.5% median cut through the honest range and was
+    // failing a correctly written 学 by two pixels.)
+    if(sorted[Math.floor(sorted.length/2)] > charDiag * 0.072) return false;
+    if(sorted[Math.floor(sorted.length*0.8)] > charDiag * 0.095) return false;
   }
   return true;
 }
