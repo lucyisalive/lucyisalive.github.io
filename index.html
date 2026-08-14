@@ -943,49 +943,65 @@ function strokeQuality(userPts, officialPts, compDiag, merged, isDot){
 }
 
 // A merged official run is only a valid explanation if the single motion can be CUT
-// INTO CONSECUTIVE PIECES, one per stroke in the run, each matching its stroke in shape
-// and sitting where that stroke belongs. Asking instead (as this did) whether every
-// reference point has ink nearby cannot tell "wrote it a bit small" from "left it out":
-// real ink written 28% short measured 8.4% median distance, and a genuinely absent
-// stroke 8.3% — indistinguishable. Shape comparison is scale-free, so a compact version
-// still matches; and requiring position pins down the case shape alone cannot judge,
-// where a character repeats a stroke (halving 里's long bottom 横 yields two shapes that
-// each look exactly like a 横, but they are not where the missing 横 belongs).
+// INTO CONSECUTIVE PIECES, one per stroke in the run, each matching its stroke in shape,
+// and with the pieces ARRANGED RELATIVE TO EACH OTHER the way the strokes are.
 //
-// Cost is the worse of the two, each divided by its own tolerance, so 1.0 means a piece
-// sits exactly at the limit. Measured: honest merges (including real device ink) score
-// 0.26-0.87, merges hiding an absent stroke 1.05-2.77.
+// Asking instead whether every reference point has ink nearby cannot tell "wrote it a
+// bit small" from "left it out" — real ink written 28% short measured 8.4% median
+// distance, a genuinely absent stroke 8.3%. And asking where each piece sits in absolute
+// terms punishes writing the component off to one side: a correct 子 written slanted
+// scored 1.37 against a 0.95 bar purely because the whole thing had moved.
+//
+// Relative arrangement is what the position test was really for. Halving 里's long
+// bottom 横 yields two pieces that each look exactly like a 横 (shape 0.05), but they sit
+// side by side where the two real 横 sit one above the other — the arrangement is wrong
+// by a third of the character. That survives translation, so writing the component
+// crooked or off-centre costs nothing.
+//
+// Measured: honest merges (four real device cases among them) score 0.27-0.81, merges
+// concealing an absent stroke 1.02-3.23. Bar 0.92. A stroke that drops its HOOK when
+// merged is not this function's job — the tail-direction check in strokeQuality covers
+// that, and covers it for merged runs too.
 function mergeCovers(userPts, parts, charDiag){
   if(parts.length < 2) return true;
   const ru = resample(userPts, 40);
   const k = parts.length;
   const refShape = parts.map(p => shapeNormalize(resample(p, 16)));
   const refMid   = parts.map(p => centroidOf(resample(p, 16)));
+  const BAR = 0.92;
 
-  function pieceCost(seg, i){
-    const rs = resample(seg, 16);
-    const ns = shapeNormalize(rs);
-    const shape = Math.min(shapeDist(ns, refShape[i]), shapeDist([...ns].reverse(), refShape[i]));
-    const place = ptDist(centroidOf(rs), refMid[i]) / charDiag;
-    return Math.max(shape / 0.75, place / 0.13);
+  function splitCost(segs){
+    let worst = 0;
+    const mids = segs.map(s => centroidOf(resample(s, 16)));
+    for(let i=0;i<k;i++){
+      const ns = shapeNormalize(resample(segs[i], 16));
+      const shape = Math.min(shapeDist(ns, refShape[i]), shapeDist([...ns].reverse(), refShape[i]));
+      worst = Math.max(worst, shape / 0.80);
+      if(worst >= BAR) return worst;
+    }
+    for(let i=0;i+1<k;i++){
+      const du = { x: mids[i+1].x - mids[i].x, y: mids[i+1].y - mids[i].y };
+      const dr = { x: refMid[i+1].x - refMid[i].x, y: refMid[i+1].y - refMid[i].y };
+      worst = Math.max(worst, Math.hypot(du.x-dr.x, du.y-dr.y) / charDiag / 0.16);
+      if(worst >= BAR) return worst;
+    }
+    return worst;
   }
 
-  let best = Infinity;
-  (function search(start, idx, worst){
-    if(best <= 0.95) return; // already good enough to accept
+  let ok = false;
+  (function search(start, idx, segs){
+    if(ok) return;
     if(idx === k-1){
       if(ru.length - start < 4) return;
-      best = Math.min(best, Math.max(worst, pieceCost(ru.slice(start), idx)));
+      if(splitCost([...segs, ru.slice(start)]) <= BAR) ok = true;
       return;
     }
-    for(let end = start + 4; end <= ru.length - 4*(k-1-idx); end += 3){
-      const w = Math.max(worst, pieceCost(ru.slice(start, end), idx));
-      if(w >= best) continue;
-      search(end, idx+1, w);
+    for(let end = start + 4; end <= ru.length - 4*(k-1-idx) && !ok; end += 3){
+      search(end, idx+1, [...segs, ru.slice(start, end)]);
     }
-  })(0, 0, 0);
+  })(0, 0, []);
 
-  return best <= 0.95;
+  return ok;
 }
 
 // An extra user stroke drawn right on top of another is a re-trace — a correction
