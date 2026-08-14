@@ -920,12 +920,18 @@ function strokeQuality(userPts, officialPts, compDiag, merged, isDot){
   // while a hook flicked to the wrong side (a specific difficulty for this player)
   // points somewhere else entirely, and gets caught regardless of how neat it is.
   let tailDiff = null;
-  if(!isDot && !merged){
+  if(!isDot){
+    // Merged runs are included: skipping them let a plain 横 stand in for 秃宝盖 (冖),
+    // whose second stroke is a 横钩 — the hook simply went unexamined once it was
+    // absorbed into a merge. A concatenated run keeps its last stroke's tail, so the
+    // same test works unchanged; it only needs a wider allowance, because a blended
+    // one-motion path swings its tail more. Measured tail differences: honest merges
+    // 0-46 degrees, a plain 横 offered as 冖 107.
     const po = strokeProfile(officialPts);
     if(po.hookTurn > 55){
       const pu = strokeProfile(ruo);
       tailDiff = angDiff(pu.tailDir, po.tailDir);
-      q *= clamp01(1 - Math.max(0, tailDiff - 40) / 50);
+      q *= clamp01(1 - Math.max(0, tailDiff - (merged ? 60 : 40)) / 50);
     }
   }
   // Overall slant: free up to 45° (measured honest variation tops out around 26°),
