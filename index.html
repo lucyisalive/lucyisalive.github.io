@@ -341,6 +341,19 @@
     font-family:inherit; font-weight:700; font-size:13px; cursor:pointer;
   }
   .batch-msg{ font-size:12px; color:#6b6355; }
+  .mastered-list{
+    display:flex; flex-wrap:wrap; gap:6px; margin-top:4px;
+    max-height:120px; overflow-y:auto;
+  }
+  .mastered-chip{
+    background:var(--jade); color:#fff; border-radius:8px;
+    padding:4px 9px; font-size:15px; font-weight:700;
+  }
+  .mastered-chip small{ font-weight:500; opacity:.8; font-size:10px; margin-left:3px; }
+  .progress-chip{
+    background:#e6dcc0; color:#6b6355; border-radius:8px;
+    padding:4px 9px; font-size:15px; font-weight:700;
+  }
   .py-alt{
     color:var(--seal); font-weight:800; cursor:pointer;
     border-bottom:1.5px dashed var(--seal); padding-bottom:1px;
@@ -413,7 +426,7 @@
 
   <div class="finale" id="finale">
     <div class="big">今天的门都推开啦！</div>
-    <p id="finaleDetail"></p>
+    <p id="finaleDetail" style="white-space:pre-line;"></p>
     <button class="game-btn btn-submit" id="restartBtn" style="margin-top:8px;">再来一轮</button>
   </div>
 </div>
@@ -436,12 +449,15 @@
 
     <label>逐个添加</label>
     <div class="add-row">
-      <input type="text" id="charInput" placeholder="字，如：龙">
-      <input type="text" id="pinyinInput" placeholder="拼音（留空自动填）">
-      <input type="text" id="wordInput" placeholder="词语（可选），如：飞龙">
+      <input type="text" id="charInput" placeholder="字">
+      <input type="text" id="pinyinInput" placeholder="拼音（自动）">
+      <input type="text" id="wordInput" placeholder="词语（可选）">
       <button id="addCharBtn">加入</button>
     </div>
     <div class="queue-list" id="queueList"></div>
+
+    <label>已永久掌握（在 3 个不同的日子写对过，不再出现）</label>
+    <div class="mastered-list" id="masteredList"></div>
 
     <label>每天要通过几个字才算完成</label>
     <div class="daily-count-row">
@@ -482,26 +498,95 @@
 
 const STORAGE_KEY_HINT = "本地网页无法自动联网保存，需要手动导出/导入存档文件";
 
+// ---------- calendar days ----------
+// Scheduling used to count "days" as "number of times 再来一轮 was pressed", which meant three
+// rounds in one afternoon looked like three days and every review interval collapsed. These
+// are real dates. Built from the *local* clock on purpose — toISOString() is UTC, and in
+// Beijing that rolls the date over at 8am, right in the middle of a school morning.
+function todayStr(){
+  const d = new Date();
+  const p = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;
+}
+
+function daysBetween(fromStr, toStr){
+  const a = new Date(fromStr + 'T00:00:00');
+  const b = new Date(toStr + 'T00:00:00');
+  return Math.round((b - a) / 86400000);
+}
+
 // ---------- default character bank ----------
 // interval: 距离上次练习多少天后应该再次出现（简化的间隔重复）
 // box: 掌握等级 0(生) -> 4(熟练)，等级越高 interval 越长
+// passedDays: 在哪些**不同日期**通过过；集满 3 个不同的日子就算永久掌握，移出轮换
+function newBankItem(char, pinyin, word){
+  return { char, pinyin, word: word || '', box:1, interval:0, lastSeen:null, history:[], passedDays:[] };
+}
+
 function defaultBank(){
   return [
-    { char:'理', pinyin:'lǐ',   word:'心_', box:1, interval:0, lastSeen:null, history:[] },
-    { char:'学', pinyin:'xué',  word:'大_', box:1, interval:0, lastSeen:null, history:[] },
-    { char:'生', pinyin:'shēng',word:'卫_', box:1, interval:0, lastSeen:null, history:[] },
-    { char:'师', pinyin:'shī',  word:'老_', box:1, interval:0, lastSeen:null, history:[] },
-    { char:'注', pinyin:'zhù',  word:'_意', box:1, interval:0, lastSeen:null, history:[] },
-  ];
+    ['迹','jì','奇迹'], ['救','jiù','求救'], ['弟','dì','师弟'], ['若','ruò','假若'],
+    ['柱','zhù','柱子'], ['普','pǔ','普通'], ['通','tōng','普通'], ['剩','shèng','剩下'],
+    ['薄','bó','单薄'], ['振','zhèn','振动'], ['裂','liè','裂开'],
+  ].map(a => newBankItem(a[0], a[1], a[2]));
 }
 
 let state = {
   bank: defaultBank(),
   priorityQueue: [],   // chars typed in today by parent, always go first
   dailyCount: 5,        // how many characters must be PASSED (not just attempted) to finish today
-  daysElapsed: 0,       // simple counter incremented each "day" (each restart/session), used for interval scheduling
   scenesUnlocked: 0,    // how many magic-world scenes have been unlocked so far (persisted)
 };
+
+const MASTERED_DAYS = 3;   // 在 3 个不同的日子写对过 = 永久掌握
+const isMastered = it => (it.passedDays || []).length >= MASTERED_DAYS;
+
+// ---------- automatic save ----------
+// Everything lives in localStorage and is rewritten on every change. Without this the whole
+// cross-day review schedule is theatre: close the tab and the boxes, intervals and mastery
+// dates are gone, so every session starts the child from scratch. Manual export/import stays
+// as the way to carry progress to a different device.
+const SAVE_KEY = 'hanzi-magic-door-state-v1';
+
+function saveState(){
+  try{ localStorage.setItem(SAVE_KEY, JSON.stringify(state)); }
+  catch(e){ /* private mode or quota — the session still works, it just won't survive a reload */ }
+}
+
+// Old saves counted days as integers and have no mastery record. Rather than invent dates
+// that were never observed, drop the counter-based lastSeen so every character simply reads
+// as due today — that costs one extra review, where guessing could silently retire a
+// character the child never actually passed on three different days.
+function migrateState(s){
+  if(!s || !Array.isArray(s.bank)) return null;
+  delete s.daysElapsed;
+  if(typeof s.dailyCount !== 'number') s.dailyCount = 5;
+  if(typeof s.scenesUnlocked !== 'number') s.scenesUnlocked = 0;
+  if(!Array.isArray(s.priorityQueue)) s.priorityQueue = [];
+  s.bank.forEach(it => {
+    if(typeof it.lastSeen !== 'string') it.lastSeen = null;
+    if(!Array.isArray(it.history)) it.history = [];
+    it.history = it.history.filter(h => typeof h.day === 'string');
+    if(!Array.isArray(it.passedDays)){
+      it.passedDays = [...new Set(
+        it.history.filter(h => h.outcome === 'first-try' || h.outcome === 'retest-pass').map(h => h.day)
+      )];
+    }
+    if(typeof it.box !== 'number') it.box = 1;
+    if(typeof it.interval !== 'number') it.interval = 0;
+  });
+  return s;
+}
+
+function loadSavedState(){
+  let raw = null;
+  try{ raw = localStorage.getItem(SAVE_KEY); }catch(e){ return; }
+  if(!raw) return;
+  try{
+    const migrated = migrateState(JSON.parse(raw));
+    if(migrated) state = migrated;
+  }catch(e){ /* corrupt entry — fall back to a fresh bank rather than refusing to start */ }
+}
 
 // ---------- session runtime ----------
 let passedCount = 0;          // characters PASSED so far this session (goal: state.dailyCount)
@@ -1362,6 +1447,7 @@ const batchAddBtn = document.getElementById('batchAddBtn');
 const batchMsg = document.getElementById('batchMsg');
 const demoGlyph = document.getElementById('demoGlyph');
 const queueList = document.getElementById('queueList');
+const masteredList = document.getElementById('masteredList');
 const dailyCountInput = document.getElementById('dailyCount');
 const saveProgressBtn = document.getElementById('saveProgressBtn');
 const loadProgressBtn = document.getElementById('loadProgressBtn');
@@ -1389,9 +1475,18 @@ function pickNextChar(){
     priorityConsumedToday.add(nextPriority.char);
     let existing = state.bank.find(b => b.char === nextPriority.char);
     if(!existing){
-      existing = { char:nextPriority.char, pinyin:nextPriority.pinyin, word:nextPriority.word||'', box:1, interval:0, lastSeen:null, history:[] };
+      existing = newBankItem(nextPriority.char, nextPriority.pinyin, nextPriority.word);
       state.bank.push(existing);
+    } else {
+      // The parent just told us which word and which reading they want for this character,
+      // which beats whatever the bank was seeded with — "薄" as 单薄/bó vs 薄饼/báo is exactly
+      // the case where the stored default would show the child the wrong pinyin.
+      existing.pinyin = nextPriority.pinyin;
+      if(nextPriority.word) existing.word = nextPriority.word;
     }
+    saveState();
+    // A character the parent typed in for today is wanted today, mastered or not — that's
+    // the whole point of the priority list (e.g. it's on tomorrow's 听写).
     return existing;
   }
   // otherwise pick whichever bank character is due for review (or, if none
@@ -1400,9 +1495,14 @@ function pickNextChar(){
   // queue would otherwise be empty. Characters currently awaiting their OWN
   // delayed retest are excluded so they can't jump the queue and reappear
   // before the real interleaving gap has happened.
-  const candidates = state.bank.filter(b => !pendingChars.has(b.char));
-  const pickFrom = candidates.length ? candidates : state.bank; // only fall back to full bank if literally everything is pending
-  const due = pickFrom.filter(b => b.lastSeen === null || (state.daysElapsed - b.lastSeen) >= b.interval);
+  // Characters already written correctly on MASTERED_DAYS different days leave the rotation
+  // for good, so the bank keeps shrinking towards whatever the child still can't do.
+  const active = state.bank.filter(b => !isMastered(b));
+  if(active.length === 0) return null;             // everything mastered — caller ends the day
+  const candidates = active.filter(b => !pendingChars.has(b.char));
+  const pickFrom = candidates.length ? candidates : active; // only fall back if literally everything is pending
+  const today = todayStr();
+  const due = pickFrom.filter(b => b.lastSeen === null || daysBetween(b.lastSeen, today) >= b.interval);
   const pool = (due.length ? due : pickFrom).slice().sort((a,b) => a.box - b.box);
   return pool[0];
 }
@@ -1540,6 +1640,10 @@ function loadNextDoor(){
     presentDoor(readyRetest.item, 'retest', readyRetest.round);
   } else {
     const item = pickNextChar();
+    if(!item){                    // every character in the bank is permanently mastered
+      showFinale(true);
+      return;
+    }
     // any OTHER item still waiting for its delayed retest just got a filler
     pendingRetests.forEach(r => { r.fillersSeen += 1; });
     presentDoor(item, 'free', 1);
@@ -1585,13 +1689,22 @@ function presentDoor(item, mode, round){
 // ---------- result handling & teaching-mode state machine ----------
 function recordResult(item, outcome){
   // outcome: 'first-try' | 'retest-pass' | 'abandoned'
-  item.lastSeen = state.daysElapsed;
+  const today = todayStr();
+  item.lastSeen = today;
   if(outcome === 'first-try') item.box = Math.min(6, item.box + 1);
   else if(outcome === 'abandoned') item.box = Math.max(0, item.box - 1);
   // 'retest-pass' leaves box unchanged — it took real effort, not free
   const schedule = [1, 2, 4, 7, 14, 21, 30]; // days, indexed by box 0..6
   item.interval = outcome === 'abandoned' ? 1 : schedule[Math.min(item.box, schedule.length - 1)];
-  item.history.push({ day: state.daysElapsed, outcome });
+  item.history.push({ day: today, outcome });
+
+  // Mastery counts DISTINCT days, not passes: writing it correctly five times this afternoon
+  // is one day's evidence, and the thing being tested is whether it survives a night's sleep.
+  if(outcome === 'first-try' || outcome === 'retest-pass'){
+    if(!item.passedDays) item.passedDays = [];
+    if(!item.passedDays.includes(today)) item.passedDays.push(today);
+  }
+  saveState();
 }
 
 function markPassed(item, outcome, message){
@@ -1812,7 +1925,8 @@ onTap(continueBtn, function(){
 });
 
 onTap(restartBtn, function(){
-  state.daysElapsed += 1;
+  // Another round on the same afternoon is NOT another day — the review intervals are keyed
+  // to the calendar now, so this only resets the counters for this sitting.
   passedCount = 0;
   pendingRetests = [];
   priorityConsumedToday = new Set();
@@ -1823,7 +1937,7 @@ onTap(restartBtn, function(){
 });
 
 // ---------- settings panel ----------
-onTap(settingsBtn, () => panelOverlay.classList.add('show'));
+onTap(settingsBtn, () => { renderMasteredList(); panelOverlay.classList.add('show'); });
 onTap(closePanelBtn, () => panelOverlay.classList.remove('show'));
 
 // ---------- pinyin ----------
@@ -1853,6 +1967,7 @@ function renderQueueList(){
   queueList.querySelectorAll('.del').forEach(el => {
     onTap(el, () => {
       state.priorityQueue.splice(Number(el.dataset.i), 1);
+      saveState();
       renderQueueList();
     });
   });
@@ -1861,9 +1976,21 @@ function renderQueueList(){
       const it = state.priorityQueue[Number(el.dataset.i)];
       const k = it.alts.indexOf(it.pinyin);
       it.pinyin = it.alts[(k + 1) % it.alts.length];
+      saveState();
       renderQueueList();
     });
   });
+}
+
+// Shows what's retired and, just as usefully, what's part-way there — "写对过 2 天" tells the
+// parent a character is one good morning away from being done, which a bare list can't.
+function renderMasteredList(){
+  const done = state.bank.filter(isMastered);
+  const partial = state.bank.filter(b => !isMastered(b) && (b.passedDays || []).length > 0);
+  const chips = done.map(b => `<span class="mastered-chip">${b.char}<small>${b.passedDays.length}天</small></span>`)
+    .concat(partial.map(b => `<span class="progress-chip">${b.char}<small>${b.passedDays.length}/${MASTERED_DAYS}</small></span>`));
+  masteredList.innerHTML = chips.join('') ||
+    '<div style="font-size:12px;color:#8a8272;">还没有字通过 3 天考验</div>';
 }
 
 // ---------- batch paste ----------
@@ -1913,6 +2040,7 @@ onTap(addCharBtn, () => {
   if(!p) return;                         // no reading typed and none on file — nothing to show the child
   state.priorityQueue.push({ char:c, pinyin:p, word:w, alts: pinyinInput.value.trim() ? [p] : alts });
   charInput.value = ''; pinyinInput.value=''; wordInput.value='';
+  saveState();
   renderQueueList();
 });
 
@@ -1925,12 +2053,13 @@ onTap(batchAddBtn, () => {
   if(bad.length) msg += `；没认出：${bad.join('、')}`;
   batchMsg.textContent = msg;
   if(items.length) batchInput.value = '';
+  saveState();
   renderQueueList();
 });
 
 dailyCountInput.addEventListener('change', () => {
   const v = parseInt(dailyCountInput.value, 10);
-  if(v > 0) state.dailyCount = v;
+  if(v > 0){ state.dailyCount = v; saveState(); }
 });
 
 onTap(saveProgressBtn, () => {
@@ -1956,9 +2085,10 @@ fileInput.addEventListener('change', (e) => {
     try{
       const loaded = JSON.parse(ev.target.result);
       if(loaded && loaded.bank){
-        state = loaded;
-        if(typeof state.scenesUnlocked !== 'number') state.scenesUnlocked = 0;
+        state = migrateState(loaded) || state;
+        saveState();
         renderQueueList();
+        renderMasteredList();
         dailyCountInput.value = state.dailyCount || 5;
         passedCount = 0;
         pendingRetests = [];
@@ -2000,18 +2130,37 @@ function applyScene(index){
   sceneImg.style.objectPosition = scene.fit === 'top' ? '50% 8%' : '50% 35%';
 }
 
-function showFinale(){
+function showFinale(bankEmpty){
   playzone.classList.add('hide');
   finale.classList.add('show');
+  if(bankEmpty){
+    // Not a failure state: the bank ran dry because every character got written correctly on
+    // three separate days. Say so, and point the parent at where to add more.
+    finaleDetail.textContent = `字库里的字全部永久掌握啦！点 ⚙️ 加新的字，就能继续闯关。今天推开了 ${passedCount} 扇门。`;
+    return;
+  }
   const sceneName = SCENES[state.scenesUnlocked % SCENES.length].name;
-  finaleDetail.textContent = `今天推开了 ${passedCount} 扇门！解锁了新场景：${sceneName}`;
+  // Exactly the ones that crossed the line *today*: hitting the count today, not merely
+  // having practised today — a parent-requested character that's already mastered can pick
+  // up a 4th day and must not set off the fanfare again.
+  const justMastered = state.bank.filter(b => (b.passedDays || []).length === MASTERED_DAYS &&
+                                              b.passedDays[b.passedDays.length - 1] === todayStr());
+  const masteredNote = justMastered.length
+    ? `\n「${justMastered.map(b => b.char).join('、')}」已经在 ${MASTERED_DAYS} 个不同的日子写对了，永久掌握，不用再练啦！`
+    : '';
+  finaleDetail.textContent = `今天推开了 ${passedCount} 扇门！解锁了新场景：${sceneName}` + masteredNote;
   state.scenesUnlocked += 1;
+  saveState();
 }
 
-applyScene(state.scenesUnlocked);
-
 // ---------- init ----------
+// Restore before anything reads state: the scene, the queue list and the first door all
+// depend on what was saved, so loading afterwards would show one round of the wrong thing.
+loadSavedState();
+applyScene(state.scenesUnlocked);
+dailyCountInput.value = state.dailyCount;
 renderQueueList();
+renderMasteredList();
 loadNextDoor();
 </script>
 </body>
