@@ -240,6 +240,15 @@
   .shake{ animation: shake .35s; }
   @keyframes shake{ 0%,100%{transform:translateX(0);} 25%{transform:translateX(-6px);} 75%{transform:translateX(6px);} }
 
+  .hint-row{ display:flex; align-items:center; gap:10px; }
+  .speak-btn{
+    width:38px; height:38px; border-radius:50%; border:none;
+    background:rgba(255,255,255,.14); color:var(--star);
+    font-size:17px; cursor:pointer; display:flex; align-items:center; justify-content:center;
+  }
+  .speak-btn:active{ transform:scale(.9); }
+  .speak-btn.speaking{ background:var(--gold); }
+
   /* Sits above the grid in normal flow now, not absolutely positioned off the top edge of
      the writing tile where it used to collide with the door frame. */
   .pinyin-tag{
@@ -341,6 +350,17 @@
     font-family:inherit; font-weight:700; font-size:13px; cursor:pointer;
   }
   .batch-msg{ font-size:12px; color:#6b6355; }
+  .stuck-list{ display:flex; flex-direction:column; gap:6px; margin-top:4px; }
+  .stuck-item{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    background:#f3e2df; border:1.5px solid #e0b8b2; border-radius:10px; padding:7px 10px;
+  }
+  .stuck-item .ch{ font-size:19px; font-weight:800; color:var(--seal-dark); }
+  .stuck-item .word{ font-size:12px; color:#8a7268; margin-left:6px; }
+  .btn-taught{
+    border:none; border-radius:8px; padding:7px 12px; background:var(--jade); color:#fff;
+    font-family:inherit; font-weight:700; font-size:12.5px; cursor:pointer; white-space:nowrap;
+  }
   .mastered-list{
     display:flex; flex-wrap:wrap; gap:6px; margin-top:4px;
     max-height:120px; overflow-y:auto;
@@ -403,7 +423,12 @@
     </div>
 
     <div class="write-slot" id="writeSlot" style="display:none;">
-      <div class="pinyin-tag" id="pinyinTag"></div>
+      <div class="hint-row">
+        <div class="pinyin-tag" id="pinyinTag"></div>
+        <!-- Never speaks on its own: reading the pinyin is the skill being practised, so
+             the sound is there for when he's stuck, not handed to him every time. -->
+        <button class="speak-btn" id="speakBtn" title="读一遍给我听">🔊</button>
+      </div>
       <div class="write-canvas-wrap" id="writeTile">
         <div class="grid-lines"></div>
         <div class="demo-glyph hidden" id="demoGlyph"></div>
@@ -456,6 +481,9 @@
     </div>
     <div class="queue-list" id="queueList"></div>
 
+    <label>需要家长讲解（今天错了 3 次，已经停下来）</label>
+    <div class="stuck-list" id="stuckList"></div>
+
     <label>已永久掌握（在 3 个不同的日子写对过，不再出现）</label>
     <div class="mastered-list" id="masteredList"></div>
 
@@ -471,7 +499,7 @@
     </div>
     <input type="file" id="fileInput" accept="application/json">
     <p class="hint-text">
-      提示：因为这个小游戏是直接在浏览器里打开的网页，不会自动联网保存。每次练完，请点"保存今天的进度"，会下载一个存档文件；下次打开游戏时，先点"读取存档"选那个文件，就能接着昨天的进度和字库继续练习。
+      提示：进度会自动存在这台设备的浏览器里，关掉页面、隔天再打开都还在，平时不用管。上面的"保存今天的进度"是导出一个存档文件，用来换设备（比如从 iPad 换到电脑），或者担心清了浏览器数据想留个底；在新设备上点"读取存档"选那个文件就能接上。
       <br><br>
       字库会按"记忆规律"自动滚动：今天答错、靠教学环节才写对的字，会更快安排复习；一次就写对的字，安排复习的间隔会拉长。你随时可以在这里加"今天最想让孩子先练"的字，这些字会排在最前面。
     </p>
@@ -549,6 +577,20 @@ let state = {
 const MASTERED_DAYS = 3;   // 在 3 个不同的日子写对过 = 永久掌握
 const isMastered = it => (it.passedDays || []).length >= MASTERED_DAYS;
 
+// 今天来回写错 3 次就停：再练下去只是把挫败感堆高，这个字需要的是大人讲一遍，不是再写一遍。
+// 讲完之后家长在设置里点「我讲过了」，它当天就能重新出现。
+const WRONG_LIMIT = 3;
+const isStuck = it => it.stuck && it.stuckDay === todayStr();
+
+// Wrong counts are per day, so a character that was hard yesterday starts fresh today.
+function wrongCountToday(it){ return it.wrongDay === todayStr() ? (it.wrongToday || 0) : 0; }
+function registerWrong(it){
+  it.wrongToday = wrongCountToday(it) + 1;
+  it.wrongDay = todayStr();
+  saveState();
+  return it.wrongToday >= WRONG_LIMIT;
+}
+
 // ---------- automatic save ----------
 // Everything lives in localStorage and is rewritten on every change. Without this the whole
 // cross-day review schedule is theatre: close the tab and the boxes, intervals and mastery
@@ -582,6 +624,7 @@ function migrateState(s){
     }
     if(typeof it.box !== 'number') it.box = 1;
     if(typeof it.interval !== 'number') it.interval = 0;
+    if(typeof it.wrongToday !== 'number') it.wrongToday = 0;
   });
 
   // New starter bank: swap it in, but never throw away what the child has already earned.
@@ -1502,6 +1545,8 @@ const batchMsg = document.getElementById('batchMsg');
 const demoGlyph = document.getElementById('demoGlyph');
 const queueList = document.getElementById('queueList');
 const masteredList = document.getElementById('masteredList');
+const stuckList = document.getElementById('stuckList');
+const speakBtn = document.getElementById('speakBtn');
 const dailyCountInput = document.getElementById('dailyCount');
 const saveProgressBtn = document.getElementById('saveProgressBtn');
 const loadProgressBtn = document.getElementById('loadProgressBtn');
@@ -1541,8 +1586,9 @@ function pickNextChar(){
     }
     saveState();
     // A character the parent typed in for today is wanted today, mastered or not — that's
-    // the whole point of the priority list (e.g. it's on tomorrow's 听写).
-    return existing;
+    // the whole point of the priority list (e.g. it's on tomorrow's 听写). Unless it's
+    // already been parked for explanation, in which case it waits for the parent too.
+    if(!isStuck(existing)) return existing;
   }
   // otherwise pick whichever bank character is due for review (or, if none
   // are strictly "due" yet, just the weakest one) — this same rule naturally
@@ -1552,8 +1598,8 @@ function pickNextChar(){
   // before the real interleaving gap has happened.
   // Characters already written correctly on MASTERED_DAYS different days leave the rotation
   // for good, so the bank keeps shrinking towards whatever the child still can't do.
-  const active = state.bank.filter(b => !isMastered(b));
-  if(active.length === 0) return null;             // everything mastered — caller ends the day
+  const active = state.bank.filter(b => !isMastered(b) && !isStuck(b));
+  if(active.length === 0) return null;             // nothing left to practise — caller ends the day
   const candidates = active.filter(b => !pendingChars.has(b.char));
   const pickFrom = candidates.length ? candidates : active; // only fall back if literally everything is pending
   const today = todayStr();
@@ -1658,6 +1704,26 @@ function setGlyph(el, char, visible){
 
 function showGlowChar(char, visible){ setGlyph(charGlow, char, visible); }
 
+// ---------- reading the prompt aloud ----------
+// Says the whole word, exactly what a parent dictating would say — the same information the
+// hint already shows on screen (单bó), just as sound. It never fires by itself: working the
+// pinyin out is the point, and this is the way out when he genuinely can't.
+function speakPrompt(){
+  const item = currentItem;
+  if(!item || !window.speechSynthesis) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(item.word || item.char);
+  u.lang = 'zh-CN';
+  u.rate = 0.75;                 // slower than default; he's listening for the syllables
+  // iOS populates the voice list asynchronously, so this is often empty on the first tap.
+  // Setting lang is what actually matters; a matching voice is a bonus when one is loaded.
+  const zh = speechSynthesis.getVoices().find(v => /^zh/i.test(v.lang));
+  if(zh) u.voice = zh;
+  u.onstart = () => speakBtn.classList.add('speaking');
+  u.onend = u.onerror = () => speakBtn.classList.remove('speaking');
+  speechSynthesis.speak(u);
+}
+
 // The demo character overlays the 米字格 at exactly the size and position of the square the
 // child will write in, then fades out when the countdown ends.
 function showDemoGlyph(char, visible){ setGlyph(demoGlyph, char, visible); }
@@ -1683,7 +1749,10 @@ function hintFor(item){
 
 // ---------- main flow ----------
 function loadNextDoor(){
-  if(passedCount >= state.dailyCount && pendingRetests.length === 0){
+  // Hitting the day's target ends the day, full stop. Waiting for every interleaved retest
+  // to also come good meant the child could have written his five characters, be told he was
+  // done by the dots, and still be handed more — the retests just carry over to tomorrow.
+  if(passedCount >= state.dailyCount){
     showFinale();
     return;
   }
@@ -1785,15 +1854,27 @@ function markAbandonedToday(item){
   clearBtn.style.display = 'none';
   timerRing.style.display = 'none';
   showGlowChar('', false);
-  resultBanner.textContent = '这个字今天先不勉强了，妈妈可以陪他编个小故事，明天再来试试';
+  resultBanner.textContent = '这个字今天先放一放，等爸爸妈妈讲一讲，讲完还能再来闯这扇门';
   resultBanner.className = 'result-banner wrong';
   statusLine.textContent = '';
+  item.stuck = true;
+  item.stuckDay = todayStr();
+  // Drop any retest it was waiting on — it isn't in rotation any more today.
+  pendingRetests = pendingRetests.filter(r => r.item !== item);
   recordResult(item, 'abandoned');
   continueBtn.classList.add('show');
 }
 
 function handleAttemptResult(ok){
   const item = currentItem;
+
+  // Counted across every mode, not per teaching step: the old state machine could ask for
+  // seventeen attempts on one character before giving up, which is where "错了很多轮还在让
+  // 他写" came from. Three tries is the whole day's budget for one character.
+  if(!ok && registerWrong(item)){
+    markAbandonedToday(item);
+    return;
+  }
 
   if(currentMode === 'free'){
     if(ok){
@@ -1992,7 +2073,7 @@ onTap(restartBtn, function(){
 });
 
 // ---------- settings panel ----------
-onTap(settingsBtn, () => { renderMasteredList(); panelOverlay.classList.add('show'); });
+onTap(settingsBtn, () => { renderMasteredList(); renderStuckList(); panelOverlay.classList.add('show'); });
 onTap(closePanelBtn, () => panelOverlay.classList.remove('show'));
 
 // ---------- pinyin ----------
@@ -2033,6 +2114,36 @@ function renderQueueList(){
       it.pinyin = it.alts[(k + 1) % it.alts.length];
       saveState();
       renderQueueList();
+    });
+  });
+}
+
+// The characters that hit today's three-wrong limit. "我讲过了" is the parent saying they've
+// sat down and explained it, which clears the count and puts it straight back in today's
+// rotation — the child gets another go at it the same evening, not tomorrow.
+function renderStuckList(){
+  const stuck = state.bank.filter(isStuck);
+  stuckList.innerHTML = stuck.map(b => `
+    <div class="stuck-item">
+      <span><span class="ch">${b.char}</span><span class="word">${b.word || ''}</span></span>
+      <button class="btn-taught" data-ch="${b.char}">我讲过了，放回去</button>
+    </div>`).join('') ||
+    '<div style="font-size:12px;color:#8a8272;">今天没有卡住的字</div>';
+
+  stuckList.querySelectorAll('.btn-taught').forEach(el => {
+    onTap(el, () => {
+      const it = state.bank.find(b => b.char === el.dataset.ch);
+      if(!it) return;
+      it.stuck = false;
+      it.wrongToday = 0;      // a fresh three tries, now that it's been explained
+      saveState();
+      renderStuckList();
+      // If the day had already ended for lack of anything to practise, reopen it.
+      if(finale.classList.contains('show')){
+        finale.classList.remove('show');
+        playzone.classList.remove('hide');
+        loadNextDoor();
+      }
     });
   });
 }
@@ -2144,6 +2255,7 @@ fileInput.addEventListener('change', (e) => {
         saveState();
         renderQueueList();
         renderMasteredList();
+        renderStuckList();
         dailyCountInput.value = state.dailyCount || 5;
         passedCount = 0;
         pendingRetests = [];
@@ -2189,9 +2301,13 @@ function showFinale(bankEmpty){
   playzone.classList.add('hide');
   finale.classList.add('show');
   if(bankEmpty){
-    // Not a failure state: the bank ran dry because every character got written correctly on
-    // three separate days. Say so, and point the parent at where to add more.
-    finaleDetail.textContent = `字库里的字全部永久掌握啦！点 ⚙️ 加新的字，就能继续闯关。今天推开了 ${passedCount} 扇门。`;
+    // Two very different reasons the pool can run dry, and they need opposite responses from
+    // the parent: everything mastered means add more characters, everything parked means go
+    // and explain the ones waiting.
+    const stuck = state.bank.filter(isStuck);
+    finaleDetail.textContent = stuck.length
+      ? `今天推开了 ${passedCount} 扇门。剩下的「${stuck.map(b=>b.char).join('、')}」在等爸爸妈妈讲一讲——讲完在 ⚙️ 里点「我讲过了」，今天还能继续闯。`
+      : `字库里的字全部永久掌握啦！点 ⚙️ 加新的字，就能继续闯关。今天推开了 ${passedCount} 扇门。`;
     return;
   }
   const sceneName = SCENES[state.scenesUnlocked % SCENES.length].name;
@@ -2216,6 +2332,8 @@ applyScene(state.scenesUnlocked);
 dailyCountInput.value = state.dailyCount;
 renderQueueList();
 renderMasteredList();
+renderStuckList();
+onTap(speakBtn, speakPrompt);
 loadNextDoor();
 </script>
 </body>
