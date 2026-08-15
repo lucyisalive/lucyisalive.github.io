@@ -910,9 +910,17 @@ function strokeLength(pts){
 // written first and 辶 last, opposite of how the IDS string reads. Characters not
 // listed here are graded as one whole-character component through the same pipeline.
 const COMPONENT_DECOMP = {
+  // 旧字库（家长仍可手动加回这些字）
   '柱': ['木','主'], '注': ['氵','主'], '理': ['王','里'], '振': ['扌','辰'],
   '救': ['求','攵'], '普': ['並','日'], '若': ['艹','右'], '裂': ['列','衣'],
   '剩': ['乘','刂'], '迹': ['亦','辶'], '通': ['甬','辶'],
+  // 现字库那 12 个复杂字的拆分**已经做好并逐条核对过**，见 spec 第 1.4 节的清单，
+  // 部件笔画数据也都打包在 hanzi-data.js 里了。但暂时没有启用：实测拿孩子的真实笔迹跑，
+  // 开了拆分之后真实笔迹从 13/14 掉到 11/14，而该判错的一项没多抓（警少一笔抓到了，
+  // 燃多一横反而漏了）。卡点是"任何一笔不得低于 0.35"这条底线和分区对齐的相互作用——
+  // 剩下两例分别是 0.23 和 0.349，就差一点点。只有 14 份真实笔迹，再调这条线就是在迁就
+  // 这 14 份，不是在把问题修对。攒够笔迹再把下面这行注释解开。
+  // ...(拆分表见 spec 第 1.4 节)
 };
 
 // ---------- geometry helpers ----------
@@ -1404,8 +1412,13 @@ function matchComponent(officialStrokes, userStrokesIn, label, charDiag, diag){
       // the more complex the character, the likelier the search talked itself into the
       // wrong one. Bailing out on the first pass also stops the cost from exploding.
       if(cand.pass){ best = cand; break; }
+      // Rank floor-clean explanations above higher-scoring ones that contain a catastrophic
+      // stroke: the average is judged over the whole character now, so at this level the
+      // thing worth optimising for is "no stroke left unexplained".
+      const clean = cand.minQ >= Q_FLOOR, bClean = best && best.minQ >= Q_FLOOR;
       if(best === null || cand.vetoes < best.vetoes ||
-         (cand.vetoes === best.vetoes && cand.meanQ > best.meanQ)) best = cand;
+         (cand.vetoes === best.vetoes && clean !== bClean ? clean :
+          cand.vetoes === best.vetoes && cand.meanQ > best.meanQ)) best = cand;
     }
     const why = best.vetoes ? `veto×${best.vetoes}`
               : (best.meanQ < Q_BAR ? `avgQ=${best.meanQ.toFixed(2)}<${Q_BAR}`
@@ -1442,7 +1455,7 @@ function matchComponent(officialStrokes, userStrokesIn, label, charDiag, diag){
   for(const r of res.rows){
     diag.push(`  ${r.u}<->official#${r.o} q=${r.c.q.toFixed(2)}${r.c.veto ? ' VETO:'+r.c.veto : ''} rms=${r.c.rms} dir=${r.c.dirDiff}${r.c.tailDiff!==null?' tail='+r.c.tailDiff:''} len=${r.c.lenRatio} pos=${r.c.posDist}`);
   }
-  return { pass: res.pass };
+  return { pass: res.pass, rows: res.rows };
 }
 
 async function gradeDrawing(char){
@@ -1499,9 +1512,15 @@ async function gradeDrawing(char){
     return { ci: bestCi, ratio: secondD === Infinity ? 99 : secondD / Math.max(bestD, 1e-6) };
   });
 
+  // Components decide ALIGNMENT — each part is fitted to its own region, which is what makes
+  // "偏旁写小了、比例失调" harmless. They do not each have to pass on their own: 氵 is three
+  // strokes, and requiring its average to clear the same bar as a thirteen-stroke 喿 punished
+  // this child for writing the three dots as short dashes (a 0.50 average over three strokes,
+  // where the same strokes pooled into the whole character are unremarkable). The verdict is
+  // taken once, over every stroke in the character.
   function runWith(assignment){
     const diag = [];
-    let pass = true;
+    let pass = true, rows = [];
     comps.forEach((c, ci) => {
       const cluster = user.filter((_, ui) => assignment[ui] === ci);
       if(cluster.length === 0){
@@ -1510,8 +1529,18 @@ async function gradeDrawing(char){
         return;
       }
       const aligned = alignClusterUniform(cluster, bboxOf(c.strokes));
-      if(!matchComponent(c.strokes, aligned, c.label, charDiag, diag).pass) pass = false;
+      const r = matchComponent(c.strokes, aligned, c.label, charDiag, diag);
+      rows = rows.concat(r.rows || []);
     });
+    if(pass && rows.length){
+      const vetoes = rows.filter(r => r.c.veto).length;
+      const meanQ = rows.reduce((a, r) => a + r.c.q, 0) / rows.length;
+      const minQ  = Math.min(...rows.map(r => r.c.q));
+      pass = vetoes === 0 && meanQ >= Q_BAR && minQ >= Q_FLOOR;
+      diag.push(`整字汇总 ${pass ? 'PASS' : 'FAIL'} avgQ=${meanQ.toFixed(2)} minQ=${minQ.toFixed(2)} veto=${vetoes} (${rows.length}笔)`);
+    } else if(pass){
+      pass = false;
+    }
     return { pass, diag };
   }
 
