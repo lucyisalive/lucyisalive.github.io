@@ -523,16 +523,24 @@ function newBankItem(char, pinyin, word){
   return { char, pinyin, word: word || '', box:1, interval:0, lastSeen:null, history:[], passedDays:[] };
 }
 
+// 全部换成 14–19 笔的复杂字：孩子说复杂字老判错，先拿最难的把判断打磨好，再往前推进。
+// 这些字的笔画数据都已打包进 hanzi-data.js，离线可用。
 function defaultBank(){
   return [
-    ['迹','jì','奇迹'], ['救','jiù','求救'], ['弟','dì','师弟'], ['若','ruò','假若'],
-    ['柱','zhù','柱子'], ['普','pǔ','普通'], ['通','tōng','普通'], ['剩','shèng','剩下'],
-    ['薄','bó','单薄'], ['振','zhèn','振动'], ['裂','liè','裂开'],
+    ['薄','bó','单薄'],   ['嘴','zuǐ','嘴巴'],  ['藏','cáng','躲藏'], ['熟','shú','成熟'],
+    ['蝴','hú','蝴蝶'],   ['器','qì','机器'],   ['燃','rán','燃烧'],  ['澡','zǎo','洗澡'],
+    ['慧','huì','智慧'],  ['融','róng','融化'], ['摔','shuāi','摔倒'],['警','jǐng','警察'],
   ].map(a => newBankItem(a[0], a[1], a[2]));
 }
 
+// Bump whenever the built-in starter bank changes. Progress is saved, so without this a
+// device that has already played keeps its old characters for ever and never sees the new
+// set — the change would reach nobody who actually uses the game.
+const BANK_VERSION = 2;
+
 let state = {
   bank: defaultBank(),
+  bankVersion: BANK_VERSION,
   priorityQueue: [],   // chars typed in today by parent, always go first
   dailyCount: 5,        // how many characters must be PASSED (not just attempted) to finish today
   scenesUnlocked: 0,    // how many magic-world scenes have been unlocked so far (persisted)
@@ -575,6 +583,22 @@ function migrateState(s){
     if(typeof it.box !== 'number') it.box = 1;
     if(typeof it.interval !== 'number') it.interval = 0;
   });
+
+  // New starter bank: swap it in, but never throw away what the child has already earned.
+  // Progress carries over for any character in both sets, characters the parent added by
+  // hand are kept regardless, and only the old built-in ones drop out.
+  if(s.bankVersion !== BANK_VERSION){
+    const byChar = new Map(s.bank.map(it => [it.char, it]));
+    const merged = defaultBank().map(fresh => {
+      const old = byChar.get(fresh.char);
+      return old ? { ...fresh, box: old.box, interval: old.interval, lastSeen: old.lastSeen,
+                     history: old.history, passedDays: old.passedDays } : fresh;
+    });
+    const kept = new Set(merged.map(it => it.char));
+    s.bank.forEach(it => { if(it.fromParent && !kept.has(it.char)) merged.push(it); });
+    s.bank = merged;
+    s.bankVersion = BANK_VERSION;
+  }
   return s;
 }
 
@@ -1088,6 +1112,18 @@ function strokeQuality(userPts, officialPts, compDiag, merged, isDot){
   // a naturally curved 撇 has a swung tail but points the same way as the reference,
   // while a hook flicked to the wrong side (a specific difficulty for this player)
   // points somewhere else entirely, and gets caught regardless of how neat it is.
+  // Overall slant: free up to 45° (measured honest variation tops out around 26°),
+  // then falls away fast, so a stroke aimed somewhere genuinely different collapses.
+  if(!isDot && !cornered) q *= clamp01(1 - Math.max(0, dirDiff - 45*shortScale) / 55);
+
+  // Everything up to here is evidence about WHICH official stroke this is, so this is the
+  // score the pairing optimizer is allowed to see. The hook verdict below deliberately is
+  // not: penalising the correct pairing simply taught the optimizer to pair the bad hook
+  // with some other, hookless official stroke instead, where the check never runs — the
+  // rule that should have caught a reversed hook was what hid it (迹's 4th stroke flicked
+  // the wrong way scored a clean pass by swapping itself with the stroke next to it).
+  const qPair = q;
+
   let tailDiff = null;
   if(!isDot){
     // Merged runs are included: skipping them let a plain 横 stand in for 秃宝盖 (冖),
@@ -1103,11 +1139,8 @@ function strokeQuality(userPts, officialPts, compDiag, merged, isDot){
       q *= clamp01(1 - Math.max(0, tailDiff - (merged ? 60 : 40)) / 50);
     }
   }
-  // Overall slant: free up to 45° (measured honest variation tops out around 26°),
-  // then falls away fast, so a stroke aimed somewhere genuinely different collapses.
-  if(!isDot && !cornered) q *= clamp01(1 - Math.max(0, dirDiff - 45*shortScale) / 55);
 
-  return { q, rms:+rms.toFixed(2), dirDiff:Math.round(dirDiff), tailDiff: tailDiff===null?null:Math.round(tailDiff),
+  return { q, qPair, rms:+rms.toFixed(2), dirDiff:Math.round(dirDiff), tailDiff: tailDiff===null?null:Math.round(tailDiff),
            lenRatio:+lenRatio.toFixed(2), posDist:+posDist.toFixed(2), reversed };
 }
 
@@ -1250,6 +1283,25 @@ function matchComponent(officialStrokes, userStrokesIn, label, charDiag, diag){
     if(m === 0) return { pass:false, head:'FAIL no-ink', rows:[] };
     if(k - m > 5) return { pass:false, head:`FAIL too-few-strokes (${m} vs ${k})`, rows:[] };
     let best = null;
+    // Comparing one user stroke against one run of official strokes gives the same answer
+    // no matter which candidate explanation asked for it, and the explanations overlap
+    // heavily — 薄 written as 12 strokes has ~1350 of them drawn from only ~730 distinct
+    // comparisons, so the work was being redone about 250 times over. That was 13.5s on a
+    // laptop, and several times that on the iPad this is actually played on.
+    const cellCache = new Map();
+    const cellFor = (u, o) => {
+      const key = u.id + '|' + o.label;
+      let c = cellCache.get(key);
+      if(c === undefined){
+        const isDot = !o.merged && strokeLength(o.pts) < charDiag * 0.14;
+        const qq = strokeQuality(u.pts, o.pts, compDiag, o.merged, isDot);
+        let veto = o.merged && !mergeCovers(u.pts, o.parts, charDiag) ? 'merge-not-covered' : null;
+        if(!veto && u.id.includes('+') && qq.lenRatio > 1.3) veto = 'join-inflates-length';
+        c = { ...qq, veto, isDot };
+        cellCache.set(key, c);
+      }
+      return c;
+    };
     for(const part of partitionsOf(k, m, 4)){
       const virt = part.map(([s, e]) => ({
         pts: officialStrokes.slice(s, e).flat(),
@@ -1257,26 +1309,28 @@ function matchComponent(officialStrokes, userStrokesIn, label, charDiag, diag){
         merged: e - s > 1,
         label: e - s > 1 ? `${s}..${e-1}` : `${s}`
       }));
-      const cells = users.map(u => virt.map(o => {
-        const isDot = !o.merged && strokeLength(o.pts) < charDiag * 0.14;
-        const qq = strokeQuality(u.pts, o.pts, compDiag, o.merged, isDot);
-        let veto = o.merged && !mergeCovers(u.pts, o.parts, charDiag) ? 'merge-not-covered' : null;
-        // Re-joining the two halves of one stroke must not INFLATE it: the pieces add
-        // up to about the original. If the "split" explanation only works by making the
-        // stroke half again as long, the second piece was really a separate mark — this
-        // is what let an extra dot fuse onto 氵's last stroke and disappear.
-        if(!veto && u.id.includes('+') && qq.lenRatio > 1.3) veto = 'join-inflates-length';
-        return { ...qq, veto, isDot };
-      }));
+      // Re-joining the two halves of one stroke must not INFLATE it (see cellFor): the
+      // pieces add up to about the original. If the "split" explanation only works by
+      // making the stroke half again as long, the second piece was really a separate mark
+      // — this is what let an extra dot fuse onto 氵's last stroke and disappear.
+      const cells = users.map(u => virt.map(o => cellFor(u, o)));
       // Cost drives the assignment: a categorical veto is expensive so the optimizer
       // prefers pairings that are legal, but quality still breaks ties.
-      const assign = hungarian(cells.map(row => row.map(c => (1 - c.q) + (c.veto ? 3 : 0))));
+      const assign = hungarian(cells.map(row => row.map(c => (1 - c.qPair) + (c.veto ? 3 : 0))));
       const rows = assign.map((col, row) => ({ u: users[row].id, o: virt[col].label, c: cells[row][col] }));
       const vetoes = rows.filter(r => r.c.veto).length;
       const meanQ = rows.reduce((s, r) => s + r.c.q, 0) / rows.length;
       const minQ  = Math.min(...rows.map(r => r.c.q));
       const cand = { vetoes, meanQ, minQ, rows,
                      pass: vetoes === 0 && meanQ >= Q_BAR && minQ >= Q_FLOOR };
+      // The question is "can this ink be read as a correct writing", so any explanation
+      // that passes settles it — same rule the extra-stroke search above already uses.
+      // Ranking the rest by average alone used to pick an explanation with a great mean
+      // and one catastrophic stroke over a clean one, and then fail it on the floor: a
+      // 16-stroke character with two strokes joined has hundreds of ways to line up, so
+      // the more complex the character, the likelier the search talked itself into the
+      // wrong one. Bailing out on the first pass also stops the cost from exploding.
+      if(cand.pass){ best = cand; break; }
       if(best === null || cand.vetoes < best.vetoes ||
          (cand.vetoes === best.vetoes && cand.meanQ > best.meanQ)) best = cand;
     }
@@ -1476,6 +1530,7 @@ function pickNextChar(){
     let existing = state.bank.find(b => b.char === nextPriority.char);
     if(!existing){
       existing = newBankItem(nextPriority.char, nextPriority.pinyin, nextPriority.word);
+      existing.fromParent = true;      // survives a starter-bank swap; built-in ones don't
       state.bank.push(existing);
     } else {
       // The parent just told us which word and which reading they want for this character,
