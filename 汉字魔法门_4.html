@@ -168,30 +168,32 @@
   .char-glow{
     position:absolute; inset:0;
     display:flex; align-items:center; justify-content:center;
-    font-family:'Ma Shan Zheng', cursive;
-    font-size:96px;
-    color: var(--gold);
-    text-shadow: 0 0 18px rgba(217,180,74,.7), 0 0 4px rgba(255,255,255,.5);
     transition: opacity .4s ease;
   }
+  /* The character is drawn from the same stroke-outline data the grader compares against,
+     not from a webfont — so what the child is shown to copy is by construction the exact
+     glyph they'll be judged on, and it's a clean printed 楷体 rather than a brush face. */
+  .char-glow svg{ width:62%; height:62%; display:block; }
+  .char-glow svg path{ fill: var(--gold); }
+  .char-glow{ filter: drop-shadow(0 0 12px rgba(217,180,74,.75)); }
   .char-glow.hidden{ opacity:0; }
 
+  /* ---------- writing view ----------
+     Writing used to be a fixed full-screen overlay floating on top of the door, which meant
+     the grid, the door, and the text lines all piled onto the same pixels. Now it's a plain
+     sibling of the doorway in normal flow: entering writing mode hides the door and shows
+     this column, so nothing can overlap anything. The progress dots and ⚙️ live in .topbar,
+     outside .scene, and stay put the whole time. */
   .write-slot{
-    position:fixed; inset:0;
-    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px;
-    z-index:20;
-    background: rgba(0,0,0,.35);
-    touch-action:none;
-    /* The overlay spans the full screen so it isn't clipped by the tiny doorway box, but
-       that means it would also sit on top of (and swallow taps for) anything else on
-       screen — e.g. the ⚙️ settings button — for as long as a challenge is active, which
-       is almost always. Make the backdrop itself click-through, and only the actual
-       writing panel (canvas + its buttons) clickable. */
-    pointer-events:none;
+    display:flex; flex-direction:column; align-items:center; gap:12px;
+    margin:0 auto 12px;
   }
-  .write-canvas-wrap, .write-controls-row{
-    pointer-events:auto;
+  .scene.writing{
+    background: #35215a;                 /* flat colour while writing — nothing to look at but the grid */
+    box-shadow: 0 20px 50px rgba(0,0,0,.4);
   }
+  .scene.writing .approach-path,
+  .scene.writing .doorway{ display:none; }
   .write-controls-row{
     display:flex; justify-content:center; gap:10px;
   }
@@ -220,13 +222,29 @@
   }
   .write-target{ width:150px; height:150px; position:relative; z-index:2; }
 
+  /* The demo character sits directly on the 米字格, exactly the size and position of the
+     square the child is about to write in — so "copy this" means copying it into the same
+     box, at the same scale, instead of shrinking a small glyph from the doorway. */
+  .demo-glyph{
+    position:absolute; inset:0; z-index:3; pointer-events:none;
+    display:flex; align-items:center; justify-content:center;
+    transition: opacity .45s ease;
+  }
+  /* One fixed em box for every character, not a per-character auto-fit: a 一 should look
+     like a short stroke in a big square, the way it does in a real workbook, not be blown
+     up to fill it. */
+  .demo-glyph svg{ width:82%; height:82%; display:block; }
+  .demo-glyph svg path{ fill: rgba(34,32,28,.82); }
+  .demo-glyph.hidden{ opacity:0; }
+
   .shake{ animation: shake .35s; }
   @keyframes shake{ 0%,100%{transform:translateX(0);} 25%{transform:translateX(-6px);} 75%{transform:translateX(6px);} }
 
+  /* Sits above the grid in normal flow now, not absolutely positioned off the top edge of
+     the writing tile where it used to collide with the door frame. */
   .pinyin-tag{
-    position:absolute; top:-30px; left:50%; transform:translateX(-50%);
-    background:var(--gold); color:#3a2416; font-weight:800; font-size:15px;
-    padding:3px 12px; border-radius:999px; white-space:nowrap;
+    background:var(--gold); color:#3a2416; font-weight:800; font-size:17px;
+    padding:5px 16px; border-radius:999px; white-space:nowrap;
     box-shadow:0 3px 8px rgba(0,0,0,.3);
   }
 
@@ -313,6 +331,20 @@
   #fileInput{ display:none; }
   .daily-count-row{ display:flex; align-items:center; gap:8px; margin-top:6px; }
   .daily-count-row input[type=number]{ width:70px; padding:8px; border-radius:8px; border:1.5px solid #cfc4a8; }
+  #batchInput{
+    width:100%; box-sizing:border-box; padding:9px 10px; border-radius:8px;
+    border:1.5px solid #cfc4a8; font-family:inherit; font-size:14px; line-height:1.6; resize:vertical;
+  }
+  .batch-row{ display:flex; align-items:center; gap:10px; margin-top:6px; }
+  .batch-row button{
+    border:none; border-radius:8px; padding:9px 16px; background:var(--jade); color:#fff;
+    font-family:inherit; font-weight:700; font-size:13px; cursor:pointer;
+  }
+  .batch-msg{ font-size:12px; color:#6b6355; }
+  .py-alt{
+    color:var(--seal); font-weight:800; cursor:pointer;
+    border-bottom:1.5px dashed var(--seal); padding-bottom:1px;
+  }
 </style>
 </head>
 <body>
@@ -355,17 +387,18 @@
           <div class="char-glow" id="charGlow"></div>
         </div>
       </div>
+    </div>
 
-      <div class="write-slot" id="writeSlot" style="display:none;">
-        <div class="write-canvas-wrap" id="writeTile">
-          <div class="pinyin-tag" id="pinyinTag"></div>
-          <div class="grid-lines"></div>
-          <svg id="drawSvg" viewBox="0 0 300 300" width="300" height="300" style="position:relative;z-index:2;touch-action:none;display:block;"></svg>
-        </div>
-        <div class="write-controls-row">
-          <button class="game-btn btn-clear" id="clearBtn">擦掉重写</button>
-          <button class="game-btn btn-submit" id="submitBtn">写好了</button>
-        </div>
+    <div class="write-slot" id="writeSlot" style="display:none;">
+      <div class="pinyin-tag" id="pinyinTag"></div>
+      <div class="write-canvas-wrap" id="writeTile">
+        <div class="grid-lines"></div>
+        <div class="demo-glyph hidden" id="demoGlyph"></div>
+        <svg id="drawSvg" viewBox="0 0 300 300" width="300" height="300" style="position:relative;z-index:2;touch-action:none;display:block;"></svg>
+      </div>
+      <div class="write-controls-row">
+        <button class="game-btn btn-clear" id="clearBtn">擦掉重写</button>
+        <button class="game-btn btn-submit" id="submitBtn">写好了</button>
       </div>
     </div>
 
@@ -389,11 +422,23 @@
   <div class="panel">
     <h2>今日汉字设置</h2>
 
-    <label>今天优先默写的字（加拼音，词语可选）</label>
+    <label>批量粘贴（按说话的方式写，拼音自动生成）</label>
+    <textarea id="batchInput" rows="3" placeholder="奇迹的迹；求救的救；师弟的弟"></textarea>
+    <div class="batch-row">
+      <button id="batchAddBtn">批量加入</button>
+      <span class="batch-msg" id="batchMsg"></span>
+    </div>
+    <p class="hint-text" style="margin-top:6px;">
+      「奇迹的迹」= 组词"奇迹"、要默写"迹"。分隔符用 ；，、空格或换行都行。<br>
+      也可以只写一个字（就没有组词提示），或写「单薄的薄 bó」手动指定拼音。<br>
+      拼音自动填好；<b style="color:var(--seal);">标红的是多音字</b>，点一下可以换读音。
+    </p>
+
+    <label>逐个添加</label>
     <div class="add-row">
       <input type="text" id="charInput" placeholder="字，如：龙">
-      <input type="text" id="pinyinInput" placeholder="拼音，如：lóng">
-      <input type="text" id="wordInput" placeholder="词语（可选），如：龙年">
+      <input type="text" id="pinyinInput" placeholder="拼音（留空自动填）">
+      <input type="text" id="wordInput" placeholder="词语（可选），如：飞龙">
       <button id="addCharBtn">加入</button>
     </div>
     <div class="queue-list" id="queueList"></div>
@@ -420,6 +465,7 @@
 </div>
 
 <script src="hanzi-data.js"></script>
+<script src="pinyin-data.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.7/dist/hanzi-writer.min.js"></script>
 <script>
 /* ============================================================
@@ -1311,6 +1357,10 @@ const charInput = document.getElementById('charInput');
 const pinyinInput = document.getElementById('pinyinInput');
 const wordInput = document.getElementById('wordInput');
 const addCharBtn = document.getElementById('addCharBtn');
+const batchInput = document.getElementById('batchInput');
+const batchAddBtn = document.getElementById('batchAddBtn');
+const batchMsg = document.getElementById('batchMsg');
+const demoGlyph = document.getElementById('demoGlyph');
 const queueList = document.getElementById('queueList');
 const dailyCountInput = document.getElementById('dailyCount');
 const saveProgressBtn = document.getElementById('saveProgressBtn');
@@ -1411,9 +1461,69 @@ function playDoorCreak(){
 function setDoorClosed(){ doorpanel.classList.remove('open'); }
 function setDoorOpen(){ doorpanel.classList.add('open'); playDoorCreak(); }
 
-function showGlowChar(char, visible){
-  charGlow.textContent = char;
-  charGlow.classList.toggle('hidden', !visible);
+// ---------- drawing a printed glyph from the grading data ----------
+// hanzi-writer ships, alongside the stroke medians we grade against, the filled outline of
+// every stroke. Drawing the demo character from those outlines instead of from a webfont
+// means the shape the child is told to copy IS the shape the grader measures — they can
+// never disagree — and it comes out as clean printed 楷体 rather than a brush face.
+// The data's y axis points up with the glyph box at y ∈ [-124, 900]; hence the flip.
+function glyphSvg(strokes){
+  const paths = strokes.map(d => `<path d="${d}"/>`).join('');
+  return `<svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">` +
+         `<g transform="scale(1,-1) translate(0,-900)">${paths}</g></svg>`;
+}
+
+// Async because the stroke data may still be loading; the guard makes a slow fetch that
+// resolves after the child has already moved on a no-op instead of a flash of the answer.
+async function renderGlyph(el, char){
+  el.dataset.want = char;
+  if(!char){ el.innerHTML = ''; return; }
+  try{
+    const data = await getCharData(char);
+    if(el.dataset.want !== char) return;
+    el.innerHTML = glyphSvg(data.strokes);
+  }catch(e){
+    if(el.dataset.want !== char) return;
+    el.innerHTML = `<div style="font-size:120px;line-height:1;">${char}</div>`;
+  }
+}
+
+// Hiding fades the glyph out over the CSS transition and only then empties the element —
+// clearing the markup up front would make it vanish on the spot and the fade never show.
+function setGlyph(el, char, visible){
+  if(visible){
+    el.classList.remove('hidden');
+    renderGlyph(el, char);
+  } else {
+    el.classList.add('hidden');
+    el.dataset.want = '';
+    setTimeout(() => { if(el.classList.contains('hidden')) el.innerHTML = ''; }, 500);
+  }
+}
+
+function showGlowChar(char, visible){ setGlyph(charGlow, char, visible); }
+
+// The demo character overlays the 米字格 at exactly the size and position of the square the
+// child will write in, then fades out when the countdown ends.
+function showDemoGlyph(char, visible){ setGlyph(demoGlyph, char, visible); }
+
+// Swap the door out for the writing column. They're siblings in normal flow, so only one is
+// ever on screen and neither can overlap the other; the progress dots and ⚙️ sit outside
+// .scene and stay visible throughout.
+function setWritingView(on){
+  playzone.classList.toggle('writing', on);
+  writeSlot.style.display = on ? 'flex' : 'none';
+  if(!on) showDemoGlyph('', false);
+}
+
+// The parent types a whole word plus which character is being tested; the hint shows that
+// word with the tested character swapped out for its pinyin (飞龙 + 龙 → 飞lóng), so the
+// child gets the context without being shown the answer. ('_' still works for old entries.)
+function hintFor(item){
+  if(!item.word) return item.pinyin;
+  if(item.word.includes('_')) return item.word.replace('_', item.pinyin);
+  if(item.word.includes(item.char)) return item.word.replace(item.char, item.pinyin);
+  return item.word + '（' + item.pinyin + '）';
 }
 
 // ---------- main flow ----------
@@ -1449,23 +1559,21 @@ function presentDoor(item, mode, round){
   continueBtn.classList.remove('show');
   timerRing.style.display = 'none';
   showGlowChar('', false);
-  pinyinTag.textContent = item.pinyin;
+  // NOTE: the hint shows the pinyin, never the actual answer character
+  pinyinTag.textContent = hintFor(item);
   getCharData(item.char); // warm the cache in the background, nothing rendered from it
   renderProgressPath();
 
   if(mode === 'free'){
-    // NOTE: the blank is replaced with the pinyin, never with the actual answer character
-    pinyinTag.textContent = item.word ? item.word.replace('_', item.pinyin) : item.pinyin;
     statusLine.textContent = '看拼音，把字写在格子里，写完点"写好了"';
     clearCanvas();
-    writeSlot.style.display = 'flex';
+    setWritingView(true);
     submitBtn.style.display = 'inline-block';
     clearBtn.style.display = 'inline-block';
   } else if(mode === 'retest'){
-    pinyinTag.textContent = item.word ? item.word.replace('_', item.pinyin) : item.pinyin;
     statusLine.textContent = '过了一会儿了，还记得刚才那个字吗？凭记忆写出来';
     clearCanvas();
-    writeSlot.style.display = 'flex';
+    setWritingView(true);
     submitBtn.style.display = 'inline-block';
     clearBtn.style.display = 'inline-block';
   } else {
@@ -1487,10 +1595,10 @@ function recordResult(item, outcome){
 }
 
 function markPassed(item, outcome, message){
+  setWritingView(false);          // back to the door for the reward animation
   setDoorOpen();
   playSuccessDing();
   showGlowChar(item.char, true);
-  writeSlot.style.display = 'none';
   submitBtn.style.display = 'none';
   clearBtn.style.display = 'none';
   timerRing.style.display = 'none';
@@ -1504,7 +1612,7 @@ function markPassed(item, outcome, message){
 }
 
 function markAbandonedToday(item){
-  writeSlot.style.display = 'none';
+  setWritingView(false);
   submitBtn.style.display = 'none';
   clearBtn.style.display = 'none';
   timerRing.style.display = 'none';
@@ -1557,6 +1665,10 @@ function handleAttemptResult(ok){
     } else {
       // blind write correct — don't pass yet, schedule the delayed retest
       pendingRetests.push({ item, round: currentRound, fillersSeen: 0 });
+      setWritingView(false);      // put the grid away; only "继续" should be tappable now
+      submitBtn.style.display = 'none';
+      clearBtn.style.display = 'none';
+      timerRing.style.display = 'none';
       resultBanner.textContent = '不看字也写对了！等下再考你一次，确认是不是真记住了';
       resultBanner.className = 'result-banner correct';
       statusLine.textContent = '';
@@ -1591,14 +1703,19 @@ function handleRoundFailure(item){
 
 function startTeachingRound(){
   const item = currentItem;
-  writeSlot.style.display = 'none';
+  clearTimeout(timerHandle);
+  clearCanvas();
+  // Stay in the writing view the whole time: the demo character appears *inside* the very
+  // square the child is about to write in, then fades. Only the buttons are held back so
+  // they can't submit an empty grid while the demo is still up.
+  setWritingView(true);
+  pinyinTag.textContent = hintFor(item);
   submitBtn.style.display = 'none';
   clearBtn.style.display = 'none';
-  clearTimeout(timerHandle);
 
   const step = TEACHING_STEPS[stepIndex];
   if(step > 0){
-    showGlowChar(item.char, true);
+    showDemoGlyph(item.char, true);
     timerRing.style.display = 'flex';
     let remaining = step;
     timerRing.textContent = remaining;
@@ -1607,7 +1724,7 @@ function startTeachingRound(){
       remaining -= 1;
       if(remaining <= 0){
         clearInterval(timerHandle);
-        showGlowChar('', false);
+        showDemoGlyph('', false);
         timerRing.style.display = 'none';
         beginWritingPhase(item);
       } else {
@@ -1615,16 +1732,16 @@ function startTeachingRound(){
       }
     }, 1000);
   } else {
-    showGlowChar('', false);
+    showDemoGlyph('', false);
     statusLine.textContent = '不看字，凭记忆写出来';
     beginWritingPhase(item);
   }
 }
 
 function beginWritingPhase(item){
-  pinyinTag.textContent = item.pinyin;
+  pinyinTag.textContent = hintFor(item);
   clearCanvas();
-  writeSlot.style.display = 'flex';
+  setWritingView(true);
   submitBtn.style.display = 'inline-block';
   clearBtn.style.display = 'inline-block';
   if(statusLine.textContent === '' || statusLine.textContent.includes('看好')){
@@ -1709,13 +1826,29 @@ onTap(restartBtn, function(){
 onTap(settingsBtn, () => panelOverlay.classList.add('show'));
 onTap(closePanelBtn, () => panelOverlay.classList.remove('show'));
 
+// ---------- pinyin ----------
+// pinyin-data.js maps every GB2312 character to its Mandarin reading(s), from the Unicode
+// Unihan database. Most characters have exactly one reading and need no attention at all.
+// 多音字 come back with more than one, and no amount of cleverness picks the right one from
+// a character alone — 薄 is bó in 单薄 but báo in 薄饼 — so those are surfaced in red for the
+// parent to tap through. That's the honest split: automate the 99%, ask about the rest.
+function pinyinAlts(char){
+  const raw = (window.PINYIN_MAP || {})[char];
+  return raw ? raw.split(' ') : [];
+}
+
 function renderQueueList(){
-  queueList.innerHTML = state.priorityQueue.map((p, i) => `
+  queueList.innerHTML = state.priorityQueue.map((p, i) => {
+    const alts = p.alts && p.alts.length > 1;
+    const py = alts
+      ? `<span class="py-alt" data-i="${i}" title="多音字，点一下换读音">${p.pinyin}</span>`
+      : p.pinyin;
+    return `
     <div class="queue-item">
-      <span>${p.char}（${p.pinyin}）${p.word ? ' · '+p.word : ''}</span>
+      <span>${p.char}（${py}）${p.word ? ' · '+p.word : ''}</span>
       <span class="del" data-i="${i}">删除</span>
-    </div>
-  `).join('') || '<div style="font-size:12px;color:#8a8272;">暂无今日优先字</div>';
+    </div>`;
+  }).join('') || '<div style="font-size:12px;color:#8a8272;">暂无今日优先字</div>';
 
   queueList.querySelectorAll('.del').forEach(el => {
     onTap(el, () => {
@@ -1723,15 +1856,75 @@ function renderQueueList(){
       renderQueueList();
     });
   });
+  queueList.querySelectorAll('.py-alt').forEach(el => {
+    onTap(el, () => {
+      const it = state.priorityQueue[Number(el.dataset.i)];
+      const k = it.alts.indexOf(it.pinyin);
+      it.pinyin = it.alts[(k + 1) % it.alts.length];
+      renderQueueList();
+    });
+  });
+}
+
+// ---------- batch paste ----------
+// Accepts the way a parent actually says it out loud — "奇迹的迹；求救的救" — because that
+// phrasing is already unambiguous: the word, then 的, then the one character being tested.
+// Also accepts "奇迹 迹", a bare "迹", and an explicit pinyin override tacked on the end.
+const PY_LETTERS = "a-zA-Zāáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜüńňǹ";
+
+function parseBatch(text){
+  const items = [], bad = [];
+  text.split(/[\n\r；;，,、]+/).forEach(raw => {
+    let s = raw.trim().replace(/^[的·\-—]+|[。．.]+$/g, '').trim();
+    if(!s) return;
+
+    // optional explicit pinyin at the end, e.g. "单薄的薄 bó"
+    let forced = '';
+    const m = s.match(new RegExp('^(.*?)[\\s:：]+([' + PY_LETTERS + ']+\\d?)$'));
+    if(m){ s = m[1].trim(); forced = m[2]; }
+
+    let word = '', char = '';
+    let mm;
+    if((mm = s.match(/^(.+)的(.)$/))){            // 奇迹的迹  (greedy: 我的书的书 → 我的书 / 书)
+      word = mm[1]; char = mm[2];
+    } else if((mm = s.match(/^(\S+)[\s]+(\S)$/))){ // 奇迹 迹
+      word = mm[1]; char = mm[2];
+    } else if(/^[一-鿿]$/.test(s)){        // 迹
+      char = s;
+    } else {
+      bad.push(raw.trim()); return;
+    }
+
+    if(!/^[一-鿿]$/.test(char)){ bad.push(raw.trim()); return; }
+    const alts = pinyinAlts(char);
+    const pinyin = forced || alts[0] || '';
+    if(!pinyin){ bad.push(raw.trim() + '（查不到拼音）'); return; }
+    items.push({ char, pinyin, word, alts: forced ? [forced] : alts });
+  });
+  return { items, bad };
 }
 
 onTap(addCharBtn, () => {
   const c = charInput.value.trim();
-  const p = pinyinInput.value.trim();
   const w = wordInput.value.trim();
-  if(!c || !p) return;
-  state.priorityQueue.push({ char:c, pinyin:p, word:w });
+  if(!c) return;
+  const alts = pinyinAlts(c);
+  const p = pinyinInput.value.trim() || alts[0] || '';
+  if(!p) return;                         // no reading typed and none on file — nothing to show the child
+  state.priorityQueue.push({ char:c, pinyin:p, word:w, alts: pinyinInput.value.trim() ? [p] : alts });
   charInput.value = ''; pinyinInput.value=''; wordInput.value='';
+  renderQueueList();
+});
+
+onTap(batchAddBtn, () => {
+  const { items, bad } = parseBatch(batchInput.value);
+  items.forEach(it => state.priorityQueue.push(it));
+  const polyphonic = items.filter(it => it.alts.length > 1).length;
+  let msg = items.length ? `加了 ${items.length} 个字` : '没认出任何字';
+  if(polyphonic) msg += `，其中 ${polyphonic} 个多音字（标红的），点一下确认读音`;
+  if(bad.length) msg += `；没认出：${bad.join('、')}`;
+  batchMsg.textContent = msg;
+  if(items.length) batchInput.value = '';
   renderQueueList();
 });
 
