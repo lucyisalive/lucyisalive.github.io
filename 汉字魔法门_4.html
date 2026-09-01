@@ -2317,7 +2317,11 @@ function renderInkList(){
 
 function inkPayloadText(only){
   const picked = only ? inkLog.filter(x => x.disputed) : inkLog;
-  return JSON.stringify({ cases: picked.map(x => ({ c: x.c, verdict: x.v, day: x.d, s: x.s })) });
+  // disputed travels with the ink. Copying only ever sends marked ones so it's implied there,
+  // but the download sends everything — and without the flag the one thing only a person can
+  // supply, whether the child actually wrote it right, is exactly what gets lost in transit.
+  return JSON.stringify({ cases: picked.map(x =>
+    ({ c: x.c, verdict: x.v, day: x.d, disputed: !!x.disputed, s: x.s })) });
 }
 
 // ---------- batch paste ----------
