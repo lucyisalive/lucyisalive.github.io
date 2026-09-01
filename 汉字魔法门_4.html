@@ -1434,6 +1434,12 @@ function matchComponent(officialStrokes, userStrokesIn, label, charDiag, diag){
     const m = users.length;
     if(m === 0) return { pass:false, head:'FAIL no-ink', rows:[] };
     if(k - m > 5) return { pass:false, head:`FAIL too-few-strokes (${m} vs ${k})`, rows:[] };
+    // One user stroke can absorb at most 4 official strokes, so beyond 4x there is no legal
+    // way to line them up at all and the search below yields nothing. The k-m>5 guard misses
+    // exactly the 6-official-against-1-drawn case, which a child scribbling a single line
+    // through a decomposed character hits immediately — 裂 is 列+衣, six strokes each — and
+    // the null that came back was dereferenced and crashed the whole grade.
+    if(k > 4 * m) return { pass:false, head:`FAIL too-few-strokes (${m} vs ${k})`, rows:[] };
     let best = null;
     // Comparing one user stroke against one run of official strokes gives the same answer
     // no matter which candidate explanation asked for it, and the explanations overlap
@@ -1490,6 +1496,8 @@ function matchComponent(officialStrokes, userStrokesIn, label, charDiag, diag){
          (cand.vetoes === best.vetoes && clean !== bClean ? clean :
           cand.vetoes === best.vetoes && cand.meanQ > best.meanQ)) best = cand;
     }
+    // Belt and braces: never dereference a search that came back empty.
+    if(best === null) return { pass:false, head:`FAIL no-valid-pairing (${m} vs ${k})`, rows:[] };
     const why = best.vetoes ? `veto×${best.vetoes}`
               : (best.meanQ < Q_BAR ? `avgQ=${best.meanQ.toFixed(2)}<${Q_BAR}`
               : (best.minQ < Q_FLOOR ? `oneStrokeQ=${best.minQ.toFixed(2)}<${Q_FLOOR}` : ''));
@@ -1531,7 +1539,15 @@ function matchComponent(officialStrokes, userStrokesIn, label, charDiag, diag){
 async function gradeDrawing(char){
   const data = await getCharData(char);
   const officialAll = (data.medians || []).map(medianToCanvasPoints);
-  const rawUser = strokesPoints.filter(s => s.length > 1);
+  // Drop touch artefacts before anything else looks at the ink. A palm or a pencil tip
+  // resting on the glass leaves a mark with essentially no length, and it was costing a
+  // real stroke its place: writing 隐 correctly in 11 strokes plus one stray tap made 12
+  // marks for 11 slots, so a genuine stroke went unmatched and the whole character failed.
+  // Measured, the gap is wide: that tap ran 1.7% of the character's diagonal, this child's
+  // shortest real stroke 11%, and the shortest stroke in any reference glyph 5.5%.
+  const drawn = strokesPoints.filter(s => s.length > 1);
+  const inkDiag = drawn.length ? Math.max(bboxOf(drawn).diag, 1) : 1;
+  const rawUser = drawn.filter(s => strokeLength(s) / inkDiag >= 0.03);
   if(rawUser.length === 0) return false;
 
   // What was actually drawn. Reproducing a disputed grade from real ink beats guessing at
@@ -2180,12 +2196,17 @@ onTap(submitBtn, async function(){
     statusLine.textContent = priorStatus;
     handleAttemptResult(ok);
   }catch(e){
-    console.log('[diag] gradeDrawing threw:', e && e.message);
-    // Could not load this character's stroke data at all (not bundled locally,
-    // no cached copy, and the live network fetch timed out/failed). This is NOT
-    // the same as "写错了" — don't burn a wrong-attempt strike, just let them retry.
+    console.log('[diag] gradeDrawing threw:', e && e.message, e && e.stack);
     submitBtn.disabled = false;
-    statusLine.textContent = '这个字还没有离线数据，需要联网一次才能批改，请连上网络后重试';
+    // Either way this is NOT "写错了" — don't burn a wrong-attempt strike. But say which it
+    // is: this used to blame the network for every failure, and sent a parent hunting for a
+    // connection problem while the real cause was the grader crashing on data that was
+    // sitting right there, bundled and offline-ready.
+    const haveData = (typeof charDataCache !== 'undefined' && charDataCache[item.char]) ||
+                     (window.HANZI_LOCAL_DATA && window.HANZI_LOCAL_DATA[item.char]);
+    statusLine.textContent = haveData
+      ? '这次没批改成功（不算写错），擦掉重写一次试试'
+      : '这个字还没有离线数据，需要联网一次才能批改，请连上网络后重试';
   }
 });
 
