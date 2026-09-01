@@ -1233,16 +1233,18 @@ function strokeQuality(userPts, officialPts, compDiag, merged){
   const lenOff    = Math.abs(Math.log(Math.max(lenRatio, 1e-3)));
   const lenFactor = clamp01(1 - Math.max(0, lenOff - Math.log(1.6)*shortScale) / 0.7);
 
-  // Short strokes used to be judged on position alone, on the theory that a dot's shape and
-  // direction are noise. Measured on this child's ink that was the single biggest source of
-  // wrong verdicts, and it got worse the more complex the character: the threshold is a
-  // fraction of the WHOLE character, so 9 of 燃's 16 strokes qualified. Judging 56% of a
-  // character on position alone let the pairing shuffle those strokes freely (a full-length
-  // 捺 scored 0.84 as one of 灬's dots and shunted the whole row along by one), and hid real
-  // errors — a missing stroke in 警 and an extra 横 in 藏 both passed. Short strokes are
-  // handled by shortScale instead, which widens the angle and length allowances in
-  // proportion to how short the stroke is, without ever going blind to its shape.
-  let q = (wShape*sShape + wDir*sDir) * posFactor * lenFactor;
+  // A genuinely tiny reference stroke carries no usable shape or direction. 霎's four dots
+  // inside 雨 are 16-20px, and comparing their shape yields rms 0.5-0.7 on attempts the
+  // parent confirms are correct — noise, not evidence, and it decided pass/fail by coin
+  // flip (0.44 on one attempt, 0.31 on the next, against a 0.35 floor). But going blind to
+  // shape for every short stroke is what let a full-length 捺 pass as one of 燃's 灬 dots
+  // and shunt that whole row along. So the exemption is narrow — only the smallest strokes,
+  // and only when the child's mark is short too. Swept against all the real ink: 0.05 
+  // doesn't rescue 霎, 0.09 breaks 燃 again and starts letting missing strokes through.
+  const isDot = strokeLength(officialPts) < compDiag * DOT_FRAC;
+  const dotTooLong = Math.max(0, Math.log(Math.max(lenRatio, 1e-3)) - Math.log(DOT_LEN));
+  let q = isDot ? clamp01(1 - posDist/0.62) * clamp01(1 - dotTooLong/0.35)
+                : (wShape*sShape + wDir*sDir) * posFactor * lenFactor;
 
   // Hook direction. WHETHER a stroke has a hook is decided from the reference alone —
   // clean data, so no noisy threshold on the child's side — and then it is only asked
@@ -1431,6 +1433,10 @@ const Q_FLOOR = 0.35;
 // The smallest turn that counts as a hook having been written at all. Used only to decide
 // whether there IS a turn; which way it goes is the sign, not the size.
 const HOOK_MIN = 25;
+// 多短的参考笔画才按"点"来判（只看位置，不看形状方向），以及点最多能比参考写长多少倍。
+// 0.07 是扫出来的：0.05 救不了霎，0.09 以上燃又开始判错、少一笔也开始漏判。
+const DOT_FRAC = 0.07;
+const DOT_LEN  = 1.7;
 
 // Match one component: explain extras (re-traces dropped; pen-lift splits explored),
 // explain shortfalls (consecutive strokes merged into one motion), then require every
