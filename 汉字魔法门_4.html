@@ -588,20 +588,28 @@ function newBankItem(char, pinyin, word){
   return { char, pinyin, word: word || '', box:1, interval:0, lastSeen:null, history:[], passedDays:[] };
 }
 
-// 全部换成 14–19 笔的复杂字：孩子说复杂字老判错，先拿最难的把判断打磨好，再往前推进。
-// 这些字的笔画数据都已打包进 hanzi-data.js，离线可用。
+// 两组字，排在前面的先练。
+// 前一组是孩子这几天要学的生字，后一组是 14–19 笔的复杂字——判断在这个长度上还不够准，
+// 留着继续收集真实笔迹（⚙️ 里的「笔迹记录」）。笔画数据全部打包在 hanzi-data.js，离线可用。
+// 注意「薄雾」读 bó 不是 báo：báo 是薄纸、薄饼那种口语读音，机器默认会填错，这里写死。
 function defaultBank(){
   return [
-    ['薄','bó','单薄'],   ['嘴','zuǐ','嘴巴'],  ['藏','cáng','躲藏'], ['熟','shú','成熟'],
-    ['蝴','hú','蝴蝶'],   ['器','qì','机器'],   ['燃','rán','燃烧'],  ['澡','zǎo','洗澡'],
-    ['慧','huì','智慧'],  ['融','róng','融化'], ['摔','shuāi','摔倒'],['警','jǐng','警察'],
+    // 今天要学的
+    ['宽','kuān','宽阔'],   ['阔','kuò','宽阔'],   ['横','héng','横卧'],  ['卧','wò','横卧'],
+    ['隐','yǐn','若隐若现'], ['鼎','dǐng','人声鼎沸'],['昂','áng','昂首'],   ['东','dōng','向东望'],
+    ['据','jù','据说'],     ['霎','shà','霎时'],    ['渐','jiàn','逐渐'],  ['裂','liè','山崩地裂'],
+    ['随','suí','随便'],    ['便','biàn','随便'],
+    // 判断还在打磨的复杂字
+    ['薄','bó','薄雾'],     ['嘴','zuǐ','嘴巴'],   ['藏','cáng','躲藏'],  ['熟','shú','成熟'],
+    ['蝴','hú','蝴蝶'],     ['器','qì','机器'],    ['燃','rán','燃烧'],   ['澡','zǎo','洗澡'],
+    ['慧','huì','智慧'],    ['融','róng','融化'],  ['摔','shuāi','摔倒'], ['警','jǐng','警察'],
   ].map(a => newBankItem(a[0], a[1], a[2]));
 }
 
 // Bump whenever the built-in starter bank changes. Progress is saved, so without this a
 // device that has already played keeps its old characters for ever and never sees the new
 // set — the change would reach nobody who actually uses the game.
-const BANK_VERSION = 2;
+const BANK_VERSION = 3;
 
 let state = {
   bank: defaultBank(),
@@ -691,8 +699,13 @@ function migrateState(s){
     const byChar = new Map(s.bank.map(it => [it.char, it]));
     const merged = defaultBank().map(fresh => {
       const old = byChar.get(fresh.char);
+      // Carry the whole record of what the child has done, not just the review schedule:
+      // dropping stuck/wrongToday would hand back a character that was parked waiting for a
+      // parent to explain it, which is the one thing being parked is meant to prevent.
       return old ? { ...fresh, box: old.box, interval: old.interval, lastSeen: old.lastSeen,
-                     history: old.history, passedDays: old.passedDays } : fresh;
+                     history: old.history, passedDays: old.passedDays,
+                     stuck: old.stuck, stuckDay: old.stuckDay,
+                     wrongToday: old.wrongToday, wrongDay: old.wrongDay } : fresh;
     });
     const kept = new Set(merged.map(it => it.char));
     s.bank.forEach(it => { if(it.fromParent && !kept.has(it.char)) merged.push(it); });
