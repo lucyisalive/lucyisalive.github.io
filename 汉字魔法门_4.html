@@ -350,6 +350,33 @@
     font-family:inherit; font-weight:700; font-size:13px; cursor:pointer;
   }
   .batch-msg{ font-size:12px; color:#6b6355; }
+  .ink-list{ display:flex; flex-direction:column; gap:5px; margin-top:4px; max-height:190px; overflow-y:auto; }
+  .ink-item{
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
+    background:#fff; border:1.5px solid #ddd2b8; border-radius:9px; padding:5px 9px;
+  }
+  .ink-item.marked{ background:#f3e2df; border-color:#d98a82; }
+  .ink-item .ch{ font-size:18px; font-weight:800; color:var(--ink); }
+  .ink-item .meta{ font-size:11px; color:#8a8272; margin-left:7px; }
+  .ink-item .v-pass{ color:var(--jade); font-weight:700; }
+  .ink-item .v-fail{ color:var(--seal); font-weight:700; }
+  .ink-mark{
+    border:1.5px solid #cfc4a8; background:transparent; color:#6b6355;
+    border-radius:7px; padding:5px 9px; font-family:inherit; font-size:11.5px;
+    cursor:pointer; white-space:nowrap;
+  }
+  .ink-item.marked .ink-mark{ background:var(--seal); border-color:var(--seal); color:#fff; }
+  .ink-actions{ display:flex; align-items:center; gap:7px; margin-top:7px; flex-wrap:wrap; }
+  .btn-ink{
+    border:none; border-radius:8px; padding:8px 12px; background:var(--jade); color:#fff;
+    font-family:inherit; font-weight:700; font-size:12.5px; cursor:pointer;
+  }
+  .btn-ink-clear{ background:#cfc4a8; color:#3a2416; }
+  #inkOut{
+    width:100%; box-sizing:border-box; margin-top:6px; padding:7px 9px; border-radius:8px;
+    border:1.5px solid #cfc4a8; font-family:ui-monospace,Menlo,monospace; font-size:10px;
+    line-height:1.4; resize:vertical; color:#6b6355;
+  }
   .stuck-list{ display:flex; flex-direction:column; gap:6px; margin-top:4px; }
   .stuck-item{
     display:flex; align-items:center; justify-content:space-between; gap:10px;
@@ -493,6 +520,16 @@
       <span style="font-size:12px;color:#6b6355;">个字（真正通过，不含放弃重来的）</span>
     </div>
 
+    <label>笔迹记录（判得不对的，标一下发给我）</label>
+    <div class="ink-list" id="inkList"></div>
+    <div class="ink-actions">
+      <button class="btn-ink" id="inkCopyBtn">📋 复制标记的</button>
+      <button class="btn-ink" id="inkDownloadBtn">⬇️ 下载全部</button>
+      <button class="btn-ink btn-ink-clear" id="inkClearBtn">清空</button>
+      <span class="batch-msg" id="inkMsg"></span>
+    </div>
+    <textarea id="inkOut" readonly rows="3" placeholder="点上面的「复制标记的」，内容会出现在这里；复制不成功就长按这里全选拷贝。"></textarea>
+
     <div class="panel-actions">
       <button class="btn-save" id="saveProgressBtn">💾 保存今天的进度</button>
       <button class="btn-load" id="loadProgressBtn">📂 读取存档</button>
@@ -589,6 +626,26 @@ function registerWrong(it){
   it.wrongDay = todayStr();
   saveState();
   return it.wrongToday >= WRONG_LIMIT;
+}
+
+// ---------- 笔迹记录 ----------
+// 每次提交都留一份底：写的是什么字、每一笔的坐标、系统判了对还是错。存在浏览器里，
+// 家长在设置面板里一键复制或下载。之前要拿这些数据得把 iPad 用数据线接上电脑、开 Safari
+// 的网页检查器、在满屏 [diag] 里翻——这道坎把"发现判错"和"能修判错"之间堵了很久。
+const INK_LOG_KEY = 'hanzi-magic-door-ink-v1';
+const MAX_INK = 24;          // 够几天用了；超出就丢最旧的，免得把浏览器存储撑爆
+let inkLog = [];
+
+function loadInkLog(){
+  try{ inkLog = JSON.parse(localStorage.getItem(INK_LOG_KEY)) || []; }catch(e){ inkLog = []; }
+}
+function saveInkLog(){
+  try{ localStorage.setItem(INK_LOG_KEY, JSON.stringify(inkLog)); }catch(e){ /* 存满了就算了 */ }
+}
+function recordInk(payload, verdict){
+  inkLog.unshift({ c: payload.c, s: payload.s, v: verdict ? 'pass' : 'fail', d: todayStr(), disputed: false });
+  if(inkLog.length > MAX_INK) inkLog.length = MAX_INK;
+  saveInkLog();
 }
 
 // ---------- automatic save ----------
@@ -1464,11 +1521,12 @@ async function gradeDrawing(char){
   const rawUser = strokesPoints.filter(s => s.length > 1);
   if(rawUser.length === 0) return false;
 
-  // TEMPORARY: dump what was actually drawn, compactly enough to select and copy out of
-  // the console in one go. Reproducing a disputed grade from real ink beats guessing at
-  // how it was written and testing a synthetic stand-in. Safe to remove once settled.
-  console.log('[strokes] ' + JSON.stringify({ c: char,
-    s: rawUser.map(s => resample(s, 16).map(p => [Math.round(p.x), Math.round(p.y)])) }));
+  // What was actually drawn. Reproducing a disputed grade from real ink beats guessing at
+  // how it was written and testing a synthetic stand-in. Logged to the console AND kept in
+  // the ink log, so getting it out no longer needs a cable and Web Inspector.
+  const inkPayload = { c: char,
+    s: rawUser.map(s => resample(s, 16).map(p => [Math.round(p.x), Math.round(p.y)])) };
+  console.log('[strokes] ' + JSON.stringify(inkPayload));
 
   // Writing the whole character small/large/off-centre is never an error.
   const user = normalizeToBounds(rawUser, getBounds(officialAll));
@@ -1570,6 +1628,7 @@ async function gradeDrawing(char){
   // TEMPORARY diagnostics — prints exactly why a drawing passed/failed, so grading can
   // be calibrated from real data. Safe to remove once stable.
   console.log(`[diag-grade] char=${char} userStrokeCount=${rawUser.length} officialStrokeCount=${officialAll.length} pass=${result.pass}${flipNote}\n` + result.diag.join('\n'));
+  recordInk(inkPayload, result.pass);
   return result.pass;
 }
 
@@ -1605,6 +1664,12 @@ const demoGlyph = document.getElementById('demoGlyph');
 const queueList = document.getElementById('queueList');
 const masteredList = document.getElementById('masteredList');
 const stuckList = document.getElementById('stuckList');
+const inkList = document.getElementById('inkList');
+const inkOut = document.getElementById('inkOut');
+const inkMsg = document.getElementById('inkMsg');
+const inkCopyBtn = document.getElementById('inkCopyBtn');
+const inkDownloadBtn = document.getElementById('inkDownloadBtn');
+const inkClearBtn = document.getElementById('inkClearBtn');
 const speakBtn = document.getElementById('speakBtn');
 const dailyCountInput = document.getElementById('dailyCount');
 const saveProgressBtn = document.getElementById('saveProgressBtn');
@@ -2132,7 +2197,7 @@ onTap(restartBtn, function(){
 });
 
 // ---------- settings panel ----------
-onTap(settingsBtn, () => { renderMasteredList(); renderStuckList(); panelOverlay.classList.add('show'); });
+onTap(settingsBtn, () => { renderMasteredList(); renderStuckList(); renderInkList(); inkMsg.textContent = ''; panelOverlay.classList.add('show'); });
 onTap(closePanelBtn, () => panelOverlay.classList.remove('show'));
 
 // ---------- pinyin ----------
@@ -2218,6 +2283,30 @@ function renderMasteredList(){
     '<div style="font-size:12px;color:#8a8272;">还没有字通过 3 天考验</div>';
 }
 
+// 判得不对的，家长点一下标红——这就是我拿到的"标准答案"，光有笔迹不知道他到底写对没写对。
+function renderInkList(){
+  inkList.innerHTML = inkLog.map((it, i) => `
+    <div class="ink-item ${it.disputed ? 'marked' : ''}">
+      <span><span class="ch">${it.c}</span><span class="meta">${it.d} · 系统判<span class="${it.v === 'pass' ? 'v-pass' : 'v-fail'}">${it.v === 'pass' ? '对' : '错'}</span> · ${it.s.length}笔</span></span>
+      <button class="ink-mark" data-i="${i}">${it.disputed ? '✓ 已标记' : '判得不对'}</button>
+    </div>`).join('') ||
+    '<div style="font-size:12px;color:#8a8272;">还没有笔迹记录，让孩子写几个字就有了</div>';
+
+  inkList.querySelectorAll('.ink-mark').forEach(el => {
+    onTap(el, () => {
+      const it = inkLog[Number(el.dataset.i)];
+      it.disputed = !it.disputed;
+      saveInkLog();
+      renderInkList();
+    });
+  });
+}
+
+function inkPayloadText(only){
+  const picked = only ? inkLog.filter(x => x.disputed) : inkLog;
+  return JSON.stringify({ cases: picked.map(x => ({ c: x.c, verdict: x.v, day: x.d, s: x.s })) });
+}
+
 // ---------- batch paste ----------
 // Accepts the way a parent actually says it out loud — "奇迹的迹；求救的救" — because that
 // phrasing is already unambiguous: the word, then 的, then the one character being tested.
@@ -2267,6 +2356,38 @@ onTap(addCharBtn, () => {
   charInput.value = ''; pinyinInput.value=''; wordInput.value='';
   saveState();
   renderQueueList();
+});
+
+onTap(inkCopyBtn, async () => {
+  const marked = inkLog.filter(x => x.disputed);
+  if(!marked.length){ inkMsg.textContent = '先点一下判得不对的那几条'; return; }
+  const text = inkPayloadText(true);
+  inkOut.value = text;
+  // iPad 上 Safari 的剪贴板 API 偶尔会拒绝，所以内容同时显示在下面的框里，
+  // 复制失败时家长长按全选也能拿走，不至于白点一场。
+  try{
+    await navigator.clipboard.writeText(text);
+    inkMsg.textContent = `已复制 ${marked.length} 条，粘贴给我就行`;
+  }catch(e){
+    inkOut.focus(); inkOut.select();
+    inkMsg.textContent = `${marked.length} 条已放在下面的框里，长按全选拷贝`;
+  }
+});
+
+onTap(inkDownloadBtn, () => {
+  if(!inkLog.length){ inkMsg.textContent = '还没有笔迹'; return; }
+  const blob = new Blob([inkPayloadText(false)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `笔迹_${todayStr()}.json`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  inkMsg.textContent = `已下载 ${inkLog.length} 条`;
+});
+
+onTap(inkClearBtn, () => {
+  inkLog = []; saveInkLog(); renderInkList();
+  inkOut.value = ''; inkMsg.textContent = '已清空';
 });
 
 onTap(batchAddBtn, () => {
@@ -2387,11 +2508,13 @@ function showFinale(bankEmpty){
 // Restore before anything reads state: the scene, the queue list and the first door all
 // depend on what was saved, so loading afterwards would show one round of the wrong thing.
 loadSavedState();
+loadInkLog();
 applyScene(state.scenesUnlocked);
 dailyCountInput.value = state.dailyCount;
 renderQueueList();
 renderMasteredList();
 renderStuckList();
+renderInkList();
 onTap(speakBtn, speakPrompt);
 loadNextDoor();
 </script>
