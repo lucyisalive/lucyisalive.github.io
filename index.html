@@ -520,7 +520,7 @@
       <span style="font-size:12px;color:#6b6355;">个字（真正通过，不含放弃重来的）</span>
     </div>
 
-    <label>笔迹记录（判得不对的，标一下发给我）</label>
+    <label>笔迹记录（判得不对的，标一下发给我）<span id="inkCount" style="font-weight:400;color:#8a8272;"></span></label>
     <div class="ink-list" id="inkList"></div>
     <div class="ink-actions">
       <button class="btn-ink" id="inkCopyBtn">📋 复制标记的</button>
@@ -641,7 +641,10 @@ function registerWrong(it){
 // 家长在设置面板里一键复制或下载。之前要拿这些数据得把 iPad 用数据线接上电脑、开 Safari
 // 的网页检查器、在满屏 [diag] 里翻——这道坎把"发现判错"和"能修判错"之间堵了很久。
 const INK_LOG_KEY = 'hanzi-magic-door-ink-v1';
-const MAX_INK = 24;          // 够几天用了；超出就丢最旧的，免得把浏览器存储撑爆
+// 24 条一次练习就装满了——光一个字走完教学环节就能吃掉六条，结果家长练了一晚上、
+// 导出来只剩最后那几个字，前面的连同标记一起被挤没了。一条约 2.5KB，200 条约 500KB，
+// 浏览器给每个站点的额度通常是 5MB 上下，放得下。
+const MAX_INK = 200;
 let inkLog = [];
 
 function loadInkLog(){
@@ -652,7 +655,14 @@ function saveInkLog(){
 }
 function recordInk(payload, verdict){
   inkLog.unshift({ c: payload.c, s: payload.s, v: verdict ? 'pass' : 'fail', d: todayStr(), disputed: false });
-  if(inkLog.length > MAX_INK) inkLog.length = MAX_INK;
+  // Marked entries are the whole point of the log — they carry the one judgement only a
+  // person can make — so they are never what gets thrown away to make room. Trim the oldest
+  // UNMARKED entry instead, and only start on marked ones if the log is somehow all marked.
+  while(inkLog.length > MAX_INK){
+    let victim = -1;
+    for(let i = inkLog.length - 1; i >= 0; i--) if(!inkLog[i].disputed){ victim = i; break; }
+    inkLog.splice(victim >= 0 ? victim : inkLog.length - 1, 1);
+  }
   saveInkLog();
 }
 
@@ -1694,6 +1704,7 @@ const queueList = document.getElementById('queueList');
 const masteredList = document.getElementById('masteredList');
 const stuckList = document.getElementById('stuckList');
 const inkList = document.getElementById('inkList');
+const inkCount = document.getElementById('inkCount');
 const inkOut = document.getElementById('inkOut');
 const inkMsg = document.getElementById('inkMsg');
 const inkCopyBtn = document.getElementById('inkCopyBtn');
@@ -2325,6 +2336,11 @@ function renderInkList(){
       <button class="ink-mark" data-i="${i}">${it.disputed ? '✓ 已标记' : '判得不对'}</button>
     </div>`).join('') ||
     '<div style="font-size:12px;color:#8a8272;">还没有笔迹记录，让孩子写几个字就有了</div>';
+
+  const marked = inkLog.filter(x => x.disputed).length;
+  inkCount.textContent = inkLog.length
+    ? `　共 ${inkLog.length} 条，已标记 ${marked} 条（最多存 ${MAX_INK} 条，标记过的不会被挤掉）`
+    : '';
 
   inkList.querySelectorAll('.ink-mark').forEach(el => {
     onTap(el, () => {
