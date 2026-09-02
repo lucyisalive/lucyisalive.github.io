@@ -588,28 +588,25 @@ function newBankItem(char, pinyin, word){
   return { char, pinyin, word: word || '', box:1, interval:0, lastSeen:null, history:[], passedDays:[] };
 }
 
-// 两组字，排在前面的先练。
-// 前一组是孩子这几天要学的生字，后一组是 14–19 笔的复杂字——判断在这个长度上还不够准，
-// 留着继续收集真实笔迹（⚙️ 里的「笔迹记录」）。笔画数据全部打包在 hanzi-data.js，离线可用。
-// 注意「薄雾」读 bó 不是 báo：báo 是薄纸、薄饼那种口语读音，机器默认会填错，这里写死。
+// 测试模式：只留有判错前科的字，家长自己测，效率优先。
+//   慧 —— 真实笔迹至今仍判错（心写成参考大小的 37%），唯一的 known_fail
+//   警 藏 —— "太松"最严重的两个：警少写任意一笔都判成对(19/19)，藏 13/17 且多一横也漏
+//   器 燃 澡 霎 —— 都有家长确认过的"写对却判错"真实笔迹，已修，需要复验
+//   薄 —— 孩子最早点名"老判错"的那个字
+// 换下去的字（孩子的生字 + 其余复杂字）进度不会丢：迁移时标成 retired 留在存档里，
+// 只是不参与出题；下次放回字库进度自动接上。
 function defaultBank(){
   return [
-    // 今天要学的
-    ['宽','kuān','宽阔'],   ['阔','kuò','宽阔'],   ['横','héng','横卧'],  ['卧','wò','横卧'],
-    ['隐','yǐn','若隐若现'], ['鼎','dǐng','人声鼎沸'],['昂','áng','昂首'],   ['东','dōng','向东望'],
-    ['据','jù','据说'],     ['霎','shà','霎时'],    ['渐','jiàn','逐渐'],  ['裂','liè','山崩地裂'],
-    ['随','suí','随便'],    ['便','biàn','随便'],
-    // 判断还在打磨的复杂字
-    ['薄','bó','薄雾'],     ['嘴','zuǐ','嘴巴'],   ['藏','cáng','躲藏'],  ['熟','shú','成熟'],
-    ['蝴','hú','蝴蝶'],     ['器','qì','机器'],    ['燃','rán','燃烧'],   ['澡','zǎo','洗澡'],
-    ['慧','huì','智慧'],    ['融','róng','融化'],  ['摔','shuāi','摔倒'], ['警','jǐng','警察'],
+    ['慧','huì','智慧'],  ['警','jǐng','警察'], ['藏','cáng','躲藏'],
+    ['器','qì','机器'],   ['燃','rán','燃烧'],  ['澡','zǎo','洗澡'],
+    ['霎','shà','霎时'],  ['薄','bó','薄雾'],
   ].map(a => newBankItem(a[0], a[1], a[2]));
 }
 
 // Bump whenever the built-in starter bank changes. Progress is saved, so without this a
 // device that has already played keeps its old characters for ever and never sees the new
 // set — the change would reach nobody who actually uses the game.
-const BANK_VERSION = 3;
+const BANK_VERSION = 4;
 
 let state = {
   bank: defaultBank(),
@@ -718,7 +715,15 @@ function migrateState(s){
                      wrongToday: old.wrongToday, wrongDay: old.wrongDay } : fresh;
     });
     const kept = new Set(merged.map(it => it.char));
-    s.bank.forEach(it => { if(it.fromParent && !kept.has(it.char)) merged.push(it); });
+    s.bank.forEach(it => {
+      if(kept.has(it.char)) return;
+      // Parent-added characters always stay. A built-in dropped from the starter bank keeps
+      // its record too if the child earned one — retired from the rotation, not erased, so
+      // putting it back later resumes where he left off instead of starting from zero.
+      const earned = (it.passedDays || []).length || (it.history || []).length;
+      if(it.fromParent) merged.push(it);
+      else if(earned) merged.push({ ...it, retired: true });
+    });
     s.bank = merged;
     s.bankVersion = BANK_VERSION;
   }
@@ -1768,7 +1773,7 @@ function pickNextChar(){
   // before the real interleaving gap has happened.
   // Characters already written correctly on MASTERED_DAYS different days leave the rotation
   // for good, so the bank keeps shrinking towards whatever the child still can't do.
-  const active = state.bank.filter(b => !isMastered(b) && !isStuck(b));
+  const active = state.bank.filter(b => !isMastered(b) && !isStuck(b) && !b.retired);
   if(active.length === 0) return null;             // nothing left to practise — caller ends the day
   const candidates = active.filter(b => !pendingChars.has(b.char));
   const pickFrom = candidates.length ? candidates : active; // only fall back if literally everything is pending
