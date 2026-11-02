@@ -1,0 +1,57 @@
+'use strict';
+
+// Exercise the browser's actual grading functions, with the bundled glyph data.
+// No network, browser storage, DOM, or copied implementation is involved.
+const fs = require('node:fs');
+const path = require('node:path');
+const vm = require('node:vm');
+
+const root = path.resolve(__dirname, '..');
+
+function createGrader({ html = fs.readFileSync(path.join(root, 'index.html'), 'utf8') } = {}) {
+  const start = html.indexOf('function medianToCanvasPoints(');
+  const end = html.indexOf('const progressPath =', start);
+  if (start < 0 || end < 0) throw new Error('Grading source boundaries were not found');
+  let logs = [];
+  const context = vm.createContext({
+    window: {},
+    console: { log: (...args) => logs.push(args.join(' ')) },
+    setTimeout,
+    clearTimeout,
+  });
+  vm.runInContext(fs.readFileSync(path.join(root, 'hanzi-data.js'), 'utf8'), context);
+  const size = html.match(/const CANVAS_SIZE\s*=\s*(\d+)/)?.[1];
+  const padding = html.match(/const CANVAS_PADDING\s*=\s*(\d+)/)?.[1];
+  if (!size || !padding) throw new Error('Canvas constants were not found');
+  vm.runInContext(`
+    const CANVAS_SIZE = ${size}, CANVAS_PADDING = ${padding};
+    let strokesPoints = [];
+    async function getCharData(char) {
+      const data = window.HANZI_LOCAL_DATA[char];
+      if (!data) throw new Error('No bundled data for ' + char);
+      return data;
+    }
+    function recordInk() {}
+  `, context);
+  vm.runInContext(html.slice(start, end), context);
+
+  return {
+    async grade(char, strokes) {
+      logs = [];
+      context.testChar = char;
+      context.testInk = strokes.map(s => s.map(p =>
+        Array.isArray(p) ? { x: p[0], y: p[1] } : { x: p.x, y: p.y }
+      ));
+      vm.runInContext('strokesPoints = testInk;', context);
+      const pass = await vm.runInContext('gradeDrawing(testChar)', context);
+      return { pass, diagnostics: logs.filter(s => s.startsWith('[diag-grade]')).join('\n') };
+    },
+    reference(char) {
+      context.testChar = char;
+      return vm.runInContext('window.HANZI_LOCAL_DATA[testChar].medians.map(medianToCanvasPoints)', context);
+    },
+    glyphs: Object.keys(context.window.HANZI_LOCAL_DATA),
+  };
+}
+
+module.exports = { createGrader, root };
