@@ -2,6 +2,7 @@
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
+<meta name="game-version" content="2026.11.02.1">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>汉字魔法门</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -542,6 +543,7 @@
     </p>
 
     <button class="btn-close-panel" id="closePanelBtn">关闭</button>
+    <p class="hint-text" id="gameVersion">版本 2026.11.02.1</p>
   </div>
 </div>
 
@@ -589,10 +591,9 @@ function newBankItem(char, pinyin, word){
 }
 
 // 测试模式：只留有判错前科的字，家长自己测，效率优先。
-//   慧 —— 真实笔迹至今仍判错（心写成参考大小的 37%），唯一的 known_fail
-//   警 藏 —— "太松"最严重的两个：警少写任意一笔都判成对(19/19)，藏 13/17 且多一横也漏
-//   器 燃 澡 霎 —— 都有家长确认过的"写对却判错"真实笔迹，已修，需要复验
-//   薄 —— 孩子最早点名"老判错"的那个字
+//   2026-11-02：保留这八个字供真机复验。已修复固定笔迹中的慧/澡/警误拒和藏误放，
+//   薄的三次完整笔迹也已通过；这表示这些具体样例修好了，不代表复杂字再无误判。
+//   剩余合笔/额外笔漏洞由 tests/structural-safety.json 单独记录，继续逐项处理。
 // 换下去的字（孩子的生字 + 其余复杂字）进度不会丢：迁移时标成 retired 留在存档里，
 // 只是不参与出题；下次放回字库进度自动接上。
 function defaultBank(){
@@ -607,6 +608,7 @@ function defaultBank(){
 // device that has already played keeps its old characters for ever and never sees the new
 // set — the change would reach nobody who actually uses the game.
 const BANK_VERSION = 4;
+const GAME_VERSION = '2026.11.02.1';
 
 let state = {
   bank: defaultBank(),
@@ -651,7 +653,8 @@ function saveInkLog(){
   try{ localStorage.setItem(INK_LOG_KEY, JSON.stringify(inkLog)); }catch(e){ /* 存满了就算了 */ }
 }
 function recordInk(payload, verdict){
-  inkLog.unshift({ c: payload.c, s: payload.s, v: verdict ? 'pass' : 'fail', d: todayStr(), disputed: false });
+  inkLog.unshift({ c: payload.c, s: payload.s, v: verdict ? 'pass' : 'fail', d: todayStr(), disputed: false,
+    graderVersion: GAME_VERSION, timestamp: Date.now() });
   // Marked entries are the whole point of the log — they carry the one judgement only a
   // person can make — so they are never what gets thrown away to make room. Trim the oldest
   // UNMARKED entry instead, and only start on marked ones if the log is somehow all marked.
@@ -999,13 +1002,9 @@ const COMPONENT_DECOMP = {
   '柱': ['木','主'], '注': ['氵','主'], '理': ['王','里'], '振': ['扌','辰'],
   '救': ['求','攵'], '普': ['並','日'], '若': ['艹','右'], '裂': ['列','衣'],
   '剩': ['乘','刂'], '迹': ['亦','辶'], '通': ['甬','辶'],
-  // 现字库那 12 个复杂字的拆分**已经做好并逐条核对过**，见 spec 第 1.4 节的清单，
-  // 部件笔画数据也都打包在 hanzi-data.js 里了。但暂时没有启用：实测拿孩子的真实笔迹跑，
-  // 开了拆分之后真实笔迹从 13/14 掉到 11/14，而该判错的一项没多抓（警少一笔抓到了，
-  // 燃多一横反而漏了）。卡点是"任何一笔不得低于 0.35"这条底线和分区对齐的相互作用——
-  // 剩下两例分别是 0.23 和 0.349，就差一点点。只有 14 份真实笔迹，再调这条线就是在迁就
-  // 这 14 份，不是在把问题修对。攒够笔迹再把下面这行注释解开。
-  // ...(拆分表见 spec 第 1.4 节)
+  // Do not enable the former nearest-stroke decomposition for complex characters:
+  // it regressed real handwriting. Four verified spatial trees below now handle
+  // 慧/警/澡/薄 without lowering Q_FLOOR; the other entries keep this original path.
 };
 
 // ---------- geometry helpers ----------
@@ -1329,7 +1328,7 @@ function strokeQuality(userPts, officialPts, compDiag, merged){
 // concealing an absent stroke 1.02-3.23. Bar 0.92. A stroke that drops its HOOK when
 // merged is not this function's job — the tail-direction check in strokeQuality covers
 // that, and covers it for merged runs too.
-function mergeCovers(userPts, parts, charDiag){
+function legacyMergeCovers(userPts, parts, charDiag){
   if(parts.length < 2) return true;
   const ru = resample(userPts, 40);
   const k = parts.length;
@@ -1369,6 +1368,62 @@ function mergeCovers(userPts, parts, charDiag){
   })(0, 0, []);
 
   return ok;
+}
+
+// For the eight complex practice characters, a merged motion must cover each
+// reference stroke in the component's existing coordinates. Normalizing each
+// fragment independently would allow a short, misplaced line to invent a stroke.
+// Search every sample boundary: the previous 3-sample stride skipped valid cuts
+// in the confirmed 警 ink. Cached cells and upper bounds keep that search bounded.
+function mergeCovers(userPts, parts, charDiag){
+  if(parts.length < 2) return true;
+  const target=bboxOf(parts),localDiag=Math.max(target.diag,1);
+  const aligned=userPts;
+  const ru=resample(aligned,40),k=parts.length;
+  const midRefs=parts.map(p=>centroidOf(resample(p,16)));
+  const cellCache=new Map();
+  function cell(start,end,part){
+    const key=start+':'+end+':'+part;let c=cellCache.get(key);
+    if(c===undefined){
+      const segment=mergeSegment(ru,start,end);
+      // Shape and direction can never exceed 1. Reject fragments whose best
+      // possible quality is already below the unchanged per-stroke floor.
+      const lo=strokeLength(parts[part]),lu=strokeLength(segment);
+      const posDist=ptDist(centroidOf(resample(segment,16)),midRefs[part])/localDiag;
+      const lenRatio=lu/Math.max(lo,1e-6);
+      const shortScale=Math.min(Math.max(0.35/Math.max(lo/localDiag,1e-3),1),2.2);
+      const posFactor=clamp01(1-Math.max(0,posDist-0.28)/0.45);
+      const lenOff=Math.abs(Math.log(Math.max(lenRatio,1e-3)));
+      const lenFactor=clamp01(1-Math.max(0,lenOff-Math.log(1.6)*shortScale)/0.7);
+      const dotTooLong=Math.max(0,Math.log(Math.max(lenRatio,1e-3))-Math.log(DOT_LEN));
+      const upper=lo<localDiag*DOT_FRAC
+        ?clamp01(1-posDist/0.62)*clamp01(1-dotTooLong/0.35)
+        :posFactor*lenFactor;
+      const q=upper>=Q_FLOOR ? strokeQuality(segment,parts[part],localDiag,false).qPair : 0;
+      const mid=centroidOf(resample(segment,16));
+      c={q,mid};cellCache.set(key,c);
+    }
+    return c;
+  }
+  const dead=new Set();
+  function search(start,part,prev){
+    const key=start+':'+part+':'+(prev?prev.start+':'+prev.end:'');
+    if(dead.has(key))return false;
+    const last=part===k-1;
+    const endMax=last?ru.length:ru.length-4*(k-1-part);
+    for(let end=last?ru.length:start+4;end<=endMax;end++){
+      const c=cell(start,end,part);
+      if(c.q<Q_FLOOR)continue;
+      if(prev){
+        const du={x:c.mid.x-prev.c.mid.x,y:c.mid.y-prev.c.mid.y};
+        const dr={x:midRefs[part].x-midRefs[part-1].x,y:midRefs[part].y-midRefs[part-1].y};
+        if(Math.hypot(du.x-dr.x,du.y-dr.y)/localDiag > .35)continue;
+      }
+      if(last || search(end,part+1,{start,end,c}))return true;
+    }
+    dead.add(key);return false;
+  }
+  return search(0,0,null);
 }
 
 // An extra user stroke drawn right on top of another is a re-trace — a correction
@@ -1447,7 +1502,7 @@ const DOT_LEN  = 1.7;
 // explain shortfalls (consecutive strokes merged into one motion), then require every
 // official stroke to have a categorically-compatible counterpart under globally
 // optimal pairing, with the component's average penmanship above the bar.
-function matchComponent(officialStrokes, userStrokesIn, label, charDiag, diag){
+function matchComponent(officialStrokes, userStrokesIn, label, charDiag, diag, strictMerges = false){
   const k = officialStrokes.length;
   const compDiag = Math.max(bboxOf(officialStrokes).diag, 1);
 
@@ -1472,10 +1527,22 @@ function matchComponent(officialStrokes, userStrokesIn, label, charDiag, diag){
       const key = u.id + '|' + o.label;
       let c = cellCache.get(key);
       if(c === undefined){
-        const qq = strokeQuality(u.pts, o.pts, compDiag, o.merged);
-        let veto = o.merged && !mergeCovers(u.pts, o.parts, charDiag) ? 'merge-not-covered' : null;
+        let qq = strokeQuality(u.pts, o.pts, compDiag, o.merged);
+        // Once the region tree has identified exactly three water-radical marks,
+        // the first two may be short dashes. The rising third stroke keeps its
+        // shape test; absent, merged, additional, or overlong dots are not exempt.
+        if(strictMerges && label==='氵' && k===3 && users.length===3 && !o.merged && (o.label==='0'||o.label==='1')){
+          const markFraction=strokeLength(u.pts)/compDiag;
+          const qDot=clamp01(1-Math.max(0,qq.posDist-0.15)/0.5)*clamp01(1-Math.max(0,markFraction-0.35)/0.25);
+          qq={...qq,q:qDot,qPair:qDot};
+        }
+        // Ordinary characters retain the original eager validation and pairing
+        // costs, including tie breaking. Only complex regions use lazy checking.
+        let veto = !strictMerges && o.merged && !legacyMergeCovers(u.pts, o.parts, charDiag)
+          ? 'merge-not-covered' : null;
         if(!veto && u.id.includes('+') && qq.lenRatio > 1.3) veto = 'join-inflates-length';
-        c = { ...qq, veto };
+        c = { ...qq, veto, mergeChecked: !o.merged || !strictMerges,
+          checkMerge: () => mergeCovers(u.pts, o.parts, charDiag) };
         cellCache.set(key, c);
       }
       return c;
@@ -1494,7 +1561,24 @@ function matchComponent(officialStrokes, userStrokesIn, label, charDiag, diag){
       const cells = users.map(u => virt.map(o => cellFor(u, o)));
       // Cost drives the assignment: a categorical veto is expensive so the optimizer
       // prefers pairings that are legal, but quality still breaks ties.
-      const assign = hungarian(cells.map(row => row.map(c => (1 - c.qPair) + (c.veto ? 3 : 0))));
+      let assign;
+      // Constraint generation: an unchecked merge is optimistic. Validate only merges
+      // selected by the optimal assignment, add proven vetoes, then re-solve.
+      // Once the selected assignment has no unchecked cells, all remaining unknown
+      // costs can only increase, so this is the same optimum as eager validation.
+      for(;;){
+        assign = hungarian(cells.map(row => row.map(c => (1 - c.qPair) + (c.veto ? 3 : 0))));
+        let changed=false;
+        for(let row=0;row<assign.length;row++){
+          const cell=cells[row][assign[row]];
+          if(cell.mergeChecked)continue;
+          cell.mergeChecked=true;
+          if(!cell.checkMerge()){
+            cell.veto='merge-not-covered';changed=true;
+          }
+        }
+        if(!changed)break;
+      }
       const rows = assign.map((col, row) => ({ u: users[row].id, o: virt[col].label, c: cells[row][col] }));
       const vetoes = rows.filter(r => r.c.veto).length;
       const meanQ = rows.reduce((s, r) => s + r.c.q, 0) / rows.length;
@@ -1552,10 +1636,115 @@ function matchComponent(officialStrokes, userStrokesIn, label, charDiag, diag){
   const res = attempt(userStrokesIn.map((pts, i) => ({ pts, id:'u'+i })), [], 0);
   diag.push(`comp=${label} ${res.head}`);
   for(const r of res.rows){
-    diag.push(`  ${r.u}<->official#${r.o} q=${r.c.q.toFixed(2)}${r.c.veto ? ' VETO:'+r.c.veto : ''} rms=${r.c.rms} dir=${r.c.dirDiff}${r.c.tailDiff!==null?' tail='+r.c.tailDiff:''} len=${r.c.lenRatio} pos=${r.c.posDist}`);
+    diag.push(`  ${r.u}<->official#${r.o} q=${r.c.q.toFixed(2)} pair=${r.c.qPair.toFixed(2)}${r.c.veto ? ' VETO:'+r.c.veto : ''} rms=${r.c.rms} dir=${r.c.dirDiff}${r.c.tailDiff!==null?' tail='+r.c.tailDiff:''} len=${r.c.lenRatio} pos=${r.c.posDist}`);
   }
   return { pass: res.pass, rows: res.rows };
 }
+
+
+
+// These trees describe spatial regions in the bundled glyph, not writing order.
+// Work down from the whole character before matching strokes within each region.
+const regionLeaf = (name, start, end) => ({
+  name, indices: Array.from({ length: end - start }, (_, i) => start + i)
+});
+const regionSplit = (axis, a, b) => ({ axis, a, b });
+const RECURSIVE_REGION_TREES = {
+  '澡': regionSplit('x', regionLeaf('氵', 0, 3),
+    regionSplit('y', regionSplit('y', regionLeaf('上口', 3, 6),
+      regionSplit('x', regionLeaf('左口', 6, 9), regionLeaf('右口', 9, 12))),
+    regionLeaf('木', 12, 16))),
+  '警': regionSplit('y', regionSplit('x',
+    regionSplit('y', regionLeaf('艹', 0, 3), regionLeaf('句', 3, 8)),
+    regionLeaf('攵', 8, 12)),
+    regionSplit('y', regionLeaf('言点', 12, 13),
+      regionSplit('y', regionLeaf('言三横', 13, 16), regionLeaf('言口', 16, 19)))),
+  '薄': regionSplit('y', regionLeaf('艹', 0, 3),
+    regionSplit('x', regionLeaf('氵', 3, 6),
+      regionSplit('y', regionLeaf('甫', 6, 13), regionLeaf('寸', 13, 16)))),
+  '慧': regionSplit('y', regionSplit('y',
+    regionSplit('x', regionLeaf('左丰', 0, 4), regionLeaf('右丰', 4, 8)),
+    regionLeaf('彐', 8, 11)), regionLeaf('心', 11, 15)),
+};
+// Keep the older, extensively tuned merge checks for all other characters.
+const STRICT_MERGE_CHARACTERS = new Set(['慧', '警', '藏', '器', '燃', '澡', '霎', '薄']);
+
+function recursiveRegionGrade(tree, officialAll, user, charDiag) {
+  const cache = new Map(), nodeKeys = new Map(), countCache = new Map();
+  const userCentres = user.map(stroke => centroidOf(resample(stroke, 16)));
+
+  function referenceCount(node) {
+    if (countCache.has(node)) return countCache.get(node);
+    const count = node.indices ? node.indices.length : referenceCount(node.a) + referenceCount(node.b);
+    countCache.set(node, count);
+    return count;
+  }
+
+  function evaluate(node, ids) {
+    if (!nodeKeys.has(node)) nodeKeys.set(node, nodeKeys.size);
+    const key = nodeKeys.get(node) + '|' + ids.join(',');
+    if (cache.has(key)) return cache.get(key);
+    let answer = null;
+    if (node.indices) {
+      const count = node.indices.length;
+      if (ids.length >= Math.ceil(count / 4) && ids.length <= count + 2) {
+        const reference = node.indices.map(i => officialAll[i]);
+        const cluster = ids.map(i => user[i]);
+        const diag = [];
+        // Uniform scaling preserves angles. Uneven proportions between regions
+        // are allowed; stretching a wrong stroke into another kind is not.
+        const aligned = alignClusterUniform(cluster, bboxOf(reference));
+        const result = matchComponent(reference, aligned, node.name, charDiag, diag, true);
+        if (result.rows.length) {
+          const bad = result.rows.filter(row => row.c.veto || row.c.q < Q_FLOOR).length;
+          const sum = result.rows.reduce((total, row) => total + row.c.q, 0);
+          answer = { rows: result.rows, diag, bad, sum, rank: bad * 100 + result.rows.length - sum };
+        }
+      }
+    } else {
+      const order = ids.slice().sort((i, j) => userCentres[i][node.axis] - userCentres[j][node.axis]);
+      const countA = referenceCount(node.a), countB = referenceCount(node.b);
+      const cuts = [];
+      for (let cut = 1; cut < order.length; cut++) {
+        cuts.push({
+          cut,
+          surplus: Math.max(0, cut - countA) + Math.max(0, order.length - cut - countB),
+          gap: userCentres[order[cut]][node.axis] - userCentres[order[cut - 1]][node.axis],
+        });
+      }
+      const minimum = Math.min(...cuts.map(cut => cut.surplus));
+      // A failed region cannot borrow ink from its neighbour by inventing extra
+      // strokes there and a compensating merge here. Try only minimum-surplus
+      // cuts; among those, start with the clearest spatial gap.
+      const preferred = cuts.filter(cut => cut.surplus === minimum).sort((a, b) => b.gap - a.gap);
+      for (const { cut } of preferred) {
+        const a = evaluate(node.a, order.slice(0, cut));
+        if (!a) continue;
+        const b = evaluate(node.b, order.slice(cut));
+        if (!b) continue;
+        const candidate = {
+          rows: [...a.rows, ...b.rows], diag: [...a.diag, ...b.diag],
+          bad: a.bad + b.bad, sum: a.sum + b.sum, rank: a.rank + b.rank,
+        };
+        if (answer === null || candidate.rank < answer.rank) answer = candidate;
+        if (node === tree && candidate.bad === 0 && candidate.sum / candidate.rows.length >= Q_BAR) {
+          answer = candidate;
+          break;
+        }
+      }
+    }
+    cache.set(key, answer);
+    return answer;
+  }
+
+  const result = evaluate(tree, user.map((_, i) => i));
+  if (!result) return { pass: false, diag: ['recursive region matching: no structural assignment'] };
+  const mean = result.sum / result.rows.length;
+  const pass = result.bad === 0 && mean >= Q_BAR;
+  result.diag.push('recursive regions ' + (pass ? 'PASS' : 'FAIL') + ' avgQ=' + mean.toFixed(2) + ' bad=' + result.bad);
+  return { pass, diag: result.diag };
+}
+
 
 async function gradeDrawing(char){
   const data = await getCharData(char);
@@ -1582,6 +1771,13 @@ async function gradeDrawing(char){
   const user = normalizeToBounds(rawUser, getBounds(officialAll));
   const charDiag = Math.max(bboxOf(officialAll).diag, 1);
 
+
+  if(RECURSIVE_REGION_TREES[char]){
+    const candidate=recursiveRegionGrade(RECURSIVE_REGION_TREES[char],officialAll,user,charDiag);
+    console.log('[diag-grade] char='+char+' pass='+candidate.pass+' recursive\n'+candidate.diag.join('\n'));
+    recordInk(inkPayload,candidate.pass);
+    return candidate.pass;
+  }
   // Structure layer: split official strokes into components.
   let comps = null;
   const parts = COMPONENT_DECOMP[char];
@@ -1637,7 +1833,7 @@ async function gradeDrawing(char){
         return;
       }
       const aligned = alignClusterUniform(cluster, bboxOf(c.strokes));
-      const r = matchComponent(c.strokes, aligned, c.label, charDiag, diag);
+      const r = matchComponent(c.strokes, aligned, c.label, charDiag, diag, STRICT_MERGE_CHARACTERS.has(char));
       rows = rows.concat(r.rows || []);
     });
     if(pass && rows.length){
@@ -1682,6 +1878,40 @@ async function gradeDrawing(char){
   return result.pass;
 }
 
+
+
+// Geometry inputs produced by grading are immutable; keep only weak references.
+// The input length guard also handles a live input stroke acquiring more points.
+function memoGeometry(original){
+ const memo=new WeakMap();
+ return function(points){
+  const old=memo.get(points);
+  if(old && old.length===points.length)return old.value;
+  const value=original(points);memo.set(points,{length:points.length,value});return value;
+ };
+}
+strokeProfile=memoGeometry(strokeProfile);
+pcaAngle=memoGeometry(pcaAngle);
+centroidOf=memoGeometry(centroidOf);
+strokeLength=memoGeometry(strokeLength);
+shapeNormalize=memoGeometry(shapeNormalize);
+{
+ const original=resample,memo=new WeakMap();
+ resample=function(points,n){
+  let row=memo.get(points);
+  if(!row || row.length!==points.length){row={length:points.length,entries:new Map()};memo.set(points,row);}
+  if(row.entries.has(n))return row.entries.get(n);
+  const value=original(points,n);row.entries.set(n,value);return value;
+ };
+}
+const MERGE_SEGMENT_MEMO=new WeakMap();
+function mergeSegment(points,start,end){
+ let segments=MERGE_SEGMENT_MEMO.get(points);
+ if(!segments){segments=new Map();MERGE_SEGMENT_MEMO.set(points,segments);}
+ const key=start+':'+end;
+ if(!segments.has(key))segments.set(key,points.slice(start,end));
+ return segments.get(key);
+}
 const progressPath = document.getElementById('progressPath');
 const sceneImg = document.getElementById('sceneImg');
 const doorpanel = document.getElementById('doorpanel');
@@ -2369,7 +2599,8 @@ function inkPayloadText(only){
   // but the download sends everything — and without the flag the one thing only a person can
   // supply, whether the child actually wrote it right, is exactly what gets lost in transit.
   return JSON.stringify({ cases: picked.map(x =>
-    ({ c: x.c, verdict: x.v, day: x.d, disputed: !!x.disputed, s: x.s })) });
+    ({ c: x.c, verdict: x.v, day: x.d, disputed: !!x.disputed, s: x.s,
+       graderVersion: x.graderVersion || null, timestamp: x.timestamp || null })) });
 }
 
 // ---------- batch paste ----------
