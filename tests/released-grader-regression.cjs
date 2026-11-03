@@ -1,6 +1,6 @@
 'use strict';
 
-// Protect every correct verdict in the released .5 grader. Earlier baselines
+// Protect every correct verdict in the released .6 grader. Earlier baselines
 // remain useful evidence, but cannot protect fixes made after they were frozen.
 // Expected answers still come from reviewed fixtures, never from the grader.
 const assert = require('node:assert/strict');
@@ -12,7 +12,7 @@ const { buildControls: targetedControls } = require('./targeted-grader-safety.cj
 const { buildControls: round4Controls } = require('./round4-grader-safety.cjs');
 const { buildControls: realInkControls } = require('./round4-real-ink-safety.cjs');
 
-const metadataFile = path.join(root, 'data/released-grader-baseline-2026.11.03.5.json');
+const metadataFile = path.join(root, 'data/released-grader-baseline-2026.11.03.6.json');
 const verdicts = new Set(['pass', 'fail']);
 const inkHash = ink => crypto.createHash('sha256').update(JSON.stringify(ink)).digest('hex');
 
@@ -164,7 +164,7 @@ async function main(args = process.argv.slice(2)) {
     const reportTarget = fs.existsSync(reportFile) ? fs.realpathSync(reportFile) : reportFile;
     assert.notEqual(reportTarget, fs.realpathSync(metadataFile), 'A report must not overwrite the frozen baseline');
   }
-  assert.equal(metadata.sourceVersion, '2026.11.03.5', 'Unexpected frozen release version');
+  assert.equal(metadata.sourceVersion, '2026.11.03.6', 'Unexpected frozen release version');
   assert.match(metadata.sourceCommit, /^[a-f0-9]{40}$/, 'Missing frozen release commit');
   assert.match(metadata.sourceHtmlSha256, /^[a-f0-9]{64}$/, 'Missing frozen release HTML hash');
   assert.ok(Array.isArray(metadata.rows) && metadata.rows.length, 'Frozen baseline has no cases');
