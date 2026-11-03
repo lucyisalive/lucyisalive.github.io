@@ -56,11 +56,11 @@ run(section('function feedbackCall(', 'let activeSpeech = null;'));
 run(`let strokesPoints=[];let isDrawing=false;let finaleCalls=0;
   function stopPromptSpeech(){} function setDoorClosed(){} function setDoorOpen(){}
   function showGlowChar(){} function setWritingView(){} function renderQueueList(){}
-  function clearCanvas(){strokesPoints=[];} async function getCharData(){}
+  function clearCanvas(){strokesPoints=[];} function getCharData(){return Promise.resolve({});}
   function startTeachingRound(){} function applyScene(){}
   function showFinale(){finaleCalls++;finale.classList.add('show');}`);
 run(section('function loadNextDoor(){', 'function startTeachingRound(){'));
-run(section('function pinyinAlts(char){', 'function renderQueueList(){'));
+run(section('let pinyinLoading =', 'function renderQueueList(){'));
 run(section('const PY_LETTERS =', 'onTap(addCharBtn,'));
 run(section('onTap(addCharBtn,', 'onTap(inkCopyBtn,'));
 run(section('onTap(batchAddBtn,', "dailyCountInput.addEventListener('change'"));

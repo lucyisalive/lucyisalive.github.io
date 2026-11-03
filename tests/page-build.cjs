@@ -23,13 +23,13 @@ const compile = (html = source, files = assets) => inlinePage(html, file => {
 });
 const compiled = compile();
 assert.equal(compile().html, compiled.html, 'Build output must be deterministic');
-assert.equal(compiled.scripts.length, 7);
+assert.equal(compiled.scripts.length, 6);
 assert.equal(compiled.styles.length, 1);
 assert.ok(compiled.html.includes('game-source.html'), 'Generated file must explain where to edit');
-assert.equal([...compiled.html.matchAll(/<script\b[^>]*>[\s\S]*?<\/script\s*>/gi)].length, 8,
+assert.equal([...compiled.html.matchAll(/<script\b[^>]*>[\s\S]*?<\/script\s*>/gi)].length, 7,
   'Data strings must not create executable tags');
 assert.equal((compiled.html.match(/<style\b/g) || []).length, 1, 'CSS strings must not terminate the style element');
-assert.ok(compiled.html.includes('<script data-source="hanzi-data.js">'));
+assert.ok(compiled.html.includes('<script data-source="glyph-catalog.js">'));
 assert.ok(compiled.html.includes('<style data-source="game-feedback.css">'));
 assert.equal(/<script\b[^>]*\bsrc\s*=/i.test(compiled.html), false, 'All startup JS must be inline');
 assertNoStartupLinks(compiled.html);
@@ -40,21 +40,21 @@ assert.deepEqual(Array.from(context.window.loaded), SCRIPT_FILES.concat('game'),
 assert.equal(context.window.example, '</script><script>notExecutable()</script>');
 assert.equal(context.window.linkExample, '<link rel="stylesheet" href="game-feedback.css">');
 
-// The game can initialize before the two large glyph modules finish arriving.
-// Bundling must preserve this deliberate position, including the footer signal.
-const smallFiles = SCRIPT_FILES.filter(file => !['hanzi-data.js', 'curriculum-hanzi-data.js'].includes(file));
+// Source order and extra inline blocks must remain intact. Neither the large
+// glyph bundles nor the optional pinyin table belong in startup markup anymore.
+const smallFiles = SCRIPT_FILES.slice(0, 3), remaining = SCRIPT_FILES.slice(3);
 const reordered = '<!DOCTYPE html><html><head><link rel="stylesheet" href="game-feedback.css"></head><body>' +
   smallFiles.map(file => '<script src="' + file + '"></script>').join('') +
   '<script>window.loaded.push("interactive");</script>' +
-  '<script src="hanzi-data.js"></script><script src="curriculum-hanzi-data.js"></script>' +
-  '<script>window.loaded.push("glyphs-ready");</script></body></html>';
+  remaining.map(file => '<script src="' + file + '"></script>').join('') +
+  '<script>window.loaded.push("footer");</script></body></html>';
 const streaming = compile(reordered);
 const streamingContext = vm.createContext({ window: { loaded: [] } });
 for (const script of streaming.html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script\s*>/gi)) {
   vm.runInContext(script[1], streamingContext);
 }
 assert.deepEqual(Array.from(streamingContext.window.loaded),
-  smallFiles.concat('interactive', 'hanzi-data.js', 'curriculum-hanzi-data.js', 'glyphs-ready'));
+  smallFiles.concat('interactive', remaining, 'footer'));
 
 for (const extra of [
   '<script src="https://example.com/game.js"></script>',
@@ -63,11 +63,14 @@ for (const extra of [
   '<link rel="stylesheet" href="https://example.com/font.css">',
   '<img src="https://example.com/a.png">',
 ]) assert.throws(() => compile(source.replace('</head>', extra + '</head>')), /local|External/);
-assert.throws(() => compile(source.replace('hanzi-data.js', '../hanzi-data.js')), /Invalid local/);
-assert.throws(() => compile(source.replace('hanzi-data.js', 'unknown.js')), /Unexpected/);
-assert.throws(() => compile(source.replace('src="hanzi-data.js"', 'async src="hanzi-data.js"')), /ordered classic/);
-assert.throws(() => compile(source.replace('</body>', '<script src="hanzi-data.js"></script></body>')), /Duplicate/);
-assert.throws(() => compile(source.replace(/<script src="hanzi-data.js"><\/script>/, '')), /seven/);
+assert.throws(() => compile(source.replace('curriculum-data.js', '../curriculum-data.js')), /Invalid local/);
+assert.throws(() => compile(source.replace('curriculum-data.js', 'unknown.js')), /Unexpected/);
+assert.throws(() => compile(source.replace('src="curriculum-data.js"', 'async src="curriculum-data.js"')), /ordered classic/);
+assert.throws(() => compile(source.replace('</body>', '<script src="curriculum-data.js"></script></body>')), /Duplicate/);
+assert.throws(() => compile(source.replace(/<script src="curriculum-data.js"><\/script>/, '')), /six/);
+for (const bulk of ['hanzi-data.js', 'curriculum-hanzi-data.js', 'pinyin-data.js']) {
+  assert.throws(() => compile(source.replace('</body>', '<script src="' + bulk + '"></script></body>')), /Unexpected/);
+}
 assert.throws(() => compile(source.replace('<link rel="stylesheet" href="game-feedback.css?v=123">', '')), /exactly once/);
 assert.throws(() => compile(source, { ...assets, [CSS_FILE]: '@import "extra.css";' }), /@import/);
 assert.throws(() => compile(source, { ...assets, [CSS_FILE]: 'p { background: url(https://example.com/a.png); }' }), /external CSS/);
@@ -93,11 +96,11 @@ if (!process.argv.includes('--unit')) {
     assert.equal(fs.readFileSync(path.join(root, file), 'utf8'), built.html, 'Published page must rebuild exactly: ' + file);
   }
   assert.equal(built.summary.glyphs.count, 167);
-  assert.equal(built.summary.startupAssetRequestsRemoved, 8);
+  assert.equal(built.summary.startupAssetRequestsRemoved, 7);
   assert.equal(built.summary.gzipBytes.singlePage > 0, true);
-  assert.equal(built.summary.scripts.length, 7);
+  assert.equal(built.summary.scripts.length, 6);
   const sourceScriptOrder = [...fs.readFileSync(path.join(root, 'game-source.html'), 'utf8')
     .matchAll(/<script\b[^>]*\bsrc=["']([^"'?]+)(?:\?[^"']*)?["'][^>]*>/g)].map(match => match[1]);
   assert.deepEqual(built.summary.scripts, sourceScriptOrder);
-  console.log('Page build: reproducible identical HTML, seven inline modules, CSS, and 167 unchanged glyphs passed.');
+  console.log('Page build: reproducible identical HTML, six inline modules, CSS, and 167 exact on-demand glyphs passed.');
 } else console.log('Page build unit checks: order, closing-tag safety, external resource rejection, and geometry-change detection passed.');

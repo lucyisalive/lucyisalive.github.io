@@ -2,7 +2,7 @@
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
-<meta name="game-version" content="2026.11.03.1">
+<meta name="game-version" content="2026.11.03.2">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>汉字魔法门</title>
 <link rel="stylesheet" href="game-feedback.css?v=2026.11.02.4">
@@ -558,7 +558,7 @@
     </p>
 
     <button class="btn-close-panel" id="closePanelBtn">关闭</button>
-    <p class="hint-text" id="gameVersion">版本 2026.11.03.1</p>
+    <p class="hint-text" id="gameVersion">版本 2026.11.03.2</p>
   </div>
 </div>
 
@@ -566,7 +566,8 @@
 <script src="practice-selector.js?v=2026.11.02.3"></script>
 <script src="sentence-hints.js?v=2026.11.02.4"></script>
 <script src="game-feedback.js?v=2026.11.02.4"></script>
-<script src="pinyin-data.js"></script>
+<script src="glyph-catalog.js"></script>
+<script src="glyph-loader.js"></script>
 <script>
 /* ============================================================
    汉字魔法门 — 默写版
@@ -623,12 +624,7 @@ function defaultBank(){
 // device that has already played keeps its old characters for ever and never sees the new
 // set — the change would reach nobody who actually uses the game.
 const BANK_VERSION = 5;
-const GAME_VERSION = '2026.11.03.1';
-// The small game controls start before the large inline glyph payload arrives.
-// Grading can briefly await those exact offline glyphs without freezing the UI.
-let finishBundledGlyphs;
-let bundledGlyphsLoaded = false;
-const bundledGlyphsReady = new Promise(resolve => { finishBundledGlyphs = resolve; });
+const GAME_VERSION = '2026.11.03.2';
 
 let state = {
   bank: defaultBank(),
@@ -876,13 +872,13 @@ function clearCanvas(){
 
 // ---------- character stroke data (loaded once per character, used only for
 // grading in the background — never rendered on screen, so nothing leaks) ----------
-// Priority: (1) bundled in hanzi-data.js — instant, zero network, works even if the
-// device has no internet at all; (2) previously fetched + cached in localStorage —
-// also zero network after the first time; (3) live fetch from the CDN, with a hard
-// timeout so a blocked/hanging network request can never freeze the "写好了" button
-// forever — it fails fast instead, with a message asking to try again while online.
+// Known glyphs come from the same frozen 167-character data, one small local
+// JSON at a time, including the original component dependencies. Versioned
+// storage makes downloaded glyphs available offline without loading the full set.
+// Only unknown parent-entered characters use the legacy remote-data fallback.
 const LOCAL_HANZI_CACHE_PREFIX = 'hanzi-char-cache-';
 const charDataCache = {};
+let frozenGlyphLoader = null;
 
 function withTimeout(promise, ms){
   return new Promise((resolve, reject) => {
@@ -894,8 +890,21 @@ function withTimeout(promise, ms){
 async function getCharData(char){
   if(charDataCache[char]) return charDataCache[char];
 
-  if(typeof bundledGlyphsReady !== 'undefined' && !bundledGlyphsLoaded){
-    await withTimeout(bundledGlyphsReady,6000);
+  const catalog = window.HANZI_GLYPH_CATALOG;
+  if(catalog && catalog.glyphs[char]){
+    if(!window.HanziGlyphLoader) throw new Error('字形加载器尚未就绪');
+    if(!frozenGlyphLoader){
+      let storage = null;
+      try{ storage = localStorage; }catch(e){}
+      frozenGlyphLoader = window.HanziGlyphLoader.create({catalog,
+        localData:window.HANZI_LOCAL_DATA || (window.HANZI_LOCAL_DATA = {}),
+        storage,fetch:window.fetch.bind(window),timeoutMs:6000});
+    }
+    // The loader also prepares exactly the original decomposition dependencies;
+    // never grade a known target merely because its own JSON arrived first.
+    const data = await frozenGlyphLoader.load(char);
+    charDataCache[char] = data;
+    return data;
   }
 
   if(window.HANZI_LOCAL_DATA && window.HANZI_LOCAL_DATA[char]){
@@ -919,7 +928,7 @@ async function getCharData(char){
 }
 
 // Only parent-entered characters outside the 167 frozen offline glyphs need a
-// network request. It cannot delay startup, and the timeout covers the body too.
+// third-party request. It cannot delay startup, and the timeout covers the body too.
 async function fetchCharacterData(char){
   const controller = typeof AbortController === 'function' ? new AbortController() : null;
   const request = (async () => {
@@ -2642,9 +2651,8 @@ onTap(submitBtn, async function(){
     const haveData = (typeof charDataCache !== 'undefined' && charDataCache[item.char]) ||
                      (window.HANZI_LOCAL_DATA && window.HANZI_LOCAL_DATA[item.char]);
     statusLine.textContent = haveData
-      ? '这次没批改成功（不算写错），擦掉重写一次试试'
-      : !bundledGlyphsLoaded ? '汉字还在准备中，笔迹已保留，请稍后再点“写好了”'
-      : '这个字还没有离线数据，需要联网一次才能批改，请连上网络后重试';
+      ? '这次没批改成功（不算写错），笔迹先留着，稍后再点“写好了”'
+      : '暂时没取到这个字的数据（不算写错），笔迹已保留，稍后再点“写好了”';
   }
 });
 
@@ -2692,9 +2700,29 @@ onTap(closePanelBtn, () => {
 // 多音字 come back with more than one, and no amount of cleverness picks the right one from
 // a character alone — 薄 is bó in 单薄 but báo in 薄饼 — so those are surfaced in red for the
 // parent to tap through. That's the honest split: automate the 99%, ask about the rest.
+let pinyinLoading = false;
+function loadPinyinForParent(){
+  if(window.PINYIN_MAP || pinyinLoading) return;
+  pinyinLoading = true;
+  const script = document.createElement('script');
+  script.src = 'pinyin-data.js';
+  script.async = true;
+  script.onload = () => {
+    pinyinLoading = false;
+    const char = charInput.value.trim();
+    if(char && !pinyinInput.value.trim()) pinyinInput.value = pinyinAlts(char)[0] || '';
+  };
+  script.onerror = () => { pinyinLoading = false; };
+  document.body.appendChild(script);
+}
+
 function pinyinAlts(char){
   const raw = (window.PINYIN_MAP || {})[char];
-  return raw ? raw.split(' ') : [];
+  if(raw) return raw.split(' ');
+  const entry = ((window.HANZI_GLYPH_CATALOG || {}).glyphs || {})[char];
+  // Keep every original reading for these familiar characters. Do not silently
+  // force a parent's different word to use the textbook's one reading.
+  return entry && entry.pinyin ? entry.pinyin.split(' ') : [];
 }
 
 function escapeText(value){
@@ -2871,7 +2899,7 @@ onTap(addCharBtn, () => {
   if(!/^[一-鿿]$/.test(c)){ batchMsg.textContent = '每次请填一个汉字；多个字请用上面的批量加入。'; return; }
   const alts = pinyinAlts(c);
   const p = pinyinInput.value.trim() || alts[0] || '';
-  if(!p) return;                         // no reading typed and none on file — nothing to show the child
+  if(!p){ loadPinyinForParent(); batchMsg.textContent = '拼音表还在加载，请稍后再点加入；也可以直接填拼音。'; return; }
   enqueueParentItems([{ char:c, pinyin:p, word:w,
     ...(sentenceInput.value.trim() ? {sentence:sentenceInput.value.trim()} : {}),
     alts: pinyinInput.value.trim() ? [p] : alts }]);
@@ -2913,14 +2941,16 @@ onTap(inkClearBtn, () => {
 });
 
 onTap(batchAddBtn, () => {
+  loadPinyinForParent();
   const { items, bad } = parseBatch(batchInput.value);
   const added = enqueueParentItems(items);
   const polyphonic = items.filter(it => it.alts.length > 1).length;
   let msg = added ? `${added} 个字已排到今天最前面，重复字保留原记录` : '没认出任何字';
   if(polyphonic) msg += `，其中 ${polyphonic} 个多音字（标红的），点一下确认读音`;
   if(bad.length) msg += `；没认出：${bad.join('、')}`;
+  if(bad.length && !window.PINYIN_MAP) msg += '；输入已保留，拼音表加载后可以再点加入';
   batchMsg.textContent = msg;
-  if(items.length) batchInput.value = '';
+  if(items.length && !bad.length) batchInput.value = '';
   saveState();
   renderQueueList();
 });
@@ -3040,14 +3070,10 @@ renderStuckList();
 renderInkList();
 onTap(speakBtn, speakPrompt);
 onTap(sentenceBtn, speakSentence);
+charInput.addEventListener('focus',loadPinyinForParent);
+batchInput.addEventListener('focus',loadPinyinForParent);
 loadNextDoor();
 document.getElementById('startupNotice').hidden = true;
-</script>
-<script src="hanzi-data.js"></script>
-<script src="curriculum-hanzi-data.js?v=2026.11.02.3"></script>
-<script>
-bundledGlyphsLoaded = true;
-finishBundledGlyphs();
 </script>
 </body>
 </html>

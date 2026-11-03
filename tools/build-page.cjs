@@ -7,13 +7,14 @@ const path = require('node:path');
 const vm = require('node:vm');
 const crypto = require('node:crypto');
 const zlib = require('node:zlib');
+const { createGlyphFiles, writeGlyphFiles } = require('./build-glyph-files.cjs');
 
 const ROOT = path.resolve(__dirname, '..');
 const SOURCE_FILE = 'game-source.html';
 const OUTPUT_FILES = ['index.html', '汉字魔法门_4.html'];
 const SCRIPT_FILES = [
-  'hanzi-data.js', 'curriculum-hanzi-data.js', 'curriculum-data.js',
-  'practice-selector.js', 'sentence-hints.js', 'game-feedback.js', 'pinyin-data.js',
+  'curriculum-data.js', 'practice-selector.js', 'sentence-hints.js',
+  'game-feedback.js', 'glyph-catalog.js', 'glyph-loader.js',
 ];
 const CSS_FILE = 'game-feedback.css';
 const GLYPH_FILES = ['hanzi-data.js', 'curriculum-hanzi-data.js'];
@@ -134,13 +135,9 @@ function inlinePage(source, readAsset) {
   let html = source.replace(RESOURCE_TAG, (tag, raw, body, linkRaw) =>
     raw === undefined ? inlineStylesheet(tag, linkRaw) : inlineScript(tag, raw, body));
   if (scripts.length !== SCRIPT_FILES.length || SCRIPT_FILES.some(file => !scripts.some(entry => entry.file === file))) {
-    throw new Error('Expected all seven local startup scripts exactly once');
+    throw new Error('Expected all six local startup scripts exactly once');
   }
   if (styles.length !== 1) throw new Error('Expected game-feedback.css exactly once');
-  if (scripts.findIndex(entry => entry.file === GLYPH_FILES[0]) >
-      scripts.findIndex(entry => entry.file === GLYPH_FILES[1])) {
-    throw new Error('hanzi-data.js must precede curriculum-hanzi-data.js');
-  }
   if (!/^\s*<!doctype html>/i.test(html)) throw new Error('Source must begin with the HTML doctype');
   html = html.replace(/^(\s*<!doctype html>)[\t ]*(?:\r?\n)?/i, '$1\n' + NOTICE + '\n');
   assertNoStartupLinks(html);
@@ -178,7 +175,11 @@ function gzipBytes(text) { return zlib.gzipSync(Buffer.from(text), { level: 9 })
 function buildPage(projectRoot = ROOT) {
   const source = fs.readFileSync(path.join(projectRoot, SOURCE_FILE), 'utf8');
   const result = inlinePage(source, file => fs.readFileSync(path.join(projectRoot, file), 'utf8'));
-  const glyphs = verifyGlyphGeometry(result.assets, result.scripts);
+  // The large frozen bundles are the authoritative build inputs, not startup
+  // scripts. Check the actual on-demand files/catalog against all 167 objects.
+  const frozen = createGlyphFiles(projectRoot);
+  writeGlyphFiles(frozen, projectRoot, true);
+  const glyphs = { count: frozen.summary.glyphCount, sha256: frozen.summary.geometrySha256 };
   const multiFileBytes = bytes(source) + result.assets.reduce((sum, asset) => sum + bytes(asset.source), 0);
   const multiFileGzip = gzipBytes(source) + result.assets.reduce((sum, asset) => sum + gzipBytes(asset.source), 0);
   const singlePageGzip = gzipBytes(result.html);
@@ -187,7 +188,7 @@ function buildPage(projectRoot = ROOT) {
     glyphs, startupAssetRequestsRemoved: result.assets.length,
     bytes: { multiFile: multiFileBytes, singlePage: bytes(result.html) },
     gzipBytes: { multiFile: multiFileGzip, singlePage: singlePageGzip, saved: multiFileGzip - singlePageGzip },
-    compressionComparison: 'gzip level 9; source HTML and each JS/CSS compressed separately versus the combined HTML; excludes HTTP headers and scene images',
+    compressionComparison: 'gzip level 9; source HTML and critical JS/CSS compressed separately versus the combined HTML; excludes HTTP headers, scene images, and lazy glyph/pinyin data',
   } };
 }
 

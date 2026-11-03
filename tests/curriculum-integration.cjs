@@ -89,7 +89,7 @@ for (const item of curriculum.entries) {
   }
   assert.equal(bankItem.curriculumId, curriculum.id);
 }
-const loaderOrder = ['curriculum-data.js', 'practice-selector.js', 'sentence-hints.js', 'game-feedback.js', 'pinyin-data.js'];
+const loaderOrder = ['curriculum-data.js', 'practice-selector.js', 'sentence-hints.js', 'game-feedback.js', 'glyph-catalog.js', 'glyph-loader.js'];
 const loaderPosition = file => {
   const escaped = file.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const pattern = new RegExp('<script\\b[^>]*\\b(?:src|data-source)=["\\\']' + escaped + '(?:\\?[^"\\\']*)?["\\\'][^>]*>', 'i');
@@ -101,8 +101,9 @@ for (let i = 1; i < loaderOrder.length; i++) {
 }
 const mainPosition = html.indexOf('function todayStr(){');
 assert.ok(loaderOrder.every(file => loaderPosition(file) < mainPosition), 'Small dependencies must precede the main program');
-assert.ok(mainPosition < loaderPosition('hanzi-data.js'), 'Buttons must initialize before the large glyph data');
-assert.ok(loaderPosition('hanzi-data.js') < loaderPosition('curriculum-hanzi-data.js'), 'Base glyphs precede additions');
+for(const file of ['hanzi-data.js','curriculum-hanzi-data.js','pinyin-data.js']) {
+  assert.equal(loaderPosition(file), -1, 'Large data must not delay startup: ' + file);
+}
 
 // All valid old learning fields, arbitrary parent metadata, and runtime settings
 // survive the bank change. Fresh textbook metadata replaces obsolete categories.
