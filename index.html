@@ -2,7 +2,7 @@
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
-<meta name="game-version" content="2026.11.02.1">
+<meta name="game-version" content="2026.11.02.2">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>汉字魔法门</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -543,7 +543,7 @@
     </p>
 
     <button class="btn-close-panel" id="closePanelBtn">关闭</button>
-    <p class="hint-text" id="gameVersion">版本 2026.11.02.1</p>
+    <p class="hint-text" id="gameVersion">版本 2026.11.02.2</p>
   </div>
 </div>
 
@@ -608,7 +608,7 @@ function defaultBank(){
 // device that has already played keeps its old characters for ever and never sees the new
 // set — the change would reach nobody who actually uses the game.
 const BANK_VERSION = 4;
-const GAME_VERSION = '2026.11.02.1';
+const GAME_VERSION = '2026.11.02.2';
 
 let state = {
   bank: defaultBank(),
@@ -654,7 +654,7 @@ function saveInkLog(){
 }
 function recordInk(payload, verdict){
   inkLog.unshift({ c: payload.c, s: payload.s, v: verdict ? 'pass' : 'fail', d: todayStr(), disputed: false,
-    graderVersion: GAME_VERSION, timestamp: Date.now() });
+    graderVersion: GAME_VERSION, timestamp: Date.now(), filtering: payload.filtering });
   // Marked entries are the whole point of the log — they carry the one judgement only a
   // person can make — so they are never what gets thrown away to make room. Trim the oldest
   // UNMARKED entry instead, and only start on marked ones if the log is somehow all marked.
@@ -1655,7 +1655,8 @@ const RECURSIVE_REGION_TREES = {
       regionSplit('x', regionLeaf('左口', 6, 9), regionLeaf('右口', 9, 12))),
     regionLeaf('木', 12, 16))),
   '警': regionSplit('y', regionSplit('x',
-    regionSplit('y', regionLeaf('艹', 0, 3), regionLeaf('句', 3, 8)),
+    regionSplit('y', regionLeaf('艹', 0, 3),
+      regionSplit('y', regionLeaf('勹', 3, 5), regionLeaf('句口', 5, 8))),
     regionLeaf('攵', 8, 12)),
     regionSplit('y', regionLeaf('言点', 12, 13),
       regionSplit('y', regionLeaf('言三横', 13, 16), regionLeaf('言口', 16, 19)))),
@@ -1758,14 +1759,34 @@ async function gradeDrawing(char){
   const drawn = strokesPoints.filter(s => s.length > 1);
   const inkDiag = drawn.length ? Math.max(bboxOf(drawn).diag, 1) : 1;
   const rawUser = drawn.filter(s => strokeLength(s) / inkDiag >= 0.03);
-  if(rawUser.length === 0) return false;
+  if(rawUser.length === 0 && strokesPoints.length === 0) return false;
+
+  // Keep evidence of input that the existing touch-artifact filter removed.
+  // A missing dot in the graded ink does not prove the player never drew it.
+  // These traces are diagnostic only; they do not change what gets graded.
+  const ignored = strokesPoints.filter(s => s.length < 2 || strokeLength(s) / inkDiag < 0.03);
+  const filtering = {
+    inputStrokeCount: strokesPoints.length,
+    retainedStrokeCount: rawUser.length,
+    shortStrokeThreshold: +(inkDiag * 0.03).toFixed(3),
+    ignoredStrokes: ignored.map(s => ({
+      reason: s.length < 2 ? 'single-point' : 'short-stroke',
+      pointCount: s.length,
+      length: +strokeLength(s).toFixed(3),
+      s: (s.length <= 16 ? s : resample(s, 16)).map(p => [p.x, p.y]),
+    })),
+  };
 
   // What was actually drawn. Reproducing a disputed grade from real ink beats guessing at
   // how it was written and testing a synthetic stand-in. Logged to the console AND kept in
   // the ink log, so getting it out no longer needs a cable and Web Inspector.
   const inkPayload = { c: char,
-    s: rawUser.map(s => resample(s, 16).map(p => [Math.round(p.x), Math.round(p.y)])) };
+    s: rawUser.map(s => resample(s, 16).map(p => [Math.round(p.x), Math.round(p.y)])), filtering };
   console.log('[strokes] ' + JSON.stringify(inkPayload));
+  if(rawUser.length === 0){
+    recordInk(inkPayload, false);
+    return false;
+  }
 
   // Writing the whole character small/large/off-centre is never an error.
   const user = normalizeToBounds(rawUser, getBounds(officialAll));
@@ -2600,7 +2621,8 @@ function inkPayloadText(only){
   // supply, whether the child actually wrote it right, is exactly what gets lost in transit.
   return JSON.stringify({ cases: picked.map(x =>
     ({ c: x.c, verdict: x.v, day: x.d, disputed: !!x.disputed, s: x.s,
-       graderVersion: x.graderVersion || null, timestamp: x.timestamp || null })) });
+       graderVersion: x.graderVersion || null, timestamp: x.timestamp || null,
+       filtering: x.filtering || null })) });
 }
 
 // ---------- batch paste ----------

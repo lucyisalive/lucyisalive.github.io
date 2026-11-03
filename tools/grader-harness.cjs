@@ -12,12 +12,13 @@ function createGrader({ html = fs.readFileSync(path.join(root, 'index.html'), 'u
   const start = html.indexOf('function medianToCanvasPoints(');
   const end = html.indexOf('const progressPath =', start);
   if (start < 0 || end < 0) throw new Error('Grading source boundaries were not found');
-  let logs = [];
+  let logs = [], recordedInk = [];
   const context = vm.createContext({
     window: {},
     console: { log: (...args) => logs.push(args.join(' ')) },
     setTimeout,
     clearTimeout,
+    captureInk: (payload, verdict) => recordedInk.push({ payload, verdict }),
   });
   vm.runInContext(fs.readFileSync(path.join(root, 'hanzi-data.js'), 'utf8'), context);
   const size = html.match(/const CANVAS_SIZE\s*=\s*(\d+)/)?.[1];
@@ -31,20 +32,22 @@ function createGrader({ html = fs.readFileSync(path.join(root, 'index.html'), 'u
       if (!data) throw new Error('No bundled data for ' + char);
       return data;
     }
-    function recordInk() {}
+    function recordInk(payload, verdict) { captureInk(payload, verdict); }
   `, context);
   vm.runInContext(html.slice(start, end), context);
 
   return {
     async grade(char, strokes) {
       logs = [];
+      recordedInk = [];
       context.testChar = char;
       context.testInk = strokes.map(s => s.map(p =>
         Array.isArray(p) ? { x: p[0], y: p[1] } : { x: p.x, y: p.y }
       ));
       vm.runInContext('strokesPoints = testInk;', context);
       const pass = await vm.runInContext('gradeDrawing(testChar)', context);
-      return { pass, diagnostics: logs.filter(s => s.startsWith('[diag-grade]')).join('\n') };
+      return { pass, diagnostics: logs.filter(s => s.startsWith('[diag-grade]')).join('\n'),
+        recordedInk: JSON.parse(JSON.stringify(recordedInk)) };
     },
     reference(char) {
       context.testChar = char;

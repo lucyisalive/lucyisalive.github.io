@@ -7,7 +7,7 @@ const { createGrader, root } = require('../tools/grader-harness.cjs');
 
 async function main() {
   const files = process.argv.slice(2);
-  if (!files.length) files.push('real-ink-cases.json', 'tests/ipad-2026-11-02.json');
+  if (!files.length) files.push('real-ink-cases.json', 'tests/ipad-2026-11-02.json', 'tests/ipad-2026-11-02-round2.json');
   const grader = createGrader();
   let matched = 0, failed = 0, unlabelled = 0;
   for (const file of files) {

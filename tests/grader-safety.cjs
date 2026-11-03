@@ -111,7 +111,28 @@ async function main() {
     if (r.pass === c.expect) matched++;
     else { errors++; console.error('FAIL mutation', c.id, r.diagnostics); }
   }
-  console.log(JSON.stringify({ referenceChecks: positives, structuralChecks: matched, errors }));
+  // Discarded taps must stay available for diagnosis without entering scoring.
+  // Otherwise a genuinely drawn tiny dot can disappear from both the grade and
+  // the evidence, making a collection problem look like a writing mistake.
+  const original = grader.reference('澡');
+  const tinyMarks = [[{x: 250, y: 250}], [{x: 250, y: 250}, {x: 251, y: 251}]];
+  for (const mark of tinyMarks) {
+    const result = await grader.grade('澡', [...original, mark]);
+    assert.equal(result.pass, true, 'A discarded tap must not change the grade');
+    const record = result.recordedInk[0].payload;
+    assert.equal(record.s.length, original.length);
+    assert.equal(record.filtering.inputStrokeCount, original.length + 1);
+    assert.equal(record.filtering.ignoredStrokes.length, 1);
+    assert.deepEqual(record.filtering.ignoredStrokes[0].s, mark.map(p => [p.x, p.y]));
+  }
+  const tapOnly = await grader.grade('澡', [tinyMarks[0]]);
+  assert.equal(tapOnly.pass, false);
+  assert.equal(tapOnly.recordedInk[0].payload.s.length, 0);
+  assert.equal(tapOnly.recordedInk[0].payload.filtering.ignoredStrokes[0].reason, 'single-point');
+  const empty = await grader.grade('澡', []);
+  assert.equal(empty.pass, false);
+  assert.equal(empty.recordedInk.length, 0);
+  console.log(JSON.stringify({ referenceChecks: positives, structuralChecks: matched, inputLoggingChecks: tinyMarks.length + 2, errors }));
   process.exitCode = errors ? 1 : 0;
 }
 
