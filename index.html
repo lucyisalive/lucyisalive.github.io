@@ -2,7 +2,7 @@
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
-<meta name="game-version" content="2026.11.02.2">
+<meta name="game-version" content="2026.11.02.3">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>汉字魔法门</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -487,6 +487,7 @@
 <div class="panel-overlay" id="panelOverlay">
   <div class="panel">
     <h2>今日汉字设置</h2>
+    <p class="hint-text">学习范围：统编人教版·三年级下册（2025年10月版）<br>从课本词语表选取的 92 个字词中，搭配难度和结构随机出题；每格写一个字。</p>
 
     <label>批量粘贴（按说话的方式写，拼音自动生成）</label>
     <textarea id="batchInput" rows="3" placeholder="奇迹的迹；求救的救；师弟的弟"></textarea>
@@ -543,11 +544,14 @@
     </p>
 
     <button class="btn-close-panel" id="closePanelBtn">关闭</button>
-    <p class="hint-text" id="gameVersion">版本 2026.11.02.2</p>
+    <p class="hint-text" id="gameVersion">版本 2026.11.02.3</p>
   </div>
 </div>
 
 <script src="hanzi-data.js"></script>
+<script src="curriculum-hanzi-data.js?v=2026.11.02.3"></script>
+<script src="curriculum-data.js?v=2026.11.02.3"></script>
+<script src="practice-selector.js?v=2026.11.02.3"></script>
 <script src="pinyin-data.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.7/dist/hanzi-writer.min.js"></script>
 <script>
@@ -587,28 +591,26 @@ function daysBetween(fromStr, toStr){
 // box: 掌握等级 0(生) -> 4(熟练)，等级越高 interval 越长
 // passedDays: 在哪些**不同日期**通过过；集满 3 个不同的日子就算永久掌握，移出轮换
 function newBankItem(char, pinyin, word){
-  return { char, pinyin, word: word || '', box:1, interval:0, lastSeen:null, history:[], passedDays:[] };
+  return { char, pinyin, word: word || '', box:1, interval:0, lastSeen:null, history:[], passedDays:[], wrongToday:0 };
 }
 
-// 测试模式：只留有判错前科的字，家长自己测，效率优先。
-//   2026-11-02：保留这八个字供真机复验。已修复固定笔迹中的慧/澡/警误拒和藏误放，
-//   薄的三次完整笔迹也已通过；这表示这些具体样例修好了，不代表复杂字再无误判。
-//   剩余合笔/额外笔漏洞由 tests/structural-safety.json 单独记录，继续逐项处理。
-// 换下去的字（孩子的生字 + 其余复杂字）进度不会丢：迁移时标成 retired 留在存档里，
-// 只是不参与出题；下次放回字库进度自动接上。
+// A verified selection from the textbook word table replaces the former eight
+// complex-character test loop. Learning records remain keyed by individual char.
 function defaultBank(){
-  return [
-    ['慧','huì','智慧'],  ['警','jǐng','警察'], ['藏','cáng','躲藏'],
-    ['器','qì','机器'],   ['燃','rán','燃烧'],  ['澡','zǎo','洗澡'],
-    ['霎','shà','霎时'],  ['薄','bó','薄雾'],
-  ].map(a => newBankItem(a[0], a[1], a[2]));
+  const curriculum = window.HANZI_CURRICULUM;
+  if(!curriculum || !curriculum.entries.length) throw new Error('教材字词库尚未加载，请刷新页面');
+  return curriculum.entries.map(entry => ({
+    ...newBankItem(entry.char, entry.pinyin, entry.word),
+    structure: entry.structure, strokeCount: entry.strokeCount,
+    curriculumId: curriculum.id, unit: entry.unit, lesson: entry.lesson,
+  }));
 }
 
 // Bump whenever the built-in starter bank changes. Progress is saved, so without this a
 // device that has already played keeps its old characters for ever and never sees the new
 // set — the change would reach nobody who actually uses the game.
-const BANK_VERSION = 4;
-const GAME_VERSION = '2026.11.02.2';
+const BANK_VERSION = 5;
+const GAME_VERSION = '2026.11.02.3';
 
 let state = {
   bank: defaultBank(),
@@ -709,23 +711,22 @@ function migrateState(s){
     const byChar = new Map(s.bank.map(it => [it.char, it]));
     const merged = defaultBank().map(fresh => {
       const old = byChar.get(fresh.char);
-      // Carry the whole record of what the child has done, not just the review schedule:
-      // dropping stuck/wrongToday would hand back a character that was parked waiting for a
-      // parent to explain it, which is the one thing being parked is meant to prevent.
-      return old ? { ...fresh, box: old.box, interval: old.interval, lastSeen: old.lastSeen,
-                     history: old.history, passedDays: old.passedDays,
-                     stuck: old.stuck, stuckDay: old.stuckDay,
-                     wrongToday: old.wrongToday, wrongDay: old.wrongDay } : fresh;
+      if(!old) return fresh;
+      // Preserve the entire learning record, including same-day errors. New
+      // textbook metadata wins, while a parent's explicit context stays theirs.
+      return { ...fresh, ...old,
+        pinyin: old.fromParent ? old.pinyin : fresh.pinyin,
+        word: old.fromParent ? old.word : fresh.word,
+        structure: fresh.structure, strokeCount: fresh.strokeCount,
+        curriculumId: fresh.curriculumId, unit: fresh.unit, lesson: fresh.lesson,
+        retired: false };
     });
     const kept = new Set(merged.map(it => it.char));
     s.bank.forEach(it => {
       if(kept.has(it.char)) return;
-      // Parent-added characters always stay. A built-in dropped from the starter bank keeps
-      // its record too if the child earned one — retired from the rotation, not erased, so
-      // putting it back later resumes where he left off instead of starting from zero.
-      const earned = (it.passedDays || []).length || (it.history || []).length;
+      // Keep even partially attempted old characters; only their rotation changes.
       if(it.fromParent) merged.push(it);
-      else if(earned) merged.push({ ...it, retired: true });
+      else merged.push({ ...it, retired: true });
     });
     s.bank = merged;
     s.bankVersion = BANK_VERSION;
@@ -752,6 +753,7 @@ let stepIndex = 0;            // index into TEACHING_STEPS
 let stepAttempts = 0;         // attempts used at the current step (max 2)
 let pendingRetests = [];      // [{item, round, fillersSeen}] — delayed blind re-checks
 let priorityConsumedToday = new Set(); // priority chars already served this session
+let selectionSession = window.HanziPracticeSelector.createSession();
 let timerHandle = null;
 const TEACHING_STEPS = [5, 3, 1, 0]; // seconds character is shown before each retry; 0 = blind
 
@@ -1995,7 +1997,8 @@ function pickNextChar(){
   const pendingChars = new Set(pendingRetests.map(r => r.item.char));
 
   // parent-added "today" priority characters go first, once each
-  const nextPriority = state.priorityQueue.find(p => !priorityConsumedToday.has(p.char) && !pendingChars.has(p.char));
+  const nextPriority = state.priorityQueue.find(p => !priorityConsumedToday.has(p.char) && !pendingChars.has(p.char)
+    && !isStuck(state.bank.find(b => b.char === p.char) || {}));
   if(nextPriority){
     priorityConsumedToday.add(nextPriority.char);
     let existing = state.bank.find(b => b.char === nextPriority.char);
@@ -2010,11 +2013,16 @@ function pickNextChar(){
       existing.pinyin = nextPriority.pinyin;
       if(nextPriority.word) existing.word = nextPriority.word;
     }
+    existing.fromParent = true;
+    existing.retired = false;
     saveState();
     // A character the parent typed in for today is wanted today, mastered or not — that's
     // the whole point of the priority list (e.g. it's on tomorrow's 听写). Unless it's
     // already been parked for explanation, in which case it waits for the parent too.
-    if(!isStuck(existing)) return existing;
+    if(!isStuck(existing)){
+      window.HanziPracticeSelector.record(selectionSession, existing);
+      return existing;
+    }
   }
   // otherwise pick whichever bank character is due for review (or, if none
   // are strictly "due" yet, just the weakest one) — this same rule naturally
@@ -2028,10 +2036,23 @@ function pickNextChar(){
   if(active.length === 0) return null;             // nothing left to practise — caller ends the day
   const candidates = active.filter(b => !pendingChars.has(b.char));
   const pickFrom = candidates.length ? candidates : active; // only fall back if literally everything is pending
+  // Prefer unseen characters within this sitting before repeating free questions.
+  // Teaching and delayed retests still use their existing separate state machine.
+  const unseen = pickFrom.filter(b => !selectionSession.byChar[b.char]);
+  const available = unseen.length ? unseen : pickFrom;
   const today = todayStr();
-  const due = pickFrom.filter(b => b.lastSeen === null || daysBetween(b.lastSeen, today) >= b.interval);
-  const pool = (due.length ? due : pickFrom).slice().sort((a,b) => a.box - b.box);
-  return pool[0];
+  const reviews = available.filter(b => b.lastSeen !== null && daysBetween(b.lastSeen, today) >= b.interval);
+  const fresh = available.filter(b => b.lastSeen === null);
+  const reviewSlot = selectionSession.total % 5 === 0 || selectionSession.total % 5 === 2;
+  let pool;
+  // Reserve normal slots for actually due reviews, so a large new textbook pool
+  // cannot bury them. Balance within the weakest due group when reviews are due.
+  if(reviews.length && (reviewSlot || !fresh.length)){
+    const weakest = Math.min(...reviews.map(b => b.box));
+    pool = reviews.filter(b => b.box === weakest);
+  } else if(fresh.length) pool = fresh;
+  else pool = available;
+  return window.HanziPracticeSelector.choose(pool, selectionSession);
 }
 
 function renderProgressPath(){
@@ -2168,8 +2189,8 @@ function setWritingView(on){
 // child gets the context without being shown the answer. ('_' still works for old entries.)
 function hintFor(item){
   if(!item.word) return item.pinyin;
-  if(item.word.includes('_')) return item.word.replace('_', item.pinyin);
-  if(item.word.includes(item.char)) return item.word.replace(item.char, item.pinyin);
+  if(item.word.includes('_')) return item.word.split('_').join(item.pinyin);
+  if(item.word.includes(item.char)) return item.word.split(item.char).join(item.pinyin);
   return item.word + '（' + item.pinyin + '）';
 }
 
@@ -2497,6 +2518,7 @@ onTap(restartBtn, function(){
   passedCount = 0;
   pendingRetests = [];
   priorityConsumedToday = new Set();
+  selectionSession = window.HanziPracticeSelector.createSession();
   applyScene(state.scenesUnlocked);
   finale.classList.remove('show');
   playzone.classList.remove('hide');
@@ -2553,7 +2575,7 @@ function renderQueueList(){
 // sat down and explained it, which clears the count and puts it straight back in today's
 // rotation — the child gets another go at it the same evening, not tomorrow.
 function renderStuckList(){
-  const stuck = state.bank.filter(isStuck);
+  const stuck = state.bank.filter(b => !b.retired && isStuck(b));
   stuckList.innerHTML = stuck.map(b => `
     <div class="stuck-item">
       <span><span class="ch">${b.char}</span><span class="word">${b.word || ''}</span></span>
@@ -2758,6 +2780,7 @@ fileInput.addEventListener('change', (e) => {
         passedCount = 0;
         pendingRetests = [];
         priorityConsumedToday = new Set();
+        selectionSession = window.HanziPracticeSelector.createSession();
         applyScene(state.scenesUnlocked);
         finale.classList.remove('show');
         playzone.classList.remove('hide');
@@ -2802,7 +2825,7 @@ function showFinale(bankEmpty){
     // Two very different reasons the pool can run dry, and they need opposite responses from
     // the parent: everything mastered means add more characters, everything parked means go
     // and explain the ones waiting.
-    const stuck = state.bank.filter(isStuck);
+    const stuck = state.bank.filter(b => !b.retired && isStuck(b));
     finaleDetail.textContent = stuck.length
       ? `今天推开了 ${passedCount} 扇门。剩下的「${stuck.map(b=>b.char).join('、')}」在等爸爸妈妈讲一讲——讲完在 ⚙️ 里点「我讲过了」，今天还能继续闯。`
       : `字库里的字全部永久掌握啦！点 ⚙️ 加新的字，就能继续闯关。今天推开了 ${passedCount} 扇门。`;

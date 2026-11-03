@@ -1,0 +1,2781 @@
+{
+  "book": {
+    "title": "义务教育教科书·语文·三年级下册",
+    "publisher": "人民教育出版社",
+    "organized_by": "教育部",
+    "grade": 3,
+    "semester": "下册",
+    "edition": "2025年10月第1版",
+    "editors": [
+      "李明新",
+      "伍新春"
+    ],
+    "isbn": "978-7-107-40597-6",
+    "curriculum_basis": "义务教育语文课程标准（2022年版），据教材后记",
+    "edition_verified_at_pdf_page": 2,
+    "word_table_printed_pages": [
+      116,
+      117,
+      118
+    ],
+    "word_table_pdf_pages": [
+      120,
+      121,
+      122
+    ],
+    "scan_note": "版权页印刷厂、发行、印次、定价等位置为样书占位符；不据此编造印刷批次。"
+  },
+  "provenance": {
+    "material_type": "原教材扫描件（第一手教材内容），第三方网站托管",
+    "hosting_site": "乐教库",
+    "hosting_page_url": "https://www.lejiaoku.com/resources/120",
+    "pdf_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf",
+    "official_reader_url": "https://book.pep.com.cn/1211001302251/",
+    "verification_method": "下载完整PDF，逐页查看封面、版权页、目录和词语表扫描页；人工转录271个词，并按单元计数核对。未抄用第三方整理词表。",
+    "pdf_sha256": "f044fe5c6708f3d9f8c17022562df6df87f9d096bf57279c5c15953328d3c72a",
+    "total_pdf_pages": 123,
+    "word_table_images": [
+      "newbook-end-120.png",
+      "newbook-end-121.png",
+      "newbook-end-122.png"
+    ],
+    "copyright_image": "newbook-front-002.png",
+    "official_context_sources": [
+      {
+        "name": "人民教育出版社《小学语文》2025年第9期，余琴《统编语文三年级教材使用的衔接建议》",
+        "url": "https://www.pep.com.cn/bks/xxyw/jzjd/202510/W020251016520796433248.pdf"
+      },
+      {
+        "name": "北京师范大学湾区应用心理学院：伍新春个人履历（教材著作出版信息）",
+        "url": "https://basaps.bnu.edu.cn/xygk/xrld/c0b335803e6840f2bb2ea98c15558c23.htm"
+      }
+    ],
+    "excluded_old_edition_source": {
+      "url": "https://v2.ykt.cbern.com.cn/65/document/29d5250e875445fca420a1d3481c20f1/pdf.pdf",
+      "reason": "搜索索引中的词语表印刷页121、赵州桥课号11，属于旧版编排，未混入本新版词库；网页检索更新时间不是教材版次。"
+    }
+  },
+  "word_count": 271,
+  "unit_word_counts": {
+    "1": 32,
+    "2": 26,
+    "3": 29,
+    "4": 36,
+    "5": 28,
+    "6": 39,
+    "7": 44,
+    "8": 37
+  },
+  "words": [
+    {
+      "word": "燕子",
+      "unit": 1,
+      "lesson": 2,
+      "section": "燕子",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "乌黑",
+      "unit": 1,
+      "lesson": 2,
+      "section": "燕子",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "剪刀",
+      "unit": 1,
+      "lesson": 2,
+      "section": "燕子",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "活泼",
+      "unit": 1,
+      "lesson": 2,
+      "section": "燕子",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "轻风",
+      "unit": 1,
+      "lesson": 2,
+      "section": "燕子",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "洒落",
+      "unit": 1,
+      "lesson": 2,
+      "section": "燕子",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "赶集",
+      "unit": 1,
+      "lesson": 2,
+      "section": "燕子",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "光彩夺目",
+      "unit": 1,
+      "lesson": 2,
+      "section": "燕子",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "春光",
+      "unit": 1,
+      "lesson": 2,
+      "section": "燕子",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "偶尔",
+      "unit": 1,
+      "lesson": 2,
+      "section": "燕子",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "闲散",
+      "unit": 1,
+      "lesson": 2,
+      "section": "燕子",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "纤细",
+      "unit": 1,
+      "lesson": 2,
+      "section": "燕子",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "电线",
+      "unit": 1,
+      "lesson": 2,
+      "section": "燕子",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "荷花",
+      "unit": 1,
+      "lesson": 3,
+      "section": "荷花",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "公园",
+      "unit": 1,
+      "lesson": 3,
+      "section": "荷花",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "清香",
+      "unit": 1,
+      "lesson": 3,
+      "section": "荷花",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "赶紧",
+      "unit": 1,
+      "lesson": 3,
+      "section": "荷花",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "荷叶",
+      "unit": 1,
+      "lesson": 3,
+      "section": "荷花",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "莲蓬",
+      "unit": 1,
+      "lesson": 3,
+      "section": "荷花",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "破裂",
+      "unit": 1,
+      "lesson": 3,
+      "section": "荷花",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "姿势",
+      "unit": 1,
+      "lesson": 3,
+      "section": "荷花",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "画家",
+      "unit": 1,
+      "lesson": 3,
+      "section": "荷花",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "本领",
+      "unit": 1,
+      "lesson": 3,
+      "section": "荷花",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "了不起",
+      "unit": 1,
+      "lesson": 3,
+      "section": "荷花",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "微风",
+      "unit": 1,
+      "lesson": 3,
+      "section": "荷花",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "停止",
+      "unit": 1,
+      "lesson": 3,
+      "section": "荷花",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "匕首",
+      "unit": 1,
+      "lesson": null,
+      "section": "语文园地一",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "乙方",
+      "unit": 1,
+      "lesson": null,
+      "section": "语文园地一",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "冗长",
+      "unit": 1,
+      "lesson": null,
+      "section": "语文园地一",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "军犬",
+      "unit": 1,
+      "lesson": null,
+      "section": "语文园地一",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "兑换",
+      "unit": 1,
+      "lesson": null,
+      "section": "语文园地一",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "争执",
+      "unit": 1,
+      "lesson": null,
+      "section": "语文园地一",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "友情",
+      "unit": 2,
+      "lesson": 6,
+      "section": "会摇尾巴的狼",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "认识",
+      "unit": 2,
+      "lesson": 6,
+      "section": "会摇尾巴的狼",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "忠诚",
+      "unit": 2,
+      "lesson": 6,
+      "section": "会摇尾巴的狼",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "驯良",
+      "unit": 2,
+      "lesson": 6,
+      "section": "会摇尾巴的狼",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "善良",
+      "unit": 2,
+      "lesson": 6,
+      "section": "会摇尾巴的狼",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "温和",
+      "unit": 2,
+      "lesson": 6,
+      "section": "会摇尾巴的狼",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "答谢",
+      "unit": 2,
+      "lesson": 6,
+      "section": "会摇尾巴的狼",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "花言巧语",
+      "unit": 2,
+      "lesson": 6,
+      "section": "会摇尾巴的狼",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "着急",
+      "unit": 2,
+      "lesson": 6,
+      "section": "会摇尾巴的狼",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "相信",
+      "unit": 2,
+      "lesson": 6,
+      "section": "会摇尾巴的狼",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "尘土",
+      "unit": 2,
+      "lesson": 6,
+      "section": "会摇尾巴的狼",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "凶恶",
+      "unit": 2,
+      "lesson": 6,
+      "section": "会摇尾巴的狼",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "恶狠狠",
+      "unit": 2,
+      "lesson": 6,
+      "section": "会摇尾巴的狼",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "猎人",
+      "unit": 2,
+      "lesson": 6,
+      "section": "会摇尾巴的狼",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "收拾",
+      "unit": 2,
+      "lesson": 6,
+      "section": "会摇尾巴的狼",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "痛快",
+      "unit": 2,
+      "lesson": 7,
+      "section": "鹿角和鹿腿",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "匀称",
+      "unit": 2,
+      "lesson": 7,
+      "section": "鹿角和鹿腿",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "精美",
+      "unit": 2,
+      "lesson": 7,
+      "section": "鹿角和鹿腿",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "别致",
+      "unit": 2,
+      "lesson": 7,
+      "section": "鹿角和鹿腿",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "眉头",
+      "unit": 2,
+      "lesson": 7,
+      "section": "鹿角和鹿腿",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "没精打采",
+      "unit": 2,
+      "lesson": 7,
+      "section": "鹿角和鹿腿",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "机灵",
+      "unit": 2,
+      "lesson": 7,
+      "section": "鹿角和鹿腿",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "灰心丧气",
+      "unit": 2,
+      "lesson": 7,
+      "section": "鹿角和鹿腿",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "机会",
+      "unit": 2,
+      "lesson": 7,
+      "section": "鹿角和鹿腿",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "叹气",
+      "unit": 2,
+      "lesson": 7,
+      "section": "鹿角和鹿腿",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "逃生",
+      "unit": 2,
+      "lesson": 7,
+      "section": "鹿角和鹿腿",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "宁静",
+      "unit": 3,
+      "lesson": 9,
+      "section": "海底世界",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "器官",
+      "unit": 3,
+      "lesson": 9,
+      "section": "海底世界",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "是否",
+      "unit": 3,
+      "lesson": 9,
+      "section": "海底世界",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "窃窃私语",
+      "unit": 3,
+      "lesson": 9,
+      "section": "海底世界",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "危险",
+      "unit": 3,
+      "lesson": 9,
+      "section": "海底世界",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "方法",
+      "unit": 3,
+      "lesson": 9,
+      "section": "海底世界",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "肌肉",
+      "unit": 3,
+      "lesson": 9,
+      "section": "海底世界",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "攻击",
+      "unit": 3,
+      "lesson": 9,
+      "section": "海底世界",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "利用",
+      "unit": 3,
+      "lesson": 9,
+      "section": "海底世界",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "后退",
+      "unit": 3,
+      "lesson": 9,
+      "section": "海底世界",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "免费",
+      "unit": 3,
+      "lesson": 9,
+      "section": "海底世界",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "差异",
+      "unit": 3,
+      "lesson": 9,
+      "section": "海底世界",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "清楚",
+      "unit": 3,
+      "lesson": 9,
+      "section": "海底世界",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "奇异",
+      "unit": 3,
+      "lesson": 9,
+      "section": "海底世界",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "实验",
+      "unit": 3,
+      "lesson": 10,
+      "section": "石蜂",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "验证",
+      "unit": 3,
+      "lesson": 10,
+      "section": "石蜂",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "记号",
+      "unit": 3,
+      "lesson": 10,
+      "section": "石蜂",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "减少",
+      "unit": 3,
+      "lesson": 10,
+      "section": "石蜂",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "阻力",
+      "unit": 3,
+      "lesson": 10,
+      "section": "石蜂",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "大约",
+      "unit": 3,
+      "lesson": 10,
+      "section": "石蜂",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "包括",
+      "unit": 3,
+      "lesson": 10,
+      "section": "石蜂",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "检查",
+      "unit": 3,
+      "lesson": 10,
+      "section": "石蜂",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "至少",
+      "unit": 3,
+      "lesson": 10,
+      "section": "石蜂",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "迷失",
+      "unit": 3,
+      "lesson": 10,
+      "section": "石蜂",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "无误",
+      "unit": 3,
+      "lesson": 10,
+      "section": "石蜂",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "逆风",
+      "unit": 3,
+      "lesson": 10,
+      "section": "石蜂",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "陌生",
+      "unit": 3,
+      "lesson": 10,
+      "section": "石蜂",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "景物",
+      "unit": 3,
+      "lesson": 10,
+      "section": "石蜂",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "能力",
+      "unit": 3,
+      "lesson": 10,
+      "section": "石蜂",
+      "source_section": "词语表",
+      "printed_page": 116,
+      "pdf_page": 120,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "文明",
+      "unit": 4,
+      "lesson": 13,
+      "section": "纸的发明",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "伟大",
+      "unit": 4,
+      "lesson": 13,
+      "section": "纸的发明",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "贡献",
+      "unit": 4,
+      "lesson": 13,
+      "section": "纸的发明",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "祖先",
+      "unit": 4,
+      "lesson": 13,
+      "section": "纸的发明",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "创造",
+      "unit": 4,
+      "lesson": 13,
+      "section": "纸的发明",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "材料",
+      "unit": 4,
+      "lesson": 13,
+      "section": "纸的发明",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "尤其",
+      "unit": 4,
+      "lesson": 13,
+      "section": "纸的发明",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "保存",
+      "unit": 4,
+      "lesson": 13,
+      "section": "纸的发明",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "吸收",
+      "unit": 4,
+      "lesson": 13,
+      "section": "纸的发明",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "积累",
+      "unit": 4,
+      "lesson": 13,
+      "section": "纸的发明",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "经验",
+      "unit": 4,
+      "lesson": 13,
+      "section": "纸的发明",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "改进",
+      "unit": 4,
+      "lesson": 13,
+      "section": "纸的发明",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "价格",
+      "unit": 4,
+      "lesson": 13,
+      "section": "纸的发明",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "便宜",
+      "unit": 4,
+      "lesson": 13,
+      "section": "纸的发明",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "满足",
+      "unit": 4,
+      "lesson": 13,
+      "section": "纸的发明",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "促进",
+      "unit": 4,
+      "lesson": 13,
+      "section": "纸的发明",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "社会",
+      "unit": 4,
+      "lesson": 13,
+      "section": "纸的发明",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "闻名",
+      "unit": 4,
+      "lesson": 14,
+      "section": "赵州桥",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "设计",
+      "unit": 4,
+      "lesson": 14,
+      "section": "赵州桥",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "创举",
+      "unit": 4,
+      "lesson": 14,
+      "section": "赵州桥",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "减轻",
+      "unit": 4,
+      "lesson": 14,
+      "section": "赵州桥",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "不但",
+      "unit": 4,
+      "lesson": 14,
+      "section": "赵州桥",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "坚固",
+      "unit": 4,
+      "lesson": 14,
+      "section": "赵州桥",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "而且",
+      "unit": 4,
+      "lesson": 14,
+      "section": "赵州桥",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "美观",
+      "unit": 4,
+      "lesson": 14,
+      "section": "赵州桥",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "体现",
+      "unit": 4,
+      "lesson": 14,
+      "section": "赵州桥",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "才干",
+      "unit": 4,
+      "lesson": 14,
+      "section": "赵州桥",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "宝贵",
+      "unit": 4,
+      "lesson": 14,
+      "section": "赵州桥",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "历史",
+      "unit": 4,
+      "lesson": 14,
+      "section": "赵州桥",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "文化",
+      "unit": 4,
+      "lesson": 14,
+      "section": "赵州桥",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "援助",
+      "unit": 4,
+      "lesson": null,
+      "section": "语文园地四",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "投掷",
+      "unit": 4,
+      "lesson": null,
+      "section": "语文园地四",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "打捞",
+      "unit": 4,
+      "lesson": null,
+      "section": "语文园地四",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "拆分",
+      "unit": 4,
+      "lesson": null,
+      "section": "语文园地四",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "搅动",
+      "unit": 4,
+      "lesson": null,
+      "section": "语文园地四",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "拓展",
+      "unit": 4,
+      "lesson": null,
+      "section": "语文园地四",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "胡萝卜",
+      "unit": 5,
+      "lesson": 16,
+      "section": "胡萝卜先生的长胡子",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "胡子",
+      "unit": 5,
+      "lesson": 16,
+      "section": "胡萝卜先生的长胡子",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "发愁",
+      "unit": 5,
+      "lesson": 16,
+      "section": "胡萝卜先生的长胡子",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "浓密",
+      "unit": 5,
+      "lesson": 16,
+      "section": "胡萝卜先生的长胡子",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "面包",
+      "unit": 5,
+      "lesson": 16,
+      "section": "胡萝卜先生的长胡子",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "完全",
+      "unit": 5,
+      "lesson": 16,
+      "section": "胡萝卜先生的长胡子",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "结实",
+      "unit": 5,
+      "lesson": 16,
+      "section": "胡萝卜先生的长胡子",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "确定",
+      "unit": 5,
+      "lesson": 16,
+      "section": "胡萝卜先生的长胡子",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "足够",
+      "unit": 5,
+      "lesson": 16,
+      "section": "胡萝卜先生的长胡子",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "确实",
+      "unit": 5,
+      "lesson": 16,
+      "section": "胡萝卜先生的长胡子",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "希望",
+      "unit": 5,
+      "lesson": 17,
+      "section": "我变成了一棵树",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "形状",
+      "unit": 5,
+      "lesson": 17,
+      "section": "我变成了一棵树",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "喜欢",
+      "unit": 5,
+      "lesson": 17,
+      "section": "我变成了一棵树",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "担心",
+      "unit": 5,
+      "lesson": 17,
+      "section": "我变成了一棵树",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "容易",
+      "unit": 5,
+      "lesson": 17,
+      "section": "我变成了一棵树",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "丁零",
+      "unit": 5,
+      "lesson": 17,
+      "section": "我变成了一棵树",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "失望",
+      "unit": 5,
+      "lesson": 17,
+      "section": "我变成了一棵树",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "巧克力",
+      "unit": 5,
+      "lesson": 17,
+      "section": "我变成了一棵树",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "香肠",
+      "unit": 5,
+      "lesson": 17,
+      "section": "我变成了一棵树",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "花生",
+      "unit": 5,
+      "lesson": 17,
+      "section": "我变成了一棵树",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "牛奶",
+      "unit": 5,
+      "lesson": 17,
+      "section": "我变成了一棵树",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "互相",
+      "unit": 5,
+      "lesson": 17,
+      "section": "我变成了一棵树",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "想念",
+      "unit": 5,
+      "lesson": 17,
+      "section": "我变成了一棵树",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "饭菜",
+      "unit": 5,
+      "lesson": 17,
+      "section": "我变成了一棵树",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "可能",
+      "unit": 5,
+      "lesson": 17,
+      "section": "我变成了一棵树",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "麻烦",
+      "unit": 5,
+      "lesson": 17,
+      "section": "我变成了一棵树",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "眼睛",
+      "unit": 5,
+      "lesson": 17,
+      "section": "我变成了一棵树",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "秘密",
+      "unit": 5,
+      "lesson": 17,
+      "section": "我变成了一棵树",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "童年",
+      "unit": 6,
+      "lesson": 18,
+      "section": "童年的水墨画",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "垂柳",
+      "unit": 6,
+      "lesson": 18,
+      "section": "童年的水墨画",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "平静",
+      "unit": 6,
+      "lesson": 18,
+      "section": "童年的水墨画",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "翅膀",
+      "unit": 6,
+      "lesson": 18,
+      "section": "童年的水墨画",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "戏耍",
+      "unit": 6,
+      "lesson": 18,
+      "section": "童年的水墨画",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "葫芦",
+      "unit": 6,
+      "lesson": 18,
+      "section": "童年的水墨画",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "松树",
+      "unit": 6,
+      "lesson": 18,
+      "section": "童年的水墨画",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "清爽",
+      "unit": 6,
+      "lesson": 18,
+      "section": "童年的水墨画",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "泥土",
+      "unit": 6,
+      "lesson": 18,
+      "section": "童年的水墨画",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "开放",
+      "unit": 6,
+      "lesson": 18,
+      "section": "童年的水墨画",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "肥皂泡",
+      "unit": 6,
+      "lesson": 19,
+      "section": "肥皂泡",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "种类",
+      "unit": 6,
+      "lesson": 19,
+      "section": "肥皂泡",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "其中",
+      "unit": 6,
+      "lesson": 19,
+      "section": "肥皂泡",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "溶化",
+      "unit": 6,
+      "lesson": 19,
+      "section": "肥皂泡",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "网球",
+      "unit": 6,
+      "lesson": 19,
+      "section": "肥皂泡",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "分裂",
+      "unit": 6,
+      "lesson": 19,
+      "section": "肥皂泡",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "形式",
+      "unit": 6,
+      "lesson": 19,
+      "section": "肥皂泡",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "圆满",
+      "unit": 6,
+      "lesson": 19,
+      "section": "肥皂泡",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "夕阳",
+      "unit": 6,
+      "lesson": 19,
+      "section": "肥皂泡",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "目送",
+      "unit": 6,
+      "lesson": 19,
+      "section": "肥皂泡",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "骄傲",
+      "unit": 6,
+      "lesson": 19,
+      "section": "肥皂泡",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "养病",
+      "unit": 6,
+      "lesson": 20,
+      "section": "灰雀",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "粉红",
+      "unit": 6,
+      "lesson": 20,
+      "section": "灰雀",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "仰望",
+      "unit": 6,
+      "lesson": 20,
+      "section": "灰雀",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "或者",
+      "unit": 6,
+      "lesson": 20,
+      "section": "灰雀",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "严寒",
+      "unit": 6,
+      "lesson": 20,
+      "section": "灰雀",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "本来",
+      "unit": 6,
+      "lesson": 20,
+      "section": "灰雀",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "可惜",
+      "unit": 6,
+      "lesson": 20,
+      "section": "灰雀",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "肯定",
+      "unit": 6,
+      "lesson": 20,
+      "section": "灰雀",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "微笑",
+      "unit": 6,
+      "lesson": 20,
+      "section": "灰雀",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "诚实",
+      "unit": 6,
+      "lesson": 20,
+      "section": "灰雀",
+      "source_section": "词语表",
+      "printed_page": 117,
+      "pdf_page": 121,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "旭日",
+      "unit": 6,
+      "lesson": null,
+      "section": "语文园地六",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "岛屿",
+      "unit": 6,
+      "lesson": null,
+      "section": "语文园地六",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "海岸",
+      "unit": 6,
+      "lesson": null,
+      "section": "语文园地六",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "浪花",
+      "unit": 6,
+      "lesson": null,
+      "section": "语文园地六",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "军舰",
+      "unit": 6,
+      "lesson": null,
+      "section": "语文园地六",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "铁锚",
+      "unit": 6,
+      "lesson": null,
+      "section": "语文园地六",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "瞭望",
+      "unit": 6,
+      "lesson": null,
+      "section": "语文园地六",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "巡航",
+      "unit": 6,
+      "lesson": null,
+      "section": "语文园地六",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "火烧云",
+      "unit": 7,
+      "lesson": 22,
+      "section": "火烧云",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "笑盈盈",
+      "unit": 7,
+      "lesson": 22,
+      "section": "火烧云",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "乘凉",
+      "unit": 7,
+      "lesson": 22,
+      "section": "火烧云",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "高寿",
+      "unit": 7,
+      "lesson": 22,
+      "section": "火烧云",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "红彤彤",
+      "unit": 7,
+      "lesson": 22,
+      "section": "火烧云",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "变化",
+      "unit": 7,
+      "lesson": 22,
+      "section": "火烧云",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "金灿灿",
+      "unit": 7,
+      "lesson": 22,
+      "section": "火烧云",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "颜色",
+      "unit": 7,
+      "lesson": 22,
+      "section": "火烧云",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "似乎",
+      "unit": 7,
+      "lesson": 22,
+      "section": "火烧云",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "威武",
+      "unit": 7,
+      "lesson": 22,
+      "section": "火烧云",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "镇静",
+      "unit": 7,
+      "lesson": 22,
+      "section": "火烧云",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "其实",
+      "unit": 7,
+      "lesson": 22,
+      "section": "火烧云",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "沉静",
+      "unit": 7,
+      "lesson": 22,
+      "section": "火烧云",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "偏偏",
+      "unit": 7,
+      "lesson": 22,
+      "section": "火烧云",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "等待",
+      "unit": 7,
+      "lesson": 22,
+      "section": "火烧云",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "爱好",
+      "unit": 7,
+      "lesson": 22,
+      "section": "火烧云",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "来临",
+      "unit": 7,
+      "lesson": 23,
+      "section": "暴风雨来临之前",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "沉闷",
+      "unit": 7,
+      "lesson": 23,
+      "section": "暴风雨来临之前",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "奇形怪状",
+      "unit": 7,
+      "lesson": 23,
+      "section": "暴风雨来临之前",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "昏暗",
+      "unit": 7,
+      "lesson": 23,
+      "section": "暴风雨来临之前",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "轻微",
+      "unit": 7,
+      "lesson": 23,
+      "section": "暴风雨来临之前",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "情况",
+      "unit": 7,
+      "lesson": 23,
+      "section": "暴风雨来临之前",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "动静",
+      "unit": 7,
+      "lesson": 23,
+      "section": "暴风雨来临之前",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "赶路",
+      "unit": 7,
+      "lesson": 23,
+      "section": "暴风雨来临之前",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "抖动",
+      "unit": 7,
+      "lesson": 23,
+      "section": "暴风雨来临之前",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "树梢",
+      "unit": 7,
+      "lesson": 23,
+      "section": "暴风雨来临之前",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "乱蓬蓬",
+      "unit": 7,
+      "lesson": 23,
+      "section": "暴风雨来临之前",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "轰隆隆",
+      "unit": 7,
+      "lesson": 23,
+      "section": "暴风雨来临之前",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "奇妙",
+      "unit": 7,
+      "lesson": 24,
+      "section": "我们奇妙的世界",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "生命",
+      "unit": 7,
+      "lesson": 24,
+      "section": "我们奇妙的世界",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "呈现",
+      "unit": 7,
+      "lesson": 24,
+      "section": "我们奇妙的世界",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "变幻",
+      "unit": 7,
+      "lesson": 24,
+      "section": "我们奇妙的世界",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "圆润",
+      "unit": 7,
+      "lesson": 24,
+      "section": "我们奇妙的世界",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "李子",
+      "unit": 7,
+      "lesson": 24,
+      "section": "我们奇妙的世界",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "夏日",
+      "unit": 7,
+      "lesson": 24,
+      "section": "我们奇妙的世界",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "感叹",
+      "unit": 7,
+      "lesson": 24,
+      "section": "我们奇妙的世界",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "光辉",
+      "unit": 7,
+      "lesson": 24,
+      "section": "我们奇妙的世界",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "神奇",
+      "unit": 7,
+      "lesson": 24,
+      "section": "我们奇妙的世界",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "光芒",
+      "unit": 7,
+      "lesson": 24,
+      "section": "我们奇妙的世界",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "建造",
+      "unit": 7,
+      "lesson": 24,
+      "section": "我们奇妙的世界",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "冰柱",
+      "unit": 7,
+      "lesson": 24,
+      "section": "我们奇妙的世界",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "锋利",
+      "unit": 7,
+      "lesson": 24,
+      "section": "我们奇妙的世界",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "刀剑",
+      "unit": 7,
+      "lesson": 24,
+      "section": "我们奇妙的世界",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "融化",
+      "unit": 7,
+      "lesson": 24,
+      "section": "我们奇妙的世界",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "性子",
+      "unit": 8,
+      "lesson": 25,
+      "section": "慢性子裁缝和急性子顾客",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "顾客",
+      "unit": 8,
+      "lesson": 25,
+      "section": "慢性子裁缝和急性子顾客",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "笑话",
+      "unit": 8,
+      "lesson": 25,
+      "section": "慢性子裁缝和急性子顾客",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "大方",
+      "unit": 8,
+      "lesson": 25,
+      "section": "慢性子裁缝和急性子顾客",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "夸奖",
+      "unit": 8,
+      "lesson": 25,
+      "section": "慢性子裁缝和急性子顾客",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "承认",
+      "unit": 8,
+      "lesson": 25,
+      "section": "慢性子裁缝和急性子顾客",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "提前",
+      "unit": 8,
+      "lesson": 25,
+      "section": "慢性子裁缝和急性子顾客",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "服务",
+      "unit": 8,
+      "lesson": 25,
+      "section": "慢性子裁缝和急性子顾客",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "满意",
+      "unit": 8,
+      "lesson": 25,
+      "section": "慢性子裁缝和急性子顾客",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "袖子",
+      "unit": 8,
+      "lesson": 25,
+      "section": "慢性子裁缝和急性子顾客",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "衬衫",
+      "unit": 8,
+      "lesson": 25,
+      "section": "慢性子裁缝和急性子顾客",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "负责",
+      "unit": 8,
+      "lesson": 25,
+      "section": "慢性子裁缝和急性子顾客",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "名声",
+      "unit": 8,
+      "lesson": 25,
+      "section": "慢性子裁缝和急性子顾客",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "泄气",
+      "unit": 8,
+      "lesson": 25,
+      "section": "慢性子裁缝和急性子顾客",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "放心",
+      "unit": 8,
+      "lesson": 25,
+      "section": "慢性子裁缝和急性子顾客",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "手艺",
+      "unit": 8,
+      "lesson": 25,
+      "section": "慢性子裁缝和急性子顾客",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "感动",
+      "unit": 8,
+      "lesson": 25,
+      "section": "慢性子裁缝和急性子顾客",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "恼怒",
+      "unit": 8,
+      "lesson": 25,
+      "section": "慢性子裁缝和急性子顾客",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "莫非",
+      "unit": 8,
+      "lesson": 26,
+      "section": "漏",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "厉害",
+      "unit": 8,
+      "lesson": 26,
+      "section": "漏",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "走南闯北",
+      "unit": 8,
+      "lesson": 26,
+      "section": "漏",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "听说",
+      "unit": 8,
+      "lesson": 26,
+      "section": "漏",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "发抖",
+      "unit": 8,
+      "lesson": 26,
+      "section": "漏",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "害怕",
+      "unit": 8,
+      "lesson": 26,
+      "section": "漏",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "松手",
+      "unit": 8,
+      "lesson": 26,
+      "section": "漏",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "骨头",
+      "unit": 8,
+      "lesson": 26,
+      "section": "漏",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "逃命",
+      "unit": 8,
+      "lesson": 26,
+      "section": "漏",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "甘心",
+      "unit": 8,
+      "lesson": 26,
+      "section": "漏",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "逃跑",
+      "unit": 8,
+      "lesson": 26,
+      "section": "漏",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "呼吸",
+      "unit": 8,
+      "lesson": null,
+      "section": "语文园地八",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "咳嗽",
+      "unit": 8,
+      "lesson": null,
+      "section": "语文园地八",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "唠叨",
+      "unit": 8,
+      "lesson": null,
+      "section": "语文园地八",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "吆喝",
+      "unit": 8,
+      "lesson": null,
+      "section": "语文园地八",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "诉说",
+      "unit": 8,
+      "lesson": null,
+      "section": "语文园地八",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "讽刺",
+      "unit": 8,
+      "lesson": null,
+      "section": "语文园地八",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "告诫",
+      "unit": 8,
+      "lesson": null,
+      "section": "语文园地八",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    },
+    {
+      "word": "辩论",
+      "unit": 8,
+      "lesson": null,
+      "section": "语文园地八",
+      "source_section": "词语表",
+      "printed_page": 118,
+      "pdf_page": 122,
+      "source_url": "https://static.lejiaoku.com/uploads/resources/1767902236152.pdf"
+    }
+  ]
+}

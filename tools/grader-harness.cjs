@@ -21,6 +21,10 @@ function createGrader({ html = fs.readFileSync(path.join(root, 'index.html'), 'u
     captureInk: (payload, verdict) => recordedInk.push({ payload, verdict }),
   });
   vm.runInContext(fs.readFileSync(path.join(root, 'hanzi-data.js'), 'utf8'), context);
+  const curriculumGlyphs = path.join(root, 'curriculum-hanzi-data.js');
+  if (fs.existsSync(curriculumGlyphs)) {
+    vm.runInContext(fs.readFileSync(curriculumGlyphs, 'utf8'), context);
+  }
   const size = html.match(/const CANVAS_SIZE\s*=\s*(\d+)/)?.[1];
   const padding = html.match(/const CANVAS_PADDING\s*=\s*(\d+)/)?.[1];
   if (!size || !padding) throw new Error('Canvas constants were not found');
