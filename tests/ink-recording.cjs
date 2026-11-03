@@ -91,9 +91,12 @@ const entry = (id, disputed = false, pointCount = 2) => ({
 
 (async () => {
   const direct = environment();
+  Object.assign(direct.context, {currentMode:'teaching',currentRound:1,stepIndex:2});
   const directVerdict = await direct.grade('收', rawInput);
   const exact = direct.read('inkLog[0]');
   assert.equal(exact.formatVersion, 2);
+  assert.deepEqual(exact.phase,{mode:'teaching',round:1,stepIndex:2},
+    'Keep which teaching stage produced a disputed attempt without asking the player to remember');
   assert.deepEqual(exact.rawS, rawInput, 'Keep all 328 original points, without rounding or resampling');
   assert.deepEqual(exact.s, compactInput, 'Existing compact readers keep their old shape');
   assert.ok(direct.logs.filter(s=>s.startsWith('[strokes]')).every(s=>!s.includes('rawS')),
@@ -103,6 +106,7 @@ const entry = (id, disputed = false, pointCount = 2) => ({
 
   const exported = JSON.parse(direct.run('inkPayloadText(false)')).cases[0];
   assert.equal(exported.formatVersion,2);assert.deepEqual(exported.rawS,rawInput);
+  assert.deepEqual(exported.phase,exact.phase,'Export the same learning stage');
   const recovered = environment({initialLog:JSON.parse(direct.storage.get('hanzi-magic-door-ink-v1'))});
   recovered.run('loadInkLog();');
   const recoveredInk = recovered.read('inkLog[0].rawS');

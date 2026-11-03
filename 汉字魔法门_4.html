@@ -3,7 +3,7 @@
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
-<meta name="game-version" content="2026.11.03.3">
+<meta name="game-version" content="2026.11.03.4">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>汉字魔法门</title>
 <style data-source="game-feedback.css">
@@ -702,7 +702,7 @@
     </p>
 
     <button class="btn-close-panel" id="closePanelBtn">关闭</button>
-    <p class="hint-text" id="gameVersion">版本 2026.11.03.3</p>
+    <p class="hint-text" id="gameVersion">版本 2026.11.03.4</p>
   </div>
 </div>
 
@@ -2618,7 +2618,7 @@ function defaultBank(){
 // device that has already played keeps its old characters for ever and never sees the new
 // set — the change would reach nobody who actually uses the game.
 const BANK_VERSION = 5;
-const GAME_VERSION = '2026.11.03.3';
+const GAME_VERSION = '2026.11.03.4';
 
 let state = {
   bank: defaultBank(),
@@ -2702,7 +2702,7 @@ function saveInkLog(){
 function recordInk(payload, verdict){
   inkLog.unshift({ c: payload.c, s: payload.s, v: verdict ? 'pass' : 'fail', d: todayStr(), disputed: false,
     graderVersion: GAME_VERSION, timestamp: Date.now(), filtering: payload.filtering,
-    formatVersion: payload.formatVersion, rawS: payload.rawS });
+    formatVersion: payload.formatVersion, rawS: payload.rawS, phase: payload.phase || null });
   saveInkLog();
 }
 
@@ -3618,9 +3618,39 @@ function referencePenLiftJoins(users,compDiag,official){
   }
   return candidates.sort((a,b)=>a.gap-b.gap);
 }
-// Match a component, accounting for re-tracing, pen lifts, and connected writing.
-// The original matching path stays unchanged when recoverPenLifts is false.
-function matchComponent(officialStrokes, userStrokesIn, label, charDiag, diag, strictMerges = false, recoverPenLifts = false){
+// The two real strokes in 燕's 北-right region can be
+// connected in either drawing order. Validate each real stroke and its hook;
+// a synthetic jump between reference strokes has no meaningful hook direction.
+function unorderedYanPairCovers(user,parts){
+  if(parts.length!==2)return false;
+  const diagonal=Math.max(bboxOf(parts).diag,1),ink=resample(user,40);
+  for(const references of [parts,[parts[1],parts[0]]]){
+    const mids=references.map(s=>centroidOf(resample(s,16)));
+    for(let cut=4;cut<=36;cut++){
+      const pieces=[ink.slice(0,cut),ink.slice(cut)];
+      let valid=true;
+      for(let index=0;index<2;index++){
+        const quality=strokeQuality(pieces[index],references[index],diagonal,false);
+        if(quality.q<Q_FLOOR){valid=false;break;}
+        const officialProfile=strokeProfile(references[index]);
+        if(officialProfile.hookTurn>55){
+          const oriented=quality.reversed?[...pieces[index]].reverse():pieces[index];
+          const profile=strokeProfile(oriented);
+          if(Math.abs(normDeg(profile.tailDir-profile.bodyDir))<HOOK_MIN){valid=false;break;}
+        }
+      }
+      if(!valid)continue;
+      const positions=pieces.map(s=>centroidOf(resample(s,16)));
+      const ux=positions[1].x-positions[0].x,uy=positions[1].y-positions[0].y;
+      const rx=mids[1].x-mids[0].x,ry=mids[1].y-mids[0].y;
+      if(Math.hypot(ux-rx,uy-ry)/diagonal<=.35)return true;
+    }
+  }
+  return false;
+}
+// Default options retain the original matching. Explicit per-character options
+// enable the reviewed pen-lift, semantic-point, or connected-pair explanations.
+function matchComponent(officialStrokes, userStrokesIn, label, charDiag, diag, strictMerges = false, recoverPenLifts = false, options = {}){
   const k = officialStrokes.length;
   const compDiag = Math.max(bboxOf(officialStrokes).diag, 1);
 
@@ -3641,11 +3671,13 @@ function matchComponent(officialStrokes, userStrokesIn, label, charDiag, diag, s
     // comparisons, so the work was being redone about 250 times over. That was 13.5s on a
     // laptop, and several times that on the iPad this is actually played on.
     const cellCache = new Map();
-    const cellFor = (u, o) => {
-      const key = u.id + '|' + o.label;
+    const cellFor = (u, o, yanPlan) => {
+      const key = u.id + '|' + o.label + (o.label==='10..11' ? '|'+yanPlan : '');
       let c = cellCache.get(key);
       if(c === undefined){
         let qq = strokeQuality(u.pts, o.pts, compDiag, o.merged);
+        const validatedYanPair=options.unorderedYanPair && yanPlan && o.label==='10..11' && unorderedYanPairCovers(u.pts,o.parts);
+        if(validatedYanPair)qq={...qq,q:qq.qPair};
         // Once the region tree has identified exactly three water-radical marks,
         // the first two may be short dashes. The rising third stroke keeps its
         // shape test; absent, merged, additional, or overlong dots are not exempt.
@@ -3654,10 +3686,22 @@ function matchComponent(officialStrokes, userStrokesIn, label, charDiag, diag, s
           const qDot=clamp01(1-Math.max(0,qq.posDist-0.15)/0.5)*clamp01(1-Math.max(0,markFraction-0.35)/0.25);
           qq={...qq,q:qDot,qPair:qDot};
         }
+        // The reviewed 米 point can be a short dash in a complete six-mark region.
+        // It must stay short and nearest its own reference location. The other
+        // five marks, including the short 撇, keep all original shape checks.
+        const pointRoles=options.semanticDots;
+        if(strictMerges && pointRoles && k===6 && users.length===6 && !o.merged && !u.id.includes('+') && pointRoles.includes(Number(o.label))){
+          const here=centroidOf(resample(u.pts,16));
+          const own=centroidOf(resample(o.pts,16));
+          const owned=officialStrokes.every((reference,index)=>index===Number(o.label)||ptDist(here,own)<ptDist(here,centroidOf(resample(reference,16))));
+          const qDot=owned && qq.lenRatio<=DOT_LEN ? clamp01(1-qq.posDist/0.62) : 0;
+          qq={...qq,q:qDot,qPair:qDot};
+        }
         // Ordinary characters retain the original eager validation and pairing
         // costs, including tie breaking. Only complex regions use lazy checking.
-        let veto = !strictMerges && o.merged && !legacyMergeCovers(u.pts, o.parts, charDiag)
+        let veto = !strictMerges && o.merged && !validatedYanPair && !legacyMergeCovers(u.pts, o.parts, charDiag)
           ? 'merge-not-covered' : null;
+        if(options.unorderedYanPair && yanPlan && o.label==='5..6' && !mergeCovers(u.pts,o.parts,charDiag))veto='merge-not-covered';
         if(!veto && u.id.includes('+') && qq.lenRatio > 1.3) veto = 'join-inflates-length';
         c = { ...qq, veto, mergeChecked: !o.merged || !strictMerges,
           checkMerge: () => mergeCovers(u.pts, o.parts, charDiag) };
@@ -3676,7 +3720,9 @@ function matchComponent(officialStrokes, userStrokesIn, label, charDiag, diag, s
       // pieces add up to about the original. If the "split" explanation only works by
       // making the stroke half again as long, the second piece was really a separate mark
       // — this is what let an extra dot fuse onto 氵's last stroke and disappear.
-      const cells = users.map(u => virt.map(o => cellFor(u, o)));
+      const yanPlan=options.unorderedYanPair && virt.every(o=>!o.merged||o.label==='5..6'||o.label==='10..11');
+      if(options.unorderedYanPair&&!yanPlan)continue;
+      const cells = users.map(u => virt.map(o => cellFor(u, o, yanPlan)));
       // Cost drives the assignment: a categorical veto is expensive so the optimizer
       // prefers pairings that are legal, but quality still breaks ties.
       let assign;
@@ -3769,6 +3815,8 @@ const regionLeaf = (name, start, end) => ({
 });
 const regionSplit = (axis, a, b) => ({ axis, a, b });
 const RECURSIVE_REGION_TREES = {
+  // 米's first mark is a point. Its second, short 撇 retains shape/direction tests.
+  '类': regionSplit('y', {...regionLeaf('米', 0, 6), semanticDots:[0]}, regionLeaf('大', 6, 9)),
   // These three additions reuse existing geometry; no extra glyph file is needed.
   '历': {...regionSplit('y',regionLeaf('厂横',0,1),regionSplit('x',regionLeaf('厂撇',1,2),regionLeaf('力',2,4))), recoverPenLifts:true},
   '收': regionSplit('x',regionLeaf('丩',0,2),regionLeaf('攵',2,6)),
@@ -3818,7 +3866,7 @@ function recursiveRegionGrade(tree, officialAll, user, charDiag) {
         // Uniform scaling preserves angles. Uneven proportions between regions
         // are allowed; stretching a wrong stroke into another kind is not.
         const aligned = alignClusterUniform(cluster, bboxOf(reference));
-        const result = matchComponent(reference, aligned, node.name, charDiag, diag, true, !!tree.recoverPenLifts);
+        const result = matchComponent(reference, aligned, node.name, charDiag, diag, true, !!tree.recoverPenLifts, {semanticDots:node.semanticDots});
         if (result.rows.length) {
           const bad = result.rows.filter(row => row.c.veto || row.c.q < Q_FLOOR).length;
           const sum = result.rows.reduce((total, row) => total + row.c.q, 0);
@@ -3904,6 +3952,11 @@ async function gradeDrawing(char){
   // how it was written and testing a synthetic stand-in. Logged to the console AND kept in
   // the ink log, so getting it out no longer needs a cable and Web Inspector.
   const inkPayload = { c: char, formatVersion: 2,
+    phase: typeof currentMode === 'undefined' ? null : {
+      mode: currentMode,
+      round: currentMode === 'teaching' ? currentRound : null,
+      stepIndex: currentMode === 'teaching' ? stepIndex : null,
+    },
     rawS: strokesPoints.map(s => s.map(p => [p.x, p.y])),
     s: rawUser.map(s => resample(s, 16).map(p => [Math.round(p.x), Math.round(p.y)])), filtering };
   console.log('[strokes] ' + JSON.stringify({ c: char, s: inkPayload.s, filtering }));
@@ -3970,7 +4023,7 @@ async function gradeDrawing(char){
   // this child for writing the three dots as short dashes (a 0.50 average over three strokes,
   // where the same strokes pooled into the whole character are unremarkable). The verdict is
   // taken once, over every stroke in the character.
-  function runWith(assignment){
+  function runWith(assignment,options={}){
     const diag = [];
     let pass = true, rows = [];
     comps.forEach((c, ci) => {
@@ -3981,7 +4034,7 @@ async function gradeDrawing(char){
         return;
       }
       const aligned = alignClusterUniform(cluster, bboxOf(c.strokes));
-      const r = matchComponent(c.strokes, aligned, c.label, charDiag, diag, STRICT_MERGE_CHARACTERS.has(char));
+      const r = matchComponent(c.strokes, aligned, c.label, charDiag, diag, STRICT_MERGE_CHARACTERS.has(char), false, options);
       rows = rows.concat(r.rows || []);
     });
     if(pass && rows.length){
@@ -4017,6 +4070,11 @@ async function gradeDrawing(char){
         break;
       }
     }
+  }
+
+  if(!result.pass && char==='燕' && rawUser.length>=officialAll.length-2){
+    const rescue=runWith(baseAssign,{unorderedYanPair:true});
+    if(rescue.pass){result=rescue;flipNote+=' (validated 燕 connected pair)';}
   }
 
   // TEMPORARY diagnostics — prints exactly why a drawing passed/failed, so grading can
@@ -4945,7 +5003,7 @@ function inkPayloadText(only){
     ({ c: x.c, verdict: x.v, day: x.d, disputed: !!x.disputed, s: x.s,
        graderVersion: x.graderVersion || null, timestamp: x.timestamp || null,
        filtering: x.filtering || null,
-       formatVersion: x.formatVersion || 1, rawS: x.rawS })) });
+       formatVersion: x.formatVersion || 1, rawS: x.rawS, phase: x.phase || null })) });
 }
 
 // ---------- batch paste ----------

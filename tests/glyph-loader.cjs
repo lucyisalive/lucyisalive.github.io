@@ -215,11 +215,13 @@ async function gradingTests() {
     assert.equal(downloaded.length, allowed.size, 'No full-bundle fetch: ' + id);
     for (const part of allowed) assert.deepEqual(localData[part], JSON.parse(fs.readFileSync(path.join(root, 'glyphs', part + '.json'), 'utf8')));
   }
-  for (const file of ['real-ink-cases.json', 'tests/ipad-2026-11-02.json', 'tests/ipad-2026-11-02-round2.json']) {
+  for (const file of ['real-ink-cases.json', 'tests/ipad-2026-11-02.json',
+    'tests/ipad-2026-11-02-round2.json', 'tests/ipad-2026-11-03-round3.json',
+    'tests/ipad-2026-11-03-round4.json']) {
     const cases = JSON.parse(fs.readFileSync(path.join(root, file), 'utf8')).cases;
     for (const c of cases) {
       if (c.expect !== 'pass' && c.expect !== 'fail') continue;
-      await compare(c.target, c.s, c.id); realCount++;
+      await compare(c.target, c.rawS || c.s, c.id); realCount++;
     }
   }
   for (const [char, entry] of Object.entries(catalog.glyphs)) {
@@ -229,7 +231,7 @@ async function gradingTests() {
     await compare(char, reference.slice(1), char + ' missing first stroke');
     dependencyCount++;
   }
-  assert.equal(realCount, 22);
+  assert.equal(realCount, 28);
   assert.equal(dependencyCount, 11, 'All original complete component decompositions exercised');
   console.log(`Glyph loader: ${realCount} labelled real traces and ${dependencyCount * 2} component-sensitive reference/missing-stroke cases exactly match full-167 grading and labels.`);
 }

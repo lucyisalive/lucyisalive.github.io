@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "description": "Each complete pen stroke deleted from the explicitly correct final 14-stroke 燕. All are deliberately incomplete and must fail; old incorrect acceptances remain inherited errors.",
+  "sourceHtmlSha256": "eef9e8b65aafffb394f1d099980e61092933b04e0d6598ab7334508af24313aa",
+  "sourceCase": "ipad-2026-11-03-r4-05",
+  "sourceGeometrySha256": "df3aef6f083096738db3bc10f97b04d6ec7e56c798e7c111b032190a6a72c676",
+  "sourceVersion": "2026.11.03.3",
+  "generatorSha256": "4026b0dbdf37b9bf9edfbb9df599bb1781d400c5dd9288d0e0b0b42ece05c781",
+  "caseCount": 14,
+  "controlsSha256": "eb78143e98ca65cf6be821252afb7f2f62dbde11233da3d0a3f8d0cdf5a89c4f",
+  "baselineSummary": {
+    "total": 14,
+    "correct": 14,
+    "regressions": [],
+    "improvements": [],
+    "inheritedErrors": []
+  },
+  "verdicts": {
+    "raw-delete-燕-1": "fail",
+    "raw-delete-燕-2": "fail",
+    "raw-delete-燕-3": "fail",
+    "raw-delete-燕-4": "fail",
+    "raw-delete-燕-5": "fail",
+    "raw-delete-燕-6": "fail",
+    "raw-delete-燕-7": "fail",
+    "raw-delete-燕-8": "fail",
+    "raw-delete-燕-9": "fail",
+    "raw-delete-燕-10": "fail",
+    "raw-delete-燕-11": "fail",
+    "raw-delete-燕-12": "fail",
+    "raw-delete-燕-13": "fail",
+    "raw-delete-燕-14": "fail"
+  }
+}
