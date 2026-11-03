@@ -14,7 +14,7 @@ const SOURCE_FILE = 'game-source.html';
 const OUTPUT_FILES = ['index.html', '汉字魔法门_4.html'];
 const SCRIPT_FILES = [
   'curriculum-data.js', 'practice-selector.js', 'sentence-hints.js',
-  'game-feedback.js', 'glyph-catalog.js', 'glyph-loader.js', 'learning-timing.js',
+  'game-feedback.js', 'glyph-catalog.js', 'glyph-loader.js', 'learning-timing.js', 'parent-validation.js',
 ];
 const CSS_FILE = 'game-feedback.css';
 const GLYPH_FILES = ['hanzi-data.js', 'curriculum-hanzi-data.js'];

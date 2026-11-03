@@ -3,7 +3,7 @@
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
-<meta name="game-version" content="2026.11.03.4">
+<meta name="game-version" content="2026.11.03.5">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>汉字魔法门</title>
 <style data-source="game-feedback.css">
@@ -192,6 +192,18 @@
     align-items:center; justify-content:center; background:#35215a; color:#fff6d6;
     padding:28px; text-align:center; font-size:18px; }
   .startup-notice[hidden]{ display:none; }
+  .parent-validation{ background:var(--paper); border-radius:12px; padding:10px 12px; margin-bottom:10px; font-size:14px; line-height:1.5; }
+  .parent-validation[hidden], .parent-confirm[hidden]{ display:none; }
+  .parent-validation-head{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .parent-validation button, .parent-confirm button, .parent-entry button{ font:inherit; border:0; border-radius:8px; padding:9px 12px; background:var(--jade); color:white; cursor:pointer; }
+  .parent-validation button{ background:#6b6355; }
+  .parent-confirm{ display:flex; justify-content:center; flex-wrap:wrap; gap:8px; margin-top:8px; }
+  .parent-entry{ padding:10px; background:#e6eee5; border-radius:10px; margin-bottom:16px; }
+  .parent-entry button{ margin:4px 4px 4px 0; }
+  #parentTestInstruction{ font-weight:700; }
+  #parentTestSummary{ color:#604d2c; }
+  #parentTestMsg{ color:var(--seal); font-size:13px; }
+  .parent-validation button:disabled{ opacity:.55; }
 
   /* ---------- top bar ---------- */
   .topbar{
@@ -573,6 +585,11 @@
   </div>
 
   <div class="scene" id="playzone">
+    <div class="parent-validation" id="parentTestBar" hidden>
+      <div class="parent-validation-head"><b id="parentTestTitle">家长识别验收</b><button id="parentTestExitBtn">退出验收</button></div>
+      <div id="parentTestInstruction"></div>
+      <div id="parentTestSummary">单独记录，不计入孩子的学习进度。</div>
+    </div>
     <div class="approach-path">
       <svg viewBox="0 0 220 70" width="220" height="70" preserveAspectRatio="none">
         <polygon points="70,70 150,70 128,50 92,50" class="path-step" opacity="0.9"/>
@@ -626,6 +643,11 @@
     <div class="timer-ring" id="timerRing" style="display:none;"></div>
     <div class="status-line" id="statusLine">看拼音，写出这个字，推开这扇门</div>
     <div class="result-banner" id="resultBanner"></div>
+    <div class="parent-confirm" id="parentTestConfirm" hidden>
+      <button id="parentTestConfirmBtn">按要求写了，记录这次</button>
+      <button id="parentTestRetryBtn">没按要求，重写这次</button>
+    </div>
+    <div class="parent-confirm" id="parentTestNext" hidden><button id="parentTestNextBtn">继续下一次验收</button></div>
 
     <div class="controls-row">
       <button class="game-btn btn-continue" id="continueBtn">继续 →</button>
@@ -642,6 +664,13 @@
 <div class="panel-overlay" id="panelOverlay">
   <div class="panel">
     <h2>今日汉字设置</h2>
+    <div class="parent-entry">
+      <b>家长识别验收</b>
+      <p class="hint-text">每轮 6 次，分别检查完整字和故意漏笔。单独保存笔迹，不计入孩子的答错、掌握和复习记录。请在尚未动笔的普通题开始。</p>
+      <button id="parentTestRound1Btn">第一轮：燕、类、逃</button>
+      <button id="parentTestRound2Btn">第二轮：辩、历、收</button>
+      <div id="parentTestMsg" role="status"></div>
+    </div>
     <p class="hint-text">学习范围：统编人教版·三年级下册（2025年10月版）<br>从课本词语表选取的 92 个字词中，搭配难度和结构随机出题；每格写一个字。</p>
 
     <label>批量粘贴（按说话的方式写，拼音自动生成）</label>
@@ -702,7 +731,7 @@
     </p>
 
     <button class="btn-close-panel" id="closePanelBtn">关闭</button>
-    <p class="hint-text" id="gameVersion">版本 2026.11.03.4</p>
+    <p class="hint-text" id="gameVersion">版本 2026.11.03.5</p>
   </div>
 </div>
 
@@ -2562,6 +2591,135 @@ window.HANZI_GLYPH_CATALOG={"version":"41b38d977b270e08ea493526a4ee0f8643a59bbf2
 });
 
 </script>
+<script data-source="parent-validation.js">
+(function (root, factory) {
+  if (typeof module === 'object' && module.exports) module.exports = factory();
+  else root.HanziParentValidation = factory();
+})(typeof window !== 'undefined' ? window : this, function () {
+  'use strict';
+
+  // This is a small adult recognition check, not a child learning assessment.
+  // All expected answers below require the adult's explicit confirmation that
+  // the submitted writing followed the instruction. Machine verdicts are never
+  // promoted to human labels on their own.
+  const ROUNDS = {
+    1: [
+      ['燕', 'yàn', '燕子', '请按平常的写法，完整、正确地写一个「燕」。', 'pass', null],
+      ['燕', 'yàn', '燕子', '请故意少写「燕」四点底中的一个点，其他笔画照常写。', 'fail', 'missing-bottom-dot'],
+      ['类', 'lèi', '种类', '请按平常的写法，完整、正确地写一个「类」。', 'pass', null],
+      ['类', 'lèi', '种类', '请故意少写「类」上半部「米」左上方的点，其他笔画照常写。', 'fail', 'missing-mi-upper-left-dot'],
+      ['逃', 'táo', '逃生', '请按平常的写法，完整、正确地写一个「逃」。', 'pass', null],
+      ['逃', 'táo', '逃生', '请故意少写「逃」走之旁最上方的点，其他笔画照常写。', 'fail', 'missing-walking-top-dot'],
+    ],
+    2: [
+      ['辩', 'biàn', '辩论', '请按平常的写法，完整、正确地写一个「辩」。', 'pass', null],
+      ['辩', 'biàn', '辩论', '请故意少写「辩」中间「讠」的点，其他笔画照常写。', 'fail', 'missing-middle-speech-dot'],
+      ['历', 'lì', '历史', '请按平常的写法，完整、正确地写一个「历」。', 'pass', null],
+      ['历', 'lì', '历史', '请故意少写「历」里面「力」的撇，其他笔画照常写。', 'fail', 'missing-inner-li-left-falling'],
+      ['收', 'shōu', '收拾', '请按平常的写法，完整、正确地写一个「收」。', 'pass', null],
+      ['收', 'shōu', '收拾', '请故意少写「收」右边「攵」最上方的短撇，其他笔画照常写。', 'fail', 'missing-puwen-top-left-falling'],
+    ],
+  };
+
+  function create(options) {
+    if (!options || typeof options !== 'object') throw new TypeError('验收设置必须是对象');
+    const round = options.round;
+    if (round !== 1 && round !== 2) throw new RangeError('识别验收轮次只能是 1 或 2');
+    const now = options.now === undefined ? Date.now : options.now;
+    const random = options.random === undefined ? Math.random : options.random;
+    if (typeof now !== 'function' || typeof random !== 'function') throw new TypeError('now 和 random 必须是函数');
+    function readTime() {
+      const value = now();
+      if (!Number.isSafeInteger(value) || value < 0) throw new RangeError('now 必须返回有效的毫秒时间');
+      return value;
+    }
+    const startedAt = readTime(), entropy = random();
+    if (typeof entropy !== 'number' || !Number.isFinite(entropy) || entropy < 0 || entropy >= 1) {
+      throw new RangeError('random 必须返回大于等于 0、小于 1 的数');
+    }
+    const id = 'pv' + round + '-' + startedAt.toString(36) + '-' + Math.floor(entropy * 4294967296).toString(36).padStart(7, '0');
+    const steps = Object.freeze(ROUNDS[round].map((row, index) => Object.freeze({
+      id: id + '-step-' + (index + 1), round, position: index + 1,
+      char: row[0], pinyin: row[1], word: row[2], instruction: row[3], expected: row[4], fault: row[5],
+    })));
+    let index = 0;
+    const results = [], seenAttempts = new Set();
+    const current = () => steps[index] || null;
+    const finished = () => index === steps.length;
+    function rejected(reason) {
+      return { accepted: false, advanced: false, matched: null, reason, finished: finished(), next: current() };
+    }
+
+    // Record contract: {id, sessionId, stepId, char, verdict, timestamp?, graderVersion?}.
+    // The caller maps its real ink record into these small fields. Never copy raw
+    // handwriting into this module; the isolated ink log owns that evidence.
+    function confirm(record, followedInstruction) {
+      if (typeof followedInstruction !== 'boolean') return rejected('confirmation-required');
+      if (!record || typeof record !== 'object') return rejected('invalid-record');
+      if (typeof record.id !== 'string' || !record.id.trim() || record.id.length > 160) return rejected('invalid-attempt-id');
+      if (seenAttempts.has(record.id)) return rejected('duplicate-attempt');
+      if (finished()) return rejected('finished');
+      const step = current();
+      if (record.sessionId !== id) return rejected('wrong-session');
+      if (record.stepId !== step.id) return rejected('wrong-step');
+      if (record.char !== step.char) return rejected('wrong-character');
+      if (record.verdict !== 'pass' && record.verdict !== 'fail') return rejected('invalid-verdict');
+      if (record.timestamp !== undefined && record.timestamp !== null &&
+          (!Number.isSafeInteger(record.timestamp) || record.timestamp < 0)) return rejected('invalid-timestamp');
+      if (record.graderVersion !== undefined && record.graderVersion !== null &&
+          (typeof record.graderVersion !== 'string' || record.graderVersion.length > 80)) return rejected('invalid-version');
+      const humanExpected = followedInstruction ? step.expected : null;
+      const matched = humanExpected === null ? null : record.verdict === humanExpected;
+      const result = Object.freeze({
+        attemptId: record.id, sessionId: id, stepId: step.id, stepIndex: index,
+        round, char: step.char, word: step.word, fault: step.fault,
+        instructionExpected: step.expected, originalVerdict: record.verdict,
+        followedInstruction, humanExpected, matched,
+        timestamp: record.timestamp === undefined ? null : record.timestamp,
+        graderVersion: record.graderVersion === undefined ? null : record.graderVersion,
+        confirmedAt: readTime(),
+      });
+      results.push(result);
+      seenAttempts.add(record.id);
+      if (followedInstruction) index += 1;
+      return { accepted: true, advanced: followedInstruction, matched, result,
+        finished: finished(), next: current() };
+    }
+
+    function summary() {
+      const scored = results.filter(result => result.humanExpected !== null);
+      const matched = scored.filter(result => result.matched).length;
+      return {
+        scope: 'parent-recognition-validation',
+        title: '识别验收第' + (round === 1 ? '一' : '二') + '轮',
+        boundary: '本轮仅验收识别；完整教学流程另行验收，结果不代表已经适合孩子使用。',
+        id, round, totalSteps: steps.length, confirmedSteps: index,
+        attempts: results.length, unconfirmedAttempts: results.length - scored.length,
+        scored: scored.length, matched, mismatched: scored.length - matched,
+        accuracy: scored.length ? matched / scored.length : null,
+        finished: finished(),
+        allMatched: finished() && scored.length === steps.length && matched === steps.length,
+      };
+    }
+    function serialize() {
+      // Return independent JSON-safe data; callers may annotate an exported copy.
+      return JSON.parse(JSON.stringify({
+        schemaVersion: 1, kind: 'parent-recognition-validation', id, round, startedAt,
+        index, steps, results, summary: summary(),
+      }));
+    }
+    return Object.freeze({
+      id, round, steps,
+      get index() { return index; },
+      get results() { return Object.freeze(results.slice()); },
+      current, confirm, finished, summary, serialize,
+    });
+  }
+
+  return Object.freeze({ create });
+});
+
+</script>
 <script>
 /* ============================================================
    汉字魔法门 — 默写版
@@ -2618,7 +2776,7 @@ function defaultBank(){
 // device that has already played keeps its old characters for ever and never sees the new
 // set — the change would reach nobody who actually uses the game.
 const BANK_VERSION = 5;
-const GAME_VERSION = '2026.11.03.4';
+const GAME_VERSION = '2026.11.03.5';
 
 let state = {
   bank: defaultBank(),
@@ -2657,6 +2815,33 @@ const MAX_INK = 200;
 const MAX_INK_BYTES = 2 * 1024 * 1024;
 let inkLog = [];
 let inkSaveNotice = '';
+// Parent acceptance uses the same grader, with its own evidence and no learning writes.
+const PARENT_INK_LOG_KEY = 'hanzi-magic-door-parent-ink-v1';
+let parentTestInkLog = [];
+let parentValidation = null; // RAM only: a reload always returns to ordinary play.
+
+function loadParentTestInkLog(){
+  try{ const saved = JSON.parse(localStorage.getItem(PARENT_INK_LOG_KEY)); parentTestInkLog = Array.isArray(saved) ? saved : []; }
+  catch(_){ parentTestInkLog = []; }
+}
+function saveParentTestInkLog(){
+  try{
+    // Preserve confirmed evidence and the newest attempt. Never thin raw points.
+    let text = JSON.stringify(parentTestInkLog);
+    while(parentTestInkLog.length > 1 && (parentTestInkLog.length > 100 || text.length * 2 > 512 * 1024)){
+      let victim = -1;
+      for(let i = parentTestInkLog.length - 1; i > 0; i--) if(!parentTestInkLog[i].humanExpected){ victim = i; break; }
+      if(victim < 0) break;
+      parentTestInkLog.splice(victim, 1);
+      text = JSON.stringify(parentTestInkLog);
+    }
+    localStorage.setItem(PARENT_INK_LOG_KEY, text);
+    return true;
+  }catch(_){
+    if(parentValidation) document.getElementById('parentTestSummary').textContent = '这次笔迹还在页面中，但暂存失败。请先停在这里，告诉我。';
+    return false;
+  }
+}
 
 function loadInkLog(){
   try{
@@ -2700,9 +2885,20 @@ function saveInkLog(){
   }
 }
 function recordInk(payload, verdict){
-  inkLog.unshift({ c: payload.c, s: payload.s, v: verdict ? 'pass' : 'fail', d: todayStr(), disputed: false,
+  const entry = { c: payload.c, s: payload.s, v: verdict ? 'pass' : 'fail', d: todayStr(), disputed: false,
     graderVersion: GAME_VERSION, timestamp: Date.now(), filtering: payload.filtering,
-    formatVersion: payload.formatVersion, rawS: payload.rawS, phase: payload.phase || null });
+    formatVersion: payload.formatVersion, rawS: payload.rawS, phase: payload.phase || null };
+  if(typeof parentValidation !== 'undefined' && parentValidation){
+    const step = parentValidation.gradingStep || parentValidation.session.current();
+    Object.assign(entry, {actor:'parent', id:parentValidation.session.id + '-attempt-' + (++parentValidation.attemptCount),
+      sessionId:parentValidation.session.id, stepId:step.id, intendedExpected:step.expected,
+      instruction:step.instruction, fault:step.fault, humanExpected:null, followedInstruction:null});
+    parentTestInkLog.unshift(entry);
+    parentValidation.pendingRecord = entry;
+    parentValidation.storageOk = saveParentTestInkLog();
+    return;
+  }
+  inkLog.unshift(entry);
   saveInkLog();
 }
 
@@ -2714,6 +2910,7 @@ function recordInk(payload, verdict){
 const SAVE_KEY = 'hanzi-magic-door-state-v1';
 
 function saveState(){
+  if(typeof parentValidation !== 'undefined' && parentValidation) return;
   try{ localStorage.setItem(SAVE_KEY, JSON.stringify(state)); }
   catch(e){ /* private mode or quota — the session still works, it just won't survive a reload */ }
 }
@@ -2835,6 +3032,7 @@ function svgPointFromEvent(e){
 let capturedPointerId = null;
 
 drawSvg.addEventListener('pointerdown', (e) => {
+  if(parentValidation && (parentValidation.busy || parentValidation.pendingRecord || parentValidation.session.finished())) return;
   e.preventDefault();
   isDrawing = true;
   const pt = svgPointFromEvent(e);
@@ -4455,6 +4653,7 @@ function hintFor(item){
 
 // ---------- main flow ----------
 function loadNextDoor(){
+  if(typeof parentValidation !== 'undefined' && parentValidation) return;
   // Hitting the day's target ends the day, full stop. Waiting for every interleaved retest
   // to also come good meant the child could have written his five characters, be told he was
   // done by the dots, and still be handed more — the retests just carry over to tomorrow.
@@ -4587,6 +4786,7 @@ function markAbandonedToday(item){
 }
 
 function handleAttemptResult(ok){
+  if(typeof parentValidation !== 'undefined' && parentValidation) return;
   const item = currentItem;
   stopPromptSpeech();
   if(ok) feedbackCall('playCorrect');
@@ -4775,7 +4975,118 @@ function onTap(el, handler){
   el.addEventListener('click', fire);
 }
 
+// ---------- isolated adult recognition acceptance ----------
+function parentTestElement(id){ return document.getElementById(id); }
+function renderParentTestSummary(){
+  const p = parentValidation;
+  if(!p) return;
+  const s = p.session.summary();
+  parentTestElement('parentTestSummary').textContent = p.storageOk === false
+    ? '笔迹暂存失败，请停在这里告诉我；页面里的笔迹仍在。'
+    : `已确认 ${s.confirmedSteps}/6 次：${s.matched} 次判定符合预期，${s.mismatched} 次需检查。不计入孩子进度。`;
+}
+function showParentTestStep(){
+  const p = parentValidation;
+  if(!p || p.busy) return;
+  p.pendingRecord = null;
+  p.gradingStep = null;
+  parentTestElement('parentTestConfirm').hidden = true;
+  parentTestElement('parentTestNext').hidden = true;
+  clearCanvas();
+  resultBanner.textContent = '';
+  resultBanner.className = 'result-banner';
+  continueBtn.classList.remove('show');
+  const step = p.session.current();
+  renderParentTestSummary();
+  if(!step){
+    setWritingView(false);
+    parentTestElement('parentTestTitle').textContent = '这一轮识别验收已记录';
+    parentTestElement('parentTestInstruction').textContent = '请告诉我“这一轮写完了”，我会读取笔迹检查。';
+    statusLine.textContent = '还需核对笔迹，再验收完整学习流程。';
+    return;
+  }
+  currentItem = {...step};
+  currentMode = 'parent-test';
+  parentTestElement('parentTestTitle').textContent = `家长识别验收·第 ${p.session.round} 轮（${step.position}/6）`;
+  parentTestElement('parentTestInstruction').textContent = step.instruction;
+  pinyinTag.textContent = step.char + ' · ' + step.word;
+  getCharData(step.char).catch(() => {});
+  setWritingView(true);
+  submitBtn.style.display = clearBtn.style.display = 'inline-block';
+  submitBtn.disabled = clearBtn.disabled = false;
+  statusLine.textContent = '按上方要求书写，点“写好了”后再确认是否按要求写了。';
+}
+function startParentValidation(round){
+  if(parentValidation) return;
+  if(currentMode !== 'free' || !currentItem || strokesPoints.length || isDrawing || submitBtn.disabled ||
+      continueBtn.classList.contains('show') || finale.classList.contains('show') || parentQueueChanged){
+    parentTestElement('parentTestMsg').textContent = '当前有正在进行的练习。请先完成它，再从尚未动笔的普通题开始验收。';
+    return;
+  }
+  const session = window.HanziParentValidation.create({round});
+  parentValidation = {session, savedItem:currentItem, savedRound:currentRound,
+    savedRequestId:currentParentRequestId, pendingRecord:null, busy:false, attemptCount:0, storageOk:true};
+  cancelTeachingRound();
+  stopPromptSpeech();
+  feedbackCall('reset');
+  panelOverlay.classList.remove('show');
+  settingsBtn.disabled = true;
+  settingsBtn.style.visibility = 'hidden';
+  parentTestElement('parentTestBar').hidden = false;
+  timerRing.style.display = 'none';
+  progressPath.textContent = '';
+  showParentTestStep();
+}
+function exitParentValidation(){
+  const p = parentValidation;
+  if(!p || p.busy || isDrawing) return;
+  parentValidation = null;
+  parentTestElement('parentTestBar').hidden = true;
+  parentTestElement('parentTestConfirm').hidden = true;
+  parentTestElement('parentTestNext').hidden = true;
+  settingsBtn.disabled = false;
+  settingsBtn.style.visibility = '';
+  submitBtn.disabled = clearBtn.disabled = false;
+  presentDoor(p.savedItem, 'free', p.savedRound, p.savedRequestId);
+}
+function confirmParentValidation(followedInstruction){
+  const p = parentValidation, entry = p && p.pendingRecord;
+  if(!p || p.busy || !entry) return;
+  const confirmation = p.session.confirm({id:entry.id,sessionId:entry.sessionId,stepId:entry.stepId,
+    char:entry.c,verdict:entry.v,timestamp:entry.timestamp,graderVersion:entry.graderVersion}, followedInstruction);
+  if(!confirmation.accepted) return;
+  Object.assign(entry, {followedInstruction, humanExpected:confirmation.result.humanExpected,
+    matched:confirmation.matched, confirmedAt:confirmation.result.confirmedAt,
+    disputed:confirmation.matched === false});
+  p.storageOk = saveParentTestInkLog();
+  p.pendingRecord = null;
+  if(confirmation.matched === false && !confirmation.finished){
+    parentTestElement('parentTestConfirm').hidden = true;
+    parentTestElement('parentTestNext').hidden = false;
+    setWritingView(false);
+    renderParentTestSummary();
+    statusLine.textContent = '这次判定与预期不符，已记录。可以退出告诉我，也可以继续下一次。';
+  } else showParentTestStep();
+}
+onTap(parentTestElement('parentTestRound1Btn'), () => startParentValidation(1));
+onTap(parentTestElement('parentTestRound2Btn'), () => startParentValidation(2));
+onTap(parentTestElement('parentTestExitBtn'), exitParentValidation);
+onTap(parentTestElement('parentTestConfirmBtn'), () => confirmParentValidation(true));
+onTap(parentTestElement('parentTestRetryBtn'), () => confirmParentValidation(false));
+onTap(parentTestElement('parentTestNextBtn'), showParentTestStep);
+
 onTap(submitBtn, async function(){
+  const parentSession = parentValidation;
+  if(parentSession && (parentSession.busy || parentSession.pendingRecord || parentSession.session.finished())) return;
+  if(parentSession && (isDrawing || !strokesPoints.length)){
+    statusLine.textContent = '请先写完这个字，再点“写好了”。';
+    return;
+  }
+  if(parentSession){
+    parentSession.busy = true;
+    parentSession.gradingStep = parentSession.session.current();
+    parentTestElement('parentTestExitBtn').disabled = true;
+  }
   console.log('[diag] submit handler START, disabled was', submitBtn.disabled);
   const item = currentItem;
   submitBtn.disabled = true;
@@ -4786,6 +5097,18 @@ onTap(submitBtn, async function(){
     console.log('[diag] about to gradeDrawing for char', item && item.char);
     const ok = await gradeDrawing(item.char);
     console.log('[diag] gradeDrawing resolved:', ok);
+    if(parentSession){
+      if(parentValidation !== parentSession) return;
+      parentSession.busy = false;
+      parentTestElement('parentTestExitBtn').disabled = false;
+      // Ink and its session/step tags were captured by recordInk, never inferred
+      // from the machine verdict. Only an explicit adult confirmation labels it.
+      submitBtn.disabled = clearBtn.disabled = true;
+      statusLine.textContent = ok ? '系统判对。请确认这次是否按上方要求写了。' : '系统判错。请确认这次是否按上方要求写了。';
+      parentTestElement('parentTestConfirm').hidden = false;
+      renderParentTestSummary();
+      return;
+    }
     submitBtn.disabled = false;
     clearBtn.disabled = false;
     statusLine.textContent = priorStatus;
@@ -4794,6 +5117,10 @@ onTap(submitBtn, async function(){
     console.log('[diag] gradeDrawing threw:', e && e.message, e && e.stack);
     submitBtn.disabled = false;
     clearBtn.disabled = false;
+    if(parentSession){
+      parentSession.busy = false;
+      parentTestElement('parentTestExitBtn').disabled = false;
+    }
     // Either way this is NOT "写错了" — don't burn a wrong-attempt strike. But say which it
     // is: this used to blame the network for every failure, and sent a parent hunting for a
     // connection problem while the real cause was the grader crashing on data that was
@@ -5132,6 +5459,13 @@ fileInput.addEventListener('change', (e) => {
   if(!file) return;
   const reader = new FileReader();
   reader.onload = (ev) => {
+    // A previously opened file picker/read can finish after acceptance starts.
+    // Do not replace the child's bank or its session underneath the saved item.
+    if(parentValidation){
+      fileInput.value = '';
+      alert('正在进行家长验收，本次没有读取存档。退出验收后可重新选择存档。');
+      return;
+    }
     try{
       const loaded = JSON.parse(ev.target.result);
       if(loaded && loaded.bank){
@@ -5216,6 +5550,7 @@ function showFinale(bankEmpty){
 // depend on what was saved, so loading afterwards would show one round of the wrong thing.
 loadSavedState();
 loadInkLog();
+loadParentTestInkLog();
 applyScene(state.scenesUnlocked);
 dailyCountInput.value = state.dailyCount;
 renderQueueList();

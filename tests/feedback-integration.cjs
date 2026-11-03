@@ -54,7 +54,7 @@ function environment() {
   vm.runInContext(source('function speakSentence(){', '// The demo character'), context);
   vm.runInContext(source('function hintFor(item){', '// ---------- main flow ----------'), context);
   vm.runInContext(source('function presentDoor(', 'function startTeachingRound(){'), context);
-  vm.runInContext(source('function onTap(el, handler){', 'onTap(submitBtn,'), context);
+  vm.runInContext(source('function onTap(el, handler){', '// ---------- isolated adult recognition acceptance ----------'), context);
   const run = code => vm.runInContext(code, context);
   function prepare(mode = 'free', blind = false) {
     const item = {char: '慧', pinyin: 'huì', word: '智慧', box: 1, interval: 0, history: [], passedDays: []};
