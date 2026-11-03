@@ -1,0 +1,3053 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="game-version" content="2026.11.03.1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>汉字魔法门</title>
+<link rel="stylesheet" href="game-feedback.css?v=2026.11.02.4">
+<style>
+  :root{
+    --sky-1:#2a1a4a; --sky-2:#4b2a6b; --sky-3:#7b3f8f;
+    --paper:#F6EFDD; --paper-2:#EFE4C8;
+    --ink:#22201C; --seal:#B3231C; --seal-dark:#8C1B15;
+    --gold:#D9B44A; --jade:#3C6E58; --grid:#D98A82;
+    --door-wood:#5b3a24; --door-wood-dark:#3a2416;
+    --star:#FFF6D6;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ height:100%; margin:0; overflow:hidden; overscroll-behavior:none; touch-action:none; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }
+  html{
+    background:
+      radial-gradient(ellipse at 50% 0%, var(--sky-3) 0%, var(--sky-2) 45%, var(--sky-1) 100%);
+  }
+  body{
+    font-family:'Baloo 2', -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    background:
+      radial-gradient(ellipse at 50% 0%, var(--sky-3) 0%, var(--sky-2) 45%, var(--sky-1) 100%);
+    display:flex; align-items:center; justify-content:center;
+    padding:20px 10px;
+    color:var(--ink);
+    /* Pin the document to exactly the viewport so there is no scrollable page at all —
+       stronger than overscroll-behavior/touchmove tricks, which some in-app browsers
+       (e.g. iPad file-viewer apps) don't fully respect. Panels that need their own
+       scroll (.panel, .queue-list) keep working since they scroll internally. */
+    position:fixed; inset:0;
+  }
+  .stars-bg{ position:fixed; inset:0; pointer-events:none; z-index:0; }
+  .stars-bg span{
+    position:absolute; width:3px; height:3px; background:var(--star);
+    border-radius:50%; opacity:.8; animation: twinkle 3s ease-in-out infinite;
+  }
+  @keyframes twinkle{ 0%,100%{opacity:.2;} 50%{opacity:1;} }
+
+  .stage{
+    width:100%; max-width:480px; position:relative; z-index:1;
+  }
+  .startup-notice{ position:fixed; inset:0; z-index:30; display:flex;
+    align-items:center; justify-content:center; background:#35215a; color:#fff6d6;
+    padding:28px; text-align:center; font-size:18px; }
+  .startup-notice[hidden]{ display:none; }
+
+  /* ---------- top bar ---------- */
+  .topbar{
+    display:flex; justify-content:space-between; align-items:center;
+    margin-bottom:10px; padding:0 4px;
+  }
+  .progress-path{
+    display:flex; gap:5px; flex:1; margin-right:10px; flex-wrap:wrap;
+  }
+  .progress-dot{
+    width:11px; height:11px; border-radius:50%;
+    background:rgba(255,255,255,.18); border:1.5px solid rgba(255,255,255,.3);
+  }
+  .progress-dot.done{ background:var(--gold); border-color:var(--gold); }
+  .progress-dot.current{ background:var(--star); border-color:var(--star); box-shadow:0 0 8px var(--star); }
+  .icon-btn{
+    width:34px; height:34px; border-radius:50%; border:none;
+    background:rgba(255,255,255,.12); color:var(--star);
+    font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center;
+    margin-left:6px;
+  }
+  .icon-btn:active{ transform:scale(.92); }
+
+  /* ---------- door scene ---------- */
+  .scene{
+    background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(0,0,0,.15));
+    border-radius:18px;
+    padding:22px 16px 18px;
+    position:relative;
+    box-shadow: 0 20px 50px rgba(0,0,0,.4), inset 0 0 60px rgba(123,63,143,.25);
+    border: 1px solid rgba(255,255,255,.08);
+  }
+
+  .doorway{
+    width:220px; height:270px;
+    margin:0 auto 14px;
+    position:relative;
+  }
+  .approach-path{
+    width:220px; margin:0 auto -6px; position:relative; z-index:0; opacity:.9;
+  }
+  .path-step{ fill:var(--door-wood); }
+  .doorframe{
+    position:absolute; inset:0;
+    border-radius:110px 110px 8px 8px;
+    background: linear-gradient(180deg, var(--door-wood), var(--door-wood-dark));
+    box-shadow: 0 10px 30px rgba(0,0,0,.5), inset 0 0 0 6px rgba(0,0,0,.25);
+    padding:10px;
+    overflow:hidden;
+  }
+  .scene-backdrop{
+    position:absolute; inset:10px;
+    border-radius:100px 100px 4px 4px;
+    overflow:hidden;
+    z-index:0;
+  }
+  .scene-photo{
+    position:absolute; inset:0; width:100%; height:100%;
+    object-fit:cover; object-position:50% 35%;
+    transform:scale(1.18); transform-origin:center;
+    display:block;
+  }
+  .scene-shade{
+    position:absolute; inset:0;
+    background: linear-gradient(180deg, rgba(0,0,0,0) 55%, rgba(0,0,0,.45) 100%);
+    pointer-events:none;
+  }
+  .scene-fireflies{ position:absolute; inset:0; display:block; pointer-events:none; }
+  .firefly{
+    fill: var(--gold);
+    filter: drop-shadow(0 0 3px var(--gold));
+    animation: fireflyPulse 2.6s ease-in-out infinite;
+  }
+  .firefly-2{ animation-delay:.6s; }
+  .firefly-3{ animation-delay:1.1s; }
+  .firefly-4{ animation-delay:1.7s; }
+  @keyframes fireflyPulse{ 0%,100%{ opacity:.25; } 50%{ opacity:1; } }
+
+  .doorpanel{
+    position:absolute; inset:10px;
+    border-radius:100px 100px 4px 4px;
+    overflow:hidden;
+    z-index:2;
+    perspective: 900px;
+  }
+  .door-leaf{
+    position:absolute; top:0; width:50%; height:100%;
+    background:
+      repeating-linear-gradient(90deg, rgba(0,0,0,.12) 0 3px, transparent 3px 22px),
+      linear-gradient(180deg, var(--door-wood), var(--door-wood-dark));
+    box-shadow: inset 0 0 18px rgba(0,0,0,.45);
+    transition: transform .9s cubic-bezier(.32,1.3,.55,1);
+    backface-visibility:hidden;
+  }
+  .door-leaf-left{ left:0; transform-origin:left center; border-top-left-radius:100px; }
+  .door-leaf-right{ right:0; transform-origin:right center; border-top-right-radius:100px; }
+  .doorpanel.open .door-leaf-left{ transform: rotateY(-108deg); }
+  .doorpanel.open .door-leaf-right{ transform: rotateY(108deg); }
+
+  .door-glow-seam{
+    position:absolute; top:0; left:50%; width:6px; height:100%;
+    transform:translateX(-50%);
+    background: radial-gradient(ellipse at center, var(--gold), transparent 70%);
+    opacity:0; z-index:3; pointer-events:none;
+  }
+  .doorpanel.open .door-glow-seam{ animation: seamFlash .9s ease-out; }
+  @keyframes seamFlash{ 0%{ opacity:0; } 25%{ opacity:.9; width:26px;} 100%{ opacity:0; width:6px; } }
+
+  .doorpanel-content{
+    position:absolute; inset:10px;
+    border-radius:100px 100px 4px 4px;
+    display:flex; align-items:center; justify-content:center;
+    z-index:4;
+  }
+  .rune{
+    position:absolute; inset:4px;
+    border:2px solid rgba(217,180,74,.5);
+    border-radius:90px 90px 4px 4px;
+    pointer-events:none;
+  }
+
+  .char-glow{
+    position:absolute; inset:0;
+    display:flex; align-items:center; justify-content:center;
+    transition: opacity .4s ease;
+  }
+  /* The character is drawn from the same stroke-outline data the grader compares against,
+     not from a webfont — so what the child is shown to copy is by construction the exact
+     glyph they'll be judged on, and it's a clean printed 楷体 rather than a brush face. */
+  .char-glow svg{ width:62%; height:62%; display:block; }
+  .char-glow svg path{ fill: var(--gold); }
+  .char-glow{ filter: drop-shadow(0 0 12px rgba(217,180,74,.75)); }
+  .char-glow.hidden{ opacity:0; }
+
+  /* ---------- writing view ----------
+     Writing used to be a fixed full-screen overlay floating on top of the door, which meant
+     the grid, the door, and the text lines all piled onto the same pixels. Now it's a plain
+     sibling of the doorway in normal flow: entering writing mode hides the door and shows
+     this column, so nothing can overlap anything. The progress dots and ⚙️ live in .topbar,
+     outside .scene, and stay put the whole time. */
+  .write-slot{
+    display:flex; flex-direction:column; align-items:center; gap:12px;
+    margin:0 auto 12px;
+  }
+  .scene.writing{
+    background: #35215a;                 /* flat colour while writing — nothing to look at but the grid */
+    box-shadow: 0 20px 50px rgba(0,0,0,.4);
+  }
+  .scene.writing .approach-path,
+  .scene.writing .doorway{ display:none; }
+  .write-controls-row{
+    display:flex; justify-content:center; gap:10px;
+  }
+  .write-canvas-wrap{
+    width:300px; height:300px;
+    background: rgba(246,239,221,.94);
+    border-radius:12px;
+    position:relative;
+    box-shadow: 0 8px 24px rgba(0,0,0,.45);
+    touch-action:none;
+    /* A real 米字格 (rice-grid) frame like in a Chinese writing workbook — a solid outer
+       border plus the cross+diagonal guide lines — helps a kid judge proportion and where
+       a stroke should start/end relative to the whole square, not just draw freehand. */
+    border: 2px solid var(--grid);
+  }
+  .grid-lines{
+    position:absolute; inset:0; pointer-events:none;
+    /* An actual small SVG (cross + both diagonals, guaranteed centered) instead of the
+       linear-gradient hack this used to use — that technique draws its line starting at
+       the box's top/left edge by default, not through the center, so the "guide lines"
+       were invisibly hugging the border the whole time instead of crossing the middle. */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cg stroke='%23D98A82' stroke-width='1.4' fill='none'%3E%3Cline x1='50' y1='0' x2='50' y2='100'/%3E%3Cline x1='0' y1='50' x2='100' y2='50'/%3E%3Cline x1='0' y1='0' x2='100' y2='100'/%3E%3Cline x1='100' y1='0' x2='0' y2='100'/%3E%3C/g%3E%3C/svg%3E");
+    background-size: 100% 100%;
+    background-position:center; background-repeat:no-repeat;
+    opacity:.7;
+  }
+  .write-target{ width:150px; height:150px; position:relative; z-index:2; }
+
+  /* The demo character sits directly on the 米字格, exactly the size and position of the
+     square the child is about to write in — so "copy this" means copying it into the same
+     box, at the same scale, instead of shrinking a small glyph from the doorway. */
+  .demo-glyph{
+    position:absolute; inset:0; z-index:3; pointer-events:none;
+    display:flex; align-items:center; justify-content:center;
+    transition: opacity .45s ease;
+  }
+  /* One fixed em box for every character, not a per-character auto-fit: a 一 should look
+     like a short stroke in a big square, the way it does in a real workbook, not be blown
+     up to fill it. */
+  .demo-glyph svg{ width:82%; height:82%; display:block; }
+  .demo-glyph svg path{ fill: rgba(34,32,28,.82); }
+  .demo-glyph.hidden{ opacity:0; }
+
+  .shake{ animation: shake .35s; }
+  @keyframes shake{ 0%,100%{transform:translateX(0);} 25%{transform:translateX(-6px);} 75%{transform:translateX(6px);} }
+
+  .hint-row{ display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap; }
+  .sentence-btn{ border:1px solid rgba(255,246,214,.35); border-radius:999px; padding:8px 10px;
+    background:rgba(255,255,255,.12); color:var(--star); font-size:13px; cursor:pointer; }
+  .sentence-btn.speaking{ background:var(--gold); color:#3a2416; }
+  .speak-btn{
+    width:38px; height:38px; border-radius:50%; border:none;
+    background:rgba(255,255,255,.14); color:var(--star);
+    font-size:17px; cursor:pointer; display:flex; align-items:center; justify-content:center;
+  }
+  .speak-btn:active{ transform:scale(.9); }
+  .speak-btn.speaking{ background:var(--gold); }
+
+  /* Sits above the grid in normal flow now, not absolutely positioned off the top edge of
+     the writing tile where it used to collide with the door frame. */
+  .pinyin-tag{
+    background:var(--gold); color:#3a2416; font-weight:800; font-size:17px;
+    padding:5px 16px; border-radius:999px; white-space:nowrap;
+    box-shadow:0 3px 8px rgba(0,0,0,.3);
+  }
+
+  .status-line{
+    text-align:center; color:var(--star); font-size:14px; min-height:20px; margin-bottom:10px;
+  }
+  .timer-ring{
+    width:34px; height:34px; margin:0 auto 6px;
+    display:flex; align-items:center; justify-content:center;
+    font-weight:800; color:var(--gold); font-size:14px;
+    border:3px solid var(--gold); border-radius:50%;
+  }
+
+  .controls-row{
+    display:flex; justify-content:center; gap:10px; margin-top:4px;
+  }
+  button.game-btn{
+    font-family:'Baloo 2', sans-serif; font-weight:700; font-size:14px;
+    border:none; border-radius:999px; padding:11px 20px; cursor:pointer;
+    transition: transform .12s ease;
+  }
+  button.game-btn:active{ transform:scale(.94); }
+  .btn-submit{ background: var(--jade); color:#fff; box-shadow:0 4px 10px rgba(60,110,88,.4); }
+  .btn-clear{ background:transparent; color:rgba(255,255,255,.7); border:1.5px solid rgba(255,255,255,.3); }
+  .btn-continue{ background: var(--gold); color:#3a2416; display:none; box-shadow:0 4px 10px rgba(217,180,74,.4); }
+  .btn-continue.show{ display:inline-block; }
+
+  .result-banner{
+    text-align:center; font-weight:800; font-size:16px; margin:8px 0 2px; min-height:22px;
+  }
+  .result-banner.correct{ color:#8fe0b0; }
+  .result-banner.wrong{ color:#f0a0a0; }
+
+  /* ---------- finale ---------- */
+  .finale{ display:none; text-align:center; padding:20px 4px 4px; }
+  .finale.show{ display:block; }
+  .finale .big{ font-family:'Ma Shan Zheng', cursive; font-size:36px; color:var(--star); }
+  .finale p{ color:rgba(255,255,255,.7); font-size:14px; }
+
+  .playzone.hide{ display:none; }
+
+  /* ---------- settings panel ---------- */
+  .panel-overlay{
+    display:none; position:fixed; inset:0; background:rgba(0,0,0,.55);
+    z-index:10; align-items:flex-end; justify-content:center;
+  }
+  .panel-overlay.show{ display:flex; }
+  .panel{
+    width:100%; max-width:480px; background:var(--paper);
+    border-radius:18px 18px 0 0; padding:18px 16px 22px; max-height:85vh; overflow-y:auto;
+    touch-action:pan-y;
+  }
+  .panel h2{ font-family:'Ma Shan Zheng', cursive; color:var(--seal-dark); margin:0 0 12px; font-size:24px; }
+  .panel label{ display:block; font-size:12px; color:#6b6355; margin:10px 0 4px; font-weight:700; }
+  .panel input[type=text]{
+    width:100%; padding:9px 10px; border-radius:8px; border:1.5px solid #cfc4a8;
+    font-family:'Baloo 2', sans-serif; font-size:14px; background:#fff;
+    -webkit-user-select:text; user-select:text; -webkit-touch-callout:default;
+  }
+  .panel input[type=number]{
+    -webkit-user-select:text; user-select:text; -webkit-touch-callout:default;
+  }
+  .add-row{ display:flex; gap:6px; margin-top:6px; }
+  .add-row input{ flex:1; }
+  .add-row button{
+    background:var(--jade); color:#fff; border:none; border-radius:8px; padding:0 14px;
+    font-weight:700; cursor:pointer;
+  }
+  .queue-list{ margin-top:10px; max-height:140px; overflow-y:auto; touch-action:pan-y; }
+  .queue-item{
+    display:flex; justify-content:space-between; align-items:center;
+    background:#fff; border-radius:8px; padding:7px 10px; margin-bottom:5px; font-size:14px;
+  }
+  .queue-item .del{ color:var(--seal); cursor:pointer; font-weight:700; }
+  .queue-item small{ display:block; color:#8a8272; font-size:11px; margin-top:3px; }
+  .queue-actions{ display:flex; gap:8px; flex-shrink:0; margin-left:8px; }
+  .queue-actions button{ border:0; border-radius:6px; padding:5px 7px; background:#efe4c8; color:#5b3a24; font-size:12px; }
+  .panel-actions{ display:flex; gap:8px; margin-top:16px; flex-wrap:wrap; }
+  .panel-actions button{
+    flex:1; min-width:120px; padding:10px; border-radius:10px; border:none;
+    font-weight:700; cursor:pointer; font-family:'Baloo 2', sans-serif; font-size:13px;
+  }
+  .btn-save{ background:var(--jade); color:#fff; }
+  .btn-load{ background:var(--gold); color:#3a2416; }
+  .btn-close-panel{ background:#cfc4a8; color:#3a2416; width:100%; margin-top:8px; }
+  .hint-text{ font-size:11.5px; color:#8a8272; margin-top:8px; line-height:1.5; }
+  #fileInput{ display:none; }
+  .daily-count-row{ display:flex; align-items:center; gap:8px; margin-top:6px; }
+  .daily-count-row input[type=number]{ width:70px; padding:8px; border-radius:8px; border:1.5px solid #cfc4a8; }
+  #batchInput{
+    width:100%; box-sizing:border-box; padding:9px 10px; border-radius:8px;
+    border:1.5px solid #cfc4a8; font-family:inherit; font-size:14px; line-height:1.6; resize:vertical;
+  }
+  .batch-row{ display:flex; align-items:center; gap:10px; margin-top:6px; }
+  .batch-row button{
+    border:none; border-radius:8px; padding:9px 16px; background:var(--jade); color:#fff;
+    font-family:inherit; font-weight:700; font-size:13px; cursor:pointer;
+  }
+  .batch-msg{ font-size:12px; color:#6b6355; }
+  .ink-list{ display:flex; flex-direction:column; gap:5px; margin-top:4px; max-height:190px; overflow-y:auto; }
+  .ink-item{
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
+    background:#fff; border:1.5px solid #ddd2b8; border-radius:9px; padding:5px 9px;
+  }
+  .ink-item.marked{ background:#f3e2df; border-color:#d98a82; }
+  .ink-item .ch{ font-size:18px; font-weight:800; color:var(--ink); }
+  .ink-item .meta{ font-size:11px; color:#8a8272; margin-left:7px; }
+  .ink-item .v-pass{ color:var(--jade); font-weight:700; }
+  .ink-item .v-fail{ color:var(--seal); font-weight:700; }
+  .ink-mark{
+    border:1.5px solid #cfc4a8; background:transparent; color:#6b6355;
+    border-radius:7px; padding:5px 9px; font-family:inherit; font-size:11.5px;
+    cursor:pointer; white-space:nowrap;
+  }
+  .ink-item.marked .ink-mark{ background:var(--seal); border-color:var(--seal); color:#fff; }
+  .ink-actions{ display:flex; align-items:center; gap:7px; margin-top:7px; flex-wrap:wrap; }
+  .btn-ink{
+    border:none; border-radius:8px; padding:8px 12px; background:var(--jade); color:#fff;
+    font-family:inherit; font-weight:700; font-size:12.5px; cursor:pointer;
+  }
+  .btn-ink-clear{ background:#cfc4a8; color:#3a2416; }
+  #inkOut{
+    width:100%; box-sizing:border-box; margin-top:6px; padding:7px 9px; border-radius:8px;
+    border:1.5px solid #cfc4a8; font-family:ui-monospace,Menlo,monospace; font-size:10px;
+    line-height:1.4; resize:vertical; color:#6b6355;
+  }
+  .stuck-list{ display:flex; flex-direction:column; gap:6px; margin-top:4px; }
+  .stuck-item{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    background:#f3e2df; border:1.5px solid #e0b8b2; border-radius:10px; padding:7px 10px;
+  }
+  .stuck-item .ch{ font-size:19px; font-weight:800; color:var(--seal-dark); }
+  .stuck-item .word{ font-size:12px; color:#8a7268; margin-left:6px; }
+  .btn-taught{
+    border:none; border-radius:8px; padding:7px 12px; background:var(--jade); color:#fff;
+    font-family:inherit; font-weight:700; font-size:12.5px; cursor:pointer; white-space:nowrap;
+  }
+  .mastered-list{
+    display:flex; flex-wrap:wrap; gap:6px; margin-top:4px;
+    max-height:120px; overflow-y:auto;
+  }
+  .mastered-chip{
+    background:var(--jade); color:#fff; border-radius:8px;
+    padding:4px 9px; font-size:15px; font-weight:700;
+  }
+  .mastered-chip small{ font-weight:500; opacity:.8; font-size:10px; margin-left:3px; }
+  .progress-chip{
+    background:#e6dcc0; color:#6b6355; border-radius:8px;
+    padding:4px 9px; font-size:15px; font-weight:700;
+  }
+  .py-alt{
+    color:var(--seal); font-weight:800; cursor:pointer;
+    border-bottom:1.5px dashed var(--seal); padding-bottom:1px;
+  }
+</style>
+</head>
+<body>
+<div class="startup-notice" id="startupNotice" role="status">正在准备汉字，马上就能开始…</div>
+
+<div class="stars-bg" id="starsBg"></div>
+
+<div class="stage">
+  <div class="topbar">
+    <div class="progress-path" id="progressPath"></div>
+    <button class="icon-btn" id="settingsBtn" title="设置">⚙️</button>
+  </div>
+
+  <div class="scene" id="playzone">
+    <div class="approach-path">
+      <svg viewBox="0 0 220 70" width="220" height="70" preserveAspectRatio="none">
+        <polygon points="70,70 150,70 128,50 92,50" class="path-step" opacity="0.9"/>
+        <polygon points="82,48 138,48 122,32 98,32" class="path-step" opacity="0.75"/>
+        <polygon points="94,30 126,30 116,18 104,18" class="path-step" opacity="0.6"/>
+      </svg>
+    </div>
+    <div class="doorway">
+      <div class="doorframe">
+        <div class="scene-backdrop" id="sceneBackdrop">
+          <img class="scene-photo" id="sceneImg" alt="">
+          <div class="scene-shade"></div>
+          <svg class="scene-fireflies" viewBox="0 0 200 250" width="100%" height="100%" preserveAspectRatio="xMidYMax slice">
+            <circle class="firefly" cx="60" cy="130" r="2.6"/>
+            <circle class="firefly firefly-2" cx="140" cy="150" r="2.2"/>
+            <circle class="firefly firefly-3" cx="95" cy="90" r="2.8"/>
+            <circle class="firefly firefly-4" cx="150" cy="90" r="2"/>
+          </svg>
+        </div>
+        <div class="doorpanel" id="doorpanel">
+          <div class="door-leaf door-leaf-left"></div>
+          <div class="door-leaf door-leaf-right"></div>
+          <div class="door-glow-seam"></div>
+        </div>
+        <div class="doorpanel-content">
+          <div class="rune"></div>
+          <div class="char-glow" id="charGlow"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="write-slot" id="writeSlot" style="display:none;">
+      <div class="hint-row">
+        <div class="pinyin-tag" id="pinyinTag"></div>
+        <!-- Never speaks on its own: reading the pinyin is the skill being practised, so
+             the sound is there for when he's stuck, not handed to him every time. -->
+        <button class="speak-btn" id="speakBtn" title="读一遍给我听">🔊</button>
+        <button class="sentence-btn" id="sentenceBtn" title="听一句话，分清词语的意思">句子提示</button>
+      </div>
+      <div class="write-canvas-wrap" id="writeTile">
+        <div class="grid-lines"></div>
+        <div class="demo-glyph hidden" id="demoGlyph"></div>
+        <svg id="drawSvg" viewBox="0 0 300 300" width="300" height="300" style="position:relative;z-index:2;touch-action:none;display:block;"></svg>
+      </div>
+      <div class="write-controls-row">
+        <button class="game-btn btn-clear" id="clearBtn">擦掉重写</button>
+        <button class="game-btn btn-submit" id="submitBtn">写好了</button>
+      </div>
+    </div>
+
+    <div class="timer-ring" id="timerRing" style="display:none;"></div>
+    <div class="status-line" id="statusLine">看拼音，写出这个字，推开这扇门</div>
+    <div class="result-banner" id="resultBanner"></div>
+
+    <div class="controls-row">
+      <button class="game-btn btn-continue" id="continueBtn">继续 →</button>
+    </div>
+  </div>
+
+  <div class="finale" id="finale">
+    <div class="big">今天的门都推开啦！</div>
+    <p id="finaleDetail" style="white-space:pre-line;"></p>
+    <button class="game-btn btn-submit" id="restartBtn" style="margin-top:8px;">再来一轮</button>
+  </div>
+</div>
+
+<div class="panel-overlay" id="panelOverlay">
+  <div class="panel">
+    <h2>今日汉字设置</h2>
+    <p class="hint-text">学习范围：统编人教版·三年级下册（2025年10月版）<br>从课本词语表选取的 92 个字词中，搭配难度和结构随机出题；每格写一个字。</p>
+
+    <label>批量粘贴（按说话的方式写，拼音自动生成）</label>
+    <textarea id="batchInput" rows="3" placeholder="奇迹的迹；求救的救；师弟的弟"></textarea>
+    <div class="batch-row">
+      <button id="batchAddBtn">批量加入</button>
+      <span class="batch-msg" id="batchMsg"></span>
+    </div>
+    <p class="hint-text" style="margin-top:6px;">
+      「奇迹的迹」= 组词"奇迹"、要默写"迹"。分隔符用 ；，、空格或换行都行。<br>
+      也可以只写一个字（就没有组词提示），或写「单薄的薄 bó」手动指定拼音。<br>
+      拼音自动填好；<b style="color:var(--seal);">标红的是多音字</b>，点一下可以换读音。
+      <br>今天加入的字优先默写；重复字只提前复习，保留原来的学习记录。新一批排在旧队列前面。
+    </p>
+
+    <label>逐个添加</label>
+    <div class="add-row">
+      <input type="text" id="charInput" placeholder="字">
+      <input type="text" id="pinyinInput" placeholder="拼音（自动）">
+      <input type="text" id="wordInput" placeholder="词语（可选）">
+      <button id="addCharBtn">加入</button>
+    </div>
+    <label for="sentenceInput">句子提示（选填，常用词语会自动配好）</label>
+    <input type="text" id="sentenceInput" placeholder="例如：我们去公园放风筝。" maxlength="100">
+    <div class="queue-list" id="queueList"></div>
+
+    <label>需要家长讲解（今天错了 3 次，已经停下来）</label>
+    <div class="stuck-list" id="stuckList"></div>
+
+    <label>已永久掌握（在 3 个不同的日子写对过，不再出现）</label>
+    <div class="mastered-list" id="masteredList"></div>
+
+    <label>每天要通过几个字才算完成</label>
+    <div class="daily-count-row">
+      <input type="number" id="dailyCount" min="1" max="30" value="5">
+      <span style="font-size:12px;color:#6b6355;">个字（真正通过，不含放弃重来的）</span>
+    </div>
+
+    <label>笔迹记录（判得不对的，标一下发给我）<span id="inkCount" style="font-weight:400;color:#8a8272;"></span></label>
+    <div class="ink-list" id="inkList"></div>
+    <div class="ink-actions">
+      <button class="btn-ink" id="inkCopyBtn">📋 复制标记的</button>
+      <button class="btn-ink" id="inkDownloadBtn">⬇️ 下载全部</button>
+      <button class="btn-ink btn-ink-clear" id="inkClearBtn">清空</button>
+      <span class="batch-msg" id="inkMsg"></span>
+    </div>
+    <textarea id="inkOut" readonly rows="3" placeholder="点上面的「复制标记的」，内容会出现在这里；复制不成功就长按这里全选拷贝。"></textarea>
+
+    <div class="panel-actions">
+      <button class="btn-save" id="saveProgressBtn">💾 保存今天的进度</button>
+      <button class="btn-load" id="loadProgressBtn">📂 读取存档</button>
+    </div>
+    <input type="file" id="fileInput" accept="application/json">
+    <p class="hint-text">
+      提示：进度会自动存在这台设备的浏览器里，关掉页面、隔天再打开都还在，平时不用管。上面的"保存今天的进度"是导出一个存档文件，用来换设备（比如从 iPad 换到电脑），或者担心清了浏览器数据想留个底；在新设备上点"读取存档"选那个文件就能接上。
+      <br><br>
+      字库会按"记忆规律"自动滚动：今天答错、靠教学环节才写对的字，会更快安排复习；一次就写对的字，安排复习的间隔会拉长。你随时可以在这里加"今天最想让孩子先练"的字，这些字会排在最前面。
+    </p>
+
+    <button class="btn-close-panel" id="closePanelBtn">关闭</button>
+    <p class="hint-text" id="gameVersion">版本 2026.11.03.1</p>
+  </div>
+</div>
+
+<script src="curriculum-data.js?v=2026.11.02.3"></script>
+<script src="practice-selector.js?v=2026.11.02.3"></script>
+<script src="sentence-hints.js?v=2026.11.02.4"></script>
+<script src="game-feedback.js?v=2026.11.02.4"></script>
+<script src="pinyin-data.js"></script>
+<script>
+/* ============================================================
+   汉字魔法门 — 默写版
+   核心机制：
+   1. 每字先"自由默写"，写完点"写好了"才整体判断对错（不是逐笔纠错）
+   2. 答错 -> 教学环节：展示字 5s -> 消失 -> 默写 -> 对了展示4s -> ... 递减到0
+      连续独立默写对 3 次（不看字）-> 判定掌握，开门
+   3. 一次就写对 -> 直接开门
+   4. 字库用简化的间隔重复：写错次数越多，下次复习间隔越短；
+      连续写对，间隔逐渐拉长
+   5. 家长可添加"今日优先字"，存档/读档保存长期进度
+   ============================================================ */
+
+const STORAGE_KEY_HINT = "本地网页无法自动联网保存，需要手动导出/导入存档文件";
+
+// ---------- calendar days ----------
+// Scheduling used to count "days" as "number of times 再来一轮 was pressed", which meant three
+// rounds in one afternoon looked like three days and every review interval collapsed. These
+// are real dates. Built from the *local* clock on purpose — toISOString() is UTC, and in
+// Beijing that rolls the date over at 8am, right in the middle of a school morning.
+function todayStr(){
+  const d = new Date();
+  const p = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;
+}
+
+function daysBetween(fromStr, toStr){
+  const a = new Date(fromStr + 'T00:00:00');
+  const b = new Date(toStr + 'T00:00:00');
+  return Math.round((b - a) / 86400000);
+}
+
+// ---------- default character bank ----------
+// interval: 距离上次练习多少天后应该再次出现（简化的间隔重复）
+// box: 掌握等级 0(生) -> 4(熟练)，等级越高 interval 越长
+// passedDays: 在哪些**不同日期**通过过；集满 3 个不同的日子就算永久掌握，移出轮换
+function newBankItem(char, pinyin, word){
+  return { char, pinyin, word: word || '', box:1, interval:0, lastSeen:null, history:[], passedDays:[], wrongToday:0 };
+}
+
+// A verified selection from the textbook word table replaces the former eight
+// complex-character test loop. Learning records remain keyed by individual char.
+function defaultBank(){
+  const curriculum = window.HANZI_CURRICULUM;
+  if(!curriculum || !curriculum.entries.length) throw new Error('教材字词库尚未加载，请刷新页面');
+  return curriculum.entries.map(entry => ({
+    ...newBankItem(entry.char, entry.pinyin, entry.word),
+    structure: entry.structure, strokeCount: entry.strokeCount,
+    curriculumId: curriculum.id, unit: entry.unit, lesson: entry.lesson,
+  }));
+}
+
+// Bump whenever the built-in starter bank changes. Progress is saved, so without this a
+// device that has already played keeps its old characters for ever and never sees the new
+// set — the change would reach nobody who actually uses the game.
+const BANK_VERSION = 5;
+const GAME_VERSION = '2026.11.03.1';
+// The small game controls start before the large inline glyph payload arrives.
+// Grading can briefly await those exact offline glyphs without freezing the UI.
+let finishBundledGlyphs;
+let bundledGlyphsLoaded = false;
+const bundledGlyphsReady = new Promise(resolve => { finishBundledGlyphs = resolve; });
+
+let state = {
+  bank: defaultBank(),
+  bankVersion: BANK_VERSION,
+  priorityQueue: [],   // chars typed in today by parent, always go first
+  dailyCount: 5,        // how many characters must be PASSED (not just attempted) to finish today
+  scenesUnlocked: 0,    // how many magic-world scenes have been unlocked so far (persisted)
+};
+
+const MASTERED_DAYS = 3;   // 在 3 个不同的日子写对过 = 永久掌握
+const isMastered = it => (it.passedDays || []).length >= MASTERED_DAYS;
+
+// 今天来回写错 3 次就停：再练下去只是把挫败感堆高，这个字需要的是大人讲一遍，不是再写一遍。
+// 讲完之后家长在设置里点「我讲过了」，它当天就能重新出现。
+const WRONG_LIMIT = 3;
+const isStuck = it => it.stuck && it.stuckDay === todayStr();
+
+// Wrong counts are per day, so a character that was hard yesterday starts fresh today.
+function wrongCountToday(it){ return it.wrongDay === todayStr() ? (it.wrongToday || 0) : 0; }
+function registerWrong(it){
+  it.wrongToday = wrongCountToday(it) + 1;
+  it.wrongDay = todayStr();
+  saveState();
+  return it.wrongToday >= WRONG_LIMIT;
+}
+
+// ---------- 笔迹记录 ----------
+// 每次提交都留一份底：写的是什么字、每一笔的坐标、系统判了对还是错。存在浏览器里，
+// 家长在设置面板里一键复制或下载。之前要拿这些数据得把 iPad 用数据线接上电脑、开 Safari
+// 的网页检查器、在满屏 [diag] 里翻——这道坎把"发现判错"和"能修判错"之间堵了很久。
+const INK_LOG_KEY = 'hanzi-magic-door-ink-v1';
+// 24 条一次练习就装满了——光一个字走完教学环节就能吃掉六条，结果家长练了一晚上、
+// 导出来只剩最后那几个字，前面的连同标记一起被挤没了。一条约 2.5KB，200 条约 500KB，
+// 浏览器给每个站点的额度通常是 5MB 上下，放得下。
+const MAX_INK = 200;
+let inkLog = [];
+
+function loadInkLog(){
+  try{ inkLog = JSON.parse(localStorage.getItem(INK_LOG_KEY)) || []; }catch(e){ inkLog = []; }
+}
+function saveInkLog(){
+  try{ localStorage.setItem(INK_LOG_KEY, JSON.stringify(inkLog)); }catch(e){ /* 存满了就算了 */ }
+}
+function recordInk(payload, verdict){
+  inkLog.unshift({ c: payload.c, s: payload.s, v: verdict ? 'pass' : 'fail', d: todayStr(), disputed: false,
+    graderVersion: GAME_VERSION, timestamp: Date.now(), filtering: payload.filtering });
+  // Marked entries are the whole point of the log — they carry the one judgement only a
+  // person can make — so they are never what gets thrown away to make room. Trim the oldest
+  // UNMARKED entry instead, and only start on marked ones if the log is somehow all marked.
+  while(inkLog.length > MAX_INK){
+    let victim = -1;
+    for(let i = inkLog.length - 1; i >= 0; i--) if(!inkLog[i].disputed){ victim = i; break; }
+    inkLog.splice(victim >= 0 ? victim : inkLog.length - 1, 1);
+  }
+  saveInkLog();
+}
+
+// ---------- automatic save ----------
+// Everything lives in localStorage and is rewritten on every change. Without this the whole
+// cross-day review schedule is theatre: close the tab and the boxes, intervals and mastery
+// dates are gone, so every session starts the child from scratch. Manual export/import stays
+// as the way to carry progress to a different device.
+const SAVE_KEY = 'hanzi-magic-door-state-v1';
+
+function saveState(){
+  try{ localStorage.setItem(SAVE_KEY, JSON.stringify(state)); }
+  catch(e){ /* private mode or quota — the session still works, it just won't survive a reload */ }
+}
+
+// Old saves counted days as integers and have no mastery record. Rather than invent dates
+// that were never observed, drop the counter-based lastSeen so every character simply reads
+// as due today — that costs one extra review, where guessing could silently retire a
+// character the child never actually passed on three different days.
+function migrateState(s){
+  if(!s || !Array.isArray(s.bank)) return null;
+  delete s.daysElapsed;
+  if(typeof s.dailyCount !== 'number') s.dailyCount = 5;
+  if(typeof s.scenesUnlocked !== 'number') s.scenesUnlocked = 0;
+  if(!Array.isArray(s.priorityQueue)) s.priorityQueue = [];
+  // Undated entries are from the old queue. Adopt them once, without changing
+  // any learning record; dated entries stop taking priority after their day.
+  const queuedChars = new Set();
+  s.priorityQueue = s.priorityQueue.filter(p => {
+    if(queuedChars.has(p.char)) return false;
+    queuedChars.add(p.char);
+    return true;
+  });
+  s.priorityQueue.forEach((p, i) => {
+    if(!p.addedDay) p.addedDay = todayStr();
+    if(!p.requestId) p.requestId = 'legacy-' + p.addedDay + '-' + i + '-' + p.char;
+  });
+  s.bank.forEach(it => {
+    if(typeof it.lastSeen !== 'string') it.lastSeen = null;
+    if(!Array.isArray(it.history)) it.history = [];
+    it.history = it.history.filter(h => typeof h.day === 'string');
+    if(!Array.isArray(it.passedDays)){
+      it.passedDays = [...new Set(
+        it.history.filter(h => h.outcome === 'first-try' || h.outcome === 'retest-pass').map(h => h.day)
+      )];
+    }
+    if(typeof it.box !== 'number') it.box = 1;
+    if(typeof it.interval !== 'number') it.interval = 0;
+    if(typeof it.wrongToday !== 'number') it.wrongToday = 0;
+  });
+
+  // New starter bank: swap it in, but never throw away what the child has already earned.
+  // Progress carries over for any character in both sets, characters the parent added by
+  // hand are kept regardless, and only the old built-in ones drop out.
+  if(s.bankVersion !== BANK_VERSION){
+    const byChar = new Map(s.bank.map(it => [it.char, it]));
+    const merged = defaultBank().map(fresh => {
+      const old = byChar.get(fresh.char);
+      if(!old) return fresh;
+      // Preserve the entire learning record, including same-day errors. New
+      // textbook metadata wins, while a parent's explicit context stays theirs.
+      return { ...fresh, ...old,
+        pinyin: old.fromParent ? old.pinyin : fresh.pinyin,
+        word: old.fromParent ? old.word : fresh.word,
+        structure: fresh.structure, strokeCount: fresh.strokeCount,
+        curriculumId: fresh.curriculumId, unit: fresh.unit, lesson: fresh.lesson,
+        retired: false };
+    });
+    const kept = new Set(merged.map(it => it.char));
+    s.bank.forEach(it => {
+      if(kept.has(it.char)) return;
+      // Keep even partially attempted old characters; only their rotation changes.
+      if(it.fromParent) merged.push(it);
+      else merged.push({ ...it, retired: true });
+    });
+    s.bank = merged;
+    s.bankVersion = BANK_VERSION;
+  }
+  return s;
+}
+
+function loadSavedState(){
+  let raw = null;
+  try{ raw = localStorage.getItem(SAVE_KEY); }catch(e){ return; }
+  if(!raw) return;
+  try{
+    const migrated = migrateState(JSON.parse(raw));
+    if(migrated) state = migrated;
+  }catch(e){ /* corrupt entry — fall back to a fresh bank rather than refusing to start */ }
+}
+
+// ---------- session runtime ----------
+let passedCount = 0;          // characters PASSED so far this session (goal: state.dailyCount)
+let currentItem = null;       // the character object currently on screen
+let currentMode = 'free';     // 'free' | 'teaching' | 'retest'
+let currentRound = 1;         // 1 or 2, only meaningful in teaching mode
+let stepIndex = 0;            // index into TEACHING_STEPS
+let stepAttempts = 0;         // attempts used at the current step (max 2)
+let pendingRetests = [];      // [{item, round, fillersSeen}] — delayed blind re-checks
+let priorityConsumedToday = new Set(); // priority chars already served this session
+let selectionSession = window.HanziPracticeSelector.createSession();
+let parentQueueChanged = false;
+let currentParentRequestId = null;
+let timerHandle = null;
+const TEACHING_STEPS = [5, 3, 1, 0]; // seconds character is shown before each retry; 0 = blind
+
+// ---------- freehand drawing surface (no standard strokes shown, no snapping) ----------
+const svgNS = 'http://www.w3.org/2000/svg';
+const drawSvg = document.getElementById('drawSvg');
+let strokesPoints = [];   // array of strokes, each stroke = array of {x,y}
+let currentPath = null;
+let isDrawing = false;
+const CANVAS_SIZE = 300;
+const CANVAS_PADDING = 28;
+
+function svgPointFromEvent(e){
+  const rect = drawSvg.getBoundingClientRect();
+  const scaleX = CANVAS_SIZE / rect.width;
+  const scaleY = CANVAS_SIZE / rect.height;
+  return { x:(e.clientX-rect.left)*scaleX, y:(e.clientY-rect.top)*scaleY };
+}
+
+let capturedPointerId = null;
+
+drawSvg.addEventListener('pointerdown', (e) => {
+  e.preventDefault();
+  isDrawing = true;
+  const pt = svgPointFromEvent(e);
+  strokesPoints.push([pt]);
+  currentPath = document.createElementNS(svgNS, 'path');
+  currentPath.setAttribute('stroke', '#22201C');
+  currentPath.setAttribute('stroke-width', '13');
+  currentPath.setAttribute('fill', 'none');
+  currentPath.setAttribute('stroke-linecap', 'round');
+  currentPath.setAttribute('stroke-linejoin', 'round');
+  currentPath.setAttribute('d', `M ${pt.x} ${pt.y}`);
+  drawSvg.appendChild(currentPath);
+  try{ drawSvg.setPointerCapture(e.pointerId); capturedPointerId = e.pointerId; }catch(_){}
+});
+drawSvg.addEventListener('pointermove', (e) => {
+  if(!isDrawing) return;
+  e.preventDefault();
+  const pt = svgPointFromEvent(e);
+  const stroke = strokesPoints[strokesPoints.length-1];
+  stroke.push(pt);
+  currentPath.setAttribute('d', currentPath.getAttribute('d') + ` L ${pt.x} ${pt.y}`);
+});
+// Pointer capture is *supposed* to auto-release on pointerup per spec, but real Apple
+// Pencil input on iPadOS has been observed leaving it stuck in some cases — when that
+// happens, every subsequent tap anywhere on the page (including on buttons like "写好了")
+// keeps getting silently redirected to this SVG instead of its real target, since the
+// browser still thinks this element has captured that pointer. Release it explicitly and
+// unconditionally on every possible end-of-stroke signal as a belt-and-suspenders fix.
+function endStroke(e){
+  isDrawing = false;
+  if(e && e.cancelable) e.preventDefault();
+  const pid = (e && e.pointerId != null) ? e.pointerId : capturedPointerId;
+  if(pid != null){
+    try{ drawSvg.releasePointerCapture(pid); }catch(_){}
+  }
+  capturedPointerId = null;
+}
+drawSvg.addEventListener('pointerup', endStroke);
+drawSvg.addEventListener('pointerleave', endStroke);
+drawSvg.addEventListener('pointercancel', endStroke);
+drawSvg.addEventListener('lostpointercapture', endStroke);
+
+// Some webviews (e.g. iPad file-viewer apps) don't honor the CSS overscroll-behavior
+// property and will still rubber-band/bounce the whole page on any drag. Block touchmove
+// document-wide as a belt-and-suspenders fix, except inside the settings panel (which needs
+// its own native scroll) — buttons/taps are unaffected since those fire on touchend, not touchmove.
+document.addEventListener('touchmove', (e) => {
+  if(e.target.closest('.panel, .queue-list')) return;
+  e.preventDefault();
+}, { passive:false });
+
+// Best-effort: ask for real browser Fullscreen on the first touch. Most third-party iPad
+// file-viewer webviews don't support/allow this (the call just silently rejects, harmless),
+// but if this particular one does, it removes the host app's own reader chrome entirely —
+// fixing the tap-to-toggle-fullscreen behavior at the root instead of fighting it per-gesture.
+document.addEventListener('pointerdown', () => {
+  const el = document.documentElement;
+  const req = el.requestFullscreen || el.webkitRequestFullscreen;
+  if(req && !document.fullscreenElement) req.call(el).catch(() => {});
+}, { once:true });
+
+function clearCanvas(){
+  drawSvg.innerHTML = '';
+  strokesPoints = [];
+}
+
+// ---------- character stroke data (loaded once per character, used only for
+// grading in the background — never rendered on screen, so nothing leaks) ----------
+// Priority: (1) bundled in hanzi-data.js — instant, zero network, works even if the
+// device has no internet at all; (2) previously fetched + cached in localStorage —
+// also zero network after the first time; (3) live fetch from the CDN, with a hard
+// timeout so a blocked/hanging network request can never freeze the "写好了" button
+// forever — it fails fast instead, with a message asking to try again while online.
+const LOCAL_HANZI_CACHE_PREFIX = 'hanzi-char-cache-';
+const charDataCache = {};
+
+function withTimeout(promise, ms){
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error('联网获取生字数据超时')), ms);
+    promise.then(v => { clearTimeout(timer); resolve(v); }, e => { clearTimeout(timer); reject(e); });
+  });
+}
+
+async function getCharData(char){
+  if(charDataCache[char]) return charDataCache[char];
+
+  if(typeof bundledGlyphsReady !== 'undefined' && !bundledGlyphsLoaded){
+    await withTimeout(bundledGlyphsReady,6000);
+  }
+
+  if(window.HANZI_LOCAL_DATA && window.HANZI_LOCAL_DATA[char]){
+    charDataCache[char] = window.HANZI_LOCAL_DATA[char];
+    return charDataCache[char];
+  }
+
+  try{
+    const cached = localStorage.getItem(LOCAL_HANZI_CACHE_PREFIX + char);
+    if(cached){
+      charDataCache[char] = JSON.parse(cached);
+      return charDataCache[char];
+    }
+  }catch(e){ /* localStorage unavailable or corrupt entry — fall through to network */ }
+
+  const data = await fetchCharacterData(char);
+  const toStore = { strokes: data.strokes, medians: data.medians };
+  charDataCache[char] = toStore;
+  try{ localStorage.setItem(LOCAL_HANZI_CACHE_PREFIX + char, JSON.stringify(toStore)); }catch(e){ /* storage full, not critical */ }
+  return toStore;
+}
+
+// Only parent-entered characters outside the 167 frozen offline glyphs need a
+// network request. It cannot delay startup, and the timeout covers the body too.
+async function fetchCharacterData(char){
+  const controller = typeof AbortController === 'function' ? new AbortController() : null;
+  const request = (async () => {
+    const response = await fetch('https://cdn.jsdelivr.net/npm/hanzi-writer-data@2.0.1/' + encodeURIComponent(char) + '.json',
+      controller ? {signal:controller.signal} : {});
+    if(!response.ok) throw new Error('这个字的数据暂时无法下载');
+    const data = await response.json();
+    if(!Array.isArray(data.strokes) || !Array.isArray(data.medians) || !data.strokes.length
+      || data.strokes.length !== data.medians.length) throw new Error('下载的字形数据不完整');
+    return data;
+  })();
+  try{ return await withTimeout(request,6000); }
+  finally{ if(controller) controller.abort(); }
+}
+
+function medianToCanvasPoints(median){
+  const effective = CANVAS_SIZE - 2*CANVAS_PADDING;
+  const scale = effective/1024;
+  return median.map(([mx,my]) => ({
+    x: mx*scale + CANVAS_PADDING,
+    y: (1024-my)*scale + CANVAS_PADDING
+  }));
+}
+
+function resample(points, n){
+  if(points.length === 0) return new Array(n).fill({x:0,y:0});
+  if(points.length === 1) return new Array(n).fill(points[0]);
+  const cum = [0];
+  for(let i=1;i<points.length;i++){
+    cum.push(cum[i-1] + Math.hypot(points[i].x-points[i-1].x, points[i].y-points[i-1].y));
+  }
+  const total = cum[cum.length-1] || 1e-6;
+  const out = [];
+  for(let k=0;k<n;k++){
+    const target = total * k/(n-1);
+    let idx = 0;
+    while(idx < cum.length-2 && cum[idx+1] < target) idx++;
+    const segLen = (cum[idx+1]-cum[idx]) || 1e-6;
+    const t = Math.min(1, Math.max(0,(target-cum[idx])/segLen));
+    const p0 = points[idx], p1 = points[idx+1] || p0;
+    out.push({ x:p0.x+(p1.x-p0.x)*t, y:p0.y+(p1.y-p0.y)*t });
+  }
+  return out;
+}
+
+function avgDist(a,b){
+  let sum=0;
+  for(let i=0;i<a.length;i++) sum += Math.hypot(a[i].x-b[i].x, a[i].y-b[i].y);
+  return sum/a.length;
+}
+
+// Grades the ALREADY-drawn (however wobbly, however out-of-order) character against the
+// character's real stroke shapes, all at once, only when the child clicks "写好了".
+// Nothing is shown to the child mid-writing — this only runs afterward.
+//
+// Stroke ORDER is intentionally ignored: plenty of kids (and adults) know a character
+// perfectly but write the strokes in a different sequence than the standard 笔顺, and
+// that's not what this game is testing — only the finished result matters. So this is a
+// pure order-agnostic best-match: for each official stroke, is there some drawn stroke,
+// anywhere in the drawing, shaped and *positioned* like it (comparison is in raw canvas
+// coordinates, not shape-only, so a stroke in the wrong part of the character doesn't
+// count just because some other stroke looks the same in isolation).
+//
+// The one thing this can't fully rule out is genuinely writing a *different* character
+// that happens to share a component with the target (e.g. 注/柱 both contain 主) — that
+// will score higher than a pure scribble, since the shared strokes really do match. The
+// match-rate cutoff below is calibrated with that specific case as the ceiling to beat:
+// simulated messy-but-correct handwriting (reordered, jittered, merged/split/dropped/
+// extra strokes) always scored 88%+ in testing, while writing a wrong character —
+// including the shared-component case — never exceeded 67%. 75% sits in the gap.
+// A hand-drawn character is almost never the exact same size, or centered in the exact
+// same spot, as the reference character's idealized bounding box — writing it a bit
+// smaller, bigger, or off-center in the box is completely normal and has nothing to do
+// with whether it's the right character. Comparing raw canvas coordinates without
+// correcting for that (as an earlier version of this function did) means a perfectly
+// correct character can fail purely because it came out a little smaller/shifted — this
+// is what happened with a real "理" that looked fine but got rejected. So: rescale +
+// re-center the whole drawing to match the official character's bounding box first, and
+// only then compare stroke shapes/positions. This only removes size/position bias, not
+// shape — a wrong character's strokes still won't line up after normalizing.
+function getBounds(strokes){
+  let minX=Infinity, minY=Infinity, maxX=-Infinity, maxY=-Infinity;
+  for(const s of strokes) for(const p of s){
+    if(p.x<minX) minX=p.x; if(p.x>maxX) maxX=p.x;
+    if(p.y<minY) minY=p.y; if(p.y>maxY) maxY=p.y;
+  }
+  return { w:maxX-minX, h:maxY-minY, cx:(minX+maxX)/2, cy:(minY+maxY)/2 };
+}
+
+function normalizeToBounds(strokes, target){
+  const b = getBounds(strokes);
+  if(b.w < 1e-6 || b.h < 1e-6) return strokes; // degenerate (e.g. a single dot) — leave as-is
+  const scale = ((target.w/b.w) + (target.h/b.h)) / 2;
+  return strokes.map(s => s.map(p => ({
+    x: target.cx + (p.x - b.cx) * scale,
+    y: target.cy + (p.y - b.cy) * scale
+  })));
+}
+
+function strokeLength(pts){
+  let sum = 0;
+  for(let i=1;i<pts.length;i++) sum += Math.hypot(pts[i].x-pts[i-1].x, pts[i].y-pts[i-1].y);
+  return sum;
+}
+
+// ============================================================
+// Concept-based grading
+//
+// Grades the way a person checking a kid's dictation does — by CONCEPTS, not pixels:
+//   1. Structure: does the ink split into the character's components (理 = 王 + 里)?
+//   2. Component: within each component, are all the expected strokes present —
+//      right KINDS of strokes (a bent horizontal is still a 横; but 提≠横, 竖钩≠竖,
+//      per explicit product decision), right COUNT (三点水 is exactly three dots —
+//      a 4th dot fails no matter how small), in roughly the right arrangement?
+//   3. Position/size/proportion get HUGE tolerance (that's penmanship, not knowledge);
+//      stroke identity and stroke count get STRICT treatment (that's the actual test).
+//
+// Mechanically: user ink is clustered to components (nearest official stroke), each
+// cluster is aligned onto its component's own box (so cross-component proportion
+// quirks vanish), and strokes are paired by GLOBALLY OPTIMAL assignment (Hungarian
+// algorithm) over a cost mixing position-free shape, PCA direction, tail direction
+// (catches hooks), relative length, and loosely-weighted position. Extra user strokes
+// must be explainable as re-traces or a stroke drawn in two lifts, else the component
+// fails; missing official strokes must be explainable as merges of consecutive
+// strokes drawn in one motion, else the component fails. This replaces the previous
+// absolute-pixel-distance scoring whose razor-edge thresholds kept misfiring both ways.
+// ============================================================
+
+// Verified 2-part decompositions (from cjkvi-ids, github.com/cjkvi/cjkvi-ids), parts
+// listed in ACTUAL STROKE ORDER — for ⿺ characters (迹/通) the enclosed part is
+// written first and 辶 last, opposite of how the IDS string reads. Characters not
+// listed here are graded as one whole-character component through the same pipeline.
+const COMPONENT_DECOMP = {
+  // 旧字库（家长仍可手动加回这些字）
+  '柱': ['木','主'], '注': ['氵','主'], '理': ['王','里'], '振': ['扌','辰'],
+  '救': ['求','攵'], '普': ['並','日'], '若': ['艹','右'], '裂': ['列','衣'],
+  '剩': ['乘','刂'], '迹': ['亦','辶'], '通': ['甬','辶'],
+  // Do not enable the former nearest-stroke decomposition for complex characters:
+  // it regressed real handwriting. Four verified spatial trees below now handle
+  // 慧/警/澡/薄 without lowering Q_FLOOR; the other entries keep this original path.
+};
+
+// ---------- geometry helpers ----------
+function clamp01(v){ return v < 0 ? 0 : (v > 1 ? 1 : v); }
+function ptDist(a, b){ return Math.hypot(a.x-b.x, a.y-b.y); }
+
+function centroidOf(pts){
+  let x=0, y=0;
+  for(const p of pts){ x+=p.x; y+=p.y; }
+  return { x:x/pts.length, y:y/pts.length };
+}
+
+function bboxOf(strokes){
+  let minX=Infinity, minY=Infinity, maxX=-Infinity, maxY=-Infinity;
+  for(const s of strokes) for(const p of s){
+    if(p.x<minX) minX=p.x; if(p.x>maxX) maxX=p.x;
+    if(p.y<minY) minY=p.y; if(p.y>maxY) maxY=p.y;
+  }
+  const w = maxX-minX, h = maxY-minY;
+  return { minX, minY, maxX, maxY, w, h, cx:(minX+maxX)/2, cy:(minY+maxY)/2, diag:Math.hypot(w,h) };
+}
+
+function angDiff(a, b){
+  const d = Math.abs(a-b) % 360;
+  return d > 180 ? 360-d : d;
+}
+
+function normDeg(deg){
+  let a = deg % 360;
+  if(a > 180) a -= 360;
+  if(a < -180) a += 360;
+  return a;
+}
+
+// Overall direction via principal axis (PCA) — far more robust to wobble than the
+// chord between two endpoints; sign disambiguated by the chord so start→end matters.
+function pcaAngle(pts){
+  const c = centroidOf(pts);
+  let sxx=0, sxy=0, syy=0;
+  for(const p of pts){
+    const dx=p.x-c.x, dy=p.y-c.y;
+    sxx+=dx*dx; sxy+=dx*dy; syy+=dy*dy;
+  }
+  let deg = 0.5*Math.atan2(2*sxy, sxx-syy) * 180/Math.PI;
+  const a = pts[0], b = pts[pts.length-1];
+  const chord = Math.atan2(b.y-a.y, b.x-a.x) * 180/Math.PI;
+  if(angDiff(deg, chord) > 90) deg += 180;
+  return normDeg(deg);
+}
+
+// Position- and scale-free shape signature: centroid to origin, RMS radius to 1.
+function shapeNormalize(pts){
+  const c = centroidOf(pts);
+  let s = 0;
+  for(const p of pts) s += (p.x-c.x)**2 + (p.y-c.y)**2;
+  const r = Math.sqrt(s/pts.length) || 1e-6;
+  return pts.map(p => ({ x:(p.x-c.x)/r, y:(p.y-c.y)/r }));
+}
+
+function shapeDist(a, b){
+  let s = 0;
+  for(let i=0;i<a.length;i++) s += Math.hypot(a[i].x-b[i].x, a[i].y-b[i].y);
+  return s/a.length;
+}
+
+// Nearest-point (Chamfer) distance, used for strokes with a corner. Comparing point i to
+// point i pairs the two strokes by distance travelled, which assumes the corner falls at
+// the same fraction along both — write 子's 横撇 with a shorter horizontal arm and every
+// point after the corner is compared against the wrong part of the reference. Measured on
+// real ink: an honest 横撇 scores 0.66 that way but 0.28 by nearest point, while a stroke
+// genuinely of another kind stays high (捺 offered for 撇: 0.82).
+function chamferDist(a, b){
+  let s = 0;
+  for(const p of a){ let m=Infinity; for(const q of b){ const d=Math.hypot(p.x-q.x,p.y-q.y); if(d<m) m=d; } s+=m; }
+  for(const q of b){ let m=Infinity; for(const p of a){ const d=Math.hypot(p.x-q.x,p.y-q.y); if(d<m) m=d; } s+=m; }
+  return s/(a.length+b.length);
+}
+
+// Uniform (angle-preserving) alignment of a user cluster onto its component's box —
+// per-component, so "wrote the radical smaller/lower than standard" stops mattering.
+function alignClusterUniform(cluster, target){
+  const b = bboxOf(cluster);
+  let scale = target.diag / Math.max(b.diag, 1e-6);
+  scale = Math.min(Math.max(scale, 0.35), 3);
+  return cluster.map(s => s.map(p => ({
+    x: target.cx + (p.x - b.cx) * scale,
+    y: target.cy + (p.y - b.cy) * scale
+  })));
+}
+
+// Hungarian algorithm (optimal assignment, O(n^3)) — replaces greedy matching, whose
+// "musical chairs" mispairings on parallel same-looking strokes caused cascades of
+// false failures on characters like 生 and the 王 radical.
+function hungarian(cost){
+  const n = cost.length;
+  const u = new Array(n+1).fill(0), v = new Array(n+1).fill(0);
+  const p = new Array(n+1).fill(0), way = new Array(n+1).fill(0);
+  for(let i=1;i<=n;i++){
+    p[0] = i;
+    let j0 = 0;
+    const minv = new Array(n+1).fill(Infinity);
+    const used = new Array(n+1).fill(false);
+    do{
+      used[j0] = true;
+      const i0 = p[j0];
+      let delta = Infinity, j1 = -1;
+      for(let j=1;j<=n;j++) if(!used[j]){
+        const cur = cost[i0-1][j-1] - u[i0] - v[j];
+        if(cur < minv[j]){ minv[j] = cur; way[j] = j0; }
+        if(minv[j] < delta){ delta = minv[j]; j1 = j; }
+      }
+      for(let j=0;j<=n;j++){
+        if(used[j]){ u[p[j]] += delta; v[j] -= delta; }
+        else minv[j] -= delta;
+      }
+      j0 = j1;
+    }while(p[j0] !== 0);
+    do{ const j1 = way[j0]; p[j0] = p[j1]; j0 = j1; }while(j0);
+  }
+  const ans = new Array(n).fill(-1);
+  for(let j=1;j<=n;j++) if(p[j] > 0) ans[p[j]-1] = j-1;
+  return ans;
+}
+
+// All ways to split k official strokes into m consecutive groups (a group = strokes
+// the writer drew as one continuous motion), group size capped.
+function* partitionsOf(k, m, maxGroup){
+  function* rec(start, groupsLeft, acc){
+    if(groupsLeft === 1){
+      if(k - start >= 1 && k - start <= maxGroup) yield [...acc, [start, k]];
+      return;
+    }
+    const maxEnd = Math.min(start + maxGroup, k - (groupsLeft - 1));
+    for(let end = start + 1; end <= maxEnd; end++){
+      yield* rec(end, groupsLeft - 1, [...acc, [start, end]]);
+    }
+  }
+  yield* rec(0, m, []);
+}
+
+// ============================================================
+// Stroke identity signals.
+//
+// Everything a stroke "is" turns out to be continuous once you measure real
+// handwriting: how hooked a tail is, how slanted a 撇 is — these are matters of
+// degree, and hard-gating them failed honest writing on a hair's breadth. So the
+// only hard veto left in the whole grader is STROKE COUNT per component (see
+// matchComponent). Identity is expressed as multiplier penalties on stroke quality
+// instead: ordinary variation costs nothing, a decisively wrong stroke collapses to
+// zero and trips the per-stroke floor.
+// ============================================================
+
+// Turning/direction profile. Smoothed first and measured over quarter-stroke spans:
+// a few px of hand jitter across a short window otherwise reads as a corner.
+function strokeProfile(pts){
+  const r = resample(pts, 25);
+  const sm = r.map((p, i) => {
+    const a = r[Math.max(0, i-1)], b = r[Math.min(r.length-1, i+1)];
+    return { x:(a.x+p.x+b.x)/3, y:(a.y+p.y+b.y)/3 };
+  });
+  const ang = (a, b) => Math.atan2(sm[b].y-sm[a].y, sm[b].x-sm[a].x) * 180/Math.PI;
+  // Turning across the body, measured between quarter-stroke spans: this is how a 折
+  // (a real corner, as in 横撇 or 横折) is told from an ordinary curve. Reference glyphs
+  // measure 9-38 for plain strokes and 85-138 for genuine 折/钩.
+  const W = 6;
+  const dirs = [];
+  for(let i=0;i+W<sm.length;i++) dirs.push(ang(i, i+W));
+  let midTurn = 0;
+  for(let i=0;i+W<dirs.length;i++) midTurn = Math.max(midTurn, angDiff(dirs[i], dirs[i+W]));
+  return {
+    tailDir:  ang(20, 24),                  // where the last ~17% is heading
+    bodyDir:  ang(6, 18),                   // where the middle half is heading
+    hookTurn: angDiff(ang(20, 24), ang(6, 18)),
+    midTurn,
+  };
+}
+
+// ============================================================
+// The continuous layer: how well written is it?
+//
+// Everything here is penmanship — neatness, placement, proportion. It can never fail
+// a stroke on its own; it produces a 0..1 quality that is averaged over the component.
+// A single wobbly stroke among ten good ones lowers the average slightly and passes,
+// which is exactly how a person grades.
+// ============================================================
+function strokeQuality(userPts, officialPts, compDiag, merged){
+  const ru = resample(userPts, 16), ro = resample(officialPts, 16);
+  const nu = shapeNormalize(ru), no = shapeNormalize(ro);
+  // A stroke with a real corner (横撇, 横折…) needs the corner-tolerant comparison, and
+  // its overall direction is not a usable signal at all: the principal axis of an L
+  // depends on the ratio of its two arms, so drawing one arm slightly longer swings it
+  // right across. Real ink: the reference 子's 横撇 reads 1 degree, an honest rendition
+  // of it 143 — a 142-degree "error" between two strokes of the same shape.
+  const cornered = Math.max(strokeProfile(officialPts).midTurn, strokeProfile(userPts).midTurn) > 65;
+  const dF = cornered ? chamferDist(nu, no) : shapeDist(nu, no);
+  const dR = cornered ? dF : shapeDist([...nu].reverse(), no);
+  const reversed = dR < dF;
+  const rms = reversed ? dR : dF;
+  const ruo = reversed ? [...ru].reverse() : ru;
+  const dirDiff = angDiff(pcaAngle(ruo), pcaAngle(ro));
+  const lu = strokeLength(userPts), lo = strokeLength(officialPts);
+  const lenRatio = lu / Math.max(lo, 1e-6);
+  const posDist = ptDist(centroidOf(ru), centroidOf(ro)) / compDiag;
+
+  // For a MERGED pair the overall direction is weak evidence — two strokes concatenated
+  // average out to some direction that a wrong stroke can coincide with (a bogus merge
+  // scored dir=2 while its shape distance was 0.86, nothing alike, and still passed).
+  // What actually distinguishes a real merge is the shape, so it carries the weight and
+  // gets a tighter bar: honest merges measure rms <= 0.35, this bogus one 0.86.
+  // A short stroke is inherently less certain in BOTH angle and proportion: the same few
+  // pixels of hand variation turn into a bigger angle, and a bigger length ratio, the
+  // shorter the stroke is. Writing a 52px stroke 15px short is a ratio of 0.71; doing the
+  // same to a 180px stroke is 0.92. So both allowances scale inversely with length — a
+  // 45px stroke gets roughly twice the latitude of a 90px one.
+  const lenFrac    = lo / Math.max(compDiag, 1);
+  const shortScale = Math.min(Math.max(0.35 / Math.max(lenFrac, 1e-3), 1), 2.2);
+
+  const sShape = clamp01(1 - rms / (merged ? 0.85 : 0.95));
+  const sDir   = clamp01(1 - dirDiff / ((merged ? 95 : 75) * shortScale));
+  const wShape = cornered ? 1.0 : (merged ? 0.80 : 0.55);
+  const wDir   = cornered ? 0.0 : (merged ? 0.20 : 0.45);
+
+  // Only SHAPE and DIRECTION are evidence that this is the right stroke. Position and
+  // length are not: any mark of roughly the right size in roughly the right area earns
+  // them, so when they carried 44% of the score (as they did) a stroke whose shape and
+  // direction were both hopeless still scored ~0.44 and slipped through — that is how a
+  // 果 written in 里's place passed. They are demotivated to penalties: worth nothing
+  // when fine, subtracting only once the stroke is placed or sized implausibly.
+  const posFactor = clamp01(1 - Math.max(0, posDist - 0.28) / 0.45);
+  const lenOff    = Math.abs(Math.log(Math.max(lenRatio, 1e-3)));
+  const lenFactor = clamp01(1 - Math.max(0, lenOff - Math.log(1.6)*shortScale) / 0.7);
+
+  // A genuinely tiny reference stroke carries no usable shape or direction. 霎's four dots
+  // inside 雨 are 16-20px, and comparing their shape yields rms 0.5-0.7 on attempts the
+  // parent confirms are correct — noise, not evidence, and it decided pass/fail by coin
+  // flip (0.44 on one attempt, 0.31 on the next, against a 0.35 floor). But going blind to
+  // shape for every short stroke is what let a full-length 捺 pass as one of 燃's 灬 dots
+  // and shunt that whole row along. So the exemption is narrow — only the smallest strokes,
+  // and only when the child's mark is short too. Swept against all the real ink: 0.05 
+  // doesn't rescue 霎, 0.09 breaks 燃 again and starts letting missing strokes through.
+  const isDot = strokeLength(officialPts) < compDiag * DOT_FRAC;
+  const dotTooLong = Math.max(0, Math.log(Math.max(lenRatio, 1e-3)) - Math.log(DOT_LEN));
+  let q = isDot ? clamp01(1 - posDist/0.62) * clamp01(1 - dotTooLong/0.35)
+                : (wShape*sShape + wDir*sDir) * posFactor * lenFactor;
+
+  // Hook direction. WHETHER a stroke has a hook is decided from the reference alone —
+  // clean data, so no noisy threshold on the child's side — and then it is only asked
+  // WHICH WAY the tail points, never how sharp the turn is. That distinction matters:
+  // a naturally curved 撇 has a swung tail but points the same way as the reference,
+  // while a hook flicked to the wrong side (a specific difficulty for this player)
+  // points somewhere else entirely, and gets caught regardless of how neat it is.
+  // Overall slant: free up to 45° (measured honest variation tops out around 26°),
+  // then falls away fast, so a stroke aimed somewhere genuinely different collapses.
+  if(!cornered) q *= clamp01(1 - Math.max(0, dirDiff - 45*shortScale) / 55);
+
+  // Everything up to here is evidence about WHICH official stroke this is, so this is the
+  // score the pairing optimizer is allowed to see. The hook verdict below deliberately is
+  // not: penalising the correct pairing simply taught the optimizer to pair the bad hook
+  // with some other, hookless official stroke instead, where the check never runs — the
+  // rule that should have caught a reversed hook was what hid it (迹's 4th stroke flicked
+  // the wrong way scored a clean pass by swapping itself with the stroke next to it).
+  const qPair = q;
+
+  let tailDiff = null;
+  {
+    // Merged runs are included: skipping them let a plain 横 stand in for 秃宝盖 (冖),
+    // whose second stroke is a 横钩 — the hook simply went unexamined once it was
+    // absorbed into a merge. A concatenated run keeps its last stroke's tail, so the
+    // same test works unchanged; it only needs a wider allowance, because a blended
+    // one-motion path swings its tail more. Measured tail differences: honest merges
+    // 0-46 degrees, a plain 横 offered as 冖 107.
+    const po = strokeProfile(officialPts);
+    if(po.hookTurn > 55){
+      const pu = strokeProfile(ruo);
+      // WHICH SIDE the tail turns to, not how far — the rule as specified is 有没有、左还是
+      // 右、上还是下, explicitly "不区分长短、偏离程度". Comparing absolute tail angles was
+      // measuring exactly the 偏离程度 it was supposed to ignore, and it punished a hook
+      // twice for being written small: 慧's 卧钩 drawn at 37% of the reference length matched
+      // on shape (0.21), position (0.05) and direction (15°) and was still failed, because a
+      // shorter hook necessarily leaves at a different absolute angle. The signed turn from
+      // the stroke's body to its tail is independent of both size and slant, so a small neat
+      // 心 passes while a hook flicked to the other side still collapses.
+      const oTurn = normDeg(po.tailDir - po.bodyDir);
+      const uTurn = normDeg(pu.tailDir - pu.bodyDir);
+      tailDiff = Math.round(uTurn);
+      // Only a decided turn to the WRONG SIDE fails. A faint or absent turn is left alone:
+      // the >55° gate catches every 折 as well as every 钩 (口's 横折 turns ~90° too), and a
+      // child who rounds that corner has not made the mistake this rule is here for. The
+      // difficulty being corrected is hooks flicked backwards, not hooks left off — and a
+      // genuinely missing stroke shows up in the shape score anyway.
+      if(Math.abs(uTurn) >= HOOK_MIN && Math.sign(uTurn) !== Math.sign(oTurn)) q = 0;
+      // A missing turn only counts against a MERGED run, which is the case this test was
+      // added for: 冖 is 短撇 + 横钩, and offering one bare flat 横 in its place is a real
+      // error that nothing else catches. On a single stroke the >55° gate can't tell a 钩
+      // from a 折, so demanding the turn there fails children who merely round 口's corner.
+      else if(merged && Math.abs(uTurn) < HOOK_MIN) q = 0;
+    }
+  }
+
+  return { q, qPair, rms:+rms.toFixed(2), dirDiff:Math.round(dirDiff), tailDiff: tailDiff===null?null:Math.round(tailDiff),
+           lenRatio:+lenRatio.toFixed(2), posDist:+posDist.toFixed(2), reversed };
+}
+
+// A merged official run is only a valid explanation if the single motion can be CUT
+// INTO CONSECUTIVE PIECES, one per stroke in the run, each matching its stroke in shape,
+// and with the pieces ARRANGED RELATIVE TO EACH OTHER the way the strokes are.
+//
+// Asking instead whether every reference point has ink nearby cannot tell "wrote it a
+// bit small" from "left it out" — real ink written 28% short measured 8.4% median
+// distance, a genuinely absent stroke 8.3%. And asking where each piece sits in absolute
+// terms punishes writing the component off to one side: a correct 子 written slanted
+// scored 1.37 against a 0.95 bar purely because the whole thing had moved.
+//
+// Relative arrangement is what the position test was really for. Halving 里's long
+// bottom 横 yields two pieces that each look exactly like a 横 (shape 0.05), but they sit
+// side by side where the two real 横 sit one above the other — the arrangement is wrong
+// by a third of the character. That survives translation, so writing the component
+// crooked or off-centre costs nothing.
+//
+// Measured: honest merges (four real device cases among them) score 0.27-0.81, merges
+// concealing an absent stroke 1.02-3.23. Bar 0.92. A stroke that drops its HOOK when
+// merged is not this function's job — the tail-direction check in strokeQuality covers
+// that, and covers it for merged runs too.
+function legacyMergeCovers(userPts, parts, charDiag){
+  if(parts.length < 2) return true;
+  const ru = resample(userPts, 40);
+  const k = parts.length;
+  const refShape = parts.map(p => shapeNormalize(resample(p, 16)));
+  const refMid   = parts.map(p => centroidOf(resample(p, 16)));
+  const BAR = 0.92;
+
+  function splitCost(segs){
+    let worst = 0;
+    const mids = segs.map(s => centroidOf(resample(s, 16)));
+    for(let i=0;i<k;i++){
+      const ns = shapeNormalize(resample(segs[i], 16));
+      const shape = Math.min(shapeDist(ns, refShape[i]), shapeDist([...ns].reverse(), refShape[i]));
+      worst = Math.max(worst, shape / 0.80);
+      if(worst >= BAR) return worst;
+    }
+    for(let i=0;i+1<k;i++){
+      const du = { x: mids[i+1].x - mids[i].x, y: mids[i+1].y - mids[i].y };
+      const dr = { x: refMid[i+1].x - refMid[i].x, y: refMid[i+1].y - refMid[i].y };
+      worst = Math.max(worst, Math.hypot(du.x-dr.x, du.y-dr.y) / charDiag / 0.16);
+      if(worst >= BAR) return worst;
+    }
+    return worst;
+  }
+
+  let ok = false;
+  (function search(start, idx, segs){
+    if(ok) return;
+    if(idx === k-1){
+      if(ru.length - start < 4) return;
+      if(splitCost([...segs, ru.slice(start)]) <= BAR) ok = true;
+      return;
+    }
+    for(let end = start + 4; end <= ru.length - 4*(k-1-idx) && !ok; end += 3){
+      search(end, idx+1, [...segs, ru.slice(start, end)]);
+    }
+  })(0, 0, []);
+
+  return ok;
+}
+
+// For the eight complex practice characters, a merged motion must cover each
+// reference stroke in the component's existing coordinates. Normalizing each
+// fragment independently would allow a short, misplaced line to invent a stroke.
+// Search every sample boundary: the previous 3-sample stride skipped valid cuts
+// in the confirmed 警 ink. Cached cells and upper bounds keep that search bounded.
+function mergeCovers(userPts, parts, charDiag){
+  if(parts.length < 2) return true;
+  const target=bboxOf(parts),localDiag=Math.max(target.diag,1);
+  const aligned=userPts;
+  const ru=resample(aligned,40),k=parts.length;
+  const midRefs=parts.map(p=>centroidOf(resample(p,16)));
+  const cellCache=new Map();
+  function cell(start,end,part){
+    const key=start+':'+end+':'+part;let c=cellCache.get(key);
+    if(c===undefined){
+      const segment=mergeSegment(ru,start,end);
+      // Shape and direction can never exceed 1. Reject fragments whose best
+      // possible quality is already below the unchanged per-stroke floor.
+      const lo=strokeLength(parts[part]),lu=strokeLength(segment);
+      const posDist=ptDist(centroidOf(resample(segment,16)),midRefs[part])/localDiag;
+      const lenRatio=lu/Math.max(lo,1e-6);
+      const shortScale=Math.min(Math.max(0.35/Math.max(lo/localDiag,1e-3),1),2.2);
+      const posFactor=clamp01(1-Math.max(0,posDist-0.28)/0.45);
+      const lenOff=Math.abs(Math.log(Math.max(lenRatio,1e-3)));
+      const lenFactor=clamp01(1-Math.max(0,lenOff-Math.log(1.6)*shortScale)/0.7);
+      const dotTooLong=Math.max(0,Math.log(Math.max(lenRatio,1e-3))-Math.log(DOT_LEN));
+      const upper=lo<localDiag*DOT_FRAC
+        ?clamp01(1-posDist/0.62)*clamp01(1-dotTooLong/0.35)
+        :posFactor*lenFactor;
+      const q=upper>=Q_FLOOR ? strokeQuality(segment,parts[part],localDiag,false).qPair : 0;
+      const mid=centroidOf(resample(segment,16));
+      c={q,mid};cellCache.set(key,c);
+    }
+    return c;
+  }
+  const dead=new Set();
+  function search(start,part,prev){
+    const key=start+':'+part+':'+(prev?prev.start+':'+prev.end:'');
+    if(dead.has(key))return false;
+    const last=part===k-1;
+    const endMax=last?ru.length:ru.length-4*(k-1-part);
+    for(let end=last?ru.length:start+4;end<=endMax;end++){
+      const c=cell(start,end,part);
+      if(c.q<Q_FLOOR)continue;
+      if(prev){
+        const du={x:c.mid.x-prev.c.mid.x,y:c.mid.y-prev.c.mid.y};
+        const dr={x:midRefs[part].x-midRefs[part-1].x,y:midRefs[part].y-midRefs[part-1].y};
+        if(Math.hypot(du.x-dr.x,du.y-dr.y)/localDiag > .35)continue;
+      }
+      if(last || search(end,part+1,{start,end,c}))return true;
+    }
+    dead.add(key);return false;
+  }
+  return search(0,0,null);
+}
+
+// An extra user stroke drawn right on top of another is a re-trace — a correction
+// habit, not a concept error. "On top" means in-place point-to-point overlap along
+// the whole length, which a merely-nearby parallel stroke does not satisfy.
+function dropOneRetrace(users, compDiag, notes){
+  const bar = Math.max(compDiag * 0.05, 10);
+  for(let i=0;i<users.length;i++) for(let j=i+1;j<users.length;j++){
+    const A = users[i].pts, B = users[j].pts;
+    const la = strokeLength(A), lb = strokeLength(B);
+    const ratio = la > lb ? la/Math.max(lb,1e-6) : lb/Math.max(la,1e-6);
+    if(ratio > 2.2) continue;
+    const ra = resample(A,16), rb = resample(B,16);
+    const overlap = Math.min(avgDist(ra, rb), avgDist([...ra].reverse(), rb));
+    if(overlap <= bar){
+      const drop = la <= lb ? i : j;
+      notes.push(`retrace:${users[drop].id}`);
+      users.splice(drop, 1);
+      return true;
+    }
+  }
+  return false;
+}
+
+// Candidate rejoins for two user strokes whose ends nearly touch (one stroke drawn
+// with a pen lift). Explored with verification by the caller rather than applied
+// greedily — strokes legitimately touch all over a character, so the smallest gap is
+// often not the real split.
+function joinCandidates(users, compDiag){
+  const bar = Math.max(compDiag * 0.09, 13);
+  const out = [];
+  for(let i=0;i<users.length;i++) for(let j=i+1;j<users.length;j++){
+    const A = users[i].pts, B = users[j].pts;
+    // Nobody splits a DOT across two pen lifts — joining two dot-sized marks would
+    // let an extra dot (e.g. a 4th dot on 氵) fuse with a real one and hide.
+    if(strokeLength(A) < 45 && strokeLength(B) < 45) continue;
+    const combos = [
+      { gap: ptDist(A[A.length-1], B[0]),          make: () => [...A, ...B] },
+      { gap: ptDist(B[B.length-1], A[0]),          make: () => [...B, ...A] },
+      { gap: ptDist(A[A.length-1], B[B.length-1]), make: () => [...A, ...[...B].reverse()] },
+      { gap: ptDist(A[0], B[0]),                   make: () => [...[...A].reverse(), ...B] },
+    ];
+    let best = null;
+    for(const c of combos) if(best === null || c.gap < best.gap) best = c;
+    const near = Math.min(bar, 0.30 * Math.min(strokeLength(A), strokeLength(B)));
+    if(best.gap > near) continue;
+    const joined = best.make();
+    const r = resample(joined, 13);
+    const mid = Math.floor(r.length/2);
+    const dIn  = Math.atan2(r[mid].y-r[mid-2].y, r[mid].x-r[mid-2].x)*180/Math.PI;
+    const dOut = Math.atan2(r[mid+2].y-r[mid].y, r[mid+2].x-r[mid].x)*180/Math.PI;
+    if(angDiff(dIn, dOut) > 60) continue; // kink at the seam: two real strokes, not one
+    out.push({ gap: best.gap, make: best.make, i, j });
+  }
+  out.sort((a,b) => a.gap - b.gap);
+  return out.slice(0, 5);
+}
+
+const Q_BAR = 0.55;   // component's average stroke quality
+// No single stroke may be this far gone, however good the rest are — this is what
+// catches one decisively wrong stroke in an otherwise well-written character. Measured
+// over ~66 randomised honest attempts the worst single stroke scored 0.42, while a
+// stroke aimed the wrong way scored 0.24-0.27 and a hook flicked to the wrong side 0.00,
+// so the line sits in the gap between them.
+const Q_FLOOR = 0.35;
+
+// The smallest turn that counts as a hook having been written at all. Used only to decide
+// whether there IS a turn; which way it goes is the sign, not the size.
+const HOOK_MIN = 25;
+// 多短的参考笔画才按"点"来判（只看位置，不看形状方向），以及点最多能比参考写长多少倍。
+// 0.07 是扫出来的：0.05 救不了霎，0.09 以上燃又开始判错、少一笔也开始漏判。
+const DOT_FRAC = 0.07;
+const DOT_LEN  = 1.7;
+
+// Match one component: explain extras (re-traces dropped; pen-lift splits explored),
+// explain shortfalls (consecutive strokes merged into one motion), then require every
+// official stroke to have a categorically-compatible counterpart under globally
+// optimal pairing, with the component's average penmanship above the bar.
+function matchComponent(officialStrokes, userStrokesIn, label, charDiag, diag, strictMerges = false){
+  const k = officialStrokes.length;
+  const compDiag = Math.max(bboxOf(officialStrokes).diag, 1);
+
+  function matchExact(users, notes){
+    const m = users.length;
+    if(m === 0) return { pass:false, head:'FAIL no-ink', rows:[] };
+    if(k - m > 5) return { pass:false, head:`FAIL too-few-strokes (${m} vs ${k})`, rows:[] };
+    // One user stroke can absorb at most 4 official strokes, so beyond 4x there is no legal
+    // way to line them up at all and the search below yields nothing. The k-m>5 guard misses
+    // exactly the 6-official-against-1-drawn case, which a child scribbling a single line
+    // through a decomposed character hits immediately — 裂 is 列+衣, six strokes each — and
+    // the null that came back was dereferenced and crashed the whole grade.
+    if(k > 4 * m) return { pass:false, head:`FAIL too-few-strokes (${m} vs ${k})`, rows:[] };
+    let best = null;
+    // Comparing one user stroke against one run of official strokes gives the same answer
+    // no matter which candidate explanation asked for it, and the explanations overlap
+    // heavily — 薄 written as 12 strokes has ~1350 of them drawn from only ~730 distinct
+    // comparisons, so the work was being redone about 250 times over. That was 13.5s on a
+    // laptop, and several times that on the iPad this is actually played on.
+    const cellCache = new Map();
+    const cellFor = (u, o) => {
+      const key = u.id + '|' + o.label;
+      let c = cellCache.get(key);
+      if(c === undefined){
+        let qq = strokeQuality(u.pts, o.pts, compDiag, o.merged);
+        // Once the region tree has identified exactly three water-radical marks,
+        // the first two may be short dashes. The rising third stroke keeps its
+        // shape test; absent, merged, additional, or overlong dots are not exempt.
+        if(strictMerges && label==='氵' && k===3 && users.length===3 && !o.merged && (o.label==='0'||o.label==='1')){
+          const markFraction=strokeLength(u.pts)/compDiag;
+          const qDot=clamp01(1-Math.max(0,qq.posDist-0.15)/0.5)*clamp01(1-Math.max(0,markFraction-0.35)/0.25);
+          qq={...qq,q:qDot,qPair:qDot};
+        }
+        // Ordinary characters retain the original eager validation and pairing
+        // costs, including tie breaking. Only complex regions use lazy checking.
+        let veto = !strictMerges && o.merged && !legacyMergeCovers(u.pts, o.parts, charDiag)
+          ? 'merge-not-covered' : null;
+        if(!veto && u.id.includes('+') && qq.lenRatio > 1.3) veto = 'join-inflates-length';
+        c = { ...qq, veto, mergeChecked: !o.merged || !strictMerges,
+          checkMerge: () => mergeCovers(u.pts, o.parts, charDiag) };
+        cellCache.set(key, c);
+      }
+      return c;
+    };
+    for(const part of partitionsOf(k, m, 4)){
+      const virt = part.map(([s, e]) => ({
+        pts: officialStrokes.slice(s, e).flat(),
+        parts: officialStrokes.slice(s, e),
+        merged: e - s > 1,
+        label: e - s > 1 ? `${s}..${e-1}` : `${s}`
+      }));
+      // Re-joining the two halves of one stroke must not INFLATE it (see cellFor): the
+      // pieces add up to about the original. If the "split" explanation only works by
+      // making the stroke half again as long, the second piece was really a separate mark
+      // — this is what let an extra dot fuse onto 氵's last stroke and disappear.
+      const cells = users.map(u => virt.map(o => cellFor(u, o)));
+      // Cost drives the assignment: a categorical veto is expensive so the optimizer
+      // prefers pairings that are legal, but quality still breaks ties.
+      let assign;
+      // Constraint generation: an unchecked merge is optimistic. Validate only merges
+      // selected by the optimal assignment, add proven vetoes, then re-solve.
+      // Once the selected assignment has no unchecked cells, all remaining unknown
+      // costs can only increase, so this is the same optimum as eager validation.
+      for(;;){
+        assign = hungarian(cells.map(row => row.map(c => (1 - c.qPair) + (c.veto ? 3 : 0))));
+        let changed=false;
+        for(let row=0;row<assign.length;row++){
+          const cell=cells[row][assign[row]];
+          if(cell.mergeChecked)continue;
+          cell.mergeChecked=true;
+          if(!cell.checkMerge()){
+            cell.veto='merge-not-covered';changed=true;
+          }
+        }
+        if(!changed)break;
+      }
+      const rows = assign.map((col, row) => ({ u: users[row].id, o: virt[col].label, c: cells[row][col] }));
+      const vetoes = rows.filter(r => r.c.veto).length;
+      const meanQ = rows.reduce((s, r) => s + r.c.q, 0) / rows.length;
+      const minQ  = Math.min(...rows.map(r => r.c.q));
+      const cand = { vetoes, meanQ, minQ, rows,
+                     pass: vetoes === 0 && meanQ >= Q_BAR && minQ >= Q_FLOOR };
+      // The question is "can this ink be read as a correct writing", so any explanation
+      // that passes settles it — same rule the extra-stroke search above already uses.
+      // Ranking the rest by average alone used to pick an explanation with a great mean
+      // and one catastrophic stroke over a clean one, and then fail it on the floor: a
+      // 16-stroke character with two strokes joined has hundreds of ways to line up, so
+      // the more complex the character, the likelier the search talked itself into the
+      // wrong one. Bailing out on the first pass also stops the cost from exploding.
+      if(cand.pass){ best = cand; break; }
+      // Rank floor-clean explanations above higher-scoring ones that contain a catastrophic
+      // stroke: the average is judged over the whole character now, so at this level the
+      // thing worth optimising for is "no stroke left unexplained".
+      const clean = cand.minQ >= Q_FLOOR, bClean = best && best.minQ >= Q_FLOOR;
+      if(best === null || cand.vetoes < best.vetoes ||
+         (cand.vetoes === best.vetoes && clean !== bClean ? clean :
+          cand.vetoes === best.vetoes && cand.meanQ > best.meanQ)) best = cand;
+    }
+    // Belt and braces: never dereference a search that came back empty.
+    if(best === null) return { pass:false, head:`FAIL no-valid-pairing (${m} vs ${k})`, rows:[] };
+    const why = best.vetoes ? `veto×${best.vetoes}`
+              : (best.meanQ < Q_BAR ? `avgQ=${best.meanQ.toFixed(2)}<${Q_BAR}`
+              : (best.minQ < Q_FLOOR ? `oneStrokeQ=${best.minQ.toFixed(2)}<${Q_FLOOR}` : ''));
+    return {
+      pass: best.pass,
+      head: `${best.pass ? 'PASS' : 'FAIL ' + why} avgQ=${best.meanQ.toFixed(2)}${notes.length ? ' (' + notes.join(' ') + ')' : ''}`,
+      rows: best.rows
+    };
+  }
+
+  function attempt(users, notes, depth){
+    if(users.length <= k) return matchExact(users, notes);
+    if(depth > 4) return { pass:false, head:`FAIL extra-stroke (${users.length} vs ${k})`, rows:[] };
+    const work = users.map(u => ({ ...u }));
+    const preNotes = [...notes];
+    if(dropOneRetrace(work, compDiag, preNotes)) return attempt(work, preNotes, depth + 1);
+    const cands = joinCandidates(users, compDiag);
+    let firstFail = null;
+    for(const cand of cands){
+      const joined = users.slice();
+      const idA = joined[cand.i].id, idB = joined[cand.j].id;
+      joined.splice(cand.j, 1);
+      joined.splice(cand.i, 1, { pts: cand.make(), id: idA+'+'+idB });
+      const res = attempt(joined, [...notes, `joined:${idA}+${idB}`], depth + 1);
+      if(res.pass) return res;
+      if(firstFail === null) firstFail = res;
+    }
+    return firstFail || { pass:false, head:`FAIL extra-stroke (${users.length} vs ${k})`, rows:[] };
+  }
+
+  const res = attempt(userStrokesIn.map((pts, i) => ({ pts, id:'u'+i })), [], 0);
+  diag.push(`comp=${label} ${res.head}`);
+  for(const r of res.rows){
+    diag.push(`  ${r.u}<->official#${r.o} q=${r.c.q.toFixed(2)} pair=${r.c.qPair.toFixed(2)}${r.c.veto ? ' VETO:'+r.c.veto : ''} rms=${r.c.rms} dir=${r.c.dirDiff}${r.c.tailDiff!==null?' tail='+r.c.tailDiff:''} len=${r.c.lenRatio} pos=${r.c.posDist}`);
+  }
+  return { pass: res.pass, rows: res.rows };
+}
+
+
+
+// These trees describe spatial regions in the bundled glyph, not writing order.
+// Work down from the whole character before matching strokes within each region.
+const regionLeaf = (name, start, end) => ({
+  name, indices: Array.from({ length: end - start }, (_, i) => start + i)
+});
+const regionSplit = (axis, a, b) => ({ axis, a, b });
+const RECURSIVE_REGION_TREES = {
+  '澡': regionSplit('x', regionLeaf('氵', 0, 3),
+    regionSplit('y', regionSplit('y', regionLeaf('上口', 3, 6),
+      regionSplit('x', regionLeaf('左口', 6, 9), regionLeaf('右口', 9, 12))),
+    regionLeaf('木', 12, 16))),
+  '警': regionSplit('y', regionSplit('x',
+    regionSplit('y', regionLeaf('艹', 0, 3),
+      regionSplit('y', regionLeaf('勹', 3, 5), regionLeaf('句口', 5, 8))),
+    regionLeaf('攵', 8, 12)),
+    regionSplit('y', regionLeaf('言点', 12, 13),
+      regionSplit('y', regionLeaf('言三横', 13, 16), regionLeaf('言口', 16, 19)))),
+  '薄': regionSplit('y', regionLeaf('艹', 0, 3),
+    regionSplit('x', regionLeaf('氵', 3, 6),
+      regionSplit('y', regionLeaf('甫', 6, 13), regionLeaf('寸', 13, 16)))),
+  '慧': regionSplit('y', regionSplit('y',
+    regionSplit('x', regionLeaf('左丰', 0, 4), regionLeaf('右丰', 4, 8)),
+    regionLeaf('彐', 8, 11)), regionLeaf('心', 11, 15)),
+};
+// Keep the older, extensively tuned merge checks for all other characters.
+const STRICT_MERGE_CHARACTERS = new Set(['慧', '警', '藏', '器', '燃', '澡', '霎', '薄']);
+
+function recursiveRegionGrade(tree, officialAll, user, charDiag) {
+  const cache = new Map(), nodeKeys = new Map(), countCache = new Map();
+  const userCentres = user.map(stroke => centroidOf(resample(stroke, 16)));
+
+  function referenceCount(node) {
+    if (countCache.has(node)) return countCache.get(node);
+    const count = node.indices ? node.indices.length : referenceCount(node.a) + referenceCount(node.b);
+    countCache.set(node, count);
+    return count;
+  }
+
+  function evaluate(node, ids) {
+    if (!nodeKeys.has(node)) nodeKeys.set(node, nodeKeys.size);
+    const key = nodeKeys.get(node) + '|' + ids.join(',');
+    if (cache.has(key)) return cache.get(key);
+    let answer = null;
+    if (node.indices) {
+      const count = node.indices.length;
+      if (ids.length >= Math.ceil(count / 4) && ids.length <= count + 2) {
+        const reference = node.indices.map(i => officialAll[i]);
+        const cluster = ids.map(i => user[i]);
+        const diag = [];
+        // Uniform scaling preserves angles. Uneven proportions between regions
+        // are allowed; stretching a wrong stroke into another kind is not.
+        const aligned = alignClusterUniform(cluster, bboxOf(reference));
+        const result = matchComponent(reference, aligned, node.name, charDiag, diag, true);
+        if (result.rows.length) {
+          const bad = result.rows.filter(row => row.c.veto || row.c.q < Q_FLOOR).length;
+          const sum = result.rows.reduce((total, row) => total + row.c.q, 0);
+          answer = { rows: result.rows, diag, bad, sum, rank: bad * 100 + result.rows.length - sum };
+        }
+      }
+    } else {
+      const order = ids.slice().sort((i, j) => userCentres[i][node.axis] - userCentres[j][node.axis]);
+      const countA = referenceCount(node.a), countB = referenceCount(node.b);
+      const cuts = [];
+      for (let cut = 1; cut < order.length; cut++) {
+        cuts.push({
+          cut,
+          surplus: Math.max(0, cut - countA) + Math.max(0, order.length - cut - countB),
+          gap: userCentres[order[cut]][node.axis] - userCentres[order[cut - 1]][node.axis],
+        });
+      }
+      const minimum = Math.min(...cuts.map(cut => cut.surplus));
+      // A failed region cannot borrow ink from its neighbour by inventing extra
+      // strokes there and a compensating merge here. Try only minimum-surplus
+      // cuts; among those, start with the clearest spatial gap.
+      const preferred = cuts.filter(cut => cut.surplus === minimum).sort((a, b) => b.gap - a.gap);
+      for (const { cut } of preferred) {
+        const a = evaluate(node.a, order.slice(0, cut));
+        if (!a) continue;
+        const b = evaluate(node.b, order.slice(cut));
+        if (!b) continue;
+        const candidate = {
+          rows: [...a.rows, ...b.rows], diag: [...a.diag, ...b.diag],
+          bad: a.bad + b.bad, sum: a.sum + b.sum, rank: a.rank + b.rank,
+        };
+        if (answer === null || candidate.rank < answer.rank) answer = candidate;
+        if (node === tree && candidate.bad === 0 && candidate.sum / candidate.rows.length >= Q_BAR) {
+          answer = candidate;
+          break;
+        }
+      }
+    }
+    cache.set(key, answer);
+    return answer;
+  }
+
+  const result = evaluate(tree, user.map((_, i) => i));
+  if (!result) return { pass: false, diag: ['recursive region matching: no structural assignment'] };
+  const mean = result.sum / result.rows.length;
+  const pass = result.bad === 0 && mean >= Q_BAR;
+  result.diag.push('recursive regions ' + (pass ? 'PASS' : 'FAIL') + ' avgQ=' + mean.toFixed(2) + ' bad=' + result.bad);
+  return { pass, diag: result.diag };
+}
+
+
+async function gradeDrawing(char){
+  const data = await getCharData(char);
+  const officialAll = (data.medians || []).map(medianToCanvasPoints);
+  // Drop touch artefacts before anything else looks at the ink. A palm or a pencil tip
+  // resting on the glass leaves a mark with essentially no length, and it was costing a
+  // real stroke its place: writing 隐 correctly in 11 strokes plus one stray tap made 12
+  // marks for 11 slots, so a genuine stroke went unmatched and the whole character failed.
+  // Measured, the gap is wide: that tap ran 1.7% of the character's diagonal, this child's
+  // shortest real stroke 11%, and the shortest stroke in any reference glyph 5.5%.
+  const drawn = strokesPoints.filter(s => s.length > 1);
+  const inkDiag = drawn.length ? Math.max(bboxOf(drawn).diag, 1) : 1;
+  const rawUser = drawn.filter(s => strokeLength(s) / inkDiag >= 0.03);
+  if(rawUser.length === 0 && strokesPoints.length === 0) return false;
+
+  // Keep evidence of input that the existing touch-artifact filter removed.
+  // A missing dot in the graded ink does not prove the player never drew it.
+  // These traces are diagnostic only; they do not change what gets graded.
+  const ignored = strokesPoints.filter(s => s.length < 2 || strokeLength(s) / inkDiag < 0.03);
+  const filtering = {
+    inputStrokeCount: strokesPoints.length,
+    retainedStrokeCount: rawUser.length,
+    shortStrokeThreshold: +(inkDiag * 0.03).toFixed(3),
+    ignoredStrokes: ignored.map(s => ({
+      reason: s.length < 2 ? 'single-point' : 'short-stroke',
+      pointCount: s.length,
+      length: +strokeLength(s).toFixed(3),
+      s: (s.length <= 16 ? s : resample(s, 16)).map(p => [p.x, p.y]),
+    })),
+  };
+
+  // What was actually drawn. Reproducing a disputed grade from real ink beats guessing at
+  // how it was written and testing a synthetic stand-in. Logged to the console AND kept in
+  // the ink log, so getting it out no longer needs a cable and Web Inspector.
+  const inkPayload = { c: char,
+    s: rawUser.map(s => resample(s, 16).map(p => [Math.round(p.x), Math.round(p.y)])), filtering };
+  console.log('[strokes] ' + JSON.stringify(inkPayload));
+  if(rawUser.length === 0){
+    recordInk(inkPayload, false);
+    return false;
+  }
+
+  // Writing the whole character small/large/off-centre is never an error.
+  const user = normalizeToBounds(rawUser, getBounds(officialAll));
+  const charDiag = Math.max(bboxOf(officialAll).diag, 1);
+
+
+  if(RECURSIVE_REGION_TREES[char]){
+    const candidate=recursiveRegionGrade(RECURSIVE_REGION_TREES[char],officialAll,user,charDiag);
+    console.log('[diag-grade] char='+char+' pass='+candidate.pass+' recursive\n'+candidate.diag.join('\n'));
+    recordInk(inkPayload,candidate.pass);
+    return candidate.pass;
+  }
+  // Structure layer: split official strokes into components.
+  let comps = null;
+  const parts = COMPONENT_DECOMP[char];
+  if(parts){
+    const partsData = parts.map(p => window.HANZI_LOCAL_DATA && window.HANZI_LOCAL_DATA[p]);
+    if(!partsData.some(d => !d)){
+      const counts = partsData.map(d => d.medians.length);
+      if(counts.reduce((a,b) => a+b, 0) === officialAll.length){
+        comps = [];
+        let cur = 0;
+        parts.forEach((p, i) => {
+          comps.push({ label: p, strokes: officialAll.slice(cur, cur + counts[i]) });
+          cur += counts[i];
+        });
+      }
+    }
+  }
+  if(!comps) comps = [{ label:'全字', strokes: officialAll }];
+
+  // Cluster each user stroke to the component of its nearest official stroke, keeping
+  // an ambiguity ratio so borderline strokes can be re-assigned if grading fails.
+  const flat = [];
+  comps.forEach((c, ci) => c.strokes.forEach(o => flat.push({ ci, r: resample(o, 16) })));
+  const assignInfo = user.map(u => {
+    const ru = resample(u, 16), rr = [...ru].reverse();
+    let bestD = Infinity, bestCi = 0, secondD = Infinity;
+    for(const f of flat){
+      const d = Math.min(avgDist(ru, f.r), avgDist(rr, f.r));
+      if(d < bestD){
+        if(f.ci !== bestCi) secondD = bestD;
+        bestD = d; bestCi = f.ci;
+      } else if(f.ci !== bestCi && d < secondD){
+        secondD = d;
+      }
+    }
+    return { ci: bestCi, ratio: secondD === Infinity ? 99 : secondD / Math.max(bestD, 1e-6) };
+  });
+
+  // Components decide ALIGNMENT — each part is fitted to its own region, which is what makes
+  // "偏旁写小了、比例失调" harmless. They do not each have to pass on their own: 氵 is three
+  // strokes, and requiring its average to clear the same bar as a thirteen-stroke 喿 punished
+  // this child for writing the three dots as short dashes (a 0.50 average over three strokes,
+  // where the same strokes pooled into the whole character are unremarkable). The verdict is
+  // taken once, over every stroke in the character.
+  function runWith(assignment){
+    const diag = [];
+    let pass = true, rows = [];
+    comps.forEach((c, ci) => {
+      const cluster = user.filter((_, ui) => assignment[ui] === ci);
+      if(cluster.length === 0){
+        pass = false;
+        diag.push(`comp=${c.label} FAIL no-ink`);
+        return;
+      }
+      const aligned = alignClusterUniform(cluster, bboxOf(c.strokes));
+      const r = matchComponent(c.strokes, aligned, c.label, charDiag, diag, STRICT_MERGE_CHARACTERS.has(char));
+      rows = rows.concat(r.rows || []);
+    });
+    if(pass && rows.length){
+      const vetoes = rows.filter(r => r.c.veto).length;
+      const meanQ = rows.reduce((a, r) => a + r.c.q, 0) / rows.length;
+      const minQ  = Math.min(...rows.map(r => r.c.q));
+      pass = vetoes === 0 && meanQ >= Q_BAR && minQ >= Q_FLOOR;
+      diag.push(`整字汇总 ${pass ? 'PASS' : 'FAIL'} avgQ=${meanQ.toFixed(2)} minQ=${minQ.toFixed(2)} veto=${vetoes} (${rows.length}笔)`);
+    } else if(pass){
+      pass = false;
+    }
+    return { pass, diag };
+  }
+
+  const baseAssign = assignInfo.map(a => a.ci);
+  let result = runWith(baseAssign);
+  let flipNote = '';
+  // Rescue: a borderline stroke clustered to the wrong component shouldn't sink an
+  // honest attempt — retry with each ambiguous stroke moved to the other component.
+  if(!result.pass && comps.length === 2){
+    const cands = assignInfo
+      .map((a, ui) => ({ ui, ratio: a.ratio }))
+      .filter(x => x.ratio <= 1.6)
+      .sort((x, y) => x.ratio - y.ratio)
+      .slice(0, 5);
+    for(const cand of cands){
+      const alt = baseAssign.slice();
+      alt[cand.ui] = 1 - alt[cand.ui];
+      const r2 = runWith(alt);
+      if(r2.pass){
+        result = r2;
+        flipNote = ` (recovered by re-clustering user stroke ${cand.ui})`;
+        break;
+      }
+    }
+  }
+
+  // TEMPORARY diagnostics — prints exactly why a drawing passed/failed, so grading can
+  // be calibrated from real data. Safe to remove once stable.
+  console.log(`[diag-grade] char=${char} userStrokeCount=${rawUser.length} officialStrokeCount=${officialAll.length} pass=${result.pass}${flipNote}\n` + result.diag.join('\n'));
+  recordInk(inkPayload, result.pass);
+  return result.pass;
+}
+
+
+
+// Geometry inputs produced by grading are immutable; keep only weak references.
+// The input length guard also handles a live input stroke acquiring more points.
+function memoGeometry(original){
+ const memo=new WeakMap();
+ return function(points){
+  const old=memo.get(points);
+  if(old && old.length===points.length)return old.value;
+  const value=original(points);memo.set(points,{length:points.length,value});return value;
+ };
+}
+strokeProfile=memoGeometry(strokeProfile);
+pcaAngle=memoGeometry(pcaAngle);
+centroidOf=memoGeometry(centroidOf);
+strokeLength=memoGeometry(strokeLength);
+shapeNormalize=memoGeometry(shapeNormalize);
+{
+ const original=resample,memo=new WeakMap();
+ resample=function(points,n){
+  let row=memo.get(points);
+  if(!row || row.length!==points.length){row={length:points.length,entries:new Map()};memo.set(points,row);}
+  if(row.entries.has(n))return row.entries.get(n);
+  const value=original(points,n);row.entries.set(n,value);return value;
+ };
+}
+const MERGE_SEGMENT_MEMO=new WeakMap();
+function mergeSegment(points,start,end){
+ let segments=MERGE_SEGMENT_MEMO.get(points);
+ if(!segments){segments=new Map();MERGE_SEGMENT_MEMO.set(points,segments);}
+ const key=start+':'+end;
+ if(!segments.has(key))segments.set(key,points.slice(start,end));
+ return segments.get(key);
+}
+const progressPath = document.getElementById('progressPath');
+const sceneImg = document.getElementById('sceneImg');
+const doorpanel = document.getElementById('doorpanel');
+const charGlow = document.getElementById('charGlow');
+const writeSlot = document.getElementById('writeSlot');
+const pinyinTag = document.getElementById('pinyinTag');
+const writeTile = document.getElementById('writeTile');
+const statusLine = document.getElementById('statusLine');
+const resultBanner = document.getElementById('resultBanner');
+const timerRing = document.getElementById('timerRing');
+const submitBtn = document.getElementById('submitBtn');
+const clearBtn = document.getElementById('clearBtn');
+const continueBtn = document.getElementById('continueBtn');
+const playzone = document.getElementById('playzone');
+const finale = document.getElementById('finale');
+const finaleDetail = document.getElementById('finaleDetail');
+const restartBtn = document.getElementById('restartBtn');
+
+const settingsBtn = document.getElementById('settingsBtn');
+const panelOverlay = document.getElementById('panelOverlay');
+const closePanelBtn = document.getElementById('closePanelBtn');
+const charInput = document.getElementById('charInput');
+const pinyinInput = document.getElementById('pinyinInput');
+const wordInput = document.getElementById('wordInput');
+const sentenceInput = document.getElementById('sentenceInput');
+const addCharBtn = document.getElementById('addCharBtn');
+const batchInput = document.getElementById('batchInput');
+const batchAddBtn = document.getElementById('batchAddBtn');
+const batchMsg = document.getElementById('batchMsg');
+const demoGlyph = document.getElementById('demoGlyph');
+const queueList = document.getElementById('queueList');
+const masteredList = document.getElementById('masteredList');
+const stuckList = document.getElementById('stuckList');
+const inkList = document.getElementById('inkList');
+const inkCount = document.getElementById('inkCount');
+const inkOut = document.getElementById('inkOut');
+const inkMsg = document.getElementById('inkMsg');
+const inkCopyBtn = document.getElementById('inkCopyBtn');
+const inkDownloadBtn = document.getElementById('inkDownloadBtn');
+const inkClearBtn = document.getElementById('inkClearBtn');
+const speakBtn = document.getElementById('speakBtn');
+const sentenceBtn = document.getElementById('sentenceBtn');
+const dailyCountInput = document.getElementById('dailyCount');
+const saveProgressBtn = document.getElementById('saveProgressBtn');
+const loadProgressBtn = document.getElementById('loadProgressBtn');
+const fileInput = document.getElementById('fileInput');
+
+// ---------- starfield ----------
+(function initStars(){
+  const bg = document.getElementById('starsBg');
+  for(let i=0;i<40;i++){
+    const s = document.createElement('span');
+    s.style.left = Math.random()*100+'%';
+    s.style.top = Math.random()*70+'%';
+    s.style.animationDelay = (Math.random()*3)+'s';
+    bg.appendChild(s);
+  }
+})();
+
+// ---------- selecting the next character to work on ----------
+function parentPriorityEntries(){
+  const today = todayStr();
+  return state.priorityQueue.filter(p => (!p.addedDay || p.addedDay === today) && p.completedDay !== today);
+}
+
+function unfinishedParentEntries(){
+  return parentPriorityEntries().filter(p => !isStuck(state.bank.find(b => b.char === p.char) || {}));
+}
+
+function nextParentPriority(){
+  const pendingChars = new Set(pendingRetests.map(r => r.item.char));
+  return unfinishedParentEntries().find(p => !priorityConsumedToday.has(p.char) && !pendingChars.has(p.char));
+}
+
+// Importing is a scheduling request, never a reset of the child's learning.
+function enqueueParentItems(items){
+  const latest = new Map();
+  items.forEach(p => {
+    if(!/^[一-鿿]$/.test(p.char) || !p.pinyin) return;
+    latest.set(p.char, { ...p, word:p.word || '', addedDay:todayStr(), completedDay:null,
+      requestId:Date.now().toString(36) + '-' + Math.random().toString(36).slice(2) });
+  });
+  latest.forEach(p => {
+    let item = state.bank.find(b => b.char === p.char);
+    if(!item){ item = newBankItem(p.char, p.pinyin, p.word); state.bank.push(item); }
+    const sameWord = item.word === p.word;
+    item.pinyin = p.pinyin;
+    item.word = p.word;
+    // A sentence belongs to a word. A replacement word must not inherit an old sentence.
+    if(typeof p.sentence === 'string') item.sentence = p.sentence.trim();
+    else if(!sameWord) delete item.sentence;
+    if(item.sentence) p.sentence = item.sentence;
+    item.fromParent = true;
+    item.retired = false;
+    priorityConsumedToday.delete(p.char);
+  });
+  state.priorityQueue = [...latest.values(), ...state.priorityQueue.filter(p => !latest.has(p.char))];
+  if(latest.size) parentQueueChanged = true;
+  saveState();
+  return latest.size;
+}
+
+function pickNextChar(){
+  const pendingChars = new Set(pendingRetests.map(r => r.item.char));
+
+  // parent-added "today" priority characters go first, once each
+  const nextPriority = nextParentPriority();
+  if(nextPriority){
+    priorityConsumedToday.add(nextPriority.char);
+    let existing = state.bank.find(b => b.char === nextPriority.char);
+    if(!existing){
+      existing = newBankItem(nextPriority.char, nextPriority.pinyin, nextPriority.word);
+      existing.fromParent = true;      // survives a starter-bank swap; built-in ones don't
+      state.bank.push(existing);
+    } else {
+      // The parent just told us which word and which reading they want for this character,
+      // which beats whatever the bank was seeded with — "薄" as 单薄/bó vs 薄饼/báo is exactly
+      // the case where the stored default would show the child the wrong pinyin.
+      existing.pinyin = nextPriority.pinyin;
+      if(nextPriority.word !== undefined && nextPriority.word !== existing.word){
+        existing.word = nextPriority.word;
+        delete existing.sentence;
+      }
+    }
+    if(typeof nextPriority.sentence === 'string') existing.sentence = nextPriority.sentence;
+    existing.fromParent = true;
+    existing.retired = false;
+    saveState();
+    // A character the parent typed in for today is wanted today, mastered or not — that's
+    // the whole point of the priority list (e.g. it's on tomorrow's 听写). Unless it's
+    // already been parked for explanation, in which case it waits for the parent too.
+    if(!isStuck(existing)){
+      window.HanziPracticeSelector.record(selectionSession, existing);
+      return existing;
+    }
+  }
+  // otherwise pick whichever bank character is due for review (or, if none
+  // are strictly "due" yet, just the weakest one) — this same rule naturally
+  // supplies a repeat character as filler for a delayed retest when the
+  // queue would otherwise be empty. Characters currently awaiting their OWN
+  // delayed retest are excluded so they can't jump the queue and reappear
+  // before the real interleaving gap has happened.
+  // Characters already written correctly on MASTERED_DAYS different days leave the rotation
+  // for good, so the bank keeps shrinking towards whatever the child still can't do.
+  const active = state.bank.filter(b => !isMastered(b) && !isStuck(b) && !b.retired
+    && !(b.passedDays || []).includes(todayStr()));
+  if(active.length === 0) return null;             // nothing left to practise — caller ends the day
+  const candidates = active.filter(b => !pendingChars.has(b.char));
+  const pickFrom = candidates.length ? candidates : active; // only fall back if literally everything is pending
+  // Prefer unseen characters within this sitting before repeating free questions.
+  // Teaching and delayed retests still use their existing separate state machine.
+  const unseen = pickFrom.filter(b => !selectionSession.byChar[b.char]);
+  const available = unseen.length ? unseen : pickFrom;
+  const today = todayStr();
+  const reviews = available.filter(b => b.lastSeen !== null && daysBetween(b.lastSeen, today) >= b.interval);
+  const fresh = available.filter(b => b.lastSeen === null);
+  const reviewSlot = selectionSession.total % 5 === 0 || selectionSession.total % 5 === 2;
+  let pool;
+  // Reserve normal slots for actually due reviews, so a large new textbook pool
+  // cannot bury them. Balance within the weakest due group when reviews are due.
+  if(reviews.length && (reviewSlot || !fresh.length)){
+    const weakest = Math.min(...reviews.map(b => b.box));
+    pool = reviews.filter(b => b.box === weakest);
+  } else if(fresh.length) pool = fresh;
+  else pool = available;
+  return window.HanziPracticeSelector.choose(pool, selectionSession);
+}
+
+function renderProgressPath(){
+  const target = Math.max(state.dailyCount, passedCount + unfinishedParentEntries().length);
+  progressPath.innerHTML = Array.from({length: target}).map((_, i) => {
+    const cls = i < passedCount ? 'progress-dot done' : 'progress-dot';
+    return `<div class="${cls}"></div>`;
+  }).join('');
+}
+
+// ---------- door state ----------
+// Audio and particles are independent of grading and learning records.
+function setDoorClosed(){ doorpanel.classList.remove('open'); }
+function setDoorOpen(){ doorpanel.classList.add('open'); }
+
+// ---------- drawing a printed glyph from the grading data ----------
+// hanzi-writer ships, alongside the stroke medians we grade against, the filled outline of
+// every stroke. Drawing the demo character from those outlines instead of from a webfont
+// means the shape the child is told to copy IS the shape the grader measures — they can
+// never disagree — and it comes out as clean printed 楷体 rather than a brush face.
+// The data's y axis points up with the glyph box at y ∈ [-124, 900]; hence the flip.
+function glyphSvg(strokes){
+  const paths = strokes.map(d => `<path d="${d}"/>`).join('');
+  return `<svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">` +
+         `<g transform="scale(1,-1) translate(0,-900)">${paths}</g></svg>`;
+}
+
+// Async because the stroke data may still be loading; the guard makes a slow fetch that
+// resolves after the child has already moved on a no-op instead of a flash of the answer.
+async function renderGlyph(el, char){
+  el.dataset.want = char;
+  if(!char){ el.innerHTML = ''; return; }
+  try{
+    const data = await getCharData(char);
+    if(el.dataset.want !== char) return;
+    el.innerHTML = glyphSvg(data.strokes);
+  }catch(e){
+    if(el.dataset.want !== char) return;
+    el.innerHTML = `<div style="font-size:120px;line-height:1;">${char}</div>`;
+  }
+}
+
+// Hiding fades the glyph out over the CSS transition and only then empties the element —
+// clearing the markup up front would make it vanish on the spot and the fade never show.
+function setGlyph(el, char, visible){
+  if(visible){
+    el.classList.remove('hidden');
+    renderGlyph(el, char);
+  } else {
+    el.classList.add('hidden');
+    el.dataset.want = '';
+    setTimeout(() => { if(el.classList.contains('hidden')) el.innerHTML = ''; }, 500);
+  }
+}
+
+function showGlowChar(char, visible){ setGlyph(charGlow, char, visible); }
+
+// ---------- reading the prompt aloud ----------
+// Says the whole word, exactly what a parent dictating would say — the same information the
+// hint already shows on screen (单bó), just as sound. It never fires by itself: working the
+// pinyin out is the point, and this is the way out when he genuinely can't.
+// Optional presentation modules must never interrupt drawing, grading, or saves.
+// In particular, an unavailable sound file/module cannot turn every button off.
+function feedbackCall(method, ...args){
+  try{
+    const feedback = window.HanziGameFeedback;
+    if(!feedback || typeof feedback[method] !== 'function') return;
+    const result = feedback[method](...args);
+    // Unlock may be asynchronous. Consume rejection without awaiting it or
+    // making the actual button action depend on audio becoming available.
+    if(result && typeof result.then === 'function'){
+      Promise.resolve(result).catch(() => {});
+      return;
+    }
+    return result;
+  }catch(e){ /* Feedback is optional; the game action still runs. */ }
+}
+
+function sentenceFor(item){
+  let fallback = '';
+  try{
+    if(item && typeof item.sentence === 'string') fallback = item.sentence.trim();
+  }catch(e){ /* An invalid optional hint must not break settings or practice. */ }
+  try{
+    const hints = window.HanziSentenceHints;
+    if(hints && typeof hints.get === 'function'){
+      const sentence = hints.get(item);
+      if(sentence && typeof sentence.then === 'function'){
+        Promise.resolve(sentence).catch(() => {});
+        return fallback;
+      }
+      if(typeof sentence === 'string' && sentence.trim()) return sentence.trim();
+    }
+  }catch(e){ /* Keep the parent's saved sentence if the optional module fails. */ }
+  return fallback;
+}
+
+let activeSpeech = null;
+function stopPromptSpeech(){
+  activeSpeech = null;
+  try{
+    if(window.speechSynthesis && typeof window.speechSynthesis.cancel === 'function'){
+      window.speechSynthesis.cancel();
+    }
+  }catch(e){ /* A speech-service failure cannot prevent switching questions. */ }
+  speakBtn.classList.remove('speaking');
+  sentenceBtn.classList.remove('speaking');
+}
+
+function speakText(text, button){
+  if(!text || !window.speechSynthesis) return;
+  stopPromptSpeech();
+  const u = new SpeechSynthesisUtterance(text);
+  activeSpeech = u; // Keep the utterance alive on Safari.
+  u.lang = 'zh-CN';
+  u.rate = 0.78;
+  const voices = window.speechSynthesis.getVoices();
+  const zh = voices.find(v => /^zh[-_]CN$/i.test(v.lang)) || voices.find(v => /^zh/i.test(v.lang));
+  if(zh) u.voice = zh;
+  u.onstart = () => { if(activeSpeech === u) button.classList.add('speaking'); };
+  u.onend = u.onerror = () => {
+    if(activeSpeech !== u) return;
+    activeSpeech = null;
+    button.classList.remove('speaking');
+  };
+  window.speechSynthesis.speak(u);
+}
+
+function speakPrompt(){
+  if(currentItem) speakText(currentItem.word || currentItem.char, speakBtn);
+}
+
+function speakSentence(){
+  if(!currentItem) return;
+  const sentence = sentenceFor(currentItem);
+  if(sentence) speakText(sentence, sentenceBtn);
+  else statusLine.textContent = '这个词还没有配句子，请爸爸妈妈在设置里补一句提示。';
+}
+
+// The demo character overlays the 米字格 at exactly the size and position of the square the
+// child will write in, then fades out when the countdown ends.
+function showDemoGlyph(char, visible){ setGlyph(demoGlyph, char, visible); }
+
+// Swap the door out for the writing column. They're siblings in normal flow, so only one is
+// ever on screen and neither can overlap the other; the progress dots and ⚙️ sit outside
+// .scene and stay visible throughout.
+function setWritingView(on){
+  playzone.classList.toggle('writing', on);
+  writeSlot.style.display = on ? 'flex' : 'none';
+  if(!on) showDemoGlyph('', false);
+}
+
+// The parent types a whole word plus which character is being tested; the hint shows that
+// word with the tested character swapped out for its pinyin (飞龙 + 龙 → 飞lóng), so the
+// child gets the context without being shown the answer. ('_' still works for old entries.)
+function hintFor(item){
+  if(!item.word) return item.pinyin;
+  if(item.word.includes('_')) return item.word.split('_').join(item.pinyin);
+  if(item.word.includes(item.char)) return item.word.split(item.char).join(item.pinyin);
+  return item.word + '（' + item.pinyin + '）';
+}
+
+// ---------- main flow ----------
+function loadNextDoor(){
+  // Hitting the day's target ends the day, full stop. Waiting for every interleaved retest
+  // to also come good meant the child could have written his five characters, be told he was
+  // done by the dots, and still be handed more — the retests just carry over to tomorrow.
+  if(passedCount >= state.dailyCount && !unfinishedParentEntries().length){
+    showFinale();
+    return;
+  }
+
+  // is a delayed retest ready to be inserted now (its 2 filler characters have happened)?
+  const readyRetest = pendingRetests.find(r => r.fillersSeen >= 2);
+  if(readyRetest && !nextParentPriority()){
+    pendingRetests = pendingRetests.filter(r => r !== readyRetest);
+    presentDoor(readyRetest.item, 'retest', readyRetest.round, readyRetest.parentRequestId);
+  } else {
+    const item = pickNextChar();
+    if(!item){
+      // An explicitly requested, already-mastered character can still need a
+      // blind retest. If there are no fillers, test it now rather than lose it.
+      if(pendingRetests.length){
+        const waiting = pendingRetests.shift();
+        presentDoor(waiting.item, 'retest', waiting.round, waiting.parentRequestId);
+      } else showFinale(true);
+      return;
+    }
+    // any OTHER item still waiting for its delayed retest just got a filler
+    pendingRetests.forEach(r => { r.fillersSeen += 1; });
+    presentDoor(item, 'free', 1);
+  }
+}
+
+function presentDoor(item, mode, round, parentRequestId = null){
+  stopPromptSpeech();
+  feedbackCall('reset');
+  currentItem = item;
+  currentMode = mode;
+  currentRound = round;
+  currentParentRequestId = mode === 'free'
+    ? (parentPriorityEntries().find(p => p.char === item.char) || {}).requestId || null
+    : parentRequestId;
+  stepIndex = 0;
+  stepAttempts = 0;
+
+  setDoorClosed();
+  resultBanner.textContent = '';
+  resultBanner.className = 'result-banner';
+  continueBtn.classList.remove('show');
+  timerRing.style.display = 'none';
+  showGlowChar('', false);
+  // NOTE: the hint shows the pinyin, never the actual answer character
+  pinyinTag.textContent = hintFor(item);
+  getCharData(item.char).catch(() => {}); // Optional prewarming must never stop the game.
+  renderProgressPath();
+
+  if(mode === 'free'){
+    statusLine.textContent = '看拼音，把字写在格子里，写完点"写好了"';
+    clearCanvas();
+    setWritingView(true);
+    submitBtn.style.display = 'inline-block';
+    clearBtn.style.display = 'inline-block';
+  } else if(mode === 'retest'){
+    statusLine.textContent = '过了一会儿了，还记得刚才那个字吗？凭记忆写出来';
+    clearCanvas();
+    setWritingView(true);
+    submitBtn.style.display = 'inline-block';
+    clearBtn.style.display = 'inline-block';
+  } else {
+    // 'teaching' handled by startTeachingRound()
+    startTeachingRound();
+  }
+}
+
+// ---------- result handling & teaching-mode state machine ----------
+function recordResult(item, outcome){
+  // outcome: 'first-try' | 'retest-pass' | 'abandoned'
+  const today = todayStr();
+  item.lastSeen = today;
+  if(outcome === 'first-try') item.box = Math.min(6, item.box + 1);
+  else if(outcome === 'abandoned') item.box = Math.max(0, item.box - 1);
+  // 'retest-pass' leaves box unchanged — it took real effort, not free
+  const schedule = [1, 2, 4, 7, 14, 21, 30]; // days, indexed by box 0..6
+  item.interval = outcome === 'abandoned' ? 1 : schedule[Math.min(item.box, schedule.length - 1)];
+  item.history.push({ day: today, outcome });
+  state.priorityQueue.forEach(p => {
+    if(p.requestId === currentParentRequestId && (!p.addedDay || p.addedDay === today)) p.completedDay = today;
+  });
+
+  // Mastery counts DISTINCT days, not passes: writing it correctly five times this afternoon
+  // is one day's evidence, and the thing being tested is whether it survives a night's sleep.
+  if(outcome === 'first-try' || outcome === 'retest-pass'){
+    if(!item.passedDays) item.passedDays = [];
+    if(!item.passedDays.includes(today)) item.passedDays.push(today);
+  }
+  saveState();
+}
+
+function markPassed(item, outcome, message){
+  setWritingView(false);          // back to the door for the reward animation
+  setDoorOpen();
+  feedbackCall('celebrate', item.char);
+  showGlowChar(item.char, true);
+  submitBtn.style.display = 'none';
+  clearBtn.style.display = 'none';
+  timerRing.style.display = 'none';
+  resultBanner.textContent = message;
+  resultBanner.className = 'result-banner correct';
+  statusLine.textContent = '';
+  recordResult(item, outcome);
+  passedCount += 1;
+  renderProgressPath();
+  continueBtn.classList.add('show');
+}
+
+function markAbandonedToday(item){
+  setWritingView(false);
+  submitBtn.style.display = 'none';
+  clearBtn.style.display = 'none';
+  timerRing.style.display = 'none';
+  showGlowChar('', false);
+  resultBanner.textContent = '这个字今天先放一放，等爸爸妈妈讲一讲，讲完还能再来闯这扇门';
+  resultBanner.className = 'result-banner wrong';
+  statusLine.textContent = '';
+  item.stuck = true;
+  item.stuckDay = todayStr();
+  // Drop any retest it was waiting on — it isn't in rotation any more today.
+  pendingRetests = pendingRetests.filter(r => r.item !== item);
+  recordResult(item, 'abandoned');
+  continueBtn.classList.add('show');
+}
+
+function handleAttemptResult(ok){
+  const item = currentItem;
+  stopPromptSpeech();
+  if(ok) feedbackCall('playCorrect');
+  else feedbackCall('playWrong');
+
+  // Counted across every mode, not per teaching step: the old state machine could ask for
+  // seventeen attempts on one character before giving up, which is where "错了很多轮还在让
+  // 他写" came from. Three tries is the whole day's budget for one character.
+  if(!ok && registerWrong(item)){
+    markAbandonedToday(item);
+    return;
+  }
+
+  if(currentMode === 'free'){
+    if(ok){
+      markPassed(item, 'first-try', '一次就写对啦！门开了 ✨');
+    } else {
+      currentMode = 'teaching';
+      currentRound = 1;
+      stepIndex = 0;
+      stepAttempts = 0;
+      resultBanner.textContent = '这次没对，我们一起再练几次';
+      resultBanner.className = 'result-banner wrong';
+      startTeachingRound();
+    }
+    return;
+  }
+
+  if(currentMode === 'retest'){
+    if(ok){
+      markPassed(item, 'retest-pass', '隔了一会儿还记得！真的记住啦 ✨');
+    } else {
+      handleRoundFailure(item);
+    }
+    return;
+  }
+
+  // currentMode === 'teaching'
+  const step = TEACHING_STEPS[stepIndex];
+  const atBlind = step === 0;
+
+  if(ok){
+    if(!atBlind){
+      stepIndex += 1;
+      stepAttempts = 0;
+      resultBanner.textContent = '对啦！时间再短一点试试';
+      resultBanner.className = 'result-banner correct';
+      startTeachingRound();
+    } else {
+      // blind write correct — don't pass yet, schedule the delayed retest
+      pendingRetests.push({ item, round: currentRound, fillersSeen: 0, parentRequestId:currentParentRequestId });
+      setWritingView(false);      // put the grid away; only "继续" should be tappable now
+      submitBtn.style.display = 'none';
+      clearBtn.style.display = 'none';
+      timerRing.style.display = 'none';
+      resultBanner.textContent = '不看字也写对了！等下再考你一次，确认是不是真记住了';
+      resultBanner.className = 'result-banner correct';
+      statusLine.textContent = '';
+      continueBtn.classList.add('show');
+      // "继续" moves on to other characters; the retest will surface once ready
+    }
+  } else {
+    stepAttempts += 1;
+    if(stepAttempts >= 2){
+      handleRoundFailure(item);
+    } else {
+      resultBanner.textContent = '还差一点，再看一眼';
+      resultBanner.className = 'result-banner wrong';
+      startTeachingRound();
+    }
+  }
+}
+
+function handleRoundFailure(item){
+  if(currentRound === 1){
+    currentMode = 'teaching';
+    currentRound = 2;
+    stepIndex = 0;
+    stepAttempts = 0;
+    resultBanner.textContent = '这一轮没完全成功，我们完整地再来一轮';
+    resultBanner.className = 'result-banner wrong';
+    startTeachingRound();
+  } else {
+    markAbandonedToday(item);
+  }
+}
+
+function startTeachingRound(){
+  const item = currentItem;
+  clearTimeout(timerHandle);
+  clearCanvas();
+  // Stay in the writing view the whole time: the demo character appears *inside* the very
+  // square the child is about to write in, then fades. Only the buttons are held back so
+  // they can't submit an empty grid while the demo is still up.
+  setWritingView(true);
+  pinyinTag.textContent = hintFor(item);
+  submitBtn.style.display = 'none';
+  clearBtn.style.display = 'none';
+
+  const step = TEACHING_STEPS[stepIndex];
+  if(step > 0){
+    showDemoGlyph(item.char, true);
+    timerRing.style.display = 'flex';
+    let remaining = step;
+    timerRing.textContent = remaining;
+    statusLine.textContent = '看好这个字，等一下要凭记忆写出来';
+    timerHandle = setInterval(() => {
+      remaining -= 1;
+      if(remaining <= 0){
+        clearInterval(timerHandle);
+        showDemoGlyph('', false);
+        timerRing.style.display = 'none';
+        beginWritingPhase(item);
+      } else {
+        timerRing.textContent = remaining;
+      }
+    }, 1000);
+  } else {
+    showDemoGlyph('', false);
+    statusLine.textContent = '不看字，凭记忆写出来';
+    beginWritingPhase(item);
+  }
+}
+
+function beginWritingPhase(item){
+  pinyinTag.textContent = hintFor(item);
+  clearCanvas();
+  setWritingView(true);
+  submitBtn.style.display = 'inline-block';
+  clearBtn.style.display = 'inline-block';
+  if(statusLine.textContent === '' || statusLine.textContent.includes('看好')){
+    statusLine.textContent = TEACHING_STEPS[stepIndex] > 0 ? '现在凭记忆写出来' : '不看字写出来';
+  }
+}
+
+// TEMPORARY diagnostics — logs every tap anywhere on the page (what element it actually
+// landed on) plus every stage the submit handler reaches, so a stuck "写好了" tap shows up
+// in the console without needing to type/paste anything. Safe to remove once the Apple
+// Pencil unresponsiveness issue is confirmed fixed.
+document.addEventListener('pointerdown', (e) => {
+  console.log('[diag] pointerdown on', e.target.id || e.target.className || e.target.tagName, 'type=', e.pointerType, 'submitBtn.disabled=', submitBtn.disabled, 'isDrawing=', isDrawing, 'capturedPointerId=', capturedPointerId);
+}, { capture:true });
+document.addEventListener('click', (e) => {
+  console.log('[diag] click on', e.target.id || e.target.className || e.target.tagName);
+}, { capture:true });
+
+// The diagnostics above proved 'click' never fires at all in this environment (real
+// Apple Pencil taps on iPadOS), even though 'pointerdown' fires reliably — likely a
+// WebKit-on-iPad quirk where touch-action:none (needed elsewhere to stop page scroll/
+// bounce) also suppresses the browser's synthesized click event, not just panning. Rather
+// than depend on 'click' at all, every button below responds to 'pointerup' directly —
+// which the diagnostics confirmed DOES fire — with 'click' kept as a second listener and
+// a short dedupe window, so this also keeps working normally in any browser where click
+// fires fine (desktop, most others) without ever double-firing.
+function onTap(el, handler){
+  let lastFired = 0;
+  function fire(e){
+    if(el.disabled) return;
+    const now = Date.now();
+    if(now - lastFired < 400) return;
+    lastFired = now;
+    feedbackCall('unlock');
+    handler(e);
+  }
+  el.addEventListener('pointerup', fire);
+  el.addEventListener('click', fire);
+}
+
+onTap(submitBtn, async function(){
+  console.log('[diag] submit handler START, disabled was', submitBtn.disabled);
+  const item = currentItem;
+  submitBtn.disabled = true;
+  clearBtn.disabled = true;
+  const priorStatus = statusLine.textContent;
+  statusLine.textContent = '正在检查...';
+  try{
+    console.log('[diag] about to gradeDrawing for char', item && item.char);
+    const ok = await gradeDrawing(item.char);
+    console.log('[diag] gradeDrawing resolved:', ok);
+    submitBtn.disabled = false;
+    clearBtn.disabled = false;
+    statusLine.textContent = priorStatus;
+    handleAttemptResult(ok);
+  }catch(e){
+    console.log('[diag] gradeDrawing threw:', e && e.message, e && e.stack);
+    submitBtn.disabled = false;
+    clearBtn.disabled = false;
+    // Either way this is NOT "写错了" — don't burn a wrong-attempt strike. But say which it
+    // is: this used to blame the network for every failure, and sent a parent hunting for a
+    // connection problem while the real cause was the grader crashing on data that was
+    // sitting right there, bundled and offline-ready.
+    const haveData = (typeof charDataCache !== 'undefined' && charDataCache[item.char]) ||
+                     (window.HANZI_LOCAL_DATA && window.HANZI_LOCAL_DATA[item.char]);
+    statusLine.textContent = haveData
+      ? '这次没批改成功（不算写错），擦掉重写一次试试'
+      : !bundledGlyphsLoaded ? '汉字还在准备中，笔迹已保留，请稍后再点“写好了”'
+      : '这个字还没有离线数据，需要联网一次才能批改，请连上网络后重试';
+  }
+});
+
+onTap(clearBtn, function(){
+  clearCanvas();
+});
+
+onTap(continueBtn, function(){
+  loadNextDoor();
+});
+
+onTap(restartBtn, function(){
+  // Another round on the same afternoon is NOT another day — the review intervals are keyed
+  // to the calendar now, so this only resets the counters for this sitting.
+  passedCount = 0;
+  pendingRetests = [];
+  priorityConsumedToday = new Set();
+  selectionSession = window.HanziPracticeSelector.createSession();
+  applyScene(state.scenesUnlocked);
+  finale.classList.remove('show');
+  playzone.classList.remove('hide');
+  loadNextDoor();
+});
+
+// ---------- settings panel ----------
+onTap(settingsBtn, () => { stopPromptSpeech(); renderQueueList(); renderMasteredList(); renderStuckList(); renderInkList(); inkMsg.textContent = ''; panelOverlay.classList.add('show'); });
+onTap(closePanelBtn, () => {
+  panelOverlay.classList.remove('show');
+  if(!parentQueueChanged) return;
+  parentQueueChanged = false;
+  if(finale.classList.contains('show')){
+    finale.classList.remove('show');
+    playzone.classList.remove('hide');
+    loadNextDoor();
+  } else if(currentMode === 'free' && !strokesPoints.length && !isDrawing && nextParentPriority()){
+    // Replace only an untouched free question. It already counted as a filler,
+    // so this must not increment the delayed-retest gap a second time.
+    presentDoor(pickNextChar(), 'free', 1);
+  }
+});
+
+// ---------- pinyin ----------
+// pinyin-data.js maps every GB2312 character to its Mandarin reading(s), from the Unicode
+// Unihan database. Most characters have exactly one reading and need no attention at all.
+// 多音字 come back with more than one, and no amount of cleverness picks the right one from
+// a character alone — 薄 is bó in 单薄 but báo in 薄饼 — so those are surfaced in red for the
+// parent to tap through. That's the honest split: automate the 99%, ask about the rest.
+function pinyinAlts(char){
+  const raw = (window.PINYIN_MAP || {})[char];
+  return raw ? raw.split(' ') : [];
+}
+
+function escapeText(value){
+  return String(value || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function renderQueueList(){
+  queueList.innerHTML = state.priorityQueue.map((p, i) => ({p,i}))
+    .filter(({p}) => !p.addedDay || p.addedDay === todayStr()).map(({p, i}) => {
+    const alts = p.alts && p.alts.length > 1;
+    const py = alts
+      ? `<span class="py-alt" data-i="${i}" title="多音字，点一下换读音">${escapeText(p.pinyin)}</span>`
+      : escapeText(p.pinyin);
+    const bankItem = state.bank.find(b => b.char === p.char);
+    const status = p.completedDay === todayStr() ? '今天已完成' : isStuck(bankItem || {}) ? '先点下方“我讲过了”再复习' : '今天优先复习';
+    const sentence = sentenceFor(p);
+    return `
+    <div class="queue-item">
+      <span>${escapeText(p.char)}（${py}）${p.word ? ' · '+escapeText(p.word) : ''}<small>${status}${sentence ? ' · 已配句子' : ' · 可补句子'}</small></span>
+      <span class="queue-actions"><button class="edit-sentence" data-i="${i}">${sentence ? '改句子' : '补句子'}</button><button class="del" data-i="${i}">删除</button></span>
+    </div>`;
+  }).join('') || '<div style="font-size:12px;color:#8a8272;">暂无今日优先字</div>';
+
+  queueList.querySelectorAll('.del').forEach(el => {
+    onTap(el, () => {
+      state.priorityQueue.splice(Number(el.dataset.i), 1);
+      saveState();
+      renderQueueList();
+    });
+  });
+  queueList.querySelectorAll('.py-alt').forEach(el => {
+    onTap(el, () => {
+      const it = state.priorityQueue[Number(el.dataset.i)];
+      const k = it.alts.indexOf(it.pinyin);
+      it.pinyin = it.alts[(k + 1) % it.alts.length];
+      const bankItem = state.bank.find(b => b.char === it.char);
+      if(bankItem) bankItem.pinyin = it.pinyin;
+      saveState();
+      renderQueueList();
+    });
+  });
+  queueList.querySelectorAll('.edit-sentence').forEach(el => {
+    onTap(el, () => {
+      const it = state.priorityQueue[Number(el.dataset.i)];
+      const sentence = prompt('写一句能说明词语意思的短句，孩子点“句子提示”时会听到：', sentenceFor(it) || '');
+      if(sentence === null) return;
+      it.sentence = sentence.trim().slice(0,100);
+      const bankItem = state.bank.find(b => b.char === it.char);
+      if(bankItem) bankItem.sentence = it.sentence;
+      saveState();
+      renderQueueList();
+    });
+  });
+}
+
+// The characters that hit today's three-wrong limit. "我讲过了" is the parent saying they've
+// sat down and explained it, which clears the count and puts it straight back in today's
+// rotation — the child gets another go at it the same evening, not tomorrow.
+function renderStuckList(){
+  const stuck = state.bank.filter(b => !b.retired && isStuck(b));
+  stuckList.innerHTML = stuck.map(b => `
+    <div class="stuck-item">
+      <span><span class="ch">${b.char}</span><span class="word">${b.word || ''}</span></span>
+      <button class="btn-taught" data-ch="${b.char}">我讲过了，放回去</button>
+    </div>`).join('') ||
+    '<div style="font-size:12px;color:#8a8272;">今天没有卡住的字</div>';
+
+  stuckList.querySelectorAll('.btn-taught').forEach(el => {
+    onTap(el, () => {
+      const it = state.bank.find(b => b.char === el.dataset.ch);
+      if(!it) return;
+      it.stuck = false;
+      it.wrongToday = 0;      // a fresh three tries, now that it's been explained
+      saveState();
+      renderStuckList();
+      // If the day had already ended for lack of anything to practise, reopen it.
+      if(finale.classList.contains('show')){
+        finale.classList.remove('show');
+        playzone.classList.remove('hide');
+        loadNextDoor();
+      }
+    });
+  });
+}
+
+// Shows what's retired and, just as usefully, what's part-way there — "写对过 2 天" tells the
+// parent a character is one good morning away from being done, which a bare list can't.
+function renderMasteredList(){
+  const done = state.bank.filter(isMastered);
+  const partial = state.bank.filter(b => !isMastered(b) && (b.passedDays || []).length > 0);
+  const chips = done.map(b => `<span class="mastered-chip">${b.char}<small>${b.passedDays.length}天</small></span>`)
+    .concat(partial.map(b => `<span class="progress-chip">${b.char}<small>${b.passedDays.length}/${MASTERED_DAYS}</small></span>`));
+  masteredList.innerHTML = chips.join('') ||
+    '<div style="font-size:12px;color:#8a8272;">还没有字通过 3 天考验</div>';
+}
+
+// 判得不对的，家长点一下标红——这就是我拿到的"标准答案"，光有笔迹不知道他到底写对没写对。
+function renderInkList(){
+  inkList.innerHTML = inkLog.map((it, i) => `
+    <div class="ink-item ${it.disputed ? 'marked' : ''}">
+      <span><span class="ch">${it.c}</span><span class="meta">${it.d} · 系统判<span class="${it.v === 'pass' ? 'v-pass' : 'v-fail'}">${it.v === 'pass' ? '对' : '错'}</span> · ${it.s.length}笔</span></span>
+      <button class="ink-mark" data-i="${i}">${it.disputed ? '✓ 已标记' : '判得不对'}</button>
+    </div>`).join('') ||
+    '<div style="font-size:12px;color:#8a8272;">还没有笔迹记录，让孩子写几个字就有了</div>';
+
+  const marked = inkLog.filter(x => x.disputed).length;
+  inkCount.textContent = inkLog.length
+    ? `　共 ${inkLog.length} 条，已标记 ${marked} 条（最多存 ${MAX_INK} 条，标记过的不会被挤掉）`
+    : '';
+
+  inkList.querySelectorAll('.ink-mark').forEach(el => {
+    onTap(el, () => {
+      const it = inkLog[Number(el.dataset.i)];
+      it.disputed = !it.disputed;
+      saveInkLog();
+      renderInkList();
+    });
+  });
+}
+
+function inkPayloadText(only){
+  const picked = only ? inkLog.filter(x => x.disputed) : inkLog;
+  // disputed travels with the ink. Copying only ever sends marked ones so it's implied there,
+  // but the download sends everything — and without the flag the one thing only a person can
+  // supply, whether the child actually wrote it right, is exactly what gets lost in transit.
+  return JSON.stringify({ cases: picked.map(x =>
+    ({ c: x.c, verdict: x.v, day: x.d, disputed: !!x.disputed, s: x.s,
+       graderVersion: x.graderVersion || null, timestamp: x.timestamp || null,
+       filtering: x.filtering || null })) });
+}
+
+// ---------- batch paste ----------
+// Accepts the way a parent actually says it out loud — "奇迹的迹；求救的救" — because that
+// phrasing is already unambiguous: the word, then 的, then the one character being tested.
+// Also accepts "奇迹 迹", a bare "迹", and an explicit pinyin override tacked on the end.
+const PY_LETTERS = "a-zA-Zāáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜüńňǹ";
+
+function parseBatch(text){
+  const items = [], bad = [];
+  text.split(/[\n\r；;，,、]+/).forEach(raw => {
+    let s = raw.trim().replace(/^[的·\-—]+|[。．.]+$/g, '').trim();
+    if(!s) return;
+
+    // optional explicit pinyin at the end, e.g. "单薄的薄 bó"
+    let forced = '';
+    const m = s.match(new RegExp('^(.*?)[\\s:：]+([' + PY_LETTERS + ']+\\d?)$'));
+    if(m){ s = m[1].trim(); forced = m[2]; }
+
+    let word = '', char = '';
+    let mm;
+    if((mm = s.match(/^(.+)的(.)$/))){            // 奇迹的迹  (greedy: 我的书的书 → 我的书 / 书)
+      word = mm[1]; char = mm[2];
+    } else if((mm = s.match(/^(\S+)[\s]+(\S)$/))){ // 奇迹 迹
+      word = mm[1]; char = mm[2];
+    } else if(/^[一-鿿]$/.test(s)){        // 迹
+      char = s;
+    } else {
+      bad.push(raw.trim()); return;
+    }
+
+    if(!/^[一-鿿]$/.test(char)){ bad.push(raw.trim()); return; }
+    const alts = pinyinAlts(char);
+    const pinyin = forced || alts[0] || '';
+    if(!pinyin){ bad.push(raw.trim() + '（查不到拼音）'); return; }
+    items.push({ char, pinyin, word, alts: forced ? [forced] : alts });
+  });
+  return { items, bad };
+}
+
+onTap(addCharBtn, () => {
+  const c = charInput.value.trim();
+  const w = wordInput.value.trim();
+  if(!c) return;
+  if(!/^[一-鿿]$/.test(c)){ batchMsg.textContent = '每次请填一个汉字；多个字请用上面的批量加入。'; return; }
+  const alts = pinyinAlts(c);
+  const p = pinyinInput.value.trim() || alts[0] || '';
+  if(!p) return;                         // no reading typed and none on file — nothing to show the child
+  enqueueParentItems([{ char:c, pinyin:p, word:w,
+    ...(sentenceInput.value.trim() ? {sentence:sentenceInput.value.trim()} : {}),
+    alts: pinyinInput.value.trim() ? [p] : alts }]);
+  charInput.value = ''; pinyinInput.value=''; wordInput.value=''; sentenceInput.value='';
+  batchMsg.textContent = '已放到今天最前面；原来的学习记录已保留。';
+  renderQueueList();
+});
+
+onTap(inkCopyBtn, async () => {
+  const marked = inkLog.filter(x => x.disputed);
+  if(!marked.length){ inkMsg.textContent = '先点一下判得不对的那几条'; return; }
+  const text = inkPayloadText(true);
+  inkOut.value = text;
+  // iPad 上 Safari 的剪贴板 API 偶尔会拒绝，所以内容同时显示在下面的框里，
+  // 复制失败时家长长按全选也能拿走，不至于白点一场。
+  try{
+    await navigator.clipboard.writeText(text);
+    inkMsg.textContent = `已复制 ${marked.length} 条，粘贴给我就行`;
+  }catch(e){
+    inkOut.focus(); inkOut.select();
+    inkMsg.textContent = `${marked.length} 条已放在下面的框里，长按全选拷贝`;
+  }
+});
+
+onTap(inkDownloadBtn, () => {
+  if(!inkLog.length){ inkMsg.textContent = '还没有笔迹'; return; }
+  const blob = new Blob([inkPayloadText(false)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `笔迹_${todayStr()}.json`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  inkMsg.textContent = `已下载 ${inkLog.length} 条`;
+});
+
+onTap(inkClearBtn, () => {
+  inkLog = []; saveInkLog(); renderInkList();
+  inkOut.value = ''; inkMsg.textContent = '已清空';
+});
+
+onTap(batchAddBtn, () => {
+  const { items, bad } = parseBatch(batchInput.value);
+  const added = enqueueParentItems(items);
+  const polyphonic = items.filter(it => it.alts.length > 1).length;
+  let msg = added ? `${added} 个字已排到今天最前面，重复字保留原记录` : '没认出任何字';
+  if(polyphonic) msg += `，其中 ${polyphonic} 个多音字（标红的），点一下确认读音`;
+  if(bad.length) msg += `；没认出：${bad.join('、')}`;
+  batchMsg.textContent = msg;
+  if(items.length) batchInput.value = '';
+  saveState();
+  renderQueueList();
+});
+
+dailyCountInput.addEventListener('change', () => {
+  const v = parseInt(dailyCountInput.value, 10);
+  if(v > 0){ state.dailyCount = v; saveState(); }
+});
+
+onTap(saveProgressBtn, () => {
+  const dataStr = JSON.stringify(state, null, 2);
+  const blob = new Blob([dataStr], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const dateStr = new Date().toISOString().slice(0,10);
+  a.href = url;
+  a.download = `汉字魔法门_存档_${dateStr}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+});
+
+onTap(loadProgressBtn, () => fileInput.click());
+fileInput.addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    try{
+      const loaded = JSON.parse(ev.target.result);
+      if(loaded && loaded.bank){
+        state = migrateState(loaded) || state;
+        saveState();
+        renderQueueList();
+        renderMasteredList();
+        renderStuckList();
+        dailyCountInput.value = state.dailyCount || 5;
+        passedCount = 0;
+        pendingRetests = [];
+        priorityConsumedToday = new Set();
+        selectionSession = window.HanziPracticeSelector.createSession();
+        applyScene(state.scenesUnlocked);
+        finale.classList.remove('show');
+        playzone.classList.remove('hide');
+        loadNextDoor();
+        alert('存档读取成功！');
+      } else {
+        alert('这个文件看起来不是有效的存档。');
+      }
+    }catch(err){
+      alert('读取失败，文件可能损坏。');
+    }
+  };
+  reader.readAsText(file);
+});
+
+// ---------- scenes (cosmetic reward for finishing today's target) ----------
+const SCENES = [
+  { name:'魔法花房',   img:'scene2.jpg', sky:['#3a2a12','#6b4a1f','#b9862f'], wood:['#5b3a24','#3a2416'] },
+  { name:'观星塔',     img:'scene3.jpg', sky:['#12213b','#1e3a5f','#3f7a8c'], wood:['#2b2440','#171224'] },
+  { name:'月光花园',   img:'scene4.jpg', sky:['#131c3d','#232f5c','#3a4a8c'], wood:['#3e4a52','#232b31'] },
+  { name:'萌宠草坪',   img:'scene5.jpg', sky:['#3a2a12','#6b4a1f','#8a5a1f'], wood:['#7a5a2e','#4a361a'] },
+  { name:'魔法图书馆', img:'scene6.jpg', sky:['#3a1f10','#5c3018','#8a5228'], wood:['#4a2a1a','#2c180e'] },
+  { name:'彩虹草原',   img:'scene1.jpg', sky:['#2a1a4a','#4b2a6b','#7b3f8f'], wood:['#5b3a24','#3a2416'], fit:'top' },
+];
+
+function applyScene(index){
+  const scene = SCENES[index % SCENES.length];
+  const root = document.documentElement.style;
+  root.setProperty('--sky-1', scene.sky[0]);
+  root.setProperty('--sky-2', scene.sky[1]);
+  root.setProperty('--sky-3', scene.sky[2]);
+  root.setProperty('--door-wood', scene.wood[0]);
+  root.setProperty('--door-wood-dark', scene.wood[1]);
+  sceneImg.src = scene.img;
+  sceneImg.style.objectPosition = scene.fit === 'top' ? '50% 8%' : '50% 35%';
+}
+
+function showFinale(bankEmpty){
+  playzone.classList.add('hide');
+  finale.classList.add('show');
+  if(bankEmpty){
+    // Two very different reasons the pool can run dry, and they need opposite responses from
+    // the parent: everything mastered means add more characters, everything parked means go
+    // and explain the ones waiting.
+    const stuck = state.bank.filter(b => !b.retired && isStuck(b));
+    finaleDetail.textContent = stuck.length
+      ? `今天推开了 ${passedCount} 扇门。剩下的「${stuck.map(b=>b.char).join('、')}」在等爸爸妈妈讲一讲——讲完在 ⚙️ 里点「我讲过了」，今天还能继续闯。`
+      : `字库里的字全部永久掌握啦！点 ⚙️ 加新的字，就能继续闯关。今天推开了 ${passedCount} 扇门。`;
+    return;
+  }
+  const sceneName = SCENES[state.scenesUnlocked % SCENES.length].name;
+  // Exactly the ones that crossed the line *today*: hitting the count today, not merely
+  // having practised today — a parent-requested character that's already mastered can pick
+  // up a 4th day and must not set off the fanfare again.
+  const justMastered = state.bank.filter(b => (b.passedDays || []).length === MASTERED_DAYS &&
+                                              b.passedDays[b.passedDays.length - 1] === todayStr());
+  const masteredNote = justMastered.length
+    ? `\n「${justMastered.map(b => b.char).join('、')}」已经在 ${MASTERED_DAYS} 个不同的日子写对了，永久掌握，不用再练啦！`
+    : '';
+  finaleDetail.textContent = `今天推开了 ${passedCount} 扇门！解锁了新场景：${sceneName}` + masteredNote;
+  state.scenesUnlocked += 1;
+  saveState();
+}
+
+// ---------- init ----------
+// Restore before anything reads state: the scene, the queue list and the first door all
+// depend on what was saved, so loading afterwards would show one round of the wrong thing.
+loadSavedState();
+loadInkLog();
+applyScene(state.scenesUnlocked);
+dailyCountInput.value = state.dailyCount;
+renderQueueList();
+renderMasteredList();
+renderStuckList();
+renderInkList();
+onTap(speakBtn, speakPrompt);
+onTap(sentenceBtn, speakSentence);
+loadNextDoor();
+document.getElementById('startupNotice').hidden = true;
+</script>
+<script src="hanzi-data.js"></script>
+<script src="curriculum-hanzi-data.js?v=2026.11.02.3"></script>
+<script>
+bundledGlyphsLoaded = true;
+finishBundledGlyphs();
+</script>
+</body>
+</html>

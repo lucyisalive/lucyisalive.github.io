@@ -52,10 +52,11 @@ run(section('function todayStr(){', '// ---------- default character bank ------
 run(section('function newBankItem(', '// ---------- freehand drawing surface'));
 run(section('function parentPriorityEntries(){', '// ---------- door state ----------'));
 run(section('function hintFor(item){', '// ---------- main flow ----------'));
+run(section('function feedbackCall(', 'let activeSpeech = null;'));
 run(`let strokesPoints=[];let isDrawing=false;let finaleCalls=0;
   function stopPromptSpeech(){} function setDoorClosed(){} function setDoorOpen(){}
   function showGlowChar(){} function setWritingView(){} function renderQueueList(){}
-  function clearCanvas(){strokesPoints=[];} function getCharData(){}
+  function clearCanvas(){strokesPoints=[];} async function getCharData(){}
   function startTeachingRound(){} function applyScene(){}
   function showFinale(){finaleCalls++;finale.classList.add('show');}`);
 run(section('function loadNextDoor(){', 'function startTeachingRound(){'));
@@ -267,4 +268,27 @@ enqueueChars('龙'); close();
 assert.equal(current().char, '龙'); assert.equal(ui.finale.classList.contains('show'), false);
 assert.equal(run('finaleCalls'), 0);
 
-console.log('parent-priority: enqueue preservation, full queue, dates, repeat/mastery, parking, request races, retests, and settings preemption passed');
+// A missing optional feedback/sentence bundle cannot block parent requests,
+// their saved custom sentences, normal progression, or the settings queue.
+reset();
+delete context.window.HanziGameFeedback;
+delete context.window.HanziSentenceHints;
+enqueue([request('龙', '飞龙', 'lóng', '  飞龙飞过天空。  ')]);
+next(); assert.equal(current().char, '龙');
+assert.equal(run('sentenceFor(currentItem)'), '飞龙飞过天空。');
+answer(true);
+assert.equal(bankItem('龙').history.at(-1).outcome, 'first-try');
+assert.equal(queue()[0].completedDay, TODAY);
+// Run the real queue renderer after the earlier scheduling-only DOM stubs.
+context.queueList = {innerHTML: '', querySelectorAll() { return []; }};
+run(section('function escapeText(value){', 'function renderStuckList(){'));
+run('renderQueueList()');
+assert.ok(context.queueList.innerHTML.includes('已配句子'));
+assert.ok(context.queueList.innerHTML.includes('今天已完成'));
+context.window.HanziSentenceHints = {get() { throw Error('Optional sentence module failed'); }};
+assert.equal(run('sentenceFor(state.priorityQueue[0])'), '飞龙飞过天空。');
+run('renderQueueList()');
+assert.ok(context.queueList.innerHTML.includes('已配句子'));
+assert.equal(run('sentenceFor(null)'), '');
+
+console.log('parent-priority: enqueue preservation, full queue, dates, repeat/mastery, parking, request races, retests, settings preemption, and missing optional modules passed');

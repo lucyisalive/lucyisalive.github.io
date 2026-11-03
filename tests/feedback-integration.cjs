@@ -19,7 +19,7 @@ function element() {
     addEventListener(type, handler) { this.listeners[type] = handler; }};
 }
 function environment() {
-  const calls = {correct: 0, wrong: 0, celebrate: [], reset: 0, unlock: 0, speechCancel: 0, save: 0, teaching: 0, open: 0, close: 0, clear: 0, progress: 0, writing: [], events: []};
+  const calls = {correct: 0, wrong: 0, celebrate: [], reset: 0, unlock: 0, speechCancel: 0, save: 0, teaching: 0, open: 0, close: 0, clear: 0, progress: 0, writing: [], events: [], spoken: []};
   const ui = Object.fromEntries(['resultBanner', 'continueBtn', 'timerRing', 'pinyinTag', 'statusLine', 'submitBtn', 'clearBtn', 'speakBtn', 'sentenceBtn'].map(name => [name, element()]));
   let now = 1000;
   class TestDate extends Date { static now() { return now; } }
@@ -38,6 +38,7 @@ function environment() {
     showGlowChar() {}, clearCanvas: () => { calls.clear++; },
     setWritingView: visible => calls.writing.push(visible), renderProgressPath: () => { calls.progress++; },
     startTeachingRound: () => { calls.teaching++; }, getCharData: () => Promise.resolve({}),
+    speakText: text => { calls.spoken.push(text); },
   });
   vm.runInContext(`let state={priorityQueue:[],bank:[]},currentItem=null,currentMode='free',currentRound=1,currentParentRequestId=null;
     let passedCount=0,stepIndex=0,stepAttempts=0,pendingRetests=[],activeSpeech=null;`, context);
@@ -48,7 +49,9 @@ function environment() {
   }
   vm.runInContext(source('function wrongCountToday(', '// ---------- 笔迹记录'), context);
   vm.runInContext(source('function parentPriorityEntries(){', 'function unfinishedParentEntries(){'), context);
+  vm.runInContext(source('function feedbackCall(', 'let activeSpeech = null;'), context);
   vm.runInContext(source('function stopPromptSpeech(){', 'function speakText('), context);
+  vm.runInContext(source('function speakSentence(){', '// The demo character'), context);
   vm.runInContext(source('function hintFor(item){', '// ---------- main flow ----------'), context);
   vm.runInContext(source('function presentDoor(', 'function startTeachingRound(){'), context);
   vm.runInContext(source('function onTap(el, handler){', 'onTap(submitBtn,'), context);
@@ -162,4 +165,66 @@ for (const mode of ['free', 'teaching', 'retest']) {
   assert.equal(e.calls.unlock, 2);
 }
 
-console.log('Feedback integration passed: free/teaching/blind/retest rewards, three-error parking, speech/reset cleanup, and pointer unlock dedupe.');
+// The entire optional resource can be missing, not merely its browser audio API.
+// Drawing/initialization, a physical button tap, grading, and saving must survive.
+function optionalModuleScenario(feedback) {
+  const e = environment(), item = e.prepare('free');
+  if(feedback === undefined) delete e.context.window.HanziGameFeedback;
+  else e.context.window.HanziGameFeedback = feedback;
+  delete e.context.window.HanziSentenceHints;
+  item.sentence = '  慧是智慧的慧。  ';
+  e.run("presentDoor(item,'free',1)");
+  assert.equal(e.run('currentItem'), item);
+  assert.equal(e.run('sentenceFor(item)'), '慧是智慧的慧。');
+  e.run('speakSentence()');
+  assert.deepEqual(e.calls.spoken, ['慧是智慧的慧。']);
+  const button = element();
+  e.context.optionalButton = button;
+  e.run('onTap(optionalButton,()=>handleAttemptResult(true))');
+  button.listeners.pointerup({type: 'pointerup'});
+  assert.equal(item.history.length, 1);
+  assert.equal(item.history[0].outcome, 'first-try');
+  assert.equal(e.run('passedCount'), 1);
+  assert.equal(e.ui.submitBtn.style.display, 'none');
+  assert.ok(e.ui.continueBtn.classList.contains('show'));
+  return e;
+}
+optionalModuleScenario(undefined);
+optionalModuleScenario({});
+optionalModuleScenario(new Proxy({}, {get() { throw Error('Optional module getter failed'); }}));
+
+// A speech service can fail while being cancelled. It must not block switching
+// questions or reaching the grading result, and stale speaking classes are removed.
+{
+  const e = environment(), item = e.prepare('free');
+  e.context.window.speechSynthesis.cancel = () => { throw Error('Speech service failed'); };
+  e.ui.speakBtn.classList.add('speaking');
+  e.ui.sentenceBtn.classList.add('speaking');
+  e.run("presentDoor(item,'free',1);handleAttemptResult(true)");
+  assert.equal(e.calls.reset, 1);
+  assert.equal(e.calls.correct, 1);
+  assert.equal(item.history.length, 1);
+  assert.equal(e.ui.speakBtn.classList.contains('speaking'), false);
+  assert.equal(e.ui.sentenceBtn.classList.contains('speaking'), false);
+}
+
+// Rejected or permanently pending unlock/feedback promises are detached effects;
+// no awaited audio promise is allowed to hold the actual button action hostage.
+(async () => {
+  const unhandled = [];
+  const recordUnhandled = error => unhandled.push(error);
+  process.on('unhandledRejection', recordUnhandled);
+  try {
+    const rejecting = () => Promise.reject(Error('Audio blocked'));
+    const pending = () => new Promise(() => {});
+    for(const effect of [rejecting, pending]) {
+      const e = optionalModuleScenario({unlock: effect, reset: effect, playCorrect: effect, celebrate: effect});
+      const item = e.run('currentItem');
+      e.context.window.HanziSentenceHints = {get: rejecting};
+      assert.equal(e.run('sentenceFor(currentItem)'), item.sentence.trim());
+    }
+    await new Promise(resolve => setImmediate(resolve));
+    assert.equal(unhandled.length, 0, 'Optional effects must consume rejected promises');
+  } finally { process.removeListener('unhandledRejection', recordUnhandled); }
+  console.log('Feedback integration passed: rewards, three-error parking, speech/reset cleanup, pointer unlock, and missing/failing/pending optional modules.');
+})().catch(error => { console.error(error); process.exitCode = 1; });

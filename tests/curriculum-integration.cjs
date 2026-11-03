@@ -89,11 +89,20 @@ for (const item of curriculum.entries) {
   }
   assert.equal(bankItem.curriculumId, curriculum.id);
 }
-const loaderOrder = ['hanzi-data.js', 'curriculum-hanzi-data.js', 'curriculum-data.js', 'practice-selector.js'];
-assert.ok(loaderOrder.every(file => html.indexOf('src="' + file) >= 0), 'All dependency scripts must be loaded');
+const loaderOrder = ['curriculum-data.js', 'practice-selector.js', 'sentence-hints.js', 'game-feedback.js', 'pinyin-data.js'];
+const loaderPosition = file => {
+  const escaped = file.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const pattern = new RegExp('<script\\b[^>]*\\b(?:src|data-source)=["\\\']' + escaped + '(?:\\?[^"\\\']*)?["\\\'][^>]*>', 'i');
+  return html.search(pattern);
+};
+assert.ok(loaderOrder.every(file => loaderPosition(file) >= 0), 'All dependency scripts must be loaded or embedded');
 for (let i = 1; i < loaderOrder.length; i++) {
-  assert.ok(html.indexOf('src="' + loaderOrder[i - 1]) < html.indexOf('src="' + loaderOrder[i]), 'Dependency load order');
+  assert.ok(loaderPosition(loaderOrder[i - 1]) < loaderPosition(loaderOrder[i]), 'Dependency load order');
 }
+const mainPosition = html.indexOf('function todayStr(){');
+assert.ok(loaderOrder.every(file => loaderPosition(file) < mainPosition), 'Small dependencies must precede the main program');
+assert.ok(mainPosition < loaderPosition('hanzi-data.js'), 'Buttons must initialize before the large glyph data');
+assert.ok(loaderPosition('hanzi-data.js') < loaderPosition('curriculum-hanzi-data.js'), 'Base glyphs precede additions');
 
 // All valid old learning fields, arbitrary parent metadata, and runtime settings
 // survive the bank change. Fresh textbook metadata replaces obsolete categories.

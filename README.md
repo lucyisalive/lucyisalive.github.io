@@ -3,7 +3,15 @@
 孩子在 iPad 上看拼音、用笔默写，游戏整体检查后决定是否开门。线上地址：
 https://lucyisalive.github.io/
 
-当前版本：**2026.11.02.4**。设置面板底部可查看版本。`index.html` 与 `汉字魔法门_4.html` 必须完全一致。
+当前版本：**2026.11.03.1**。设置面板底部可查看版本。`index.html` 与 `汉字魔法门_4.html` 必须完全一致。
+
+## 启动与发布
+
+修改页面逻辑请编辑 `game-source.html`；模块仍编辑各自的 JS/CSS 源文件，随后运行 `node tools/build-page.cjs` 生成两个入口。不要直接改生成后的 HTML。`node tools/build-page.cjs --check` 检查发布页与源文件一致。
+
+2026-11-03真机诊断发现：两个字形脚本各等待约100秒，导致界面先出现而按钮迟迟未注册。本版将7个脚本与反馈样式内嵌到一个HTML，移除启动时对在线字体和第三方字库脚本的等待；小模块和按钮先初始化，大字形数据随后就绪。167个原字形完整保留，判分算法不变。字形尚未就绪时，提交最多等6秒，超时保留笔迹、不记写错，按钮恢复可点。页面准备期间有明确提示。
+
+音效或句子模块缺失/异常不会中断按钮或学习流程。只有家长新增的非内置字，才按需下载单字JSON；6秒超时覆盖响应正文，并取消请求。后台预热失败不影响首题。学习存档和笔迹存储键均未改变。
 
 ## 练习反馈、句子与家长优先
 
@@ -61,6 +69,9 @@ node tests/parent-priority.cjs
 node tests/sentence-hints.cjs
 node tests/feedback-module.cjs
 node tests/feedback-integration.cjs
+node tests/character-loading.cjs
+node tests/page-build.cjs
+node tests/offline-startup.cjs
 ```
 
 结构安全检查（`structural-safety.cjs`）将新增错误作为失败，同时明确列出继承漏洞。真实笔迹的已知失败始终保留为失败；不能修改期望答案来让测试变绿。测试使用网页实际判定函数及本项目字形数据，不连接网络，不修改浏览器进度。
