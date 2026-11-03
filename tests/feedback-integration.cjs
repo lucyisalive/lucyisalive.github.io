@@ -35,7 +35,7 @@ function environment() {
     window: {HanziGameFeedback: feedback, speechSynthesis: {cancel() { calls.speechCancel++; calls.events.push('speech-cancel'); }}},
     todayStr: () => '2026-11-02', saveState: () => { calls.save++; },
     setDoorClosed: () => { calls.close++; }, setDoorOpen: () => { calls.open++; },
-    showGlowChar() {}, clearCanvas: () => { calls.clear++; },
+    showGlowChar() {}, showDemoGlyph() {}, cancelTeachingRound() {}, clearCanvas: () => { calls.clear++; },
     setWritingView: visible => calls.writing.push(visible), renderProgressPath: () => { calls.progress++; },
     startTeachingRound: () => { calls.teaching++; }, getCharData: () => Promise.resolve({}),
     speakText: text => { calls.spoken.push(text); },

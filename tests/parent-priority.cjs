@@ -40,6 +40,7 @@ const feedback = { reset() {}, celebrate() {}, playCorrect() {}, playWrong() {} 
 const context = vm.createContext({
   ...ui, window: { HanziGameFeedback: feedback, HanziSentenceHints: { get: item => item.sentence || '' } },
   Date: FixedDate, Math: math,
+  clearInterval() {},
   localStorage: { getItem: key => saved.get(key) || null, setItem: (key, value) => saved.set(key, value) },
   onTap: (el, handler) => handlers.set(el.id, handler),
 });
@@ -55,7 +56,7 @@ run(section('function hintFor(item){', '// ---------- main flow ----------'));
 run(section('function feedbackCall(', 'let activeSpeech = null;'));
 run(`let strokesPoints=[];let isDrawing=false;let finaleCalls=0;
   function stopPromptSpeech(){} function setDoorClosed(){} function setDoorOpen(){}
-  function showGlowChar(){} function setWritingView(){} function renderQueueList(){}
+  function showGlowChar(){} function showDemoGlyph(){} function setWritingView(){} function renderQueueList(){}
   function clearCanvas(){strokesPoints=[];} function getCharData(){return Promise.resolve({});}
   function startTeachingRound(){} function applyScene(){}
   function showFinale(){finaleCalls++;finale.classList.add('show');}`);

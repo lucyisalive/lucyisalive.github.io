@@ -7,7 +7,8 @@ const { createGrader, root } = require('../tools/grader-harness.cjs');
 
 async function main() {
   const files = process.argv.slice(2);
-  if (!files.length) files.push('real-ink-cases.json', 'tests/ipad-2026-11-02.json', 'tests/ipad-2026-11-02-round2.json');
+  if (!files.length) files.push('real-ink-cases.json', 'tests/ipad-2026-11-02.json',
+    'tests/ipad-2026-11-02-round2.json', 'tests/ipad-2026-11-03-round3.json');
   const grader = createGrader();
   let matched = 0, failed = 0, unlabelled = 0;
   for (const file of files) {
@@ -18,7 +19,9 @@ async function main() {
         continue;
       }
       assert.ok(c.expect === 'pass' || c.expect === 'fail', 'Invalid human label: ' + c.id);
-      const result = await grader.grade(c.target, c.s);
+      // New records preserve the exact submitted points. Older s-only records
+      // are lossy evidence: re-sampling and rounding can flip borderline grades.
+      const result = await grader.grade(c.target, c.rawS || c.s);
       const actual = result.pass ? 'pass' : 'fail';
       if (actual === c.expect) {
         matched++;

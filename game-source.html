@@ -2,7 +2,7 @@
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
-<meta name="game-version" content="2026.11.03.2">
+<meta name="game-version" content="2026.11.03.3">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>汉字魔法门</title>
 <link rel="stylesheet" href="game-feedback.css?v=2026.11.02.4">
@@ -558,7 +558,7 @@
     </p>
 
     <button class="btn-close-panel" id="closePanelBtn">关闭</button>
-    <p class="hint-text" id="gameVersion">版本 2026.11.03.2</p>
+    <p class="hint-text" id="gameVersion">版本 2026.11.03.3</p>
   </div>
 </div>
 
@@ -568,6 +568,7 @@
 <script src="game-feedback.js?v=2026.11.02.4"></script>
 <script src="glyph-catalog.js"></script>
 <script src="glyph-loader.js"></script>
+<script src="learning-timing.js"></script>
 <script>
 /* ============================================================
    汉字魔法门 — 默写版
@@ -624,7 +625,7 @@ function defaultBank(){
 // device that has already played keeps its old characters for ever and never sees the new
 // set — the change would reach nobody who actually uses the game.
 const BANK_VERSION = 5;
-const GAME_VERSION = '2026.11.03.2';
+const GAME_VERSION = '2026.11.03.3';
 
 let state = {
   bank: defaultBank(),
@@ -656,29 +657,59 @@ function registerWrong(it){
 // 家长在设置面板里一键复制或下载。之前要拿这些数据得把 iPad 用数据线接上电脑、开 Safari
 // 的网页检查器、在满屏 [diag] 里翻——这道坎把"发现判错"和"能修判错"之间堵了很久。
 const INK_LOG_KEY = 'hanzi-magic-door-ink-v1';
-// 24 条一次练习就装满了——光一个字走完教学环节就能吃掉六条，结果家长练了一晚上、
-// 导出来只剩最后那几个字，前面的连同标记一起被挤没了。一条约 2.5KB，200 条约 500KB，
-// 浏览器给每个站点的额度通常是 5MB 上下，放得下。
+// The compact s field remains readable by old tools. New entries also preserve
+// every original input point in rawS, including marks removed by touch filtering.
+// Bound the full JSON size as well as the count; never thin an exact trace to fit.
 const MAX_INK = 200;
+const MAX_INK_BYTES = 2 * 1024 * 1024;
 let inkLog = [];
+let inkSaveNotice = '';
 
 function loadInkLog(){
-  try{ inkLog = JSON.parse(localStorage.getItem(INK_LOG_KEY)) || []; }catch(e){ inkLog = []; }
+  try{
+    const saved = JSON.parse(localStorage.getItem(INK_LOG_KEY));
+    inkLog = Array.isArray(saved) ? saved : [];
+  }catch(e){ inkLog = []; }
+}
+function trimInkLog(){
+  // Serialize each entry once. Removing an old entry only subtracts its length;
+  // repeated whole-log serialization can pause the iPad on a large backlog.
+  const texts = inkLog.map(entry => JSON.stringify(entry));
+  let units = 2 + texts.reduce((sum, text) => sum + text.length, 0) + Math.max(0, texts.length - 1);
+  while(inkLog.length > MAX_INK || (units + INK_LOG_KEY.length) * 2 > MAX_INK_BYTES){
+    let victim = -1;
+    // Preserve the latest submission and all human-marked evidence. If only
+    // those remain, exceeding the target budget is safer than losing a case.
+    for(let i = inkLog.length - 1; i > 0; i--) if(!inkLog[i].disputed){ victim = i; break; }
+    if(victim < 0) break;
+    units -= texts[victim].length + (inkLog.length > 1 ? 1 : 0);
+    inkLog.splice(victim, 1);
+    texts.splice(victim, 1);
+  }
+  return '[' + texts.join(',') + ']';
 }
 function saveInkLog(){
-  try{ localStorage.setItem(INK_LOG_KEY, JSON.stringify(inkLog)); }catch(e){ /* 存满了就算了 */ }
+  try{
+    localStorage.setItem(INK_LOG_KEY, trimInkLog());
+    inkSaveNotice = '';
+    try{
+      if(typeof inkMsg !== 'undefined' && inkMsg) inkMsg.textContent = inkSaveNotice;
+    }catch(_){}
+    return true;
+  }catch(e){
+    // Private mode or a shared-origin quota must not block grading. The current
+    // memory copy still contains the exact trace and can be downloaded manually.
+    inkSaveNotice = '笔迹暂存未成功，请下载笔迹保存；游戏可以继续。';
+    try{
+      if(typeof inkMsg !== 'undefined' && inkMsg) inkMsg.textContent = inkSaveNotice;
+    }catch(_){}
+    return false;
+  }
 }
 function recordInk(payload, verdict){
   inkLog.unshift({ c: payload.c, s: payload.s, v: verdict ? 'pass' : 'fail', d: todayStr(), disputed: false,
-    graderVersion: GAME_VERSION, timestamp: Date.now(), filtering: payload.filtering });
-  // Marked entries are the whole point of the log — they carry the one judgement only a
-  // person can make — so they are never what gets thrown away to make room. Trim the oldest
-  // UNMARKED entry instead, and only start on marked ones if the log is somehow all marked.
-  while(inkLog.length > MAX_INK){
-    let victim = -1;
-    for(let i = inkLog.length - 1; i >= 0; i--) if(!inkLog[i].disputed){ victim = i; break; }
-    inkLog.splice(victim >= 0 ? victim : inkLog.length - 1, 1);
-  }
+    graderVersion: GAME_VERSION, timestamp: Date.now(), filtering: payload.filtering,
+    formatVersion: payload.formatVersion, rawS: payload.rawS });
   saveInkLog();
 }
 
@@ -783,7 +814,14 @@ let selectionSession = window.HanziPracticeSelector.createSession();
 let parentQueueChanged = false;
 let currentParentRequestId = null;
 let timerHandle = null;
-const TEACHING_STEPS = [5, 3, 1, 0]; // seconds character is shown before each retry; 0 = blind
+let teachingRunId = 0;
+const TEACHING_STEPS = [5, 3, 1, 0]; // fallback durations; the last stage always stays blind
+
+function cancelTeachingRound(){
+  teachingRunId += 1;
+  clearInterval(timerHandle);
+  timerHandle = null;
+}
 
 // ---------- freehand drawing surface (no standard strokes shown, no snapping) ----------
 const svgNS = 'http://www.w3.org/2000/svg';
@@ -1562,11 +1600,34 @@ const HOOK_MIN = 25;
 const DOT_FRAC = 0.07;
 const DOT_LEN  = 1.7;
 
-// Match one component: explain extras (re-traces dropped; pen-lift splits explored),
-// explain shortfalls (consecutive strokes merged into one motion), then require every
-// official stroke to have a categorically-compatible counterpart under globally
-// optimal pairing, with the component's average penmanship above the bar.
-function matchComponent(officialStrokes, userStrokesIn, label, charDiag, diag, strictMerges = false){
+// Only 历's spatial tree opts in. Recover a brief lift within one stroke only
+// when its endpoints, full curve, and original position agree with a reference.
+function referencePenLiftJoins(users,compDiag,official){
+  const candidates=[];
+  for(let i=0;i<users.length;i++)for(let j=i+1;j<users.length;j++){
+    const A=users[i].pts,B=users[j].pts;
+    const combinations=[ [...A,...B], [...B,...A], [...A,...[...B].reverse()], [...[...A].reverse(),...B] ];
+    const seams=[A.length,B.length,A.length,A.length];
+    combinations.forEach((joined,index)=>{
+      const seam=seams[index],gap=ptDist(joined[seam-1],joined[seam]);
+      // A short pause at a corner is allowed. This is not permission to bridge
+      // neighbouring marks: endpoints and the full curve must already agree.
+      if(gap>Math.max(1,compDiag*0.03))return;
+      const ink=resample(joined,32);
+      const valid=official.some(stroke=>{
+        const quality=strokeQuality(joined,stroke,compDiag,false);
+        if(quality.q<0.85)return false;
+        const reference=resample(stroke,32);
+        return Math.min(avgDist(ink,reference),avgDist([...ink].reverse(),reference))/compDiag<=0.06;
+      });
+      if(valid)candidates.push({i,j,gap,make:()=>joined});
+    });
+  }
+  return candidates.sort((a,b)=>a.gap-b.gap);
+}
+// Match a component, accounting for re-tracing, pen lifts, and connected writing.
+// The original matching path stays unchanged when recoverPenLifts is false.
+function matchComponent(officialStrokes, userStrokesIn, label, charDiag, diag, strictMerges = false, recoverPenLifts = false){
   const k = officialStrokes.length;
   const compDiag = Math.max(bboxOf(officialStrokes).diag, 1);
 
@@ -1684,6 +1745,7 @@ function matchComponent(officialStrokes, userStrokesIn, label, charDiag, diag, s
     const preNotes = [...notes];
     if(dropOneRetrace(work, compDiag, preNotes)) return attempt(work, preNotes, depth + 1);
     const cands = joinCandidates(users, compDiag);
+    if(recoverPenLifts)cands.push(...referencePenLiftJoins(users,compDiag,officialStrokes));
     let firstFail = null;
     for(const cand of cands){
       const joined = users.slice();
@@ -1714,6 +1776,10 @@ const regionLeaf = (name, start, end) => ({
 });
 const regionSplit = (axis, a, b) => ({ axis, a, b });
 const RECURSIVE_REGION_TREES = {
+  // These three additions reuse existing geometry; no extra glyph file is needed.
+  '历': {...regionSplit('y',regionLeaf('厂横',0,1),regionSplit('x',regionLeaf('厂撇',1,2),regionLeaf('力',2,4))), recoverPenLifts:true},
+  '收': regionSplit('x',regionLeaf('丩',0,2),regionLeaf('攵',2,6)),
+  '辩': regionSplit('x', regionLeaf('左辛',0,7), regionSplit('x',regionLeaf('讠',7,9),regionLeaf('右辛',9,16))),
   '澡': regionSplit('x', regionLeaf('氵', 0, 3),
     regionSplit('y', regionSplit('y', regionLeaf('上口', 3, 6),
       regionSplit('x', regionLeaf('左口', 6, 9), regionLeaf('右口', 9, 12))),
@@ -1759,7 +1825,7 @@ function recursiveRegionGrade(tree, officialAll, user, charDiag) {
         // Uniform scaling preserves angles. Uneven proportions between regions
         // are allowed; stretching a wrong stroke into another kind is not.
         const aligned = alignClusterUniform(cluster, bboxOf(reference));
-        const result = matchComponent(reference, aligned, node.name, charDiag, diag, true);
+        const result = matchComponent(reference, aligned, node.name, charDiag, diag, true, !!tree.recoverPenLifts);
         if (result.rows.length) {
           const bad = result.rows.filter(row => row.c.veto || row.c.q < Q_FLOOR).length;
           const sum = result.rows.reduce((total, row) => total + row.c.q, 0);
@@ -1844,9 +1910,10 @@ async function gradeDrawing(char){
   // What was actually drawn. Reproducing a disputed grade from real ink beats guessing at
   // how it was written and testing a synthetic stand-in. Logged to the console AND kept in
   // the ink log, so getting it out no longer needs a cable and Web Inspector.
-  const inkPayload = { c: char,
+  const inkPayload = { c: char, formatVersion: 2,
+    rawS: strokesPoints.map(s => s.map(p => [p.x, p.y])),
     s: rawUser.map(s => resample(s, 16).map(p => [Math.round(p.x), Math.round(p.y)])), filtering };
-  console.log('[strokes] ' + JSON.stringify(inkPayload));
+  console.log('[strokes] ' + JSON.stringify({ c: char, s: inkPayload.s, filtering }));
   if(rawUser.length === 0){
     recordInk(inkPayload, false);
     return false;
@@ -1860,8 +1927,11 @@ async function gradeDrawing(char){
   if(RECURSIVE_REGION_TREES[char]){
     const candidate=recursiveRegionGrade(RECURSIVE_REGION_TREES[char],officialAll,user,charDiag);
     console.log('[diag-grade] char='+char+' pass='+candidate.pass+' recursive\n'+candidate.diag.join('\n'));
-    recordInk(inkPayload,candidate.pass);
-    return candidate.pass;
+    // 辩 uses this tree as an extra valid explanation (OR the legacy result).
+    // 收 requires both explanations (AND); this cannot add a new false positive.
+    // 历 keeps the structural result, with narrowly verified pen lifts above.
+    const useLegacy=(char==='辩'&&!candidate.pass)||(char==='收'&&candidate.pass);
+    if(!useLegacy){recordInk(inkPayload,candidate.pass);return candidate.pass;}
   }
   // Structure layer: split official strokes into components.
   let comps = null;
@@ -2193,14 +2263,17 @@ function glyphSvg(strokes){
 // Async because the stroke data may still be loading; the guard makes a slow fetch that
 // resolves after the child has already moved on a no-op instead of a flash of the answer.
 async function renderGlyph(el, char){
+  const requestId = String((Number(el.dataset.glyphRequest) || 0) + 1);
+  el.dataset.glyphRequest = requestId;
   el.dataset.want = char;
   if(!char){ el.innerHTML = ''; return; }
   try{
     const data = await getCharData(char);
-    if(el.dataset.want !== char) return;
+    if(el.dataset.want !== char || el.dataset.glyphRequest !== requestId) return;
     el.innerHTML = glyphSvg(data.strokes);
+    return data;
   }catch(e){
-    if(el.dataset.want !== char) return;
+    if(el.dataset.want !== char || el.dataset.glyphRequest !== requestId) return;
     el.innerHTML = `<div style="font-size:120px;line-height:1;">${char}</div>`;
   }
 }
@@ -2210,7 +2283,8 @@ async function renderGlyph(el, char){
 function setGlyph(el, char, visible){
   if(visible){
     el.classList.remove('hidden');
-    renderGlyph(el, char);
+    el.innerHTML = '';
+    return renderGlyph(el, char);
   } else {
     el.classList.add('hidden');
     el.dataset.want = '';
@@ -2304,7 +2378,7 @@ function speakSentence(){
 
 // The demo character overlays the 米字格 at exactly the size and position of the square the
 // child will write in, then fades out when the countdown ends.
-function showDemoGlyph(char, visible){ setGlyph(demoGlyph, char, visible); }
+function showDemoGlyph(char, visible){ return setGlyph(demoGlyph, char, visible); }
 
 // Swap the door out for the writing column. They're siblings in normal flow, so only one is
 // ever on screen and neither can overlap the other; the progress dots and ⚙️ sit outside
@@ -2312,7 +2386,10 @@ function showDemoGlyph(char, visible){ setGlyph(demoGlyph, char, visible); }
 function setWritingView(on){
   playzone.classList.toggle('writing', on);
   writeSlot.style.display = on ? 'flex' : 'none';
-  if(!on) showDemoGlyph('', false);
+  if(!on){
+    cancelTeachingRound();
+    showDemoGlyph('', false);
+  }
 }
 
 // The parent types a whole word plus which character is being tested; the hint shows that
@@ -2358,6 +2435,8 @@ function loadNextDoor(){
 }
 
 function presentDoor(item, mode, round, parentRequestId = null){
+  cancelTeachingRound();
+  showDemoGlyph('', false);
   stopPromptSpeech();
   feedbackCall('reset');
   currentItem = item;
@@ -2546,7 +2625,11 @@ function handleRoundFailure(item){
 
 function startTeachingRound(){
   const item = currentItem;
-  clearTimeout(timerHandle);
+  cancelTeachingRound();
+  const runId = teachingRunId;
+  const stage = stepIndex;
+  const stillCurrent = () => teachingRunId === runId && currentItem === item
+    && currentMode === 'teaching' && stepIndex === stage;
   clearCanvas();
   // Stay in the writing view the whole time: the demo character appears *inside* the very
   // square the child is about to write in, then fades. Only the buttons are held back so
@@ -2556,24 +2639,40 @@ function startTeachingRound(){
   submitBtn.style.display = 'none';
   clearBtn.style.display = 'none';
 
-  const step = TEACHING_STEPS[stepIndex];
-  if(step > 0){
-    showDemoGlyph(item.char, true);
-    timerRing.style.display = 'flex';
-    let remaining = step;
-    timerRing.textContent = remaining;
-    statusLine.textContent = '看好这个字，等一下要凭记忆写出来';
-    timerHandle = setInterval(() => {
-      remaining -= 1;
-      if(remaining <= 0){
-        clearInterval(timerHandle);
-        showDemoGlyph('', false);
-        timerRing.style.display = 'none';
-        beginWritingPhase(item);
-      } else {
-        timerRing.textContent = remaining;
-      }
-    }, 1000);
+  timerRing.style.display = 'none';
+  if(TEACHING_STEPS[stage] > 0){
+    statusLine.textContent = '字形显示后开始计时';
+    return Promise.resolve(showDemoGlyph(item.char, true)).then(async data => {
+      if(!stillCurrent()) return;
+      // Use the same glyph's real stroke count, or saved textbook metadata if
+      // drawing its printed fallback. No extra data request is needed for timing.
+      const count = data && data.medians ? data.medians.length : item.strokeCount;
+      const timing = window.HanziLearningTiming;
+      const steps = timing ? timing.steps(count) : TEACHING_STEPS;
+      // Give Safari a paint opportunity before spending any of the viewing time.
+      await new Promise(resolve => {
+        if(typeof window.requestAnimationFrame === 'function'){
+          window.requestAnimationFrame(() => window.requestAnimationFrame(resolve));
+        } else setTimeout(resolve, 0);
+      });
+      if(!stillCurrent()) return;
+      let remaining = steps[stage];
+      timerRing.textContent = remaining;
+      timerRing.style.display = 'flex';
+      statusLine.textContent = '看好这个字，等一下要凭记忆写出来';
+      timerHandle = setInterval(() => {
+        if(!stillCurrent()) return;
+        remaining -= 1;
+        if(remaining <= 0){
+          cancelTeachingRound();
+          showDemoGlyph('', false);
+          timerRing.style.display = 'none';
+          beginWritingPhase(item);
+        } else {
+          timerRing.textContent = remaining;
+        }
+      }, 1000);
+    });
   } else {
     showDemoGlyph('', false);
     statusLine.textContent = '不看字，凭记忆写出来';
@@ -2678,7 +2777,7 @@ onTap(restartBtn, function(){
 });
 
 // ---------- settings panel ----------
-onTap(settingsBtn, () => { stopPromptSpeech(); renderQueueList(); renderMasteredList(); renderStuckList(); renderInkList(); inkMsg.textContent = ''; panelOverlay.classList.add('show'); });
+onTap(settingsBtn, () => { stopPromptSpeech(); renderQueueList(); renderMasteredList(); renderStuckList(); renderInkList(); inkMsg.textContent = inkSaveNotice; panelOverlay.classList.add('show'); });
 onTap(closePanelBtn, () => {
   panelOverlay.classList.remove('show');
   if(!parentQueueChanged) return;
@@ -2830,12 +2929,13 @@ function renderInkList(){
 
   const marked = inkLog.filter(x => x.disputed).length;
   inkCount.textContent = inkLog.length
-    ? `　共 ${inkLog.length} 条，已标记 ${marked} 条（最多存 ${MAX_INK} 条，标记过的不会被挤掉）`
+    ? `　共 ${inkLog.length} 条，已标记 ${marked} 条（通常保留最近 ${MAX_INK} 条，已标记的优先保留）`
     : '';
 
   inkList.querySelectorAll('.ink-mark').forEach(el => {
+    const it = inkLog[Number(el.dataset.i)];
     onTap(el, () => {
-      const it = inkLog[Number(el.dataset.i)];
+      if(!it || !inkLog.includes(it)) return;
       it.disputed = !it.disputed;
       saveInkLog();
       renderInkList();
@@ -2851,7 +2951,8 @@ function inkPayloadText(only){
   return JSON.stringify({ cases: picked.map(x =>
     ({ c: x.c, verdict: x.v, day: x.d, disputed: !!x.disputed, s: x.s,
        graderVersion: x.graderVersion || null, timestamp: x.timestamp || null,
-       filtering: x.filtering || null })) });
+       filtering: x.filtering || null,
+       formatVersion: x.formatVersion || 1, rawS: x.rawS })) });
 }
 
 // ---------- batch paste ----------
@@ -3031,6 +3132,8 @@ function applyScene(index){
 }
 
 function showFinale(bankEmpty){
+  cancelTeachingRound();
+  showDemoGlyph('', false);
   playzone.classList.add('hide');
   finale.classList.add('show');
   if(bankEmpty){

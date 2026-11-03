@@ -23,10 +23,10 @@ const compile = (html = source, files = assets) => inlinePage(html, file => {
 });
 const compiled = compile();
 assert.equal(compile().html, compiled.html, 'Build output must be deterministic');
-assert.equal(compiled.scripts.length, 6);
+assert.equal(compiled.scripts.length, SCRIPT_FILES.length);
 assert.equal(compiled.styles.length, 1);
 assert.ok(compiled.html.includes('game-source.html'), 'Generated file must explain where to edit');
-assert.equal([...compiled.html.matchAll(/<script\b[^>]*>[\s\S]*?<\/script\s*>/gi)].length, 7,
+assert.equal([...compiled.html.matchAll(/<script\b[^>]*>[\s\S]*?<\/script\s*>/gi)].length, SCRIPT_FILES.length + 1,
   'Data strings must not create executable tags');
 assert.equal((compiled.html.match(/<style\b/g) || []).length, 1, 'CSS strings must not terminate the style element');
 assert.ok(compiled.html.includes('<script data-source="glyph-catalog.js">'));
@@ -67,7 +67,7 @@ assert.throws(() => compile(source.replace('curriculum-data.js', '../curriculum-
 assert.throws(() => compile(source.replace('curriculum-data.js', 'unknown.js')), /Unexpected/);
 assert.throws(() => compile(source.replace('src="curriculum-data.js"', 'async src="curriculum-data.js"')), /ordered classic/);
 assert.throws(() => compile(source.replace('</body>', '<script src="curriculum-data.js"></script></body>')), /Duplicate/);
-assert.throws(() => compile(source.replace(/<script src="curriculum-data.js"><\/script>/, '')), /six/);
+assert.throws(() => compile(source.replace(/<script src="curriculum-data.js"><\/script>/, '')), /startup scripts exactly once/);
 for (const bulk of ['hanzi-data.js', 'curriculum-hanzi-data.js', 'pinyin-data.js']) {
   assert.throws(() => compile(source.replace('</body>', '<script src="' + bulk + '"></script></body>')), /Unexpected/);
 }
@@ -96,11 +96,11 @@ if (!process.argv.includes('--unit')) {
     assert.equal(fs.readFileSync(path.join(root, file), 'utf8'), built.html, 'Published page must rebuild exactly: ' + file);
   }
   assert.equal(built.summary.glyphs.count, 167);
-  assert.equal(built.summary.startupAssetRequestsRemoved, 7);
+  assert.equal(built.summary.startupAssetRequestsRemoved, SCRIPT_FILES.length + 1);
   assert.equal(built.summary.gzipBytes.singlePage > 0, true);
-  assert.equal(built.summary.scripts.length, 6);
+  assert.equal(built.summary.scripts.length, SCRIPT_FILES.length);
   const sourceScriptOrder = [...fs.readFileSync(path.join(root, 'game-source.html'), 'utf8')
     .matchAll(/<script\b[^>]*\bsrc=["']([^"'?]+)(?:\?[^"']*)?["'][^>]*>/g)].map(match => match[1]);
   assert.deepEqual(built.summary.scripts, sourceScriptOrder);
-  console.log('Page build: reproducible identical HTML, six inline modules, CSS, and 167 exact on-demand glyphs passed.');
+  console.log('Page build: reproducible identical HTML, small inline modules, CSS, and 167 exact on-demand glyphs passed.');
 } else console.log('Page build unit checks: order, closing-tag safety, external resource rejection, and geometry-change detection passed.');

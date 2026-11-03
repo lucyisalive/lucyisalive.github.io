@@ -14,7 +14,7 @@ const SOURCE_FILE = 'game-source.html';
 const OUTPUT_FILES = ['index.html', '汉字魔法门_4.html'];
 const SCRIPT_FILES = [
   'curriculum-data.js', 'practice-selector.js', 'sentence-hints.js',
-  'game-feedback.js', 'glyph-catalog.js', 'glyph-loader.js',
+  'game-feedback.js', 'glyph-catalog.js', 'glyph-loader.js', 'learning-timing.js',
 ];
 const CSS_FILE = 'game-feedback.css';
 const GLYPH_FILES = ['hanzi-data.js', 'curriculum-hanzi-data.js'];
@@ -135,7 +135,7 @@ function inlinePage(source, readAsset) {
   let html = source.replace(RESOURCE_TAG, (tag, raw, body, linkRaw) =>
     raw === undefined ? inlineStylesheet(tag, linkRaw) : inlineScript(tag, raw, body));
   if (scripts.length !== SCRIPT_FILES.length || SCRIPT_FILES.some(file => !scripts.some(entry => entry.file === file))) {
-    throw new Error('Expected all six local startup scripts exactly once');
+    throw new Error('Expected all ' + SCRIPT_FILES.length + ' local startup scripts exactly once');
   }
   if (styles.length !== 1) throw new Error('Expected game-feedback.css exactly once');
   if (!/^\s*<!doctype html>/i.test(html)) throw new Error('Source must begin with the HTML doctype');
