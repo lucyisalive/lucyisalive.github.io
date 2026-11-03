@@ -43,6 +43,7 @@ function buildCases(grader) {
     ['ipad-2026-11-02-round2', 'tests/ipad-2026-11-02-round2.json'],
     ['ipad-2026-11-03-round3', 'tests/ipad-2026-11-03-round3.json'],
     ['ipad-2026-11-03-round4', 'tests/ipad-2026-11-03-round4.json'],
+    ['ipad-2026-11-03-round5', 'tests/ipad-2026-11-03-round5.json'],
   ];
   for (const [suite, file] of humanSuites) {
     addSuite(suite, JSON.parse(fs.readFileSync(path.join(root, file), 'utf8')).cases, true);

@@ -1,0 +1,180 @@
+{
+  "schemaVersion": 1,
+  "description": "Frozen released 2026.11.03.5 verdicts for deliberately incomplete 颜 with total stroke count restored by a duplicated original dot or a displaced corner dot/line. Every explicit expected answer remains fail. Old false acceptances stay visible and cannot excuse a new false acceptance.",
+  "sourceVersion": "2026.11.03.5",
+  "sourceCommit": "17c1d00d43fef79c3b6527a8015cf33c3a735dc8",
+  "sourceHtmlSha256": "7c61c23609cb3a6663594b8e5ccb4afb52ff661036632b055511990ec99d96b8",
+  "sourceCase": "ipad-2026-11-03-r5-02",
+  "sourceInkSha256": "b8f642e74f57d99c09caa57f283438756131ab03742113a381da525e36f0f38a",
+  "generatorSha256": "5e88d9c0f40363a71529a06f9d3610b2fa2fff7865bd711395cf1d2ceb737403",
+  "caseCount": 22,
+  "controlsSha256": "1c5843a94ee9e6f59ce9680356fc5b04d7986598d842a8b9e9cc291641a2933e",
+  "baselineSummary": {
+    "total": 22,
+    "correct": 18,
+    "inheritedErrors": [
+      "raw-delete-dot-3-short-dot-top-left",
+      "raw-delete-dot-3-short-line-top-left",
+      "raw-delete-dot-3-short-dot-top-right",
+      "raw-delete-dot-3-short-line-top-right"
+    ]
+  },
+  "verdicts": {
+    "raw-delete-1-duplicate-dot-3": "fail",
+    "raw-delete-2-duplicate-dot-3": "fail",
+    "raw-delete-4-duplicate-dot-3": "fail",
+    "raw-delete-5-duplicate-dot-3": "fail",
+    "raw-delete-6-duplicate-dot-3": "fail",
+    "raw-delete-7-duplicate-dot-3": "fail",
+    "raw-delete-8-duplicate-dot-3": "fail",
+    "raw-delete-9-duplicate-dot-3": "fail",
+    "raw-delete-10-duplicate-dot-3": "fail",
+    "raw-delete-11-duplicate-dot-3": "fail",
+    "raw-delete-12-duplicate-dot-3": "fail",
+    "raw-delete-13-duplicate-dot-3": "fail",
+    "raw-delete-14-duplicate-dot-3": "fail",
+    "raw-delete-15-duplicate-dot-3": "fail",
+    "raw-delete-dot-3-short-dot-top-left": "pass",
+    "raw-delete-dot-3-short-line-top-left": "pass",
+    "raw-delete-dot-3-short-dot-top-right": "pass",
+    "raw-delete-dot-3-short-line-top-right": "pass",
+    "raw-delete-dot-3-short-dot-bottom-left": "fail",
+    "raw-delete-dot-3-short-line-bottom-left": "fail",
+    "raw-delete-dot-3-short-dot-bottom-right": "fail",
+    "raw-delete-dot-3-short-line-bottom-right": "fail"
+  },
+  "filtering": {
+    "raw-delete-1-duplicate-dot-3": {
+      "inputStrokeCount": 15,
+      "retainedStrokeCount": 15,
+      "shortStrokeThreshold": 6.869,
+      "ignoredStrokes": []
+    },
+    "raw-delete-2-duplicate-dot-3": {
+      "inputStrokeCount": 15,
+      "retainedStrokeCount": 15,
+      "shortStrokeThreshold": 7.593,
+      "ignoredStrokes": []
+    },
+    "raw-delete-4-duplicate-dot-3": {
+      "inputStrokeCount": 15,
+      "retainedStrokeCount": 15,
+      "shortStrokeThreshold": 7.629,
+      "ignoredStrokes": []
+    },
+    "raw-delete-5-duplicate-dot-3": {
+      "inputStrokeCount": 15,
+      "retainedStrokeCount": 15,
+      "shortStrokeThreshold": 7.629,
+      "ignoredStrokes": []
+    },
+    "raw-delete-6-duplicate-dot-3": {
+      "inputStrokeCount": 15,
+      "retainedStrokeCount": 15,
+      "shortStrokeThreshold": 7.629,
+      "ignoredStrokes": []
+    },
+    "raw-delete-7-duplicate-dot-3": {
+      "inputStrokeCount": 15,
+      "retainedStrokeCount": 15,
+      "shortStrokeThreshold": 7.629,
+      "ignoredStrokes": []
+    },
+    "raw-delete-8-duplicate-dot-3": {
+      "inputStrokeCount": 15,
+      "retainedStrokeCount": 15,
+      "shortStrokeThreshold": 7.629,
+      "ignoredStrokes": []
+    },
+    "raw-delete-9-duplicate-dot-3": {
+      "inputStrokeCount": 15,
+      "retainedStrokeCount": 15,
+      "shortStrokeThreshold": 7.289,
+      "ignoredStrokes": []
+    },
+    "raw-delete-10-duplicate-dot-3": {
+      "inputStrokeCount": 15,
+      "retainedStrokeCount": 15,
+      "shortStrokeThreshold": 7.629,
+      "ignoredStrokes": []
+    },
+    "raw-delete-11-duplicate-dot-3": {
+      "inputStrokeCount": 15,
+      "retainedStrokeCount": 15,
+      "shortStrokeThreshold": 7.629,
+      "ignoredStrokes": []
+    },
+    "raw-delete-12-duplicate-dot-3": {
+      "inputStrokeCount": 15,
+      "retainedStrokeCount": 15,
+      "shortStrokeThreshold": 7.629,
+      "ignoredStrokes": []
+    },
+    "raw-delete-13-duplicate-dot-3": {
+      "inputStrokeCount": 15,
+      "retainedStrokeCount": 15,
+      "shortStrokeThreshold": 7.629,
+      "ignoredStrokes": []
+    },
+    "raw-delete-14-duplicate-dot-3": {
+      "inputStrokeCount": 15,
+      "retainedStrokeCount": 15,
+      "shortStrokeThreshold": 7.629,
+      "ignoredStrokes": []
+    },
+    "raw-delete-15-duplicate-dot-3": {
+      "inputStrokeCount": 15,
+      "retainedStrokeCount": 15,
+      "shortStrokeThreshold": 7.53,
+      "ignoredStrokes": []
+    },
+    "raw-delete-dot-3-short-dot-top-left": {
+      "inputStrokeCount": 15,
+      "retainedStrokeCount": 15,
+      "shortStrokeThreshold": 9.445,
+      "ignoredStrokes": []
+    },
+    "raw-delete-dot-3-short-line-top-left": {
+      "inputStrokeCount": 15,
+      "retainedStrokeCount": 15,
+      "shortStrokeThreshold": 9.476,
+      "ignoredStrokes": []
+    },
+    "raw-delete-dot-3-short-dot-top-right": {
+      "inputStrokeCount": 15,
+      "retainedStrokeCount": 15,
+      "shortStrokeThreshold": 9.555,
+      "ignoredStrokes": []
+    },
+    "raw-delete-dot-3-short-line-top-right": {
+      "inputStrokeCount": 15,
+      "retainedStrokeCount": 15,
+      "shortStrokeThreshold": 9.59,
+      "ignoredStrokes": []
+    },
+    "raw-delete-dot-3-short-dot-bottom-left": {
+      "inputStrokeCount": 15,
+      "retainedStrokeCount": 15,
+      "shortStrokeThreshold": 9.49,
+      "ignoredStrokes": []
+    },
+    "raw-delete-dot-3-short-line-bottom-left": {
+      "inputStrokeCount": 15,
+      "retainedStrokeCount": 15,
+      "shortStrokeThreshold": 9.52,
+      "ignoredStrokes": []
+    },
+    "raw-delete-dot-3-short-dot-bottom-right": {
+      "inputStrokeCount": 15,
+      "retainedStrokeCount": 15,
+      "shortStrokeThreshold": 9.6,
+      "ignoredStrokes": []
+    },
+    "raw-delete-dot-3-short-line-bottom-right": {
+      "inputStrokeCount": 15,
+      "retainedStrokeCount": 15,
+      "shortStrokeThreshold": 9.633,
+      "ignoredStrokes": []
+    }
+  }
+}

@@ -2,7 +2,7 @@
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
-<meta name="game-version" content="2026.11.03.5">
+<meta name="game-version" content="2026.11.03.6">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>汉字魔法门</title>
 <link rel="stylesheet" href="game-feedback.css?v=2026.11.02.4">
@@ -587,7 +587,7 @@
     </p>
 
     <button class="btn-close-panel" id="closePanelBtn">关闭</button>
-    <p class="hint-text" id="gameVersion">版本 2026.11.03.5</p>
+    <p class="hint-text" id="gameVersion">版本 2026.11.03.6</p>
   </div>
 </div>
 
@@ -655,7 +655,7 @@ function defaultBank(){
 // device that has already played keeps its old characters for ever and never sees the new
 // set — the change would reach nobody who actually uses the game.
 const BANK_VERSION = 5;
-const GAME_VERSION = '2026.11.03.5';
+const GAME_VERSION = '2026.11.03.6';
 
 let state = {
   bank: defaultBank(),
@@ -1995,6 +1995,51 @@ function recursiveRegionGrade(tree, officialAll, user, charDiag) {
 }
 
 
+function rescueYanFaceFixedPair(baseline, official, user, charDiag){
+  const rows=baseline.rows;
+  if(!rows || rows.length!==15 || rows.some(r=>r.c.veto || !/^[0-9]+$/.test(r.o) || !/^u[0-9]+$/.test(r.u)))return null;
+  // Fifteen marks must represent fifteen independent strokes. Reuse the
+  // established full-path retrace check; a repeated stroke cannot replace one
+  // that was never written. This guard only limits this failed-grade rescue.
+  const independent=user.map((pts,index)=>({pts,id:'u'+index}));
+  if(dropOneRetrace(independent,charDiag,[]))return null;
+  const aligned=alignClusterUniform(user,bboxOf(official));
+  const mids=aligned.map(s=>centroidOf(resample(s,16)));
+  const refMids=official.map(s=>centroidOf(resample(s,16)));
+  const target=refMids[2];
+  const pointIds=[];
+  for(let i=0;i<aligned.length;i++){
+    const owned=refMids.every((other,j)=>j===2||ptDist(mids[i],target)<ptDist(mids[i],other));
+    if(owned && ptDist(mids[i],target)/charDiag<=.12 && strokeLength(aligned[i])/charDiag<=.18)pointIds.push(i);
+  }
+  // There is exactly one point role. Two marks occupying it cannot compensate
+  // for a missing main stroke, even if the overall count is still fifteen.
+  if(pointIds.length!==1)return null;
+  const pointId='u'+pointIds[0];
+  const oldPoint=rows.find(r=>r.o==='2'),oldFalling=rows.find(r=>r.o==='3');
+  if(!oldPoint||!oldFalling)return null;
+  if(pointId!==oldPoint.u && pointId!==oldFalling.u)return null;
+  const changed=new Set(pointId===oldPoint.u?['2']:['2','3']);
+  if(rows.some(r=>!changed.has(r.o)&&r.c.q<Q_FLOOR))return null;
+  const pointQ=clamp01(1-ptDist(mids[pointIds[0]],target)/charDiag/.62);
+  const next=rows.map(r=>({...r}));
+  const fixedPoint=next.find(r=>r.u===pointId);
+  fixedPoint.o='2';fixedPoint.c={...strokeQuality(aligned[pointIds[0]],official[2],charDiag,false),q:pointQ,qPair:pointQ};
+  if(pointId!==oldPoint.u){
+    const other=next.find(r=>r.u===oldPoint.u),index=Number(other.u.slice(1));
+    other.o='3';other.c=strokeQuality(aligned[index],official[3],charDiag,false);
+  }
+  // Retain whole-character coordinates. The right short 撇 must not borrow
+  // 页's 撇, or the reverse, while a single point cell receives an exception.
+  const left=new Set(mids.map((mid,i)=>({x:mid.x,i})).sort((a,b)=>a.x-b.x).slice(0,9).map(p=>'u'+p.i));
+  if(next.some(r=>left.has(r.u)!==(Number(r.o)<9)))return null;
+  const mean=next.reduce((sum,r)=>sum+r.c.q,0)/next.length;
+  if(mean<Q_BAR||next.some(r=>r.c.q<Q_FLOOR||r.c.veto))return null;
+  const diag=['颜 fixed baseline pair PASS avgQ='+mean.toFixed(2)];
+  for(const r of next)diag.push('  '+r.u+'<->official#'+r.o+' q='+r.c.q.toFixed(2)+' pair='+r.c.qPair.toFixed(2)+' rms='+r.c.rms+' dir='+r.c.dirDiff+' len='+r.c.lenRatio+' pos='+r.c.posDist);
+  return {pass:true,diag,rows:next};
+}
+
 async function gradeDrawing(char){
   const data = await getCharData(char);
   const officialAll = (data.medians || []).map(medianToCanvasPoints);
@@ -2123,7 +2168,7 @@ async function gradeDrawing(char){
     } else if(pass){
       pass = false;
     }
-    return { pass, diag };
+    return { pass, diag, rows };
   }
 
   const baseAssign = assignInfo.map(a => a.ci);
@@ -2152,6 +2197,11 @@ async function gradeDrawing(char){
   if(!result.pass && char==='燕' && rawUser.length>=officialAll.length-2){
     const rescue=runWith(baseAssign,{unorderedYanPair:true});
     if(rescue.pass){result=rescue;flipNote+=' (validated 燕 connected pair)';}
+  }
+
+  if(!result.pass && char==='颜' && rawUser.length===15 && officialAll.length===15){
+    const rescue=rescueYanFaceFixedPair(result,officialAll,user,charDiag);
+    if(rescue){result=rescue;flipNote+=' (validated 颜 fixed pair)';}
   }
 
   // TEMPORARY diagnostics — prints exactly why a drawing passed/failed, so grading can

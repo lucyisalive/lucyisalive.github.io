@@ -1,0 +1,1121 @@
+{
+  "schemaVersion": 1,
+  "sourceVersion": "2026.11.03.5",
+  "sourceCommit": "17c1d00d43fef79c3b6527a8015cf33c3a735dc8",
+  "sourceHtmlSha256": "7c61c23609cb3a6663594b8e5ccb4afb52ff661036632b055511990ec99d96b8",
+  "generatorSha256": "9daec47ba95dfecdfc39d98dc34e5425986d645eb46283254e0917b8150707f6",
+  "controlsSha256": "3ce30085d64e74e95984dec98d5a67fd5974b6aae46d846972dc1d6a64f8301e",
+  "caseCount": 145,
+  "generationRules": {
+    "version": 1,
+    "target": "颜",
+    "parts": {
+      "彦": [
+        0,
+        9
+      ],
+      "产": [
+        0,
+        6
+      ],
+      "彡": [
+        6,
+        9
+      ],
+      "页": [
+        9,
+        15
+      ]
+    },
+    "expected": "Only the final 15-stroke raw iPad trace is human-confirmed pass. The first 12-stroke trace remains null. Delete a complete stroke or a whole part, add an isolated long mark, or remove a real arm of 页横折: fail.",
+    "pointBoundary": "The small left point (#3) may be doubled or 2.5x and may be a short vertical mark within its original horizontal bounds. Extreme 8x/12x marks crossing the whole 产 region, or superposing the two marks on the same reference location, are deliberate errors. Do not classify a slight point-angle change as wrong.",
+    "pageCorner": "页 #13 is 横折 with midTurn about88deg, hookTurn about23deg. It has no independent hook; negatives remove a horizontal/vertical arm, never an invented hook.",
+    "penlift": "Only reference strokes >=60px. Preserve knots; interpolate <=2px; split at25/50/75% plus an interior sharp corner, no gap or2px path gap; remaining pieces >=12px. These are pass."
+  },
+  "glyphSourcesSha256": {
+    "hanzi-data.js": "7a093c5273f13d1a6142d1c81444fcbb355435a13ea1938f7d22ff63609d6424",
+    "curriculum-hanzi-data.js": "77211011ac88386dc9cdbf08cfbbe5bf357c329fa05107d5b0c00996fdd80010"
+  },
+  "baselineSummary": {
+    "total": 145,
+    "labelled": 144,
+    "correct": 95,
+    "regressions": [],
+    "improvements": [],
+    "inheritedErrors": [
+      "human-final-15",
+      "delete-reference-2",
+      "delete-reference-2-reversed",
+      "delete-reference-3",
+      "delete-reference-3-reversed",
+      "delete-reference-4",
+      "delete-reference-4-reversed",
+      "delete-reference-5",
+      "delete-reference-5-reversed",
+      "delete-reference-6",
+      "delete-reference-6-reversed",
+      "delete-reference-7",
+      "delete-reference-7-reversed",
+      "delete-reference-8",
+      "delete-reference-8-reversed",
+      "delete-reference-9",
+      "delete-reference-9-reversed",
+      "delete-reference-10",
+      "delete-reference-10-reversed",
+      "delete-reference-11",
+      "delete-reference-11-reversed",
+      "delete-reference-14",
+      "delete-reference-14-reversed",
+      "extra-reference-0",
+      "extra-reference-2",
+      "extra-reference-3",
+      "extra-reference-4",
+      "extra-reference-5",
+      "extra-reference-6",
+      "extra-reference-7",
+      "extra-human-final-0",
+      "extra-human-final-2",
+      "extra-human-final-3",
+      "page-fold-missing-horizontal-arm",
+      "swapped-彦-页",
+      "points-both-at-right",
+      "points-both-at-left",
+      "penlift-2-50-gap0",
+      "penlift-2-50-gap2",
+      "penlift-5-25-gap2",
+      "penlift-5-50-gap0",
+      "penlift-5-50-gap2",
+      "penlift-5-75-gap2",
+      "penlift-9-50-gap0",
+      "penlift-9-50-gap2",
+      "penlift-10-50-gap0",
+      "penlift-10-50-gap2",
+      "penlift-12-50-gap0",
+      "penlift-12-50-gap2"
+    ],
+    "unlabelled": [
+      {
+        "id": "unlabelled-first-12",
+        "actual": "fail",
+        "changed": false
+      }
+    ]
+  },
+  "rows": [
+    {
+      "id": "standard",
+      "target": "颜",
+      "expect": "pass",
+      "inkSha256": "5ae6c7aba74b9b2b2e862f91d36da8833dcad3f0f42b391c3483f689e7b2e45f",
+      "actual": "pass"
+    },
+    {
+      "id": "small-shifted",
+      "target": "颜",
+      "expect": "pass",
+      "inkSha256": "43ac353218227df1661fbb8d33e4e6a345103b2d92d7aa341b1d0b7a93f14a66",
+      "actual": "pass"
+    },
+    {
+      "id": "reordered",
+      "target": "颜",
+      "expect": "pass",
+      "inkSha256": "ef0a141d1242c4ea3cac532b3d68e436c48b7cf77ee3d5c42d8e3857885ab580",
+      "actual": "pass"
+    },
+    {
+      "id": "human-final-15",
+      "target": "颜",
+      "expect": "pass",
+      "inkSha256": "b8f642e74f57d99c09caa57f283438756131ab03742113a381da525e36f0f38a",
+      "actual": "fail"
+    },
+    {
+      "id": "unlabelled-first-12",
+      "target": "颜",
+      "expect": null,
+      "inkSha256": "167f2aae5c6ef7df50ef9d9d615db9b02aa0c2522d604d775e0dac012f88579e",
+      "actual": "fail"
+    },
+    {
+      "id": "delete-reference-1",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "b80d674497d3f89a088682a5422028a996c51e7ada079365007f36db018d3d3e",
+      "actual": "fail"
+    },
+    {
+      "id": "delete-reference-1-reversed",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "c8ac40e9e6a39713b9194c877417def0f8896f72773b0164c4b13cab5a4cfe09",
+      "actual": "fail"
+    },
+    {
+      "id": "delete-reference-2",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "c708d569033e4d8e8720232af9ddeb73d08ec0ce02ad515a92412e089e1e23c7",
+      "actual": "pass"
+    },
+    {
+      "id": "delete-reference-2-reversed",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "af666413bd15bee8fd816ba619a08d2dfee82580229553e8a90189bf2281b23d",
+      "actual": "pass"
+    },
+    {
+      "id": "delete-reference-3",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "9ff2bf3842f9b94e3035ee88afb3c523a3701f77737fdce58e229507a7a9f8ce",
+      "actual": "pass"
+    },
+    {
+      "id": "delete-reference-3-reversed",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "bd3c2c1f3c83d413e11572da3c0368c36cdda003f498a4c082114398f44e6766",
+      "actual": "pass"
+    },
+    {
+      "id": "delete-reference-4",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "bc4aa1319dd3f8668e58a4844bf57a2a78371e45cbd98ead808507b7236fa757",
+      "actual": "pass"
+    },
+    {
+      "id": "delete-reference-4-reversed",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "b6c5cffeec85902698a9b1e22a3515162d56a2327012588bb1da2f3f8cec4350",
+      "actual": "pass"
+    },
+    {
+      "id": "delete-reference-5",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "a78eb6d4b48ace61afaa2e07435fb2feb62ecf93cfe8cb8236128507f5fd1942",
+      "actual": "pass"
+    },
+    {
+      "id": "delete-reference-5-reversed",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "3b255fa9d23b4e569832f5388e7074aa1df96c9e2774552ae58cd15ec6c4c308",
+      "actual": "pass"
+    },
+    {
+      "id": "delete-reference-6",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "e939936faaf4797933b3ba8028895c4e7db43fd6b782381b8e3d78ce163dcdcc",
+      "actual": "pass"
+    },
+    {
+      "id": "delete-reference-6-reversed",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "93c7606b711dd60e0ffc2a5dee436bb96ef001a5c60ae87bc8673f13509166fb",
+      "actual": "pass"
+    },
+    {
+      "id": "delete-reference-7",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "260711401eaa47a0542c73a0ca5a83118e167ed4f1901ccda844b0f5a4060ed0",
+      "actual": "pass"
+    },
+    {
+      "id": "delete-reference-7-reversed",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "6b201c9909797b25cf5badf04ea4404eee2260fe472628fab1904ccc07913f35",
+      "actual": "pass"
+    },
+    {
+      "id": "delete-reference-8",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "5226496245cde8fe8254f545e1dc482d164f576153d1a505fc588a4030965ea0",
+      "actual": "pass"
+    },
+    {
+      "id": "delete-reference-8-reversed",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "be95e4291795755c2b8e62b90b6c6eb8965ae70fa6a1c789cce45747bde84381",
+      "actual": "pass"
+    },
+    {
+      "id": "delete-reference-9",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "4cbc45f97ae4cb53abdb70c3437a314b3fbd896ece04af8e06c71a72b66fff57",
+      "actual": "pass"
+    },
+    {
+      "id": "delete-reference-9-reversed",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "3ca9039163776df026a1e6ce0acb502dcba7e18174bad4ea1a09251b59d06a43",
+      "actual": "pass"
+    },
+    {
+      "id": "delete-reference-10",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "557c24d696ee2177f0a062977dafa7dbaa9de9a1c4e5b6631b186b981dcb3ed0",
+      "actual": "pass"
+    },
+    {
+      "id": "delete-reference-10-reversed",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "c1ca48991782dbf11ea0a316ac511f228d1e9e66b4fe8f75cb986a2cb0fed3f2",
+      "actual": "pass"
+    },
+    {
+      "id": "delete-reference-11",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "0dc3a85338dd2f51d147bc3c7503d69b8a8d888784d7f326cc8ec56dd26f03e8",
+      "actual": "pass"
+    },
+    {
+      "id": "delete-reference-11-reversed",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "1cd523d9cdec0f70b7c03e1e800087ccb200025d54ccf696376cd31a7ec2d272",
+      "actual": "pass"
+    },
+    {
+      "id": "delete-reference-12",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "30b4e6b1b3f9bb963e2a3c8e118e5148c4800e7d79af6d70be6ed27c59d29b4d",
+      "actual": "fail"
+    },
+    {
+      "id": "delete-reference-12-reversed",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "5597ee67452ccfd04f0d0d9dbcb26dbb77cd0eed1b39aa7edcd580f361c20b11",
+      "actual": "fail"
+    },
+    {
+      "id": "delete-reference-13",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "ae04071e5554586b4d6132d39515dabfa8e32f4fc5a720ba4218f0f17e7ab2fa",
+      "actual": "fail"
+    },
+    {
+      "id": "delete-reference-13-reversed",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "fa8cf8e9652250dbbc1332f81a05ed4df4c6323e91784c1f0f8b961e14cdacaf",
+      "actual": "fail"
+    },
+    {
+      "id": "delete-reference-14",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "0634271897805d87536ef218387795f3390affff7ea528d5773a3c961bed745d",
+      "actual": "pass"
+    },
+    {
+      "id": "delete-reference-14-reversed",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "0211e2bbe628bbfaba50f4c438946924f4bbe93d6b1a49cf305478d19e9769e9",
+      "actual": "pass"
+    },
+    {
+      "id": "delete-reference-15",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "0ba86641874b8721ecb1c09937916dda2477628b16a4e711408f1f4f206d62da",
+      "actual": "fail"
+    },
+    {
+      "id": "delete-reference-15-reversed",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "e41e73c06012d3db9bce303db1ffaab74d0e65f34f881e082a64bb96ef3d93df",
+      "actual": "fail"
+    },
+    {
+      "id": "delete-human-final-1",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "15a9978948c677536d24fc8985dbc101c0a9b2c85ed0ad12176b8ccce7e256f6",
+      "actual": "fail"
+    },
+    {
+      "id": "delete-human-final-2",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "3cc482ae863576be526eefcdc641af8aa302919f24c8303f6611879e8b168de6",
+      "actual": "fail"
+    },
+    {
+      "id": "delete-human-final-3",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "6d5a0f7cc201ba95fa12522ede3ade0918afe9f77e47c5c6f1a571f49118f8d0",
+      "actual": "fail"
+    },
+    {
+      "id": "delete-human-final-4",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "0c8d2df33469b4892ed7fdf0eb44f5b9845c98d77fa323138cd030ec92e6f4de",
+      "actual": "fail"
+    },
+    {
+      "id": "delete-human-final-5",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "9a54718d294b51cd8246f95ca110ba056a6fbcba4d7c4474c866a2704f424801",
+      "actual": "fail"
+    },
+    {
+      "id": "delete-human-final-6",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "f321985ffda0520b483cc95cc1aab5b28cf6e72d3cbd089edcfa73b00ac3b987",
+      "actual": "fail"
+    },
+    {
+      "id": "delete-human-final-7",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "26aaa45372accf8b6f0312897839618fb3069e204af72a3f6f815c1d240d11cb",
+      "actual": "fail"
+    },
+    {
+      "id": "delete-human-final-8",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "fcee3ae8295dc31ed463aaba45c126a7ae6ca339ce6b6136888caa2ede274917",
+      "actual": "fail"
+    },
+    {
+      "id": "delete-human-final-9",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "fe517ac350167973019591818161f97574876b67be869d4c7928f462e79605e6",
+      "actual": "fail"
+    },
+    {
+      "id": "delete-human-final-10",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "89dd1f66172e09d257798587125f79edcebeb98909d743da3ab435d0f7e3a8c9",
+      "actual": "fail"
+    },
+    {
+      "id": "delete-human-final-11",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "97afe166ac6d6f8d8683bbed7d72333943db9bf3bf338abe6acf1bd4ca9bcdc5",
+      "actual": "fail"
+    },
+    {
+      "id": "delete-human-final-12",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "650e1e361bfee1037cd2b5c9ecd937e03b945c3786cde3c127fe23695bb876ee",
+      "actual": "fail"
+    },
+    {
+      "id": "delete-human-final-13",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "79361b5325993dd4eb13cdb055089623967d26f0b8d9f19df5e606ef609bca34",
+      "actual": "fail"
+    },
+    {
+      "id": "delete-human-final-14",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "84c252dfb0c4e21cdc5b3e5448353ce9c16e447eafb6fa98f9c96c1127dc3131",
+      "actual": "fail"
+    },
+    {
+      "id": "delete-human-final-15",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "6e5b33d48df76bfe2390f250af2efaf09e1d8f09029c39c4d1c87fd651886211",
+      "actual": "fail"
+    },
+    {
+      "id": "extra-reference-0",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "09c8ff2e627a7df87e569753d5f221de254cb32a4944c6e013ed865922738a7b",
+      "actual": "pass"
+    },
+    {
+      "id": "extra-reference-1",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "4ec71d3b7dcda1324fdcd26d138b7c3ec8c31ab776e4a15adc1177393ba6809f",
+      "actual": "fail"
+    },
+    {
+      "id": "extra-reference-2",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "cac5a39ff917c119fd4fbf78dad901f0c123e0b637873d8d739f108e311ef92b",
+      "actual": "pass"
+    },
+    {
+      "id": "extra-reference-3",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "4bc6327196eb1790afb025c406eb6220d6a193ef69f0d242fe5c10363f119310",
+      "actual": "pass"
+    },
+    {
+      "id": "extra-reference-4",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "86286f6d6e2022f332eb84c09b4766a50444ef25a9659af50b1484eed46fa832",
+      "actual": "pass"
+    },
+    {
+      "id": "extra-reference-5",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "95a894236161972dfb1ad2993f2dfc9641c6d2f52dc2111b87cf5be112211597",
+      "actual": "pass"
+    },
+    {
+      "id": "extra-reference-6",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "a6578fcec9e2224dbf4a4d14659cea2f259ee7d0902b7476f84debec25976ef6",
+      "actual": "pass"
+    },
+    {
+      "id": "extra-reference-7",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "ff975f4d7d84f148dae208a038703fb03c09de1ab0396a67f8cab44c916f70bf",
+      "actual": "pass"
+    },
+    {
+      "id": "extra-human-final-0",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "71de4e905b9b7491feea5f6c2e31269a0b48b0afb7c26aa97da1a2f7133133f7",
+      "actual": "pass"
+    },
+    {
+      "id": "extra-human-final-1",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "1e9f880e2799e26f9ff1e3f68adec1395719908e98fda47f493e17f4871fc990",
+      "actual": "fail"
+    },
+    {
+      "id": "extra-human-final-2",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "f1ea055b39f8791864a72eee33c7dd786dda638a588051985a01a1bd5bbf6d6d",
+      "actual": "pass"
+    },
+    {
+      "id": "extra-human-final-3",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "f41d754c032993926c32217c5320c9c5fb6d76323d1584faef56a65a86469be0",
+      "actual": "pass"
+    },
+    {
+      "id": "rotate-main-2--1",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "2ec2320a74ce4536e82e6edf0dbb4eb1fb77ce3fef66a976f0f322fd4972c8ea",
+      "actual": "fail"
+    },
+    {
+      "id": "rotate-main-2-1",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "259edc27c76c4f3b5cb6df3eedf76d8832e4f79e150d5a785bb954e12d498ba5",
+      "actual": "fail"
+    },
+    {
+      "id": "rotate-main-5--1",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "e2ff37169da1da9e929ed32242f28fffd5f52172ddd8c1f9ec25aa7d137ae1b6",
+      "actual": "fail"
+    },
+    {
+      "id": "rotate-main-5-1",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "f909c84e5d0117deeff1a949c1490b6f17c4074357e0fef067e6fbf6a7214e20",
+      "actual": "fail"
+    },
+    {
+      "id": "rotate-main-6--1",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "2e2d69c5a02056f8c55b2f04dbbc3b753b09ef3563822f753dea57066aad2d5b",
+      "actual": "fail"
+    },
+    {
+      "id": "rotate-main-6-1",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "bf21aefeb487e2c0ce61c5a5ef29e96b970d03f12445dfe3609fb58eea91e8cd",
+      "actual": "fail"
+    },
+    {
+      "id": "rotate-main-7--1",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "10d74f2adde2a8ab1181a82c835b7c2df6a91515718c412066122bfc1fbd20f1",
+      "actual": "fail"
+    },
+    {
+      "id": "rotate-main-7-1",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "e4033f01eb54961d02c91daa5ebea1eaf842a8eefd333b2ae9cbc82b458f40cf",
+      "actual": "fail"
+    },
+    {
+      "id": "rotate-main-8--1",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "546ee0107f94f27cce72aa9afe36213c6a9a5dbb48b28f9141fc23ec9fe0d4b0",
+      "actual": "fail"
+    },
+    {
+      "id": "rotate-main-8-1",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "8988823c8fab101d1418334487596fbaf262b16212d140f35e2fb796c4c26029",
+      "actual": "fail"
+    },
+    {
+      "id": "rotate-main-9--1",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "017ae5e34d209ddc3d37b03e72fbf25291ceb1475d93640cdb9ed3b7feba1f6a",
+      "actual": "fail"
+    },
+    {
+      "id": "rotate-main-9-1",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "1ca2c25ddf736c529c6ca177a4e67cd9c9f819adab2d9360184a5d2db2dace58",
+      "actual": "fail"
+    },
+    {
+      "id": "rotate-main-10--1",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "960a132037f1df1deed8d2e65b9c4dd1c46fc6c55121b34a48fd6f2ed0dd4cd0",
+      "actual": "fail"
+    },
+    {
+      "id": "rotate-main-10-1",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "1a427817ba191835e8ec7b00a2c5cd66f7acba8be4df4591d53a7f5998c4495a",
+      "actual": "fail"
+    },
+    {
+      "id": "rotate-main-12--1",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "e111e4c17a1dff1966e8f7a58f33633f3c6dfca6ea11c452bb3050692bbcd0d9",
+      "actual": "fail"
+    },
+    {
+      "id": "rotate-main-12-1",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "1ab421946f5be4a98ab6afa24232f33172c02ed9ea29a759373144784823371f",
+      "actual": "fail"
+    },
+    {
+      "id": "rotate-main-14--1",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "0c281617d3bb975bddf83b787b6e21a18493f06cfbe9c6116dcebeccb56d97a4",
+      "actual": "fail"
+    },
+    {
+      "id": "rotate-main-14-1",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "ad47c2c3e4eccc2cf45cb0205dbe91b60079765e5f7146e7ab9b048192a5a220",
+      "actual": "fail"
+    },
+    {
+      "id": "page-fold-missing-vertical-arm",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "d6f275c9053d6de200ec1f95ecc2e5a5dfe93715cd567ecf3799626cd013df0a",
+      "actual": "fail"
+    },
+    {
+      "id": "page-fold-missing-horizontal-arm",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "075bf453d0c27b71a055d68e3baea0b4f4cb02684de2da5a48154361c6a28440",
+      "actual": "pass"
+    },
+    {
+      "id": "missing-part-彦",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "069f3b31078403f07b2df7bff20bdb3a1f225d843ef316c0599d28f049b31422",
+      "actual": "fail"
+    },
+    {
+      "id": "missing-part-产",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "2e4dc2fb214da942efd28c36ab2cc9f9d5c315cd4efbbb0df32cf496c70bef53",
+      "actual": "fail"
+    },
+    {
+      "id": "missing-part-彡",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "b8af39578c9096f6d02d902093eeadc99b2826146909cc6a71b030686c11d5f4",
+      "actual": "fail"
+    },
+    {
+      "id": "missing-part-页",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "9a5514f81790fa03728b484e9d5b9a84be12094e806c665ee668c7ec2580a603",
+      "actual": "fail"
+    },
+    {
+      "id": "written-as-顾",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "0f972f25d38245f1d60acc701d9f1729536ddd77c431b118a6c11287e824307f",
+      "actual": "fail"
+    },
+    {
+      "id": "swapped-彦-页",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "1f96af11bef262397671fef8daabe384a879e0b1c6b30659f4574ab7e354c3ce",
+      "actual": "pass"
+    },
+    {
+      "id": "left-point-extreme-8",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "2d281cad539d768c7ebd093bb5e0a7e30d7371ec6802dcfcb03019469273f613",
+      "actual": "fail"
+    },
+    {
+      "id": "left-point-extreme-12",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "081494ed69506a7ce3d806940179afdaa29f10b474f03fa9e492516ad1440a96",
+      "actual": "fail"
+    },
+    {
+      "id": "points-both-at-right",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "2bdfb5b72fffb413fc924d5d29335646882561dd3f982735c157a6df644dc20a",
+      "actual": "pass"
+    },
+    {
+      "id": "points-both-at-left",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "c3f2dc2e10f0694101585c260292f0ef89036b97bb43fb44bbd4d72d5a2b8155",
+      "actual": "pass"
+    },
+    {
+      "id": "right-short-fall-as-long-horizontal",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "a1e223b4f847997f2a6a429d93b66c3071264855fc207ee2d627914979a16a08",
+      "actual": "fail"
+    },
+    {
+      "id": "right-short-fall-rotate90",
+      "target": "颜",
+      "expect": "fail",
+      "inkSha256": "f0d2f01a47ce1338c8f5559df450455730172edcdb51dcc00a08093434f2afc8",
+      "actual": "fail"
+    },
+    {
+      "id": "left-point-local-2",
+      "target": "颜",
+      "expect": "pass",
+      "inkSha256": "9d087df1d40a560bd7d41c41be1acca2e34aaec21f99c6ec4c20a6def03b86de",
+      "actual": "pass"
+    },
+    {
+      "id": "left-point-local-2.5",
+      "target": "颜",
+      "expect": "pass",
+      "inkSha256": "dc6a75994d94cd1a7546f8a44d681229670f97eecef33057a639de86fe83aaa4",
+      "actual": "pass"
+    },
+    {
+      "id": "left-point-local-vertical",
+      "target": "颜",
+      "expect": "pass",
+      "inkSha256": "747143336331ba9461d012cc008acac0b64fd00b6273bd4b358921548aad55c6",
+      "actual": "pass"
+    },
+    {
+      "id": "penlift-2-25-gap0",
+      "target": "颜",
+      "expect": "pass",
+      "inkSha256": "8d029c253371bb139d0832c1e6b132353eeca753fe435ce7612246f14725461e",
+      "actual": "pass"
+    },
+    {
+      "id": "penlift-2-25-gap2",
+      "target": "颜",
+      "expect": "pass",
+      "inkSha256": "3099d3b7d4265ef5ad179ca8eed8fd0c5c06d2c0404ef41fdebc9410c916d15b",
+      "actual": "pass"
+    },
+    {
+      "id": "penlift-2-50-gap0",
+      "target": "颜",
+      "expect": "pass",
+      "inkSha256": "fdda386b8be70a33668465da1f2529d7f6f83be2da096c3e38994457e7cf54b0",
+      "actual": "fail"
+    },
+    {
+      "id": "penlift-2-50-gap2",
+      "target": "颜",
+      "expect": "pass",
+      "inkSha256": "cf46d59f948128b06c29117e166aa7783b504bd6cead7fd04eb97c03c0f7f34e",
+      "actual": "fail"
+    },
+    {
+      "id": "penlift-2-75-gap0",
+      "target": "颜",
+      "expect": "pass",
+      "inkSha256": "915edbc5eb31e4a58c0ab5998dd08f00b63215f1e5e1fc631c9f2433d4db87a6",
+      "actual": "pass"
+    },
+    {
+      "id": "penlift-2-75-gap2",
+      "target": "颜",
+      "expect": "pass",
+      "inkSha256": "39c30d9d921c7bfe936a82613d439d4fed8dec6e233d7162da80ad2cd26a7113",
+      "actual": "pass"
+    },
+    {
+      "id": "penlift-5-25-gap0",
+      "target": "颜",
+      "expect": "pass",
+      "inkSha256": "e944ab42d8d3babdfce46911121c88fe639f9072d6d55892f979d3c1a0473305",
+      "actual": "pass"
+    },
+    {
+      "id": "penlift-5-25-gap2",
+      "target": "颜",
+      "expect": "pass",
+      "inkSha256": "b4749310f68f10803ff2eb04271216a5cb502aa877bd86efc4e8fdce4a17a0db",
+      "actual": "fail"
+    },
+    {
+      "id": "penlift-5-50-gap0",
+      "target": "颜",
+      "expect": "pass",
+      "inkSha256": "48469433f8b4516e950053951c787edfe715246b892e2b419ea7ee70cbc81329",
+      "actual": "fail"
+    },
+    {
+      "id": "penlift-5-50-gap2",
+      "target": "颜",
+      "expect": "pass",
+      "inkSha256": "87654a386676ecafce4fd8bc78221ef33db6e7fd3e4ef4fd2189cd0b41668edc",
+      "actual": "fail"
+    },
+    {
+      "id": "penlift-5-75-gap0",
+      "target": "颜",
+      "expect": "pass",
+      "inkSha256": "1beddccbf580af5c5be63813be30791b1f64b3466d706afd53ab227646314b6e",
+      "actual": "pass"
+    },
+    {
+      "id": "penlift-5-75-gap2",
+      "target": "颜",
+      "expect": "pass",
+      "inkSha256": "389c08352f087f5df045c1fa4ed0f62b23a88d2d0e13649dbd8ec7f0f6dacf42",
+      "actual": "fail"
+    },
+    {
+      "id": "penlift-6-25-gap0",
+      "target": "颜",
+      "expect": "pass",
+      "inkSha256": "2fdc7661639db12b0a6df9014e7585c99ecbe1b1a0f99ad2ad3ad462dd3fa201",
+      "actual": "pass"
+    },
+    {
+      "id": "penlift-6-25-gap2",
+      "target": "颜",
+      "expect": "pass",
+      "inkSha256": "5c78aa9aac5ac98570d5022e394f5d0b39fd7a612d7ad022c05a184c0b51b11e",
+      "actual": "pass"
+    },
+    {
+      "id": "penlift-6-50-gap0",
+      "target": "颜",
+      "expect": "pass",
+      "inkSha256": "6d79bde1dfd9628900dfb60b0284193383b5f2e1ee7eaaa8b14ff31e9fa09895",
+      "actual": "pass"
+    },
+    {
+      "id": "penlift-6-50-gap2",
+      "target": "颜",
+      "expect": "pass",
+      "inkSha256": "e7f94a5f024b92b06e0d93434e2553ff136eb10c2d487edd190799dced2ff5e8",
+      "actual": "pass"
+    },
+    {
+      "id": "penlift-6-75-gap0",
+      "target": "颜",
+      "expect": "pass",
+      "inkSha256": "568ae56d281a193a0a795c76f1b3b54ee7e5f543eccd2f138f843c9926ed25a9",
+      "actual": "pass"
+    },
+    {
+      "id": "penlift-6-75-gap2",
+      "target": "颜",
+      "expect": "pass",
+      "inkSha256": "c52b6e2ed772600d2355aefffff86b3c4f5bf844d09b2e48f5c75a7c3ab624d5",
+      "actual": "pass"
+    },
+    {
+      "id": "penlift-9-25-gap0",
+      "target": "颜",
+      "expect": "pass",
+      "inkSha256": "02dd769bf914db9c0505e6c4b77e79b79f24300aebb780a9731b776031e79cf5",
+      "actual": "pass"
+    },
+    {
+      "id": "penlift-9-25-gap2",
+      "target": "颜",
+      "expect": "pass",
+      "inkSha256": "fb4e7cef43675008730b9cce9d523ffad7f56dd601d1d86b034fae20367c672a",
+      "actual": "pass"
+    },
+    {
+      "id": "penlift-9-50-gap0",
+      "target": "颜",
+      "expect": "pass",
+      "inkSha256": "e3e8ef91f1bec368ed6e827e34db88834b3918460bb3b21e28c1b92adeee15d0",
+      "actual": "fail"
+    },
+    {
+      "id": "penlift-9-50-gap2",
+      "target": "颜",
+      "expect": "pass",
+      "inkSha256": "38678bb00447c5a93d6d14276337ab5084c46c1b7fbd80da9309a0578ea03a95",
+      "actual": "fail"
+    },
+    {
+      "id": "penlift-9-75-gap0",
+      "target": "颜",
+      "expect": "pass",
+      "inkSha256": "6e73b24a7d1945dd6ac18bd659b43b8053718c08b2bc9b498371770b30f95300",
+      "actual": "pass"
+    },
+    {
+      "id": "penlift-9-75-gap2",
+      "target": "颜",
+      "expect": "pass",
+      "inkSha256": "7ddb0a303c9b4ef4f04de3459f1fd140eb50f131cd1e58ac5a271fb0ae10bab2",
+      "actual": "pass"
+    },
+    {
+      "id": "penlift-10-25-gap0",
+      "target": "颜",
+      "expect": "pass",
+      "inkSha256": "01cb596c854df1ea921044c1a5a82bc4918e63684a475c13639da4e4bfeb0ce9",
+      "actual": "pass"
+    },
+    {
+      "id": "penlift-10-25-gap2",
+      "target": "颜",
+      "expect": "pass",
+      "inkSha256": "04b6ef60611806b710da45b26f85b0b8734e7e2b1ac83bc484c6dafdc7327477",
+      "actual": "pass"
+    },
+    {
+      "id": "penlift-10-50-gap0",
+      "target": "颜",
+      "expect": "pass",
+      "inkSha256": "149c57f381fb246fd16cc09782dbc44e59d078288f1a89f041ffb1e03ea32696",
+      "actual": "fail"
+    },
+    {
+      "id": "penlift-10-50-gap2",
+      "target": "颜",
+      "expect": "pass",
+      "inkSha256": "7eafc072612ff0290a53fddfca8d7d0dbd0c410e8952bbdb9a701f95075f7aa2",
+      "actual": "fail"
+    },
+    {
+      "id": "penlift-10-75-gap0",
+      "target": "颜",
+      "expect": "pass",
+      "inkSha256": "ca658f296e34d92f5efd687d5476dc420d8be0ff8af22af6d35c6ed9ec49724d",
+      "actual": "pass"
+    },
+    {
+      "id": "penlift-10-75-gap2",
+      "target": "颜",
+      "expect": "pass",
+      "inkSha256": "4cdb58d081516cc87d8bb31acc79658a6c1fd642214824766cc89529683be3e0",
+      "actual": "pass"
+    },
+    {
+      "id": "penlift-12-25-gap0",
+      "target": "颜",
+      "expect": "pass",
+      "inkSha256": "189cf25e34e8d1197cad870380af805fd5acb42368b5038450c8ca4f4b1c14d0",
+      "actual": "pass"
+    },
+    {
+      "id": "penlift-12-25-gap2",
+      "target": "颜",
+      "expect": "pass",
+      "inkSha256": "b32a3dc085b72061294ac7dfa8fcaf7fefb68972adc41fd4020934a50bc86989",
+      "actual": "pass"
+    },
+    {
+      "id": "penlift-12-50-gap0",
+      "target": "颜",
+      "expect": "pass",
+      "inkSha256": "8ea6f893c61ac42a5e33763259f7bb97681adbf19773fa82654d35b67582c55d",
+      "actual": "fail"
+    },
+    {
+      "id": "penlift-12-50-gap2",
+      "target": "颜",
+      "expect": "pass",
+      "inkSha256": "91a2a640f5f73e76a39cbc80a941dd372b3ff5037db18a2773ccbed11a7879c3",
+      "actual": "fail"
+    },
+    {
+      "id": "penlift-12-75-gap0",
+      "target": "颜",
+      "expect": "pass",
+      "inkSha256": "1162f825e77ddbdecb3ed32a57548999c40fb27f1abe7824ae14ca0d5368a829",
+      "actual": "pass"
+    },
+    {
+      "id": "penlift-12-75-gap2",
+      "target": "颜",
+      "expect": "pass",
+      "inkSha256": "4d1db398a1cc30363131a55876249de63179c66e7de12ba9bc0e38d4a7d4df51",
+      "actual": "pass"
+    },
+    {
+      "id": "penlift-13-25-gap0",
+      "target": "颜",
+      "expect": "pass",
+      "inkSha256": "52f96e6da52a9ddd83206071a9ec8b11b32e6e1307957911804cc1b9cd0670bf",
+      "actual": "pass"
+    },
+    {
+      "id": "penlift-13-25-gap2",
+      "target": "颜",
+      "expect": "pass",
+      "inkSha256": "839642855c62d9b48ddda67d538a154221ec6284bdd830fcfc0b3b9cfdede6cb",
+      "actual": "pass"
+    },
+    {
+      "id": "penlift-13-50-gap0",
+      "target": "颜",
+      "expect": "pass",
+      "inkSha256": "127eefd90cfbd8ad23fe0c22b4f446dee89e19f673156c797ccbc54c435a57dd",
+      "actual": "pass"
+    },
+    {
+      "id": "penlift-13-50-gap2",
+      "target": "颜",
+      "expect": "pass",
+      "inkSha256": "82e7e10107094527952fb443e4809a06f925974336c387fdf0d803676c82cf76",
+      "actual": "pass"
+    },
+    {
+      "id": "penlift-13-75-gap0",
+      "target": "颜",
+      "expect": "pass",
+      "inkSha256": "4081c01d89c15af2194ae422564ebfde142e5aaddcd0dfb8170d8510fdf6cfa4",
+      "actual": "pass"
+    },
+    {
+      "id": "penlift-13-75-gap2",
+      "target": "颜",
+      "expect": "pass",
+      "inkSha256": "5f0028be0d8df3d0769386d7b1e9b9d81a725a2da52dc03d8b8cee66bf2c5a01",
+      "actual": "pass"
+    },
+    {
+      "id": "penlift-14-25-gap0",
+      "target": "颜",
+      "expect": "pass",
+      "inkSha256": "b9acf9934d13f5efc8a45eab183ab0e884ebaf20b50c3b8c4319a4f30c9d8f03",
+      "actual": "pass"
+    },
+    {
+      "id": "penlift-14-25-gap2",
+      "target": "颜",
+      "expect": "pass",
+      "inkSha256": "f1d2634b78730621e31615ecf4f15938153c9842b5b5dd2a8ee16534de58ff21",
+      "actual": "pass"
+    },
+    {
+      "id": "penlift-14-50-gap0",
+      "target": "颜",
+      "expect": "pass",
+      "inkSha256": "bd5e02b1a093d58ef15ce029ff0eb06650d27fca7f8d82fc82431707b27fdf31",
+      "actual": "pass"
+    },
+    {
+      "id": "penlift-14-50-gap2",
+      "target": "颜",
+      "expect": "pass",
+      "inkSha256": "b337b9565a0cedfd9ff464ef8408e15b29460a5eafd42e689c9e03fd0321efb8",
+      "actual": "pass"
+    },
+    {
+      "id": "penlift-14-75-gap0",
+      "target": "颜",
+      "expect": "pass",
+      "inkSha256": "d3f91c014a3c88911624a7290e4703fac074074fbc8fe68f7951d8c65683b1fa",
+      "actual": "pass"
+    },
+    {
+      "id": "penlift-14-75-gap2",
+      "target": "颜",
+      "expect": "pass",
+      "inkSha256": "f44f7274fd4aeb95b06faa164614afbef183eae03096775b044497f84ecc1d31",
+      "actual": "pass"
+    }
+  ]
+}

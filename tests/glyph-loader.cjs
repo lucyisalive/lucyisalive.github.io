@@ -217,7 +217,7 @@ async function gradingTests() {
   }
   for (const file of ['real-ink-cases.json', 'tests/ipad-2026-11-02.json',
     'tests/ipad-2026-11-02-round2.json', 'tests/ipad-2026-11-03-round3.json',
-    'tests/ipad-2026-11-03-round4.json']) {
+    'tests/ipad-2026-11-03-round4.json', 'tests/ipad-2026-11-03-round5.json']) {
     const cases = JSON.parse(fs.readFileSync(path.join(root, file), 'utf8')).cases;
     for (const c of cases) {
       if (c.expect !== 'pass' && c.expect !== 'fail') continue;
@@ -231,7 +231,7 @@ async function gradingTests() {
     await compare(char, reference.slice(1), char + ' missing first stroke');
     dependencyCount++;
   }
-  assert.equal(realCount, 28);
+  assert.equal(realCount, 29);
   assert.equal(dependencyCount, 11, 'All original complete component decompositions exercised');
   console.log(`Glyph loader: ${realCount} labelled real traces and ${dependencyCount * 2} component-sensitive reference/missing-stroke cases exactly match full-167 grading and labels.`);
 }
