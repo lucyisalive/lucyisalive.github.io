@@ -2,10 +2,11 @@
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
-<meta name="game-version" content="2026.11.02.3">
+<meta name="game-version" content="2026.11.02.4">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>汉字魔法门</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="game-feedback.css?v=2026.11.02.4">
 <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
@@ -241,7 +242,10 @@
   .shake{ animation: shake .35s; }
   @keyframes shake{ 0%,100%{transform:translateX(0);} 25%{transform:translateX(-6px);} 75%{transform:translateX(6px);} }
 
-  .hint-row{ display:flex; align-items:center; gap:10px; }
+  .hint-row{ display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap; }
+  .sentence-btn{ border:1px solid rgba(255,246,214,.35); border-radius:999px; padding:8px 10px;
+    background:rgba(255,255,255,.12); color:var(--star); font-size:13px; cursor:pointer; }
+  .sentence-btn.speaking{ background:var(--gold); color:#3a2416; }
   .speak-btn{
     width:38px; height:38px; border-radius:50%; border:none;
     background:rgba(255,255,255,.14); color:var(--star);
@@ -329,6 +333,9 @@
     background:#fff; border-radius:8px; padding:7px 10px; margin-bottom:5px; font-size:14px;
   }
   .queue-item .del{ color:var(--seal); cursor:pointer; font-weight:700; }
+  .queue-item small{ display:block; color:#8a8272; font-size:11px; margin-top:3px; }
+  .queue-actions{ display:flex; gap:8px; flex-shrink:0; margin-left:8px; }
+  .queue-actions button{ border:0; border-radius:6px; padding:5px 7px; background:#efe4c8; color:#5b3a24; font-size:12px; }
   .panel-actions{ display:flex; gap:8px; margin-top:16px; flex-wrap:wrap; }
   .panel-actions button{
     flex:1; min-width:120px; padding:10px; border-radius:10px; border:none;
@@ -456,6 +463,7 @@
         <!-- Never speaks on its own: reading the pinyin is the skill being practised, so
              the sound is there for when he's stuck, not handed to him every time. -->
         <button class="speak-btn" id="speakBtn" title="读一遍给我听">🔊</button>
+        <button class="sentence-btn" id="sentenceBtn" title="听一句话，分清词语的意思">句子提示</button>
       </div>
       <div class="write-canvas-wrap" id="writeTile">
         <div class="grid-lines"></div>
@@ -499,6 +507,7 @@
       「奇迹的迹」= 组词"奇迹"、要默写"迹"。分隔符用 ；，、空格或换行都行。<br>
       也可以只写一个字（就没有组词提示），或写「单薄的薄 bó」手动指定拼音。<br>
       拼音自动填好；<b style="color:var(--seal);">标红的是多音字</b>，点一下可以换读音。
+      <br>今天加入的字优先默写；重复字只提前复习，保留原来的学习记录。新一批排在旧队列前面。
     </p>
 
     <label>逐个添加</label>
@@ -508,6 +517,8 @@
       <input type="text" id="wordInput" placeholder="词语（可选）">
       <button id="addCharBtn">加入</button>
     </div>
+    <label for="sentenceInput">句子提示（选填，常用词语会自动配好）</label>
+    <input type="text" id="sentenceInput" placeholder="例如：我们去公园放风筝。" maxlength="100">
     <div class="queue-list" id="queueList"></div>
 
     <label>需要家长讲解（今天错了 3 次，已经停下来）</label>
@@ -544,7 +555,7 @@
     </p>
 
     <button class="btn-close-panel" id="closePanelBtn">关闭</button>
-    <p class="hint-text" id="gameVersion">版本 2026.11.02.3</p>
+    <p class="hint-text" id="gameVersion">版本 2026.11.02.4</p>
   </div>
 </div>
 
@@ -552,6 +563,8 @@
 <script src="curriculum-hanzi-data.js?v=2026.11.02.3"></script>
 <script src="curriculum-data.js?v=2026.11.02.3"></script>
 <script src="practice-selector.js?v=2026.11.02.3"></script>
+<script src="sentence-hints.js?v=2026.11.02.4"></script>
+<script src="game-feedback.js?v=2026.11.02.4"></script>
 <script src="pinyin-data.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.7/dist/hanzi-writer.min.js"></script>
 <script>
@@ -610,7 +623,7 @@ function defaultBank(){
 // device that has already played keeps its old characters for ever and never sees the new
 // set — the change would reach nobody who actually uses the game.
 const BANK_VERSION = 5;
-const GAME_VERSION = '2026.11.02.3';
+const GAME_VERSION = '2026.11.02.4';
 
 let state = {
   bank: defaultBank(),
@@ -690,6 +703,18 @@ function migrateState(s){
   if(typeof s.dailyCount !== 'number') s.dailyCount = 5;
   if(typeof s.scenesUnlocked !== 'number') s.scenesUnlocked = 0;
   if(!Array.isArray(s.priorityQueue)) s.priorityQueue = [];
+  // Undated entries are from the old queue. Adopt them once, without changing
+  // any learning record; dated entries stop taking priority after their day.
+  const queuedChars = new Set();
+  s.priorityQueue = s.priorityQueue.filter(p => {
+    if(queuedChars.has(p.char)) return false;
+    queuedChars.add(p.char);
+    return true;
+  });
+  s.priorityQueue.forEach((p, i) => {
+    if(!p.addedDay) p.addedDay = todayStr();
+    if(!p.requestId) p.requestId = 'legacy-' + p.addedDay + '-' + i + '-' + p.char;
+  });
   s.bank.forEach(it => {
     if(typeof it.lastSeen !== 'string') it.lastSeen = null;
     if(!Array.isArray(it.history)) it.history = [];
@@ -754,6 +779,8 @@ let stepAttempts = 0;         // attempts used at the current step (max 2)
 let pendingRetests = [];      // [{item, round, fillersSeen}] — delayed blind re-checks
 let priorityConsumedToday = new Set(); // priority chars already served this session
 let selectionSession = window.HanziPracticeSelector.createSession();
+let parentQueueChanged = false;
+let currentParentRequestId = null;
 let timerHandle = null;
 const TEACHING_STEPS = [5, 3, 1, 0]; // seconds character is shown before each retry; 0 = blind
 
@@ -1959,6 +1986,7 @@ const closePanelBtn = document.getElementById('closePanelBtn');
 const charInput = document.getElementById('charInput');
 const pinyinInput = document.getElementById('pinyinInput');
 const wordInput = document.getElementById('wordInput');
+const sentenceInput = document.getElementById('sentenceInput');
 const addCharBtn = document.getElementById('addCharBtn');
 const batchInput = document.getElementById('batchInput');
 const batchAddBtn = document.getElementById('batchAddBtn');
@@ -1975,6 +2003,7 @@ const inkCopyBtn = document.getElementById('inkCopyBtn');
 const inkDownloadBtn = document.getElementById('inkDownloadBtn');
 const inkClearBtn = document.getElementById('inkClearBtn');
 const speakBtn = document.getElementById('speakBtn');
+const sentenceBtn = document.getElementById('sentenceBtn');
 const dailyCountInput = document.getElementById('dailyCount');
 const saveProgressBtn = document.getElementById('saveProgressBtn');
 const loadProgressBtn = document.getElementById('loadProgressBtn');
@@ -1993,12 +2022,53 @@ const fileInput = document.getElementById('fileInput');
 })();
 
 // ---------- selecting the next character to work on ----------
+function parentPriorityEntries(){
+  const today = todayStr();
+  return state.priorityQueue.filter(p => (!p.addedDay || p.addedDay === today) && p.completedDay !== today);
+}
+
+function unfinishedParentEntries(){
+  return parentPriorityEntries().filter(p => !isStuck(state.bank.find(b => b.char === p.char) || {}));
+}
+
+function nextParentPriority(){
+  const pendingChars = new Set(pendingRetests.map(r => r.item.char));
+  return unfinishedParentEntries().find(p => !priorityConsumedToday.has(p.char) && !pendingChars.has(p.char));
+}
+
+// Importing is a scheduling request, never a reset of the child's learning.
+function enqueueParentItems(items){
+  const latest = new Map();
+  items.forEach(p => {
+    if(!/^[一-鿿]$/.test(p.char) || !p.pinyin) return;
+    latest.set(p.char, { ...p, word:p.word || '', addedDay:todayStr(), completedDay:null,
+      requestId:Date.now().toString(36) + '-' + Math.random().toString(36).slice(2) });
+  });
+  latest.forEach(p => {
+    let item = state.bank.find(b => b.char === p.char);
+    if(!item){ item = newBankItem(p.char, p.pinyin, p.word); state.bank.push(item); }
+    const sameWord = item.word === p.word;
+    item.pinyin = p.pinyin;
+    item.word = p.word;
+    // A sentence belongs to a word. A replacement word must not inherit an old sentence.
+    if(typeof p.sentence === 'string') item.sentence = p.sentence.trim();
+    else if(!sameWord) delete item.sentence;
+    if(item.sentence) p.sentence = item.sentence;
+    item.fromParent = true;
+    item.retired = false;
+    priorityConsumedToday.delete(p.char);
+  });
+  state.priorityQueue = [...latest.values(), ...state.priorityQueue.filter(p => !latest.has(p.char))];
+  if(latest.size) parentQueueChanged = true;
+  saveState();
+  return latest.size;
+}
+
 function pickNextChar(){
   const pendingChars = new Set(pendingRetests.map(r => r.item.char));
 
   // parent-added "today" priority characters go first, once each
-  const nextPriority = state.priorityQueue.find(p => !priorityConsumedToday.has(p.char) && !pendingChars.has(p.char)
-    && !isStuck(state.bank.find(b => b.char === p.char) || {}));
+  const nextPriority = nextParentPriority();
   if(nextPriority){
     priorityConsumedToday.add(nextPriority.char);
     let existing = state.bank.find(b => b.char === nextPriority.char);
@@ -2011,8 +2081,12 @@ function pickNextChar(){
       // which beats whatever the bank was seeded with — "薄" as 单薄/bó vs 薄饼/báo is exactly
       // the case where the stored default would show the child the wrong pinyin.
       existing.pinyin = nextPriority.pinyin;
-      if(nextPriority.word) existing.word = nextPriority.word;
+      if(nextPriority.word !== undefined && nextPriority.word !== existing.word){
+        existing.word = nextPriority.word;
+        delete existing.sentence;
+      }
     }
+    if(typeof nextPriority.sentence === 'string') existing.sentence = nextPriority.sentence;
     existing.fromParent = true;
     existing.retired = false;
     saveState();
@@ -2032,7 +2106,8 @@ function pickNextChar(){
   // before the real interleaving gap has happened.
   // Characters already written correctly on MASTERED_DAYS different days leave the rotation
   // for good, so the bank keeps shrinking towards whatever the child still can't do.
-  const active = state.bank.filter(b => !isMastered(b) && !isStuck(b) && !b.retired);
+  const active = state.bank.filter(b => !isMastered(b) && !isStuck(b) && !b.retired
+    && !(b.passedDays || []).includes(todayStr()));
   if(active.length === 0) return null;             // nothing left to practise — caller ends the day
   const candidates = active.filter(b => !pendingChars.has(b.char));
   const pickFrom = candidates.length ? candidates : active; // only fall back if literally everything is pending
@@ -2056,7 +2131,7 @@ function pickNextChar(){
 }
 
 function renderProgressPath(){
-  const target = state.dailyCount;
+  const target = Math.max(state.dailyCount, passedCount + unfinishedParentEntries().length);
   progressPath.innerHTML = Array.from({length: target}).map((_, i) => {
     const cls = i < passedCount ? 'progress-dot done' : 'progress-dot';
     return `<div class="${cls}"></div>`;
@@ -2064,50 +2139,9 @@ function renderProgressPath(){
 }
 
 // ---------- door state ----------
-// ---------- tiny synthesized sound effects (no audio files, no network) ----------
-let audioCtx = null;
-function ensureAudio(){
-  if(!audioCtx){
-    try{ audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }catch(e){ audioCtx = null; }
-  }
-  return audioCtx;
-}
-function playTone(freq, duration, type, gainStart){
-  const ctx = ensureAudio();
-  if(!ctx) return;
-  const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
-  osc.type = type;
-  osc.frequency.value = freq;
-  gain.gain.setValueAtTime(gainStart, ctx.currentTime);
-  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
-  osc.connect(gain);
-  gain.connect(ctx.destination);
-  osc.start();
-  osc.stop(ctx.currentTime + duration);
-}
-function playSuccessDing(){
-  playTone(880, 0.18, 'triangle', 0.16);
-  setTimeout(() => playTone(1320, 0.24, 'triangle', 0.12), 90);
-}
-function playDoorCreak(){
-  const ctx = ensureAudio();
-  if(!ctx) return;
-  const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
-  osc.type = 'sawtooth';
-  osc.frequency.setValueAtTime(170, ctx.currentTime);
-  osc.frequency.exponentialRampToValueAtTime(85, ctx.currentTime + 0.7);
-  gain.gain.setValueAtTime(0.05, ctx.currentTime);
-  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.75);
-  osc.connect(gain);
-  gain.connect(ctx.destination);
-  osc.start();
-  osc.stop(ctx.currentTime + 0.8);
-}
-
+// Audio and particles are independent of grading and learning records.
 function setDoorClosed(){ doorpanel.classList.remove('open'); }
-function setDoorOpen(){ doorpanel.classList.add('open'); playDoorCreak(); }
+function setDoorOpen(){ doorpanel.classList.add('open'); }
 
 // ---------- drawing a printed glyph from the grading data ----------
 // hanzi-writer ships, alongside the stroke medians we grade against, the filled outline of
@@ -2155,20 +2189,42 @@ function showGlowChar(char, visible){ setGlyph(charGlow, char, visible); }
 // Says the whole word, exactly what a parent dictating would say — the same information the
 // hint already shows on screen (单bó), just as sound. It never fires by itself: working the
 // pinyin out is the point, and this is the way out when he genuinely can't.
-function speakPrompt(){
-  const item = currentItem;
-  if(!item || !window.speechSynthesis) return;
-  speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(item.word || item.char);
+let activeSpeech = null;
+function stopPromptSpeech(){
+  activeSpeech = null;
+  if(window.speechSynthesis) window.speechSynthesis.cancel();
+  speakBtn.classList.remove('speaking');
+  sentenceBtn.classList.remove('speaking');
+}
+
+function speakText(text, button){
+  if(!text || !window.speechSynthesis) return;
+  stopPromptSpeech();
+  const u = new SpeechSynthesisUtterance(text);
+  activeSpeech = u; // Keep the utterance alive on Safari.
   u.lang = 'zh-CN';
-  u.rate = 0.75;                 // slower than default; he's listening for the syllables
-  // iOS populates the voice list asynchronously, so this is often empty on the first tap.
-  // Setting lang is what actually matters; a matching voice is a bonus when one is loaded.
-  const zh = speechSynthesis.getVoices().find(v => /^zh/i.test(v.lang));
+  u.rate = 0.78;
+  const voices = window.speechSynthesis.getVoices();
+  const zh = voices.find(v => /^zh[-_]CN$/i.test(v.lang)) || voices.find(v => /^zh/i.test(v.lang));
   if(zh) u.voice = zh;
-  u.onstart = () => speakBtn.classList.add('speaking');
-  u.onend = u.onerror = () => speakBtn.classList.remove('speaking');
-  speechSynthesis.speak(u);
+  u.onstart = () => { if(activeSpeech === u) button.classList.add('speaking'); };
+  u.onend = u.onerror = () => {
+    if(activeSpeech !== u) return;
+    activeSpeech = null;
+    button.classList.remove('speaking');
+  };
+  window.speechSynthesis.speak(u);
+}
+
+function speakPrompt(){
+  if(currentItem) speakText(currentItem.word || currentItem.char, speakBtn);
+}
+
+function speakSentence(){
+  if(!currentItem) return;
+  const sentence = window.HanziSentenceHints.get(currentItem);
+  if(sentence) speakText(sentence, sentenceBtn);
+  else statusLine.textContent = '这个词还没有配句子，请爸爸妈妈在设置里补一句提示。';
 }
 
 // The demo character overlays the 米字格 at exactly the size and position of the square the
@@ -2199,20 +2255,25 @@ function loadNextDoor(){
   // Hitting the day's target ends the day, full stop. Waiting for every interleaved retest
   // to also come good meant the child could have written his five characters, be told he was
   // done by the dots, and still be handed more — the retests just carry over to tomorrow.
-  if(passedCount >= state.dailyCount){
+  if(passedCount >= state.dailyCount && !unfinishedParentEntries().length){
     showFinale();
     return;
   }
 
   // is a delayed retest ready to be inserted now (its 2 filler characters have happened)?
   const readyRetest = pendingRetests.find(r => r.fillersSeen >= 2);
-  if(readyRetest){
+  if(readyRetest && !nextParentPriority()){
     pendingRetests = pendingRetests.filter(r => r !== readyRetest);
-    presentDoor(readyRetest.item, 'retest', readyRetest.round);
+    presentDoor(readyRetest.item, 'retest', readyRetest.round, readyRetest.parentRequestId);
   } else {
     const item = pickNextChar();
-    if(!item){                    // every character in the bank is permanently mastered
-      showFinale(true);
+    if(!item){
+      // An explicitly requested, already-mastered character can still need a
+      // blind retest. If there are no fillers, test it now rather than lose it.
+      if(pendingRetests.length){
+        const waiting = pendingRetests.shift();
+        presentDoor(waiting.item, 'retest', waiting.round, waiting.parentRequestId);
+      } else showFinale(true);
       return;
     }
     // any OTHER item still waiting for its delayed retest just got a filler
@@ -2221,10 +2282,15 @@ function loadNextDoor(){
   }
 }
 
-function presentDoor(item, mode, round){
+function presentDoor(item, mode, round, parentRequestId = null){
+  stopPromptSpeech();
+  window.HanziGameFeedback.reset();
   currentItem = item;
   currentMode = mode;
   currentRound = round;
+  currentParentRequestId = mode === 'free'
+    ? (parentPriorityEntries().find(p => p.char === item.char) || {}).requestId || null
+    : parentRequestId;
   stepIndex = 0;
   stepAttempts = 0;
 
@@ -2268,6 +2334,9 @@ function recordResult(item, outcome){
   const schedule = [1, 2, 4, 7, 14, 21, 30]; // days, indexed by box 0..6
   item.interval = outcome === 'abandoned' ? 1 : schedule[Math.min(item.box, schedule.length - 1)];
   item.history.push({ day: today, outcome });
+  state.priorityQueue.forEach(p => {
+    if(p.requestId === currentParentRequestId && (!p.addedDay || p.addedDay === today)) p.completedDay = today;
+  });
 
   // Mastery counts DISTINCT days, not passes: writing it correctly five times this afternoon
   // is one day's evidence, and the thing being tested is whether it survives a night's sleep.
@@ -2281,7 +2350,7 @@ function recordResult(item, outcome){
 function markPassed(item, outcome, message){
   setWritingView(false);          // back to the door for the reward animation
   setDoorOpen();
-  playSuccessDing();
+  window.HanziGameFeedback.celebrate(item.char);
   showGlowChar(item.char, true);
   submitBtn.style.display = 'none';
   clearBtn.style.display = 'none';
@@ -2314,6 +2383,9 @@ function markAbandonedToday(item){
 
 function handleAttemptResult(ok){
   const item = currentItem;
+  stopPromptSpeech();
+  if(ok) window.HanziGameFeedback.playCorrect();
+  else window.HanziGameFeedback.playWrong();
 
   // Counted across every mode, not per teaching step: the old state machine could ask for
   // seventeen attempts on one character before giving up, which is where "错了很多轮还在让
@@ -2360,7 +2432,7 @@ function handleAttemptResult(ok){
       startTeachingRound();
     } else {
       // blind write correct — don't pass yet, schedule the delayed retest
-      pendingRetests.push({ item, round: currentRound, fillersSeen: 0 });
+      pendingRetests.push({ item, round: currentRound, fillersSeen: 0, parentRequestId:currentParentRequestId });
       setWritingView(false);      // put the grid away; only "继续" should be tappable now
       submitBtn.style.display = 'none';
       clearBtn.style.display = 'none';
@@ -2470,6 +2542,7 @@ function onTap(el, handler){
     const now = Date.now();
     if(now - lastFired < 400) return;
     lastFired = now;
+    window.HanziGameFeedback.unlock();
     handler(e);
   }
   el.addEventListener('pointerup', fire);
@@ -2526,8 +2599,21 @@ onTap(restartBtn, function(){
 });
 
 // ---------- settings panel ----------
-onTap(settingsBtn, () => { renderMasteredList(); renderStuckList(); renderInkList(); inkMsg.textContent = ''; panelOverlay.classList.add('show'); });
-onTap(closePanelBtn, () => panelOverlay.classList.remove('show'));
+onTap(settingsBtn, () => { stopPromptSpeech(); renderQueueList(); renderMasteredList(); renderStuckList(); renderInkList(); inkMsg.textContent = ''; panelOverlay.classList.add('show'); });
+onTap(closePanelBtn, () => {
+  panelOverlay.classList.remove('show');
+  if(!parentQueueChanged) return;
+  parentQueueChanged = false;
+  if(finale.classList.contains('show')){
+    finale.classList.remove('show');
+    playzone.classList.remove('hide');
+    loadNextDoor();
+  } else if(currentMode === 'free' && !strokesPoints.length && !isDrawing && nextParentPriority()){
+    // Replace only an untouched free question. It already counted as a filler,
+    // so this must not increment the delayed-retest gap a second time.
+    presentDoor(pickNextChar(), 'free', 1);
+  }
+});
 
 // ---------- pinyin ----------
 // pinyin-data.js maps every GB2312 character to its Mandarin reading(s), from the Unicode
@@ -2540,16 +2626,24 @@ function pinyinAlts(char){
   return raw ? raw.split(' ') : [];
 }
 
+function escapeText(value){
+  return String(value || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
 function renderQueueList(){
-  queueList.innerHTML = state.priorityQueue.map((p, i) => {
+  queueList.innerHTML = state.priorityQueue.map((p, i) => ({p,i}))
+    .filter(({p}) => !p.addedDay || p.addedDay === todayStr()).map(({p, i}) => {
     const alts = p.alts && p.alts.length > 1;
     const py = alts
-      ? `<span class="py-alt" data-i="${i}" title="多音字，点一下换读音">${p.pinyin}</span>`
-      : p.pinyin;
+      ? `<span class="py-alt" data-i="${i}" title="多音字，点一下换读音">${escapeText(p.pinyin)}</span>`
+      : escapeText(p.pinyin);
+    const bankItem = state.bank.find(b => b.char === p.char);
+    const status = p.completedDay === todayStr() ? '今天已完成' : isStuck(bankItem || {}) ? '先点下方“我讲过了”再复习' : '今天优先复习';
+    const sentence = window.HanziSentenceHints.get(p);
     return `
     <div class="queue-item">
-      <span>${p.char}（${py}）${p.word ? ' · '+p.word : ''}</span>
-      <span class="del" data-i="${i}">删除</span>
+      <span>${escapeText(p.char)}（${py}）${p.word ? ' · '+escapeText(p.word) : ''}<small>${status}${sentence ? ' · 已配句子' : ' · 可补句子'}</small></span>
+      <span class="queue-actions"><button class="edit-sentence" data-i="${i}">${sentence ? '改句子' : '补句子'}</button><button class="del" data-i="${i}">删除</button></span>
     </div>`;
   }).join('') || '<div style="font-size:12px;color:#8a8272;">暂无今日优先字</div>';
 
@@ -2565,6 +2659,20 @@ function renderQueueList(){
       const it = state.priorityQueue[Number(el.dataset.i)];
       const k = it.alts.indexOf(it.pinyin);
       it.pinyin = it.alts[(k + 1) % it.alts.length];
+      const bankItem = state.bank.find(b => b.char === it.char);
+      if(bankItem) bankItem.pinyin = it.pinyin;
+      saveState();
+      renderQueueList();
+    });
+  });
+  queueList.querySelectorAll('.edit-sentence').forEach(el => {
+    onTap(el, () => {
+      const it = state.priorityQueue[Number(el.dataset.i)];
+      const sentence = prompt('写一句能说明词语意思的短句，孩子点“句子提示”时会听到：', window.HanziSentenceHints.get(it) || '');
+      if(sentence === null) return;
+      it.sentence = sentence.trim().slice(0,100);
+      const bankItem = state.bank.find(b => b.char === it.char);
+      if(bankItem) bankItem.sentence = it.sentence;
       saveState();
       renderQueueList();
     });
@@ -2689,12 +2797,15 @@ onTap(addCharBtn, () => {
   const c = charInput.value.trim();
   const w = wordInput.value.trim();
   if(!c) return;
+  if(!/^[一-鿿]$/.test(c)){ batchMsg.textContent = '每次请填一个汉字；多个字请用上面的批量加入。'; return; }
   const alts = pinyinAlts(c);
   const p = pinyinInput.value.trim() || alts[0] || '';
   if(!p) return;                         // no reading typed and none on file — nothing to show the child
-  state.priorityQueue.push({ char:c, pinyin:p, word:w, alts: pinyinInput.value.trim() ? [p] : alts });
-  charInput.value = ''; pinyinInput.value=''; wordInput.value='';
-  saveState();
+  enqueueParentItems([{ char:c, pinyin:p, word:w,
+    ...(sentenceInput.value.trim() ? {sentence:sentenceInput.value.trim()} : {}),
+    alts: pinyinInput.value.trim() ? [p] : alts }]);
+  charInput.value = ''; pinyinInput.value=''; wordInput.value=''; sentenceInput.value='';
+  batchMsg.textContent = '已放到今天最前面；原来的学习记录已保留。';
   renderQueueList();
 });
 
@@ -2732,9 +2843,9 @@ onTap(inkClearBtn, () => {
 
 onTap(batchAddBtn, () => {
   const { items, bad } = parseBatch(batchInput.value);
-  items.forEach(it => state.priorityQueue.push(it));
+  const added = enqueueParentItems(items);
   const polyphonic = items.filter(it => it.alts.length > 1).length;
-  let msg = items.length ? `加了 ${items.length} 个字` : '没认出任何字';
+  let msg = added ? `${added} 个字已排到今天最前面，重复字保留原记录` : '没认出任何字';
   if(polyphonic) msg += `，其中 ${polyphonic} 个多音字（标红的），点一下确认读音`;
   if(bad.length) msg += `；没认出：${bad.join('、')}`;
   batchMsg.textContent = msg;
@@ -2857,6 +2968,7 @@ renderMasteredList();
 renderStuckList();
 renderInkList();
 onTap(speakBtn, speakPrompt);
+onTap(sentenceBtn, speakSentence);
 loadNextDoor();
 </script>
 </body>

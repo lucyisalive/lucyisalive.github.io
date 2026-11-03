@@ -35,7 +35,7 @@ for (const file of ['hanzi-data.js', 'curriculum-hanzi-data.js', 'curriculum-dat
 }
 vm.runInContext(slice('function todayStr(){', '// ---------- default character bank ----------'), context);
 vm.runInContext(slice('function newBankItem(', '// ---------- freehand drawing surface'), context);
-vm.runInContext(slice('function pickNextChar(){', 'function renderProgressPath(){'), context);
+vm.runInContext(slice('function parentPriorityEntries(){', 'function renderProgressPath(){'), context);
 vm.runInContext(slice('function hintFor(item){', '// ---------- main flow ----------'), context);
 const run = code => vm.runInContext(code, context);
 const plain = code => clone(run(code));
@@ -123,7 +123,12 @@ const migrated = plain('migrateState(testSave)');
 assert.equal(migrated.bankVersion, 5);
 assert.equal(migrated.dailyCount, 9);
 assert.equal(migrated.scenesUnlocked, 7);
-assert.deepEqual(migrated.priorityQueue, priorityQueue);
+assert.equal(migrated.priorityQueue.length, priorityQueue.length);
+migrated.priorityQueue.forEach((entry, i) => {
+  for (const key of Object.keys(priorityQueue[i])) assert.deepEqual(entry[key], priorityQueue[i][key]);
+  assert.equal(entry.addedDay, today);
+  assert.ok(entry.requestId, 'Legacy priority gets a persistent request identity');
+});
 assert.deepEqual(migrated.familyPreference, oldSave.familyPreference);
 assert.equal(new Set(migrated.bank.map(item => item.char)).size, migrated.bank.length);
 for (const old of [common, parentCommon, parentOutside]) {
