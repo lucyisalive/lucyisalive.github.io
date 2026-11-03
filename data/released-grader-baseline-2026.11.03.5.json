@@ -1,0 +1,4168 @@
+{
+  "schemaVersion": 1,
+  "sourceVersion": "2026.11.03.5",
+  "sourceCommit": "17c1d00d43fef79c3b6527a8015cf33c3a735dc8",
+  "sourceHtmlSha256": "7c61c23609cb3a6663594b8e5ccb4afb52ff661036632b055511990ec99d96b8",
+  "description": "Immutable released verdicts from git show 17c1d00:index.html. Expected answers are unchanged independent human or controlled-case labels. Only results already equal to those expected answers are protected; unresolved errors stay errors. No raw handwriting is duplicated.",
+  "excludedUnlabelled": 46,
+  "rows": [
+    {
+      "id": "real-ink/xue-merged-zi-2026-08-13",
+      "target": "学",
+      "expect": "pass",
+      "inkSha256": "81c6fa3445b818eb3ec5f5f1c764d6981e260502b5a0188843cf580ea0c5c4a3",
+      "actual": "pass"
+    },
+    {
+      "id": "real-ink/xue-merged-zi-compact-2026-08-13",
+      "target": "学",
+      "expect": "pass",
+      "inkSha256": "096479715641de5e110aea12864c44fc94adfe5b7efd00c964c9ccfd3d636886",
+      "actual": "pass"
+    },
+    {
+      "id": "real-ink/xue-heng-for-mibaogai-2026-08-13",
+      "target": "学",
+      "expect": "fail",
+      "inkSha256": "fbfa0cfa696c245955f18b96161ae0895c829daab82f35232fc2541b97813664",
+      "actual": "fail"
+    },
+    {
+      "id": "real-ink/xue-merged-zi-slanted-2026-08-13",
+      "target": "学",
+      "expect": "pass",
+      "inkSha256": "94442fc7dc2f988a4cfb7d59a48a2833db72dd33c14222dd44b816114adf5e0f",
+      "actual": "pass"
+    },
+    {
+      "id": "real-ink/xue-cong-left-pie-long-2026-08-13",
+      "target": "学",
+      "expect": "pass",
+      "inkSha256": "4feddabb9061a9d5e74a9b362276db9c4321dece583cad8483c4be7cc9b0071a",
+      "actual": "pass"
+    },
+    {
+      "id": "real-ink/xue-neat-8-strokes-a-2026-08-13",
+      "target": "学",
+      "expect": "pass",
+      "inkSha256": "04c705dfa1b4cb6c60243e8d833f0e3c18e8ef15cba76db20d708a1370e4e487",
+      "actual": "pass"
+    },
+    {
+      "id": "real-ink/xue-neat-8-strokes-b-2026-08-13",
+      "target": "学",
+      "expect": "pass",
+      "inkSha256": "f77c585122253f9e9429fe9c66c700d0264d9cb842662bfe85633771d8b9f8a1",
+      "actual": "pass"
+    },
+    {
+      "id": "real-ink/qi-bottom-kou-wide",
+      "target": "器",
+      "expect": "pass",
+      "inkSha256": "a2a0b35f41c7ad1be7783f04689e310cdd19dbfb92b5e5949c269e4532f5a1a3",
+      "actual": "pass"
+    },
+    {
+      "id": "real-ink/ran-neat-a",
+      "target": "燃",
+      "expect": "pass",
+      "inkSha256": "2237ab7bf8a33831fa6361c4190beb07205c27e4a1d5e30fe4ef5807bb84508a",
+      "actual": "pass"
+    },
+    {
+      "id": "real-ink/ran-neat-b",
+      "target": "燃",
+      "expect": "pass",
+      "inkSha256": "18aa54f5c2df23d9e17465a4eeb33eefb5d158a7eb2855ae3e3987d9ab00f1dc",
+      "actual": "pass"
+    },
+    {
+      "id": "real-ink/zao-neat-a",
+      "target": "澡",
+      "expect": "pass",
+      "inkSha256": "1072626bf4b5a9100cac1a173265a7f1955aacc809a2456531569bfb5697b62d",
+      "actual": "pass"
+    },
+    {
+      "id": "real-ink/zao-neat-b",
+      "target": "澡",
+      "expect": "pass",
+      "inkSha256": "5cf5771bd41ce45fafd7431f688a6b3e8c779c39ffb27b2d49084ac8f1ee88ee",
+      "actual": "pass"
+    },
+    {
+      "id": "real-ink/hui-neat-a",
+      "target": "慧",
+      "expect": "pass",
+      "inkSha256": "d065b80e16884f734acdf97533da6467f42f0d2abeb60c69bf38fd3911ba74bb",
+      "actual": "pass"
+    },
+    {
+      "id": "real-ink/hui-neat-b",
+      "target": "慧",
+      "expect": "pass",
+      "inkSha256": "5d512a3f3d3e7059771d234249646b30783af2a4d30e2e46d288dc9db3c3424f",
+      "actual": "pass"
+    },
+    {
+      "id": "real-ink/sha-rain-dots-0",
+      "target": "霎",
+      "expect": "pass",
+      "inkSha256": "0a6bc3013628703f4b0f1a759cc581bb54ae144be9569544479087c8abc70cf2",
+      "actual": "pass"
+    },
+    {
+      "id": "ipad-2026-11-02/ipad-2026-11-02-01",
+      "target": "慧",
+      "expect": "pass",
+      "inkSha256": "88bf10e46c3d5e8d6df89c5941e50d3b06a50743e4bfaa64deea83d2059d2ff8",
+      "actual": "pass"
+    },
+    {
+      "id": "ipad-2026-11-02/ipad-2026-11-02-02",
+      "target": "藏",
+      "expect": "fail",
+      "inkSha256": "c6387485df0e6a401c417f00d030c4ee76323e36239812ad71dc25da7e31b24a",
+      "actual": "fail"
+    },
+    {
+      "id": "ipad-2026-11-02/ipad-2026-11-02-04",
+      "target": "澡",
+      "expect": "pass",
+      "inkSha256": "751edb32f895641f74098700ff9c32f6f667be7bce40518cf9f52e8438bb998e",
+      "actual": "pass"
+    },
+    {
+      "id": "ipad-2026-11-02/ipad-2026-11-02-05",
+      "target": "澡",
+      "expect": "pass",
+      "inkSha256": "45c6d445d0526880d11fdde7ec8b3ec335654e52ccfef69e76653949d7c3c5cd",
+      "actual": "pass"
+    },
+    {
+      "id": "ipad-2026-11-02/ipad-2026-11-02-10",
+      "target": "警",
+      "expect": "pass",
+      "inkSha256": "f21187ac465b93363aa0fd63f286134ed885e3a72793de01cd08f7d45665337d",
+      "actual": "pass"
+    },
+    {
+      "id": "ipad-2026-11-02/ipad-2026-11-02-11",
+      "target": "警",
+      "expect": "pass",
+      "inkSha256": "9bf893b776c6ec14b9db10777fa51292827b8737f4206146081b600240795ad5",
+      "actual": "pass"
+    },
+    {
+      "id": "ipad-2026-11-02-round2/round2-16",
+      "target": "警",
+      "expect": "pass",
+      "inkSha256": "b5504c94475daf5ebb9a4b33baf8283f8ee844b8f95d67cc40e673122a12dc31",
+      "actual": "pass"
+    },
+    {
+      "id": "ipad-2026-11-03-round3/ipad-2026-11-03-r3-06",
+      "target": "辩",
+      "expect": "pass",
+      "inkSha256": "c1d3de5c082a7ef9a1d79d485ceb50d1dbc79332571f326e537d1cfc5d6180e9",
+      "actual": "pass"
+    },
+    {
+      "id": "ipad-2026-11-03-round3/ipad-2026-11-03-r3-07",
+      "target": "历",
+      "expect": "fail",
+      "inkSha256": "9b1e496ecf7884c6b1459997a66675379737822d76b18a89940f5d2c586aa907",
+      "actual": "fail"
+    },
+    {
+      "id": "ipad-2026-11-03-round3/ipad-2026-11-03-r3-14",
+      "target": "收",
+      "expect": "fail",
+      "inkSha256": "57b2d208ad1bfa0d02144c37d2ef88f3365af5b87990e546beaa8264127786e1",
+      "actual": "fail"
+    },
+    {
+      "id": "ipad-2026-11-03-round4/ipad-2026-11-03-r4-05",
+      "target": "燕",
+      "expect": "pass",
+      "inkSha256": "df3aef6f083096738db3bc10f97b04d6ec7e56c798e7c111b032190a6a72c676",
+      "actual": "pass"
+    },
+    {
+      "id": "ipad-2026-11-03-round4/ipad-2026-11-03-r4-12",
+      "target": "类",
+      "expect": "pass",
+      "inkSha256": "f0107480a01b28cbdb2e522dbf49be4bb870379ffc26e92aaec06a69c40fa746",
+      "actual": "pass"
+    },
+    {
+      "id": "ipad-2026-11-03-round4/ipad-2026-11-03-r4-16",
+      "target": "类",
+      "expect": "pass",
+      "inkSha256": "6f9f0fb26654b5f0455d372d897e425f6aaac5297f356f5ea69d8dda16b34150",
+      "actual": "pass"
+    },
+    {
+      "id": "structural-safety/missing-藏-1",
+      "target": "藏",
+      "expect": "fail",
+      "inkSha256": "bb330ddad0e5d74d21dc452c641c03338df6c88ec64a9c6eedcc37acee4250a9",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-藏-2",
+      "target": "藏",
+      "expect": "fail",
+      "inkSha256": "f6fd6e1b143a50b31c42dab2ca9ca6910b2674b0733c9fe7e19cea7c338753b0",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-藏-3",
+      "target": "藏",
+      "expect": "fail",
+      "inkSha256": "7b9dff0e647bb07a9b83f1844308186df00cf58b1c33699faa99787b5538b538",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-藏-4",
+      "target": "藏",
+      "expect": "fail",
+      "inkSha256": "09908013e2d0a2e46716f3d4ad0edf232e10283b2f9f6c0990469e7c3b7064b5",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-藏-5",
+      "target": "藏",
+      "expect": "fail",
+      "inkSha256": "7f18738c7e8a5f374a685937fbbca88e1c5719898561ff2baaec6678d0baf746",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-藏-6",
+      "target": "藏",
+      "expect": "fail",
+      "inkSha256": "c883fc4a20d78e0a59166db4a3ef68ccf2b787b22806a18869e81a6b6252f1c8",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-藏-7",
+      "target": "藏",
+      "expect": "fail",
+      "inkSha256": "98c024ac893a37f3402ba3faf92ffeba6c1a5e5ef58123bd101e1945bb261eac",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-藏-8",
+      "target": "藏",
+      "expect": "fail",
+      "inkSha256": "eb0fdfddbf25086f1913710c0b882ff5c8c03c4cf5f8b82d2cf53cebaa0170f9",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-藏-9",
+      "target": "藏",
+      "expect": "fail",
+      "inkSha256": "fa515c7ab4fa6baab4f5356fa4350e5a8899fb9d7a5e9434524af154f87a2f71",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-藏-10",
+      "target": "藏",
+      "expect": "fail",
+      "inkSha256": "34da9d682e4e9ab3b12c6e018b34ed7d602cdca26c13206982a29a0805995c45",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-藏-11",
+      "target": "藏",
+      "expect": "fail",
+      "inkSha256": "b734c962100628b04430f69166224dfb57039e3eb455b2142b0bb0e5ebe25355",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-藏-12",
+      "target": "藏",
+      "expect": "fail",
+      "inkSha256": "c458c8bb04adde9c50733a7463a7a5790632cdbd66e64c58bdb79acc77ee162a",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-藏-13",
+      "target": "藏",
+      "expect": "fail",
+      "inkSha256": "732a43aec561538a6bfd2c6d889aee63e84e28cd13f498cfdf88d8924c569bb9",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-藏-14",
+      "target": "藏",
+      "expect": "fail",
+      "inkSha256": "6a1837db777c1461248251929fad8e3c304cde4fc66d4697bdddc4ce770fa44f",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-藏-15",
+      "target": "藏",
+      "expect": "fail",
+      "inkSha256": "ac4d1e1847227f4824c11e071d39a177a517983ac60148822833f69522cb436d",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-藏-16",
+      "target": "藏",
+      "expect": "fail",
+      "inkSha256": "cf2506e8cde47341d117adf0730f7132613cb72c41b75c3b0a353119ffa27e9a",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-藏-17",
+      "target": "藏",
+      "expect": "fail",
+      "inkSha256": "252e816d7b74ac4556fd00e6d29aa8e83d5c0391c8e37ea50cdbe032640823d1",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/extra-藏-above",
+      "target": "藏",
+      "expect": "fail",
+      "inkSha256": "d0fb77fe3cbe8d6d6772cc0a571c45a0e3d10eb09374781ae956788f68621ac8",
+      "actual": "pass"
+    },
+    {
+      "id": "structural-safety/extra-藏-right",
+      "target": "藏",
+      "expect": "fail",
+      "inkSha256": "5be719f953879bd19480ceac3a6c00e14ecee42d66708d03d43f1a3391ab308c",
+      "actual": "pass"
+    },
+    {
+      "id": "structural-safety/extra-藏-below",
+      "target": "藏",
+      "expect": "fail",
+      "inkSha256": "1ab41e56a45a42bd0bc2bf8a0ebc10c5fb5ec7fd7e53e7fc2402f662338d20ec",
+      "actual": "pass"
+    },
+    {
+      "id": "structural-safety/missing-警-1",
+      "target": "警",
+      "expect": "fail",
+      "inkSha256": "f2b648b786544c3cb36e2377085cc3f82fd9a8c33cefcbfe9999f6db18012594",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-警-2",
+      "target": "警",
+      "expect": "fail",
+      "inkSha256": "3bc8ff6d7916f83d8aad638eee4da80fb0833d75c9d9c3fbce351eedef9d025c",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-警-3",
+      "target": "警",
+      "expect": "fail",
+      "inkSha256": "a011bea860ce91c04d8e3828816766fdf20e04bf9a4301e88daebb69cdf28ba2",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-警-4",
+      "target": "警",
+      "expect": "fail",
+      "inkSha256": "d405afb0fcbc6ddcee0b103e4f1b54b905d8d9e884c3b3e54630a56cddf7bdec",
+      "actual": "pass"
+    },
+    {
+      "id": "structural-safety/missing-警-5",
+      "target": "警",
+      "expect": "fail",
+      "inkSha256": "dfbdd4f08c925257f1f4bd4952c637ae689f4a461548ae76462cb2d186e1d3e1",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-警-6",
+      "target": "警",
+      "expect": "fail",
+      "inkSha256": "d243f00feb5beeea2f90ddeaa56f6be6bc8554e8bd75a6778b846e497edf30fa",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-警-7",
+      "target": "警",
+      "expect": "fail",
+      "inkSha256": "1a05934430ffd521478474c2f6a749320f12bcd0c7695a64be1650b68723b4d3",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-警-8",
+      "target": "警",
+      "expect": "fail",
+      "inkSha256": "475efbe471398e22e3f795d40cbcc2c3b221d77a557253c1bb61d0db2ffb4482",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-警-9",
+      "target": "警",
+      "expect": "fail",
+      "inkSha256": "b84ccfe99568f9df0cc1c9a521882009c8e1ddfab6a172c18cc5db49847d930b",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-警-10",
+      "target": "警",
+      "expect": "fail",
+      "inkSha256": "2d4feeb9afbb6cc016132df757476d4f280d04def9825972024e878d846fabce",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-警-11",
+      "target": "警",
+      "expect": "fail",
+      "inkSha256": "cd0eb74644eee80a4912f1f3c8d587214b59f264af7b1cf0b7ddfd434e3782be",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-警-12",
+      "target": "警",
+      "expect": "fail",
+      "inkSha256": "ea00ef4daa9ad261d95c15d33e833c125faa7d698d659361acf1381e5281b14c",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-警-13",
+      "target": "警",
+      "expect": "fail",
+      "inkSha256": "9e6325e63f8d42329939d88a54a4cacd845ca3c990498395356ba4d04aad65ed",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-警-14",
+      "target": "警",
+      "expect": "fail",
+      "inkSha256": "490a196276e78c689aae40ede8412d06241289764526de9194def5000c57a826",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-警-15",
+      "target": "警",
+      "expect": "fail",
+      "inkSha256": "4bf580e0c6fb3e03160be0656a32ec4f9e4c2298c482598117d46c1a1d851d72",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-警-16",
+      "target": "警",
+      "expect": "fail",
+      "inkSha256": "960d40551f8ca6b3eff090ef6c2310d3631f4772e43c1118b21d8364611b3379",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-警-17",
+      "target": "警",
+      "expect": "fail",
+      "inkSha256": "495b97e5295867c63bfd0d32f53d8f091383018f901e5869e7b0289fdee26933",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-警-18",
+      "target": "警",
+      "expect": "fail",
+      "inkSha256": "22df460f7d0177ac334f6d6474c23d706e6fe86dccf6c6df697254027a9b6934",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-警-19",
+      "target": "警",
+      "expect": "fail",
+      "inkSha256": "9176f74fc5304d8c54265ddcc6de22c7d7bfa2062e038efbae1c873c9550a678",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/extra-警-above",
+      "target": "警",
+      "expect": "fail",
+      "inkSha256": "6e4299dcedf33298509d8e0028a961e9cd0439263ea37b6284d70b9b5f9a0142",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/extra-警-right",
+      "target": "警",
+      "expect": "fail",
+      "inkSha256": "9208f8d236549fe475914c2b3eb2f419196074fca28f78a2ecda9ccb6f09755e",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/extra-警-below",
+      "target": "警",
+      "expect": "fail",
+      "inkSha256": "40e5607963803a565d9d0172b2d38aa3cbf83a5123fbf2aa2651e3eeec816878",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-澡-1",
+      "target": "澡",
+      "expect": "fail",
+      "inkSha256": "3772c0f382f2c913628538486ec9653918d85a9db6057b3ce4c4f7d6d95dc407",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-澡-2",
+      "target": "澡",
+      "expect": "fail",
+      "inkSha256": "8f9fbf2292ea21abaa51e85cf552f4a0df76da17b67dc6f78b7b5271b8ea9b94",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-澡-3",
+      "target": "澡",
+      "expect": "fail",
+      "inkSha256": "086e7a42ca9b1898456be24d12fede0d2f708a776c73abf9a895b323d53bf603",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-澡-4",
+      "target": "澡",
+      "expect": "fail",
+      "inkSha256": "ec467423332460d6ad184cb0f2915369e616eab75edd1bff4ab43c4e0e3fcc42",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-澡-5",
+      "target": "澡",
+      "expect": "fail",
+      "inkSha256": "0076209ec7c7262db02dc5b03a0de0888a36d37a6ae9dea329eb0bf700eca2f8",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-澡-6",
+      "target": "澡",
+      "expect": "fail",
+      "inkSha256": "5c4904d80ce661e5876f48bfe9f90c6c36a32377a1039f1e8fc5e9507fa6c341",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-澡-7",
+      "target": "澡",
+      "expect": "fail",
+      "inkSha256": "8438523d5b05b586c6979a17d96047d4b24f20105ce7b342a3294837efd0c34f",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-澡-8",
+      "target": "澡",
+      "expect": "fail",
+      "inkSha256": "75ea7854f8356aad98971cd862b00a1ec96e41cfcb883d5879db1d14c496b8ed",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-澡-9",
+      "target": "澡",
+      "expect": "fail",
+      "inkSha256": "4d1e09eb3148691e93cc90fdb4bdb3697e4003755835e380c22f25f0bc0fb636",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-澡-10",
+      "target": "澡",
+      "expect": "fail",
+      "inkSha256": "39d1d3d02b466fc9b07c3b9f898ec6ca19758226dbfd3b9d72c9800a193df759",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-澡-11",
+      "target": "澡",
+      "expect": "fail",
+      "inkSha256": "8b8901928ba95127eb97b90759f5312069d99478a90a5cd2e3d6d3f16f3cbc55",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-澡-12",
+      "target": "澡",
+      "expect": "fail",
+      "inkSha256": "cbf86d02a2503ec754dc8b96240dfcb5d34753419a4d9f80c958334ad228edc8",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-澡-13",
+      "target": "澡",
+      "expect": "fail",
+      "inkSha256": "add729a264da2e6322c398ddb62b11735ee16a5a030301cf11a10285652d0d3c",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-澡-14",
+      "target": "澡",
+      "expect": "fail",
+      "inkSha256": "2a900ef6fd20a04d31fdb3ce595a819028e098e8bd5c8b1460e6df55bc6dae2d",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-澡-15",
+      "target": "澡",
+      "expect": "fail",
+      "inkSha256": "0c7540df2baad4465ebe646a8091742f57c1735826f4a020f1700aef3d7706e6",
+      "actual": "pass"
+    },
+    {
+      "id": "structural-safety/missing-澡-16",
+      "target": "澡",
+      "expect": "fail",
+      "inkSha256": "d0785899365f48c8ca14b8af7424d677c185f8d5c3072ad891803b2502b57f1c",
+      "actual": "pass"
+    },
+    {
+      "id": "structural-safety/extra-澡-above",
+      "target": "澡",
+      "expect": "fail",
+      "inkSha256": "bdd08c0c8f5ea9fd0344274de860883104aec58c334817c3184cbbfb354e6c8b",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/extra-澡-right",
+      "target": "澡",
+      "expect": "fail",
+      "inkSha256": "58a196f40661cbafda9dd88e7f8a2f1efb3db5897430c91643057dc926e51fc5",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/extra-澡-below",
+      "target": "澡",
+      "expect": "fail",
+      "inkSha256": "7a402569d5a44ae38ba6ce799ff701c57444651887df47a5d92a0983d35f6b03",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-薄-1",
+      "target": "薄",
+      "expect": "fail",
+      "inkSha256": "ec2353716579ce49464df825eef817699c05551b76e025ac967936a6838c3239",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-薄-2",
+      "target": "薄",
+      "expect": "fail",
+      "inkSha256": "9e3863e125cdb0148537c52c8a95b4ea6ef99e529ac926df8e580e93b3d141ef",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-薄-3",
+      "target": "薄",
+      "expect": "fail",
+      "inkSha256": "2256aaba9221922fd4c9f1c4b7f93361f0c1c73673d857f1b196294f595a1516",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-薄-4",
+      "target": "薄",
+      "expect": "fail",
+      "inkSha256": "9b64a07c84efe04a3a6f9bdb97176777791d3f6b21dc85b461369d3490049adb",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-薄-5",
+      "target": "薄",
+      "expect": "fail",
+      "inkSha256": "7baab0e6103323fa9bce06719233deaf2d19ed971264da065bc3f0c77a29c67b",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-薄-6",
+      "target": "薄",
+      "expect": "fail",
+      "inkSha256": "0266953645f76085570e087b3ef22df709b51d380a50f359cdaaab3f95e91d4d",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-薄-7",
+      "target": "薄",
+      "expect": "fail",
+      "inkSha256": "5b301f0fc9e3091a914245b8a4495e118116394f6079880418c6feb929c6da61",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-薄-8",
+      "target": "薄",
+      "expect": "fail",
+      "inkSha256": "9a1a2ed0b5fa337046b3ee46a918258e36822305708726b78db6e3170581eb3b",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-薄-9",
+      "target": "薄",
+      "expect": "fail",
+      "inkSha256": "486eb780852840dd7d5e9cab5dd27edc78b086d377be30b180baed88e8b57f8f",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-薄-10",
+      "target": "薄",
+      "expect": "fail",
+      "inkSha256": "0cf85f5c1495f09e326eea4ef6f983c8880346d2c55c29b09c961365f7b765ee",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-薄-11",
+      "target": "薄",
+      "expect": "fail",
+      "inkSha256": "93ba1c5d4238ece74d1cecf92123b7524fad2f68a6f501c0c66370c0fceee3f5",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-薄-12",
+      "target": "薄",
+      "expect": "fail",
+      "inkSha256": "6224a7b389fa36bfe6e99ba209172a222a05be7b6e7a1c518e3546317fbb642d",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-薄-13",
+      "target": "薄",
+      "expect": "fail",
+      "inkSha256": "e6fb88e148000e33953383794d74d72ba278835868fe9d179ebcb30b98925637",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-薄-14",
+      "target": "薄",
+      "expect": "fail",
+      "inkSha256": "8a7f2d6a39244534f4697089b66a1a7e35c6699e5e765e2625465a1e3be9c7ca",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-薄-15",
+      "target": "薄",
+      "expect": "fail",
+      "inkSha256": "c071816f83b2524b9b6e4291c305ada41337ae5dbcec4b2864b4dde38871ed03",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-薄-16",
+      "target": "薄",
+      "expect": "fail",
+      "inkSha256": "9900da604e6cd29b415ebd157b68e547fbf9fc5460022213beadf53fed7414e9",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/extra-薄-above",
+      "target": "薄",
+      "expect": "fail",
+      "inkSha256": "7f94a3669ace4354d59f2433db4fe30958e9b2a7d57f264e367e6218a933f11d",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/extra-薄-right",
+      "target": "薄",
+      "expect": "fail",
+      "inkSha256": "f6a486d36df6e21773c1caef6db274469b200d4921590667a26a6e49c2855980",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/extra-薄-below",
+      "target": "薄",
+      "expect": "fail",
+      "inkSha256": "37c5d2e1365f4af295f62814b56f96b7eb9635ad0a4859436a4b85cbc68e3ad5",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-慧-1",
+      "target": "慧",
+      "expect": "fail",
+      "inkSha256": "f29f9a488296f0e5000e5adb78324dbcf8b96dfd4520e7ab4167f708da3f0b71",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-慧-2",
+      "target": "慧",
+      "expect": "fail",
+      "inkSha256": "395a89955ccdcda28962e83392e643ff57c9dff092c626e40fc9040b98ab48ca",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-慧-3",
+      "target": "慧",
+      "expect": "fail",
+      "inkSha256": "f0234e5e47246998e540b8b6c1e7fa26501fc9fcb56ab08bdaf866a1fd070fbe",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-慧-4",
+      "target": "慧",
+      "expect": "fail",
+      "inkSha256": "0d763b9ca0705ad22bc91790b787c5cc07217ed77ccaa0db718b9eac117739f4",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-慧-5",
+      "target": "慧",
+      "expect": "fail",
+      "inkSha256": "2208166a34f4ac228299f99534f681baaed8e96c0ac5dd3db6e03ea24ae6f2f7",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-慧-6",
+      "target": "慧",
+      "expect": "fail",
+      "inkSha256": "41e85998c59bd5e9a33808494cf8b99bc1d893304cf26dec1305ff0d98ca1a1a",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-慧-7",
+      "target": "慧",
+      "expect": "fail",
+      "inkSha256": "558eb7ad43415b66322dca2c7d5ba634df859ad03c8cd72ae1b7d8d2a9624b07",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-慧-8",
+      "target": "慧",
+      "expect": "fail",
+      "inkSha256": "b0e88f2d9a757f8d395e4430d7584d4daaf9b957c816e98cbd55b2976fcf994d",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-慧-9",
+      "target": "慧",
+      "expect": "fail",
+      "inkSha256": "10cd6763e72c3c1d346706ca91cebf5210b83135253f77a5dadda1b4f6302335",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-慧-10",
+      "target": "慧",
+      "expect": "fail",
+      "inkSha256": "4b50ec8ca060a5c96960d237ca7841a7b4b40cce9868ec70f6c25e9399652d35",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-慧-11",
+      "target": "慧",
+      "expect": "fail",
+      "inkSha256": "9895fcb6fc60e4d3e70b760418cd3a52661559b9d0f7dbff5d43d7bd564f2c7b",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-慧-12",
+      "target": "慧",
+      "expect": "fail",
+      "inkSha256": "7ad8ba1fdedb401f80047371726338761c64b0da720f555fb1a6108074327cca",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-慧-13",
+      "target": "慧",
+      "expect": "fail",
+      "inkSha256": "ad96d6527b3ab31b62c28e707745ff32ed943f5b55d9d9de29f67db33e1d0840",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-慧-14",
+      "target": "慧",
+      "expect": "fail",
+      "inkSha256": "2b16d036ca3d3544f1f90790e777b5c081ebb3871d309b6269eb28f6412470bb",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/missing-慧-15",
+      "target": "慧",
+      "expect": "fail",
+      "inkSha256": "398246bcd6ac64ece0aa89324ded22e4e10d44120b04e2705e69a14b6bb9302a",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/extra-慧-above",
+      "target": "慧",
+      "expect": "fail",
+      "inkSha256": "183052af359393487f2332b9b07ab37f7e089943d724fd5648e3d977c2ae68f1",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/extra-慧-right",
+      "target": "慧",
+      "expect": "fail",
+      "inkSha256": "df8617035be3326b73b8d9040be8c717dfdf2df8bde01dc69280531c83871718",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/extra-慧-below",
+      "target": "慧",
+      "expect": "fail",
+      "inkSha256": "e3c4fa311fbfbc0e9073ea0ae3e6945612b29f42d413a9cf0bda63b094719f6c",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/rotate90-慧-13",
+      "target": "慧",
+      "expect": "fail",
+      "inkSha256": "9b712b064e5938c8b23319ff920c508ff1a992d6825fb30d1533b85d442c1bf3",
+      "actual": "pass"
+    },
+    {
+      "id": "structural-safety/rotate90-慧-9",
+      "target": "慧",
+      "expect": "fail",
+      "inkSha256": "7ccdd05854d8ac57606fc727338bc5811c2463e545d40e07b6dc5b62cae8b561",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/rotate90-警-14",
+      "target": "警",
+      "expect": "fail",
+      "inkSha256": "8c418ad71077541c038a499b65b9fdf6a214bb87ff2463004e559b2f3d98d7ad",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/rotate90-警-5",
+      "target": "警",
+      "expect": "fail",
+      "inkSha256": "600341dbc755236c3e2f41aebe75522c16d0ef26282019751cb804d7394b9aea",
+      "actual": "pass"
+    },
+    {
+      "id": "structural-safety/rotate90-澡-13",
+      "target": "澡",
+      "expect": "fail",
+      "inkSha256": "291230b78d4c6d1eca930dfec7c780bd9908359fdd2c44bb97b55afa201fe1b7",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/rotate90-澡-14",
+      "target": "澡",
+      "expect": "fail",
+      "inkSha256": "17e2eed38173d5cd2ab54d789e5f86597b1567e45ad2f29bcab7cdf4776444a0",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/rotate90-薄-1",
+      "target": "薄",
+      "expect": "fail",
+      "inkSha256": "1bb645bfe808891983c69f92c060987ce55f56110be3d63daea00ee1b572cb38",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/rotate90-薄-14",
+      "target": "薄",
+      "expect": "fail",
+      "inkSha256": "9ea2dd83cb27f49084bfba31254b8aadf098d518d8f18fdb4e51da5df8fae9d6",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/rotate90-藏-15",
+      "target": "藏",
+      "expect": "fail",
+      "inkSha256": "c63e5742ee8530abbe9c664958015d9b6934c20226717f787c72b52ee0510b3f",
+      "actual": "fail"
+    },
+    {
+      "id": "structural-safety/rotate90-藏-1",
+      "target": "藏",
+      "expect": "fail",
+      "inkSha256": "e00861a4c4b65079cc87b09cf3d26dff114019337fdd4fb8ca6a38331d6fe622",
+      "actual": "fail"
+    },
+    {
+      "id": "targeted/standard-辩",
+      "target": "辩",
+      "expect": "pass",
+      "inkSha256": "011980d1d8bddf85f3b2427769649fe05aeccfaa458f52fdc0e7c2da3f26c1bd",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/small-shifted-辩",
+      "target": "辩",
+      "expect": "pass",
+      "inkSha256": "aa5f12c62b4c46214e2ad712fc7f1e3ba15a941aafbdd295389e49db2260c4f7",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/delete-辩-1",
+      "target": "辩",
+      "expect": "fail",
+      "inkSha256": "989d433ad881bf9b0f079ff4ec53a2207e7eff8fcc99c5646399adfda4a3d0a7",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/delete-辩-2",
+      "target": "辩",
+      "expect": "fail",
+      "inkSha256": "a0ad9de61aba49644fd15425dc3c0d2b30a884678f0e06268ae13e9030e7ca08",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/delete-辩-3",
+      "target": "辩",
+      "expect": "fail",
+      "inkSha256": "ff250bdb189b3310634952d0118d065507845c9544c973253cfe76fedd083055",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/delete-辩-4",
+      "target": "辩",
+      "expect": "fail",
+      "inkSha256": "2df32583cd9f5451740c65a2a44b5874eeadedc7f0d41a742101c3728db910db",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/delete-辩-5",
+      "target": "辩",
+      "expect": "fail",
+      "inkSha256": "8ebca59b08a6e15cd4dd5e10ce35df4e0917b6f474b5f801927bb7b5cef5353f",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/delete-辩-6",
+      "target": "辩",
+      "expect": "fail",
+      "inkSha256": "dfed7c13381924639dbcde4230065ca4aeb85072a920d4fb281a389377e29c96",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/delete-辩-7",
+      "target": "辩",
+      "expect": "fail",
+      "inkSha256": "2f540aaffcc15a3174224690e7ca2f82f98df9779be245cac3160c09f7199138",
+      "actual": "fail"
+    },
+    {
+      "id": "targeted/delete-辩-8",
+      "target": "辩",
+      "expect": "fail",
+      "inkSha256": "cc50f92e5dac818c6f947f1563886ce8eba2387e439e192de72ed22588474109",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/delete-辩-9",
+      "target": "辩",
+      "expect": "fail",
+      "inkSha256": "9a35e5231289cc992c1359ba615eca31c10a2f143132ae877829fa22106df256",
+      "actual": "fail"
+    },
+    {
+      "id": "targeted/delete-辩-10",
+      "target": "辩",
+      "expect": "fail",
+      "inkSha256": "8741447bbd19d67c2871f2c3b0d022e9ef968484bf4fadec5cebb071f9d683fe",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/delete-辩-11",
+      "target": "辩",
+      "expect": "fail",
+      "inkSha256": "d4b84841fc8002e606d3ed743e6a6c9cfe1f69481a0f4d3445b87f5956745cf0",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/delete-辩-12",
+      "target": "辩",
+      "expect": "fail",
+      "inkSha256": "ad732de2427b88495d73661c963068319bb29ccd40833b294218f59273c0f488",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/delete-辩-13",
+      "target": "辩",
+      "expect": "fail",
+      "inkSha256": "fe3719780561ce52470d9b48a4fb35639f5c7bf702978edfd373e6995297b4ee",
+      "actual": "fail"
+    },
+    {
+      "id": "targeted/delete-辩-14",
+      "target": "辩",
+      "expect": "fail",
+      "inkSha256": "b317aad21c678851c02394e32ae35eb604fb7d6cd9d0a86353aa20d67e3657ee",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/delete-辩-15",
+      "target": "辩",
+      "expect": "fail",
+      "inkSha256": "7cb455facab2ad0369c0f420ded5a4665da14bdd48baa55fb2f94ec18d9b23ad",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/delete-辩-16",
+      "target": "辩",
+      "expect": "fail",
+      "inkSha256": "74bfdb960feda078b08ecfcab1482b9f3fc37a9ab1e405d090699feaf29118c2",
+      "actual": "fail"
+    },
+    {
+      "id": "targeted/extra-辩-0",
+      "target": "辩",
+      "expect": "fail",
+      "inkSha256": "69ce225e3dfa0e2be0c1b2d2519828c642c69496adc3e805375078e74f57a1c2",
+      "actual": "fail"
+    },
+    {
+      "id": "targeted/extra-辩-1",
+      "target": "辩",
+      "expect": "fail",
+      "inkSha256": "304ada831d3c7ac7b9c30cd176f8af387f9790e5f2956de51cda25dea479a29f",
+      "actual": "fail"
+    },
+    {
+      "id": "targeted/extra-辩-2",
+      "target": "辩",
+      "expect": "fail",
+      "inkSha256": "5ab70e662ad1b010d71985cae41cfe3fd5544abc770dacbc12fdfc577f7e61da",
+      "actual": "fail"
+    },
+    {
+      "id": "targeted/extra-辩-3",
+      "target": "辩",
+      "expect": "fail",
+      "inkSha256": "2d0bb465d74549fd0448b298b6d7f39da715d589fb768ed35f890f4fa3d7dd87",
+      "actual": "fail"
+    },
+    {
+      "id": "targeted/rotate90-辩-2",
+      "target": "辩",
+      "expect": "fail",
+      "inkSha256": "b38ba3f204ec2b15014a3a40b73a3c6c0f0cb69401be676bfad3e7f32fac16a9",
+      "actual": "fail"
+    },
+    {
+      "id": "targeted/rotate90-辩-5",
+      "target": "辩",
+      "expect": "fail",
+      "inkSha256": "a9fb263000aa3993b930d3623ada50ff596f1b68f5f33faf2382f4c1e2b72bed",
+      "actual": "fail"
+    },
+    {
+      "id": "targeted/rotate90-辩-6",
+      "target": "辩",
+      "expect": "fail",
+      "inkSha256": "69bf58a3becb6067151b3e38c72226e53e816c2191085d2e567de6b1d929da2b",
+      "actual": "fail"
+    },
+    {
+      "id": "targeted/rotate90-辩-7",
+      "target": "辩",
+      "expect": "fail",
+      "inkSha256": "5ae6c1c4708087cfee1eaffb3571449a53a46c76c8b1cb6284b6296bf104260a",
+      "actual": "fail"
+    },
+    {
+      "id": "targeted/rotate90-辩-11",
+      "target": "辩",
+      "expect": "fail",
+      "inkSha256": "b8cd07d3b7a5ec5614d181798e3f5d912613fcb8826634d24cf2f9849a1cefcb",
+      "actual": "fail"
+    },
+    {
+      "id": "targeted/rotate90-辩-14",
+      "target": "辩",
+      "expect": "fail",
+      "inkSha256": "50fc0b4de7fee39569e80aae1ef0239117ec078d3f73ddf44eecfdf740641e5b",
+      "actual": "fail"
+    },
+    {
+      "id": "targeted/rotate90-辩-15",
+      "target": "辩",
+      "expect": "fail",
+      "inkSha256": "b51d90051640d9db512c1dab5c8ccee954ae401d24e7d61f2c18867fe29d78fc",
+      "actual": "fail"
+    },
+    {
+      "id": "targeted/rotate90-辩-16",
+      "target": "辩",
+      "expect": "fail",
+      "inkSha256": "0f921a1fcb1ff7d5a7eb86acf0a87979883a5a250ed61bd9816897d5fcbe0b0b",
+      "actual": "fail"
+    },
+    {
+      "id": "targeted/penlift-辩-5-24-gap0",
+      "target": "辩",
+      "expect": "pass",
+      "inkSha256": "cc0a11fcc23dd059b852ce18d8a6067820ab0bfcb38e3064055db7a39ab5b3f8",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-辩-5-24-gap1",
+      "target": "辩",
+      "expect": "pass",
+      "inkSha256": "a1218449d5af2687600631501b33bcfebc94c7eae87d26ccd03de2ad3e13670c",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-辩-5-48-gap0",
+      "target": "辩",
+      "expect": "pass",
+      "inkSha256": "91670178d45986831716cedb6e0d7d8c4cb1f0ffc8a64a363093349a65b4a921",
+      "actual": "fail"
+    },
+    {
+      "id": "targeted/penlift-辩-5-48-gap1",
+      "target": "辩",
+      "expect": "pass",
+      "inkSha256": "22480692efc4b387645a9a8221af5cf297f8712bb4e06154e580bf87024e309c",
+      "actual": "fail"
+    },
+    {
+      "id": "targeted/penlift-辩-5-72-gap0",
+      "target": "辩",
+      "expect": "pass",
+      "inkSha256": "60beedb161dfedfbe5d52663d86d11109616e00ca3d5619b304ab012698e3003",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-辩-5-72-gap1",
+      "target": "辩",
+      "expect": "pass",
+      "inkSha256": "2b058d5166c772d6f1410dcda2dae0dd06b949b5054886b662af52bded908554",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-辩-6-24-gap0",
+      "target": "辩",
+      "expect": "pass",
+      "inkSha256": "6a45211a68fa4147b23f675bf36d9e54185addf3a4329456ce99a11efaa61753",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-辩-6-24-gap1",
+      "target": "辩",
+      "expect": "pass",
+      "inkSha256": "1e64737e4cb4e64b0454d0180db1477bf6c24f48cb4eab4e84219f71753dafa8",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-辩-6-48-gap0",
+      "target": "辩",
+      "expect": "pass",
+      "inkSha256": "685088f28dda437fa49a263ff072f8ea951ff070283e64586e66afae24ffa827",
+      "actual": "fail"
+    },
+    {
+      "id": "targeted/penlift-辩-6-48-gap1",
+      "target": "辩",
+      "expect": "pass",
+      "inkSha256": "875b46ec4d19f339e3b79f99fb8d7eb46804e29586e8f100ffcba74395affb32",
+      "actual": "fail"
+    },
+    {
+      "id": "targeted/penlift-辩-6-72-gap0",
+      "target": "辩",
+      "expect": "pass",
+      "inkSha256": "51c6c4f0403d32269a810dad6fe3b2f24e0b1c5a0ed7ea8d12c32d2e530eb160",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-辩-6-72-gap1",
+      "target": "辩",
+      "expect": "pass",
+      "inkSha256": "986417683268dc49a6ccb63371111b0774d1d88ff9cfe5acce6310d0dde412f3",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-辩-7-24-gap0",
+      "target": "辩",
+      "expect": "pass",
+      "inkSha256": "99ce1792c7f4fb6cb9ee4bd0fba61c10188926bb267f686aa4183c8efcb270f6",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-辩-7-24-gap1",
+      "target": "辩",
+      "expect": "pass",
+      "inkSha256": "b6dc559414dc193bd6bb0ffd1981f862d82b9cebc3b6ee904081ceb19409694d",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-辩-7-48-gap0",
+      "target": "辩",
+      "expect": "pass",
+      "inkSha256": "c8e73739cdb0d815595a76e835a045fa79166e3d7155bc11a356946dcb27c3dd",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-辩-7-48-gap1",
+      "target": "辩",
+      "expect": "pass",
+      "inkSha256": "a4e08092eb2f808a4b7da2f11582420d0997712a323b2b920c452e9167acbcd7",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-辩-7-72-gap0",
+      "target": "辩",
+      "expect": "pass",
+      "inkSha256": "8686dbb2049c56573396df6778206c7afbfe27f3f788f5310dd9f569dd2afcf7",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-辩-7-72-gap1",
+      "target": "辩",
+      "expect": "pass",
+      "inkSha256": "ee889d16736b08d480345a91f76d376a38d58cc8a428e21c3edc9167c8a40857",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-辩-9-24-gap0",
+      "target": "辩",
+      "expect": "pass",
+      "inkSha256": "4a0fd060164ea3d608fd3554ede33376eb252f12167b457a4ce81529874ca67a",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-辩-9-24-gap1",
+      "target": "辩",
+      "expect": "pass",
+      "inkSha256": "e87784c0b394446b032ba94149285faffc859b319365dd6653d427f8f26471e2",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-辩-9-48-gap0",
+      "target": "辩",
+      "expect": "pass",
+      "inkSha256": "5d42d5deeea8eaff3d782b52902803aa89f1d3297e35cc8b186247fb036bcc4b",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-辩-9-48-gap1",
+      "target": "辩",
+      "expect": "pass",
+      "inkSha256": "efd7018caf02b71c118658eb3039e44392c2d35957f18162bb8920327d5885ed",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-辩-9-72-gap0",
+      "target": "辩",
+      "expect": "pass",
+      "inkSha256": "f9e95bbb320063acea3069a5c51f30137613744a1062618a25e84ff4c4190b12",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-辩-9-72-gap1",
+      "target": "辩",
+      "expect": "pass",
+      "inkSha256": "59a11d3e753ead3276a171556ded52188f2e019879383c15247935067dd1ec43",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-辩-9-74-gap0",
+      "target": "辩",
+      "expect": "pass",
+      "inkSha256": "d2efb781a4fe67f5ee158ca4b29d9c02f8154aaba8ce572082864ff3de281e03",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-辩-9-74-gap1",
+      "target": "辩",
+      "expect": "pass",
+      "inkSha256": "e5ff19a6b04c0c6e9fe9748e1d1cc4c87a0f9f15aee30f15a8203785ce962c2e",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-辩-14-24-gap0",
+      "target": "辩",
+      "expect": "pass",
+      "inkSha256": "5680f7ebe4adce67b3fe334c26380cb99ead4a20455067136ee1a3bf3df137c2",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-辩-14-24-gap1",
+      "target": "辩",
+      "expect": "pass",
+      "inkSha256": "7a03715e2c524aa9a834d460dede33225cb2791f8eb9ff429c9d2032e5031056",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-辩-14-48-gap0",
+      "target": "辩",
+      "expect": "pass",
+      "inkSha256": "e28f0b4e0d5219eea22a796c805984fdf739372e4ae8fb1fe65faaf740edd556",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-辩-14-48-gap1",
+      "target": "辩",
+      "expect": "pass",
+      "inkSha256": "9f1e799edc909e967ec790f0b18ac1d74aba722731dae20eee6201a4173ea764",
+      "actual": "fail"
+    },
+    {
+      "id": "targeted/penlift-辩-14-72-gap0",
+      "target": "辩",
+      "expect": "pass",
+      "inkSha256": "a43a9d3b7a98209af8403be4c6b819c9980241b837d435f952186cc8a868ed09",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-辩-14-72-gap1",
+      "target": "辩",
+      "expect": "pass",
+      "inkSha256": "a8e9d1133bb3ab3062a67f2527921c9debffdc2a2847d1a336551f2120086370",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-辩-15-24-gap0",
+      "target": "辩",
+      "expect": "pass",
+      "inkSha256": "6f801d7be7b3f6fc87893ea918e4113188706cb51d4665fb32d32910b3557b38",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-辩-15-24-gap1",
+      "target": "辩",
+      "expect": "pass",
+      "inkSha256": "179edf8966ef4c7ab5920dfcf7e7faf935e59635b369fd42d56863b65596aaa4",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-辩-15-48-gap0",
+      "target": "辩",
+      "expect": "pass",
+      "inkSha256": "0db36e5a39588f2d45e3dfe51eb0deaab516e388c23ed8334fb84ef6d0d85a70",
+      "actual": "fail"
+    },
+    {
+      "id": "targeted/penlift-辩-15-48-gap1",
+      "target": "辩",
+      "expect": "pass",
+      "inkSha256": "d26c8d5954ab5b7196cff29ec1875502f4b64acf973fdda7d18bf0f161c8ae9d",
+      "actual": "fail"
+    },
+    {
+      "id": "targeted/penlift-辩-15-72-gap0",
+      "target": "辩",
+      "expect": "pass",
+      "inkSha256": "006fc54b325d2cd587dda7daf0e62790941cc523fce5cdf6d397756ccbb63094",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-辩-15-72-gap1",
+      "target": "辩",
+      "expect": "pass",
+      "inkSha256": "dc3de694a925809ffc0628380d5ab783d675139a07346bb3e1e374ed2eac319d",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-辩-16-24-gap0",
+      "target": "辩",
+      "expect": "pass",
+      "inkSha256": "a04569f68f263647c8aeb479df89224f227b39e99fd8c3a72a57f00406ede7d1",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-辩-16-24-gap1",
+      "target": "辩",
+      "expect": "pass",
+      "inkSha256": "0cbfe641e4c2a4184fe82b7179271f4f6c446214c09764a349799f28f55a9639",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-辩-16-48-gap0",
+      "target": "辩",
+      "expect": "pass",
+      "inkSha256": "115faa256873d525421c292f642f73d64be5d0a6216b9b2073af3d19760aaf45",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-辩-16-48-gap1",
+      "target": "辩",
+      "expect": "pass",
+      "inkSha256": "cb50a7177dd95d80fe819d214a1f687dbdf3b19d4353999d2cff3e31f41c64b8",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-辩-16-72-gap0",
+      "target": "辩",
+      "expect": "pass",
+      "inkSha256": "59c86b6bf142ee4b161617d4bb6172a65452b15bba2ef406622c41b7a1333c3b",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-辩-16-72-gap1",
+      "target": "辩",
+      "expect": "pass",
+      "inkSha256": "c6d4e66262a388a2bc926969d4ef0e57ead0daa129ee2d10f1708a9903456168",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/standard-历",
+      "target": "历",
+      "expect": "pass",
+      "inkSha256": "892182ea01e5026007378dad3da22655c8fbad0a4f76d75f4930effd5cfa98dd",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/small-shifted-历",
+      "target": "历",
+      "expect": "pass",
+      "inkSha256": "ff52071289f71bb278f874bf77823cba3aeb0dd228eb66b4d73dd77768687fef",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/delete-历-1",
+      "target": "历",
+      "expect": "fail",
+      "inkSha256": "ba2283a2cc089233e5e1c20365a0158d236f8fd66e87b505baba06d18761d96a",
+      "actual": "fail"
+    },
+    {
+      "id": "targeted/delete-历-2",
+      "target": "历",
+      "expect": "fail",
+      "inkSha256": "a4a79d803cd9661b843fd549bc90145306bcc06a64d8ca078ec40e8ad828d705",
+      "actual": "fail"
+    },
+    {
+      "id": "targeted/delete-历-3",
+      "target": "历",
+      "expect": "fail",
+      "inkSha256": "3ede2ab0744f8859c22eeae63ee006716e681bf2ce24ff140c27402105fefeef",
+      "actual": "fail"
+    },
+    {
+      "id": "targeted/delete-历-4",
+      "target": "历",
+      "expect": "fail",
+      "inkSha256": "34aa2e17f0b5682ba29df35e47f6580b1b4180db9e226fe535abf686d9d705f6",
+      "actual": "fail"
+    },
+    {
+      "id": "targeted/extra-历-0",
+      "target": "历",
+      "expect": "fail",
+      "inkSha256": "ca974f7fbe2504771ff798f6f4d6c6a5a5d8f2c148a6282f138ea95423327e90",
+      "actual": "fail"
+    },
+    {
+      "id": "targeted/extra-历-1",
+      "target": "历",
+      "expect": "fail",
+      "inkSha256": "7981df218d8a175c62c6bf85428473ec89f431f55ae490d22cf18292f7fa8384",
+      "actual": "fail"
+    },
+    {
+      "id": "targeted/extra-历-2",
+      "target": "历",
+      "expect": "fail",
+      "inkSha256": "5213013beffb1f340393567c53ec95cb63071ca5f94c12ef72634ee54a48945a",
+      "actual": "fail"
+    },
+    {
+      "id": "targeted/extra-历-3",
+      "target": "历",
+      "expect": "fail",
+      "inkSha256": "57c196fd091bd01c6835a27a1350838c20f6be7457a645427f3a4188eb6ea72b",
+      "actual": "fail"
+    },
+    {
+      "id": "targeted/rotate90-历-1",
+      "target": "历",
+      "expect": "fail",
+      "inkSha256": "300ba50163280f84cbcc329a31873ed079d72e23bc8737c3dd42236136a4efb4",
+      "actual": "fail"
+    },
+    {
+      "id": "targeted/rotate90-历-2",
+      "target": "历",
+      "expect": "fail",
+      "inkSha256": "e4b8efa41123c2896cb63da73c20215e9cb15254ba58de8c1bec21104ae16235",
+      "actual": "fail"
+    },
+    {
+      "id": "targeted/rotate90-历-4",
+      "target": "历",
+      "expect": "fail",
+      "inkSha256": "6b55a14487e8e62dae391f6e9c3faa564edff2b1a23a3c90b2c6da35c6862280",
+      "actual": "fail"
+    },
+    {
+      "id": "targeted/penlift-历-1-24-gap0",
+      "target": "历",
+      "expect": "pass",
+      "inkSha256": "73c779eb6a46d40942f0d02d2e09b135581a43107e78ac4ef2622235323e5374",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-历-1-24-gap1",
+      "target": "历",
+      "expect": "pass",
+      "inkSha256": "09633689366d0c19f87d6d041b4329686f6313ef1210bd377935482a58f73866",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-历-1-48-gap0",
+      "target": "历",
+      "expect": "pass",
+      "inkSha256": "b56f7ea108b111e12818f543b922219f5b5f243b44625495f05f770e562377da",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-历-1-48-gap1",
+      "target": "历",
+      "expect": "pass",
+      "inkSha256": "187e9ba461d173d53c2c89d44e3fd488f895107f850e210c13a32558834bfcaf",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-历-1-72-gap0",
+      "target": "历",
+      "expect": "pass",
+      "inkSha256": "d2dc7236eae31609973ecda7db9042f5db19020a7490394629bc0c1307d59df5",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-历-1-72-gap1",
+      "target": "历",
+      "expect": "pass",
+      "inkSha256": "08ae5c57f0afa7b5dae9e4abcda495a6cd4f66144e50c632c11a179e673f933a",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-历-2-24-gap0",
+      "target": "历",
+      "expect": "pass",
+      "inkSha256": "8e7823a82a6c1b95b31c58db7cc5a698e261c995b2ece2a1a787b445feba30bc",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-历-2-24-gap1",
+      "target": "历",
+      "expect": "pass",
+      "inkSha256": "b8762d449c6ca74202a6d9c7ef9f2bcc13546305132539626914687a505ed39e",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-历-2-48-gap0",
+      "target": "历",
+      "expect": "pass",
+      "inkSha256": "1e9fdcf4784af3bbf7dad597ddfe6f9ecd9fdaf70c158347b872dbdb6ef227b9",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-历-2-48-gap1",
+      "target": "历",
+      "expect": "pass",
+      "inkSha256": "a523840b48bf0981a4fca3e4b453f4558fe569db835c6e23f9a686407746f655",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-历-2-72-gap0",
+      "target": "历",
+      "expect": "pass",
+      "inkSha256": "de50414eff668b4e0ab99b8d64c7bac72d8880d08ed9596722d373d608a85e7f",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-历-2-72-gap1",
+      "target": "历",
+      "expect": "pass",
+      "inkSha256": "68c90efd4643cb85608d812beed3d2f4fa86dd4de4bbd67be3d28197bda1c3c1",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-历-3-24-gap0",
+      "target": "历",
+      "expect": "pass",
+      "inkSha256": "d05a062ef5daae87794ae8a19e11774d370582b4ca9381e71be2184876d2803e",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-历-3-24-gap1",
+      "target": "历",
+      "expect": "pass",
+      "inkSha256": "79c869fa64cd19ba54095d9266386b094075b76311cc19a14da08b2735e2a887",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-历-3-48-gap0",
+      "target": "历",
+      "expect": "pass",
+      "inkSha256": "fbdbec6cb8f80ec9de2dbe7ec844729d2f79d75a9724f52fb17dee60cd4717e2",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-历-3-48-gap1",
+      "target": "历",
+      "expect": "pass",
+      "inkSha256": "c239d3c576dd4b295e8deceae6431d9c4d96ec90ceea57d70eef8ef86743bfed",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-历-3-72-gap0",
+      "target": "历",
+      "expect": "pass",
+      "inkSha256": "6e0a658a352a9b10b095310a2b649727cb223da7d916d1ba46cb1f295ba3e644",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-历-3-72-gap1",
+      "target": "历",
+      "expect": "pass",
+      "inkSha256": "5882255dfb5d9da7f3adb67fd73a2527453d67cd45beff1da33f5e90cda8c4a8",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-历-3-84-gap0",
+      "target": "历",
+      "expect": "pass",
+      "inkSha256": "b666289b55e905ba4e8ad2ebfa666989da498a6a3990502c56d0a0159d1afb6a",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-历-3-84-gap1",
+      "target": "历",
+      "expect": "pass",
+      "inkSha256": "aa67b6060d8df6bd943df1b74fa0d1539b0883714da2178388408e3f3fdc6211",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-历-4-24-gap0",
+      "target": "历",
+      "expect": "pass",
+      "inkSha256": "8d05c98947c9383ff4555bd527582329b3a54bb079931ce59e8a7acb13b551fc",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-历-4-24-gap1",
+      "target": "历",
+      "expect": "pass",
+      "inkSha256": "ce85dd76d9085f0d10f19a6e6c3e1ac545afe2ade5d997b97b80177efae08af5",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-历-4-48-gap0",
+      "target": "历",
+      "expect": "pass",
+      "inkSha256": "9f042392e2a83b847ccd149b3a7252eb1511b68c2ffe1866f45f19bd703c92e2",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-历-4-48-gap1",
+      "target": "历",
+      "expect": "pass",
+      "inkSha256": "78ad4695e6cf7517bfeb31554685643fa57fae6c0ad029ac40a77f53735566b1",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-历-4-72-gap0",
+      "target": "历",
+      "expect": "pass",
+      "inkSha256": "87ef4062f4a28d4dd3783fc1b6a786bdde960ffe27350656a50c97bf6ecce62d",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-历-4-72-gap1",
+      "target": "历",
+      "expect": "pass",
+      "inkSha256": "a51ec61fa2d21102ceb2856110e15bf1df1b5547bac5ae8aa40fff55ce289998",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/standard-收",
+      "target": "收",
+      "expect": "pass",
+      "inkSha256": "f21828b323e9500b2df55a6745bdc3121ca331e3e970d032e42badff16783b0b",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/small-shifted-收",
+      "target": "收",
+      "expect": "pass",
+      "inkSha256": "901d982984f08e06e828e20c84aafebbfd2b14073c53ab06b6e0d81195000b38",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/delete-收-1",
+      "target": "收",
+      "expect": "fail",
+      "inkSha256": "d27c4ba6e273de7cd793bae4e3684cd559e57423762d108fb5b946ce952836c3",
+      "actual": "fail"
+    },
+    {
+      "id": "targeted/delete-收-2",
+      "target": "收",
+      "expect": "fail",
+      "inkSha256": "b629e32ab4dc1f4888831b46346aa56f5735c77037a166ae47920e35b24c9dc8",
+      "actual": "fail"
+    },
+    {
+      "id": "targeted/delete-收-3",
+      "target": "收",
+      "expect": "fail",
+      "inkSha256": "ab3277e1c22366ecc0b592c36cddf460cde2dd895aa5228d2f569dbe791817a3",
+      "actual": "fail"
+    },
+    {
+      "id": "targeted/delete-收-4",
+      "target": "收",
+      "expect": "fail",
+      "inkSha256": "73c56a9bcc0d5a8f062ef6806f1709505c1ce367ba17fc99e1b7d318c2a25eea",
+      "actual": "fail"
+    },
+    {
+      "id": "targeted/delete-收-5",
+      "target": "收",
+      "expect": "fail",
+      "inkSha256": "bde4a87f1a039fccdfc547c22bf2a9282357478fbd703900239ff05f7d62a115",
+      "actual": "fail"
+    },
+    {
+      "id": "targeted/delete-收-6",
+      "target": "收",
+      "expect": "fail",
+      "inkSha256": "94a447216ff17da5b09660b6c8bb4eb4ac4727454d16500bf49a886d130e79ae",
+      "actual": "fail"
+    },
+    {
+      "id": "targeted/extra-收-0",
+      "target": "收",
+      "expect": "fail",
+      "inkSha256": "9be6b85afc11d1acf9fa9a73ae88513d4a6a30a4c765ef8c35932c28739b9a40",
+      "actual": "fail"
+    },
+    {
+      "id": "targeted/extra-收-1",
+      "target": "收",
+      "expect": "fail",
+      "inkSha256": "f4b85a6a47b3f621bdf3de0f6f0c34c8d82ee07ed5a2052e153f864406aae9c9",
+      "actual": "fail"
+    },
+    {
+      "id": "targeted/extra-收-2",
+      "target": "收",
+      "expect": "fail",
+      "inkSha256": "fd3a287745ac9076a9f8694761001e591516448af91af3f29abcf8e97e056785",
+      "actual": "fail"
+    },
+    {
+      "id": "targeted/extra-收-3",
+      "target": "收",
+      "expect": "fail",
+      "inkSha256": "d4b0a196748b0b8dc277641846a1634a597cb4d7f0f7f28cf7cbe668882635ae",
+      "actual": "fail"
+    },
+    {
+      "id": "targeted/rotate90-收-2",
+      "target": "收",
+      "expect": "fail",
+      "inkSha256": "77b32d8ea700d1eda530d776e202a5aebccb554f81aa7a2998dfb339ee6f66bf",
+      "actual": "fail"
+    },
+    {
+      "id": "targeted/rotate90-收-4",
+      "target": "收",
+      "expect": "fail",
+      "inkSha256": "3bfc7dbe5ac601a001fec84f07f077f456592a44e965239886c8eaa3a65eb297",
+      "actual": "fail"
+    },
+    {
+      "id": "targeted/rotate90-收-5",
+      "target": "收",
+      "expect": "fail",
+      "inkSha256": "79c464e48573b9dd2896456c74c65727d92d93120717499db5e5b60694a0c1df",
+      "actual": "fail"
+    },
+    {
+      "id": "targeted/rotate90-收-6",
+      "target": "收",
+      "expect": "fail",
+      "inkSha256": "5c477a916da6b8e3b6535034576ebcf3ddbdb8ebe5a140afa56e360668852030",
+      "actual": "fail"
+    },
+    {
+      "id": "targeted/penlift-收-1-24-gap0",
+      "target": "收",
+      "expect": "pass",
+      "inkSha256": "d028871af9cee34f903ff13f7f80f4fc795c73f47bbf185f3dd6be17bbb7bc51",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-收-1-24-gap1",
+      "target": "收",
+      "expect": "pass",
+      "inkSha256": "08461276ef1dcb08cf32d5b54dc6937101734bc91a3d19ba1ea8e2fcc5a14df6",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-收-1-48-gap0",
+      "target": "收",
+      "expect": "pass",
+      "inkSha256": "eabf04d94a0e3ae64bc757536aecb1ec545725cff9d095d2e6c3ea4d7203f558",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-收-1-48-gap1",
+      "target": "收",
+      "expect": "pass",
+      "inkSha256": "be22bf15592220f8ff105009b5477d4053aa1055c55c38350fd0d66ba724beda",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-收-1-72-gap0",
+      "target": "收",
+      "expect": "pass",
+      "inkSha256": "0de1ef4cc10305b4da69a049333f1e692db407fe734d09bb95af876fb70fa8ab",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-收-1-72-gap1",
+      "target": "收",
+      "expect": "pass",
+      "inkSha256": "6296a5231947b13b53c1f9361129cb04ea37621af9e0e2ff512f46131675f520",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-收-1-63-gap0",
+      "target": "收",
+      "expect": "pass",
+      "inkSha256": "756fb4b30123984ae9ccd9f818b6e131913d146570c8526ecd954cee7c52865d",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-收-1-63-gap1",
+      "target": "收",
+      "expect": "pass",
+      "inkSha256": "d517ff2696c9a1faefa268d8142cae6627b8d78d7ebdc3c23744a25f2e55ad1f",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-收-2-24-gap0",
+      "target": "收",
+      "expect": "pass",
+      "inkSha256": "14220b3c0935af1384864e3496934770e06cd3c72626d96f18a630eb091818bc",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-收-2-24-gap1",
+      "target": "收",
+      "expect": "pass",
+      "inkSha256": "f0a97f062789f040c377a55613adebb9458396989473476cea749b1b837693a1",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-收-2-48-gap0",
+      "target": "收",
+      "expect": "pass",
+      "inkSha256": "e98ead45b68208581efcd38068a0b143682540847d403f19fd22059a24a01be7",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-收-2-48-gap1",
+      "target": "收",
+      "expect": "pass",
+      "inkSha256": "4e55b5dbbbf6914caa6c0c6496a0a1900eb85b825ef2b01a523e5a819c0d8365",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-收-2-72-gap0",
+      "target": "收",
+      "expect": "pass",
+      "inkSha256": "31aa3052e670b77964f717175b63dd74db80c32c1547f9354705413c78caccec",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-收-2-72-gap1",
+      "target": "收",
+      "expect": "pass",
+      "inkSha256": "3325304b26ff583085166d82e78f220ba539ec8efeaf1b7fa4f23ed2d4429070",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-收-3-24-gap0",
+      "target": "收",
+      "expect": "pass",
+      "inkSha256": "f011d6ddd346f96922726a5616e8d7925f6cbc5cfb93c36b6dfbfef5cff6e4f2",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-收-3-24-gap1",
+      "target": "收",
+      "expect": "pass",
+      "inkSha256": "4108616da80c97c27a6424ddc68c2c7418568b9e6cf0cb73072653a164daeb4a",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-收-3-48-gap0",
+      "target": "收",
+      "expect": "pass",
+      "inkSha256": "79298c8f1e0e804504729b406e051958257744d71b91c481d24f30bfecb43cba",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-收-3-48-gap1",
+      "target": "收",
+      "expect": "pass",
+      "inkSha256": "9bf1b408101d07915ae07ffb9fdcbb58eb4a7ca963e260b03853e8f9f983f2de",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-收-3-72-gap0",
+      "target": "收",
+      "expect": "pass",
+      "inkSha256": "84d40471d465d0a37458a483ee22aacfc7201c07bb37a8fbdf60a33229f61baf",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-收-3-72-gap1",
+      "target": "收",
+      "expect": "pass",
+      "inkSha256": "30caae2c39bd5be8d2da8ca02383e54e1fb55dd546a9b7b1578dd45f72ed8d5d",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-收-4-24-gap0",
+      "target": "收",
+      "expect": "pass",
+      "inkSha256": "8a12f87cc1f0e5725f513961c9bb70aadad500f84e29bce67294f1c9636f0a2a",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-收-4-24-gap1",
+      "target": "收",
+      "expect": "pass",
+      "inkSha256": "bbb8f19005aed7579be875bdaa233fd8df4134bbdbeaf6cd2885413d358c867a",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-收-4-48-gap0",
+      "target": "收",
+      "expect": "pass",
+      "inkSha256": "ed2680e71207cb4caf1d2a88d7a3b1c4f795333203ecce842caced4fd4fcaa6b",
+      "actual": "fail"
+    },
+    {
+      "id": "targeted/penlift-收-4-48-gap1",
+      "target": "收",
+      "expect": "pass",
+      "inkSha256": "81019dea61823ce1fc0ef72a64decda4682760540cedf86e5a6a6c18aeab5737",
+      "actual": "fail"
+    },
+    {
+      "id": "targeted/penlift-收-4-72-gap0",
+      "target": "收",
+      "expect": "pass",
+      "inkSha256": "fd7486df74e52b0f25581d7fd6214380634e2cf0869b8a5789d78f4ec509cf4b",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-收-4-72-gap1",
+      "target": "收",
+      "expect": "pass",
+      "inkSha256": "875fde8d978dfa7f1b6bc297383326aff9b7f48d991c4649c58ff226dcbee1de",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-收-5-24-gap0",
+      "target": "收",
+      "expect": "pass",
+      "inkSha256": "a4d039ad87c23f92b05647e07b454cb493546c93d7b0b8fbfda82b2d459fca53",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-收-5-24-gap1",
+      "target": "收",
+      "expect": "pass",
+      "inkSha256": "b4455b0ec68b03b50f81f33f9e2593042950be1e20873f0f4b3f03c29102b5cc",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-收-5-48-gap0",
+      "target": "收",
+      "expect": "pass",
+      "inkSha256": "62be8c23773e6e2c1b9a6076700c8b11770f7efe605b9c2eb10f9f38ceffb608",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-收-5-48-gap1",
+      "target": "收",
+      "expect": "pass",
+      "inkSha256": "dc66b66e33879eaa6e3760304fab14e0832fca912b359cc5b4b19dd8784215dd",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-收-5-72-gap0",
+      "target": "收",
+      "expect": "pass",
+      "inkSha256": "d9990eb2b392e4df81fd301747c3e4e4a26ab5e154b9b9a8d7e8247130bd6285",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-收-5-72-gap1",
+      "target": "收",
+      "expect": "pass",
+      "inkSha256": "23b273462aa11399d7596bb47d619a6b836922d1fcb423a0538c411b7650626f",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-收-6-24-gap0",
+      "target": "收",
+      "expect": "pass",
+      "inkSha256": "7d70aa1ebea6cc2246497b4186fe552542e66b593b3fe2dc298e67be9a79266c",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-收-6-24-gap1",
+      "target": "收",
+      "expect": "pass",
+      "inkSha256": "765a4aad6d366db092a28962bcb41a5814e87f56c5855a2ed2b437ccaead5058",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-收-6-48-gap0",
+      "target": "收",
+      "expect": "pass",
+      "inkSha256": "45e9300db1e45d367413a5798c034403ef2068f893755ea5590fdf91c5f9512e",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-收-6-48-gap1",
+      "target": "收",
+      "expect": "pass",
+      "inkSha256": "4435d1c9ba1f7c0eb8727fad3e36b8ae159c6bd8e67d3626243763e79107b0f9",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-收-6-72-gap0",
+      "target": "收",
+      "expect": "pass",
+      "inkSha256": "138876d6c26387b67de472617fb2d583de545083203257137aac442ae81dd5bf",
+      "actual": "pass"
+    },
+    {
+      "id": "targeted/penlift-收-6-72-gap1",
+      "target": "收",
+      "expect": "pass",
+      "inkSha256": "6fd215179e774526bc9d43eff86f1aff2f6b8673d7ec7834844750f809fe0d19",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/standard-燕",
+      "target": "燕",
+      "expect": "pass",
+      "inkSha256": "1efcbf7d605f2f3ad424b94bd538615cf9b80db51a2c1e66f12e384e06c7be75",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/small-shifted-燕",
+      "target": "燕",
+      "expect": "pass",
+      "inkSha256": "4978fb7d61a683f239f731f07389527ca5dd740f5d608e28e4e3e50435b9e3d6",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/reordered-燕",
+      "target": "燕",
+      "expect": "pass",
+      "inkSha256": "a875d62b811f1f1c56f62ee677deb20f38d86bf2d8683b37964e1ec522f117e4",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/delete-燕-1",
+      "target": "燕",
+      "expect": "fail",
+      "inkSha256": "2e90a05aea469c2d9860a1bec1c11288d4014f983fe728727275b7f171fbe367",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/delete-燕-1-reversed",
+      "target": "燕",
+      "expect": "fail",
+      "inkSha256": "4b019407d7ee322bffe347c2f850c395767a7e3525b13cd8e998f088c90a415f",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/delete-燕-2",
+      "target": "燕",
+      "expect": "fail",
+      "inkSha256": "7b8167b6160b0466be4cf74bc4957e13b3c24f0a7117da38f104226b879a6175",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/delete-燕-2-reversed",
+      "target": "燕",
+      "expect": "fail",
+      "inkSha256": "4faf9f4da1ec86b4e0d4eb1eea6810662c882379c379fddf9d9c35afc69d080e",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/delete-燕-3",
+      "target": "燕",
+      "expect": "fail",
+      "inkSha256": "85990c5c9962e0e5fe410332982f3a0e03810c4f2d93386b5bcd6e07a50de52b",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/delete-燕-3-reversed",
+      "target": "燕",
+      "expect": "fail",
+      "inkSha256": "be2c58b223470328a0f9f402dbc7afa6963184ebf09f9ca1ec9b82c7e86d4790",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/delete-燕-4",
+      "target": "燕",
+      "expect": "fail",
+      "inkSha256": "2d89a3b55d6690b61914193a6f00f981d7716ef7cc1c2610c490448070ebee1f",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/delete-燕-4-reversed",
+      "target": "燕",
+      "expect": "fail",
+      "inkSha256": "4cb5e4c3905159df53620f0ceb5924fe4873ca869544357f886d07330c871442",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/delete-燕-5",
+      "target": "燕",
+      "expect": "fail",
+      "inkSha256": "c20e50ce068076bd10a88ae4ad3ac3c05ae4a44200849f7b009cca0d2b156c3d",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/delete-燕-5-reversed",
+      "target": "燕",
+      "expect": "fail",
+      "inkSha256": "e2ab7bd8fda5cf0cf8970af8730f3fe4fe7819693031b0db2e4feca6fcb21d79",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/delete-燕-6",
+      "target": "燕",
+      "expect": "fail",
+      "inkSha256": "9008ba0cb58c5f43173f5fc1f5b1f8b30fdabb6de7cb29ac7756e5339fc1dba3",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/delete-燕-6-reversed",
+      "target": "燕",
+      "expect": "fail",
+      "inkSha256": "6cc94ce59a7d46ac3b8c3cb8ac57248a6dfc2650c988dceeab9501069b0dd18a",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/delete-燕-7",
+      "target": "燕",
+      "expect": "fail",
+      "inkSha256": "5d4fabd6156c67c9229e26f730e1020c73a17be67e9742a341dd9c4f7ca8cb16",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/delete-燕-7-reversed",
+      "target": "燕",
+      "expect": "fail",
+      "inkSha256": "6fe6ccbec233b9c14e983affb464504ed7cb93260cdf8856c702ae4a70563b50",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/delete-燕-8",
+      "target": "燕",
+      "expect": "fail",
+      "inkSha256": "de09612b7ca119582deaf00e18f4eedd53fb1754cd7123cb311cc15e11487550",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/delete-燕-8-reversed",
+      "target": "燕",
+      "expect": "fail",
+      "inkSha256": "cd303c68af86240fc5b2b13a9bff5e1ea894bb47e4a119a61f329a0abed30e97",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/delete-燕-9",
+      "target": "燕",
+      "expect": "fail",
+      "inkSha256": "82ef5e0bf4520ca3bd312e9a342c6f6b063264f21d3279b6e167578600cca2dd",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/delete-燕-9-reversed",
+      "target": "燕",
+      "expect": "fail",
+      "inkSha256": "262554045ffe253fc369d887eb0699f010201e1ccdefd8a83cbe71dde4d293dc",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/delete-燕-10",
+      "target": "燕",
+      "expect": "fail",
+      "inkSha256": "800e740d377f527a1026568064102e78d0baac3ec22ee53c412ca9e564bcbf58",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/delete-燕-10-reversed",
+      "target": "燕",
+      "expect": "fail",
+      "inkSha256": "79f485622bd3427bdc14d2a28d41bc2307c8638d64fa12f0ed62f10996d428f4",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/delete-燕-11",
+      "target": "燕",
+      "expect": "fail",
+      "inkSha256": "693ee6fdc3a51df9861d7883c3478513c590f3746280e070ed3e370bec0fe08f",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/delete-燕-11-reversed",
+      "target": "燕",
+      "expect": "fail",
+      "inkSha256": "5905914de01d01fdb2dda1f92519ddde0d219691c121fb3b492c395361155289",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/delete-燕-12",
+      "target": "燕",
+      "expect": "fail",
+      "inkSha256": "2edeee8b0a28d18a35942e2176dd80bd7854d71c0f4f9699cf52281c00362b00",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/delete-燕-12-reversed",
+      "target": "燕",
+      "expect": "fail",
+      "inkSha256": "c0f1a00ab1f2182965072b226c817c4ff4287501bba7bc250ffcc03472da6f9c",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/delete-燕-13",
+      "target": "燕",
+      "expect": "fail",
+      "inkSha256": "5908af56296d5d274fc58f9a5de1ddb2c39d070974fa84aeb47591bfb8883832",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/delete-燕-13-reversed",
+      "target": "燕",
+      "expect": "fail",
+      "inkSha256": "67964bedd448e6feec192ff3e43fc792d04332aa7318fbe23c44ac712a6427b1",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/delete-燕-14",
+      "target": "燕",
+      "expect": "fail",
+      "inkSha256": "186ea2a4dff564a04861c9923dc370f7b9603584d600130f157d812b28e07145",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/delete-燕-14-reversed",
+      "target": "燕",
+      "expect": "fail",
+      "inkSha256": "b8f41dee1473e2a21012d5722564097588ba095e6b6aecc39b7d966aa5b3cb58",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/delete-燕-15",
+      "target": "燕",
+      "expect": "fail",
+      "inkSha256": "4cd10fe7cc141ce39e286dfc611a6eee281c89cd6ef93bf4562c95432625f183",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/delete-燕-15-reversed",
+      "target": "燕",
+      "expect": "fail",
+      "inkSha256": "22e52ab550f16191c7fc7ee033d36b0d5c9a8bcb3e44b18d3f304321b5369f8a",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/delete-燕-16",
+      "target": "燕",
+      "expect": "fail",
+      "inkSha256": "0313b02d003760be73c68a638944a27622a7941696f2a9571a0325b155433292",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/delete-燕-16-reversed",
+      "target": "燕",
+      "expect": "fail",
+      "inkSha256": "41177e70c5ff6239f0972749980318a1ad2b83c091276b0c020fd4a9239e4b06",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/extra-燕-0",
+      "target": "燕",
+      "expect": "fail",
+      "inkSha256": "1bd179b82fd2701f2c3804eb89940e2ba3b2b0bcfaeba6a78c9fea13451f832b",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/extra-燕-1",
+      "target": "燕",
+      "expect": "fail",
+      "inkSha256": "5b6039f6a5ba6b8bc0fb942fecd0030b5a399388e07a533e9ef321adf8cf7ec8",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/extra-燕-2",
+      "target": "燕",
+      "expect": "fail",
+      "inkSha256": "b6ef7a26ee4196e8d3c441c94d0b721015c7ac524144a53e4d63c84b5a18c0fe",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/extra-燕-3",
+      "target": "燕",
+      "expect": "fail",
+      "inkSha256": "7491fe739485dcaad5949106c7683061b9a8c0531f8ff44a2716536fe757c967",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/extra-燕-4",
+      "target": "燕",
+      "expect": "fail",
+      "inkSha256": "2a2d3bedf78753d8d463140dc358990728cb383c1469a67b5ce28b8ba8d92b5a",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/extra-燕-5",
+      "target": "燕",
+      "expect": "fail",
+      "inkSha256": "58981ccf3e7e4aa65c5d21bf3ce24017f0549c63d761ebf2b34c283170612b66",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/extra-燕-6",
+      "target": "燕",
+      "expect": "fail",
+      "inkSha256": "932c177162b1c23d376a16311964117e5aa69bb6f2d9627b6e35e2fc43b6c06c",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/extra-燕-7",
+      "target": "燕",
+      "expect": "fail",
+      "inkSha256": "72149611502d0ec5fe34e5e44b1d4795d2f1c91fc2efd3457bc493cabfbe454b",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/rotate90-燕-1--1",
+      "target": "燕",
+      "expect": "fail",
+      "inkSha256": "d12cb384edb2942b801b0fed924702e4217986eab737d09cc0ef6257a060488a",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/rotate90-燕-1-1",
+      "target": "燕",
+      "expect": "fail",
+      "inkSha256": "00e4282171e55b866fd9eac9fdcd97e53b70d754f744d8f174e3aa8fe495ca00",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/penlift-燕-1-25-gap0",
+      "target": "燕",
+      "expect": "pass",
+      "inkSha256": "3a330472800cdf5785fcea7c360bb7cc9855199d36367591975f11142e5bde0f",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-燕-1-25-gap2",
+      "target": "燕",
+      "expect": "pass",
+      "inkSha256": "1bb301d474558206c5601b71c420d1e73271433a32fb20f5999987c1bda64dc0",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-燕-1-50-gap0",
+      "target": "燕",
+      "expect": "pass",
+      "inkSha256": "1c080a282c99c032c8ebf677dbffc29f014037f66259030ae1115901f0aa0c06",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-燕-1-50-gap2",
+      "target": "燕",
+      "expect": "pass",
+      "inkSha256": "b4a588f937e07b5e5a27de6ed8b3fc72af4d6b4d57e1fcf442a3cb977f7a24a2",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-燕-1-75-gap0",
+      "target": "燕",
+      "expect": "pass",
+      "inkSha256": "a7f86599bf980be0db52ca1502f157f9922435fb5a854718cf69d78da3f82e5c",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-燕-1-75-gap2",
+      "target": "燕",
+      "expect": "pass",
+      "inkSha256": "e8306deaa42e3246390ab8f7cc9cfe92a58a03a5fa51455a66b77440e23944f9",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/rotate90-燕-2--1",
+      "target": "燕",
+      "expect": "fail",
+      "inkSha256": "528de68c8ab27acabdb0cd87fc6bd50ed1d674351ff47d86ad976d670efee80f",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/rotate90-燕-2-1",
+      "target": "燕",
+      "expect": "fail",
+      "inkSha256": "9b49fc47925fa7cd282ebb8a92aea36f6edcbbd32b10987967a8ed30c10396e5",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/penlift-燕-2-25-gap0",
+      "target": "燕",
+      "expect": "pass",
+      "inkSha256": "07cf4b880c2121c05ad4ac51a8c88780625a0a89f43b82e53446fe5ca7895c4b",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-燕-2-25-gap2",
+      "target": "燕",
+      "expect": "pass",
+      "inkSha256": "622cde05dfc78811d169c620960aab927c79441f175b76ad8616a11b38b1dd72",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-燕-2-50-gap0",
+      "target": "燕",
+      "expect": "pass",
+      "inkSha256": "eac58d2923fdb36125affd22b0013096cefa261263efc8c701bc9090ddfc2d28",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/penlift-燕-2-50-gap2",
+      "target": "燕",
+      "expect": "pass",
+      "inkSha256": "792d0bf076e69769d4933aabad77fa8e7a00b5c69e9f6c193b622e919820827d",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/penlift-燕-2-75-gap0",
+      "target": "燕",
+      "expect": "pass",
+      "inkSha256": "8c9e8f0720f891e80c2343d9c1dc17db1438f25ff2423745c0fe444f0d43a227",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-燕-2-75-gap2",
+      "target": "燕",
+      "expect": "pass",
+      "inkSha256": "d2ae53f39ab5c90548a54298fb5c3caf8cc4bdee3a61496820d6b136a6df83ad",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/rotate90-燕-3--1",
+      "target": "燕",
+      "expect": "fail",
+      "inkSha256": "0e7491809167df690e53b0ba0c1f7ea1fea6f90e1a95c1b299c6c01d580e9591",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/rotate90-燕-3-1",
+      "target": "燕",
+      "expect": "fail",
+      "inkSha256": "b67bf48cd13bc6b87b9f750dd683a41b06d89b1700807dd3d67571610e71e944",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/penlift-燕-3-25-gap0",
+      "target": "燕",
+      "expect": "pass",
+      "inkSha256": "7950db2c7a81a5bebe6627f1feaaaa3df8054c48f6a870b51ee4423139ac366f",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-燕-3-25-gap2",
+      "target": "燕",
+      "expect": "pass",
+      "inkSha256": "ff86e89a7bb8db770af390ea10b0e0bcb938b3dc1b194f542a3918a0f015fe78",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-燕-3-50-gap0",
+      "target": "燕",
+      "expect": "pass",
+      "inkSha256": "d218fa5364300ddf2df6eb35948df4ce2c211fa689d64a9925a802022d8c3722",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/penlift-燕-3-50-gap2",
+      "target": "燕",
+      "expect": "pass",
+      "inkSha256": "89846b3b3648ef3b446056acf78b1a24c9bbc323b70b0f7c6ed56db712b13d51",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/penlift-燕-3-75-gap0",
+      "target": "燕",
+      "expect": "pass",
+      "inkSha256": "e401bb72df1250e0687f58c95b734939e53a8be1dfe269fafe8bbadd1531602e",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-燕-3-75-gap2",
+      "target": "燕",
+      "expect": "pass",
+      "inkSha256": "c8c26d4bed8e258f9e37c2e06797734fb08c6eab48c1e518af67b78cfd5b4600",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-燕-4-50-gap0",
+      "target": "燕",
+      "expect": "pass",
+      "inkSha256": "4eac45ce2211ed50fb39230da909e88364fcceb738a88ce7705af0bbba5a9efc",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/penlift-燕-4-50-gap2",
+      "target": "燕",
+      "expect": "pass",
+      "inkSha256": "82d6e4dda90c7bb248bd74a9fcabe66b4c16529f8ab4595d2425a44cb6b4269d",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/penlift-燕-5-50-gap0",
+      "target": "燕",
+      "expect": "pass",
+      "inkSha256": "d76b85433ad58f6d69deedcb7ba6b8c8e53ca869d8c047bfcbf0367b33a0c96e",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/penlift-燕-5-50-gap2",
+      "target": "燕",
+      "expect": "pass",
+      "inkSha256": "eb30c50ebe26d38e1e3bda82c3a0cb7e2dbf67a69cfd1b4848451ec62fbf20ed",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/penlift-燕-6-25-gap0",
+      "target": "燕",
+      "expect": "pass",
+      "inkSha256": "f86539ae8a1a1a4b35cab345a9cefa4512d9703de0c2ff9c6c0a3e96bef09975",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/penlift-燕-6-25-gap2",
+      "target": "燕",
+      "expect": "pass",
+      "inkSha256": "756bbbd87f08bfd0481551c192252df92e2691b319493ae44f6a814ad0aa80aa",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/penlift-燕-6-50-gap0",
+      "target": "燕",
+      "expect": "pass",
+      "inkSha256": "b7acc044081d73773aef1c71f155d34d0721b93b25a01a6f67255394b12db387",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/penlift-燕-6-50-gap2",
+      "target": "燕",
+      "expect": "pass",
+      "inkSha256": "911122bc13e8d50ed5bbb1d9cb9d05342e592061d75fd2af51c26ef9ca5f2c22",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/penlift-燕-6-75-gap0",
+      "target": "燕",
+      "expect": "pass",
+      "inkSha256": "8fd9af9401db5143148df2669c692864427f75a0ee73bad871ee6fe129e8fa46",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/penlift-燕-6-75-gap2",
+      "target": "燕",
+      "expect": "pass",
+      "inkSha256": "bc03e70b5670569b386c743a94b21a031272788aa65bd3579be7ace268270f69",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/penlift-燕-7-50-gap0",
+      "target": "燕",
+      "expect": "pass",
+      "inkSha256": "02067371795ffbc2006951bdad0cc6e153a31a9441dcfc185a31382fe5c6a93d",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/penlift-燕-7-50-gap2",
+      "target": "燕",
+      "expect": "pass",
+      "inkSha256": "46e765a449eee8bec11aa2dad9cb9e61911039970ee5df028aa4f6d926b98937",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/rotate90-燕-8--1",
+      "target": "燕",
+      "expect": "fail",
+      "inkSha256": "dfb497bc68214d3f674171e6fa4ebbf90a044bcfa3922ee0ba9d2bf1bc931ead",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/rotate90-燕-8-1",
+      "target": "燕",
+      "expect": "fail",
+      "inkSha256": "5a9b427d1c9f9c5405137bda180fdbd4d1d8cb4399ed8ab22e6b917d6668b1de",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/penlift-燕-8-25-gap0",
+      "target": "燕",
+      "expect": "pass",
+      "inkSha256": "9971ce50dd3fe62efedc394ece2aeeb50d908a7bdc40a45832126f6b0d398847",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-燕-8-25-gap2",
+      "target": "燕",
+      "expect": "pass",
+      "inkSha256": "eb81dfc2663ce2732e6780a79c5290724a13488c26aafdb6d7b9f5b71aecd959",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-燕-8-50-gap0",
+      "target": "燕",
+      "expect": "pass",
+      "inkSha256": "a93f30f3d8241d320a479d74c090851e4c53d3ccfad905371d118a7e3ac99fb2",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/penlift-燕-8-50-gap2",
+      "target": "燕",
+      "expect": "pass",
+      "inkSha256": "ee0d8e6838d055ee29b2bba0a36d20f0ef11834624968217c0ef451d1f800a6d",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/penlift-燕-8-75-gap0",
+      "target": "燕",
+      "expect": "pass",
+      "inkSha256": "f38fb2b86f41f39c8ceaf3c83d8ff146859210776d6dc0c6be94832cce320a83",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-燕-8-75-gap2",
+      "target": "燕",
+      "expect": "pass",
+      "inkSha256": "f0ada11ef178ed875cecab5efa59b87ae4429bac7ae2cf856d2af38e62937fd5",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-燕-9-50-gap0",
+      "target": "燕",
+      "expect": "pass",
+      "inkSha256": "2dba0371fe36a18c3feaa2ac5866fd2a14bfb0ab87786dd3e99ef0b6609332d2",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/penlift-燕-9-50-gap2",
+      "target": "燕",
+      "expect": "pass",
+      "inkSha256": "a8a7dd8851fdd5bdcbd5a6e503d940bbe8c74a78fa306b537ad1ab9ca54cd274",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/penlift-燕-10-50-gap0",
+      "target": "燕",
+      "expect": "pass",
+      "inkSha256": "6095d0f56d738abe3c394fba729c3b2facd7191071c7fefa28bb2a3b552f0569",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/penlift-燕-10-50-gap2",
+      "target": "燕",
+      "expect": "pass",
+      "inkSha256": "19a6e2582a0c91cd68eecaefc76849873b3b68387fed8d35eb6f93619b43e50e",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/penlift-燕-11-50-gap0",
+      "target": "燕",
+      "expect": "pass",
+      "inkSha256": "df0eba668683d1ce02670b0695bb6d711c46ce81216ea3c88800626714a8cbf6",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/penlift-燕-11-50-gap2",
+      "target": "燕",
+      "expect": "pass",
+      "inkSha256": "0aeaaa841b19cc5f7a6747358bd045054001e7f35251623ee70f28244d89a190",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/penlift-燕-12-25-gap0",
+      "target": "燕",
+      "expect": "pass",
+      "inkSha256": "6b1697272d6266a115ef7c033b31ac2bf0ea0c5a1c98151cda9828ed06b76c59",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-燕-12-25-gap2",
+      "target": "燕",
+      "expect": "pass",
+      "inkSha256": "9b45e39d1cc7564c97b66013e36385cfe0932b25d897333f433da3885d198081",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-燕-12-50-gap0",
+      "target": "燕",
+      "expect": "pass",
+      "inkSha256": "ac08af2f073fde5c2fdcd69d366afd91bcc46ff9650e7c8e74148d12ec238895",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-燕-12-50-gap2",
+      "target": "燕",
+      "expect": "pass",
+      "inkSha256": "f2ceb44bb9212c11fabe5c177be13e103afebbb57379c43bcf1e8c5079a7cc7d",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-燕-12-75-gap0",
+      "target": "燕",
+      "expect": "pass",
+      "inkSha256": "6a2052658b4a8e1af7a41f87757daadf1ba2fdd67477679dffe19b4456714d29",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-燕-12-75-gap2",
+      "target": "燕",
+      "expect": "pass",
+      "inkSha256": "f304bcd0be1f7687d422c3f7f6f0d6663775a55801e930fcb8a33275542781e9",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-燕-12-corner-gap0",
+      "target": "燕",
+      "expect": "pass",
+      "inkSha256": "e74cdebe22e2f3ea275029fe8872600687effdc6bc2fb06ce49ad729ac9f84c7",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-燕-12-corner-gap2",
+      "target": "燕",
+      "expect": "pass",
+      "inkSha256": "78263dcbdeaffa0d424088bc97e3cbbefce60966b965bd598a5d9a6e12143053",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-燕-13-50-gap0",
+      "target": "燕",
+      "expect": "pass",
+      "inkSha256": "23d7c36ec5da71da40ce0fa2a558dc19e1919c2979f2201704e5657f91e98357",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/penlift-燕-13-50-gap2",
+      "target": "燕",
+      "expect": "pass",
+      "inkSha256": "88160a77128c6353ae5fe8acb7c7a68130ad6163247ba144bdfcd205097348b9",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/penlift-燕-14-50-gap0",
+      "target": "燕",
+      "expect": "pass",
+      "inkSha256": "7e7b8eef68e013a431b2b76dcd85c0197708bb9026a1feeaa6a0f82af7fe1616",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/penlift-燕-14-50-gap2",
+      "target": "燕",
+      "expect": "pass",
+      "inkSha256": "25f13827219b009b6a9223949fe322dac1ddb1889487d86968be97175a7e5c23",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/penlift-燕-15-50-gap0",
+      "target": "燕",
+      "expect": "pass",
+      "inkSha256": "61d00bd22ed5245e8af76d6b151d516feb63da5cbbe713c4e22507965a4ce266",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/penlift-燕-15-50-gap2",
+      "target": "燕",
+      "expect": "pass",
+      "inkSha256": "6e8af75c3c66d70197a5b155b2325fd6410f01e3cf335559a5ff22324fe892d7",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/penlift-燕-16-25-gap0",
+      "target": "燕",
+      "expect": "pass",
+      "inkSha256": "61ba9a621cdfac5ae27c6542a3b673305c6f769fd1a7156386db81be176aa500",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/penlift-燕-16-25-gap2",
+      "target": "燕",
+      "expect": "pass",
+      "inkSha256": "dd6cfc607d771acfd3b528da01d691c003c8ea62958955c0fbb1671894b7eb91",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/penlift-燕-16-50-gap0",
+      "target": "燕",
+      "expect": "pass",
+      "inkSha256": "b8f795ec59ebb2b77621f90a102c653bfea8e729a32fc2ae04ced52e6ab0d2b0",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/penlift-燕-16-50-gap2",
+      "target": "燕",
+      "expect": "pass",
+      "inkSha256": "6354e63c68a90fb494d421925a50b45cae384fa15ceae81e84fe9e86df448767",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/penlift-燕-16-75-gap0",
+      "target": "燕",
+      "expect": "pass",
+      "inkSha256": "a2ad69f14ca5806fe207a7bd7f5ffaf4477621a63bfe5692e25dc9e65a5809f1",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/penlift-燕-16-75-gap2",
+      "target": "燕",
+      "expect": "pass",
+      "inkSha256": "1518dddfbb80c2390df665f08d0e8636bf2d3d9d8cfeeed0defa764ea1e75938",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/missing-bottom-dots-燕",
+      "target": "燕",
+      "expect": "fail",
+      "inkSha256": "8a176fc7c8d934b977762d41cdcae52e640adecff75ae4dfbf354b42df714ac8",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/standard-逃",
+      "target": "逃",
+      "expect": "pass",
+      "inkSha256": "4b5f81de307ca1441168ab42a3979410ff7448be542139d11cb491b69526cfa5",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/small-shifted-逃",
+      "target": "逃",
+      "expect": "pass",
+      "inkSha256": "f9c7005f542dd626336dd72df73eecee87d9d468498680f70ae8e1c0d770d452",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/reordered-逃",
+      "target": "逃",
+      "expect": "pass",
+      "inkSha256": "57d47ac12f232476ae8cb375e4681b7449fca71bd6625d72a5fe7efe6af2baf0",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/delete-逃-1",
+      "target": "逃",
+      "expect": "fail",
+      "inkSha256": "fce195d8a4321315b0503d5990566928e0addbc28b22c9df82f0559e40d23586",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/delete-逃-1-reversed",
+      "target": "逃",
+      "expect": "fail",
+      "inkSha256": "54253a27664b80a9632b044a12c79c717ef75515d2e5235d2c6f2fbee3036f68",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/delete-逃-2",
+      "target": "逃",
+      "expect": "fail",
+      "inkSha256": "9e1e9dcda21e9d0d897684c877cefcc449b5755c05983b8951a59449d21557e4",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/delete-逃-2-reversed",
+      "target": "逃",
+      "expect": "fail",
+      "inkSha256": "939a29d0529c3fddb6dd72df315433d7055c62ff506fe13fe152ee1679ee7c1d",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/delete-逃-3",
+      "target": "逃",
+      "expect": "fail",
+      "inkSha256": "aedea7422d98bc1413924525fbb07e02bf5e5cc4da9e34a8ed5f72eb4a5af7fc",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/delete-逃-3-reversed",
+      "target": "逃",
+      "expect": "fail",
+      "inkSha256": "4d0a00dcc2baab1b6f3d71107a051855a7dfdd55964906647d4d5eef58a12593",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/delete-逃-4",
+      "target": "逃",
+      "expect": "fail",
+      "inkSha256": "c3ca9b4c943317d85548eded0b98ab64acaea5c8ff530aaa695fa4808ec4fa64",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/delete-逃-4-reversed",
+      "target": "逃",
+      "expect": "fail",
+      "inkSha256": "5344c7a04272ff93913d6fc01115597de0ab2eeefddbadcc8c7dada3877a9e00",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/delete-逃-5",
+      "target": "逃",
+      "expect": "fail",
+      "inkSha256": "3f6882bc7c37f58762b6bd964ce214992a184f5228ebc65b021ef2b637faf907",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/delete-逃-5-reversed",
+      "target": "逃",
+      "expect": "fail",
+      "inkSha256": "a6d3965911dc6f2e9556bea7aa20b992da87dca768a14728c481130794270fbe",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/delete-逃-6",
+      "target": "逃",
+      "expect": "fail",
+      "inkSha256": "5fb05a7e1d456b1c5d5b4592b309b27e28ae4b0013b98285e482018ff29db800",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/delete-逃-6-reversed",
+      "target": "逃",
+      "expect": "fail",
+      "inkSha256": "2e54a0aee91bf69fc7750b84099a6e0caf8e10178b94cb5ac5ff03bcb761addb",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/delete-逃-7",
+      "target": "逃",
+      "expect": "fail",
+      "inkSha256": "06471405097b5d6fde2096fcdb7128f4426097d648a1251103e2d19bd9a68e1b",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/delete-逃-7-reversed",
+      "target": "逃",
+      "expect": "fail",
+      "inkSha256": "3f49471ac70f56ae5de81a8a6dd6e6e03f9c7c753771befd41ff1af4da9d9727",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/delete-逃-8",
+      "target": "逃",
+      "expect": "fail",
+      "inkSha256": "264b40e58c82c14dc2709ed2c34cf7840d74f3b15cbc31ee763624e5ffe6be57",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/delete-逃-8-reversed",
+      "target": "逃",
+      "expect": "fail",
+      "inkSha256": "08aba888bff7fdb53891284f8a273e1090edad41b7b92b433904ba91b137a32a",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/delete-逃-9",
+      "target": "逃",
+      "expect": "fail",
+      "inkSha256": "5f06114b5e326f90ebe5d1a71a06aba7a38a051fdf34addb5aa3e82f6f78fd9c",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/delete-逃-9-reversed",
+      "target": "逃",
+      "expect": "fail",
+      "inkSha256": "93934256cb31dc9014df0b20c1725d8c99e6131894d016087eca962ef7e3cf26",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/extra-逃-0",
+      "target": "逃",
+      "expect": "fail",
+      "inkSha256": "deb89f6e9d42705cfdfa90fcca9c4a06af592ba51667897846352fe68d6463d4",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/extra-逃-1",
+      "target": "逃",
+      "expect": "fail",
+      "inkSha256": "c651d862a939a6ca752f43f9b9146f7862aa916aebbc20a3f53889c768362cec",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/extra-逃-2",
+      "target": "逃",
+      "expect": "fail",
+      "inkSha256": "29a34fcc0cd7babad0b05d637efa1d142da76c6114c9b331313e810f25483389",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/extra-逃-3",
+      "target": "逃",
+      "expect": "fail",
+      "inkSha256": "2a60fc13be5991b1304c235fe3e3a328755f73397f8aec737e29165c62bd8eae",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/extra-逃-4",
+      "target": "逃",
+      "expect": "fail",
+      "inkSha256": "4f132fac88d8e1b6088ada4b10b568e24166e1a92c1711766c2b9f8b1a9e0319",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/extra-逃-5",
+      "target": "逃",
+      "expect": "fail",
+      "inkSha256": "c431cd1289edc12df91107d881108e15a78c390c8c2107b1dab8684a6b7c2a88",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/extra-逃-6",
+      "target": "逃",
+      "expect": "fail",
+      "inkSha256": "31bfadc8d1b920f4a9d5506e52b47e0c7407ac6e029be7d5ed5950489d692bf9",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/extra-逃-7",
+      "target": "逃",
+      "expect": "fail",
+      "inkSha256": "0a34253d114ebf15ca63c5147a27ca21598bf6deb6e9020582182e0c857b309f",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/rotate90-逃-1--1",
+      "target": "逃",
+      "expect": "fail",
+      "inkSha256": "5222ce1f109cfc8c8bef4858c0d9aaaab54a21eaae9fcae62f9e1daadd6c000d",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/rotate90-逃-1-1",
+      "target": "逃",
+      "expect": "fail",
+      "inkSha256": "8a44039a1c4bcd2c1676cc58362d3ef0908ed1471dad6622fa7f30decb5896ac",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/penlift-逃-1-25-gap0",
+      "target": "逃",
+      "expect": "pass",
+      "inkSha256": "aac2e5b0dff22dcb27f535eea7ecf50445fee89c460508115a060c8f8c627211",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-逃-1-25-gap2",
+      "target": "逃",
+      "expect": "pass",
+      "inkSha256": "edc69ba64f3c7a94fe251be2d67d7b77a3cf6b077b6bf8d12f5cb1cb39fe0f4b",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-逃-1-50-gap0",
+      "target": "逃",
+      "expect": "pass",
+      "inkSha256": "693ffd3260726dc73d2604dbd0584554899ecd137f546bc0cdcfdb9164f6f271",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-逃-1-50-gap2",
+      "target": "逃",
+      "expect": "pass",
+      "inkSha256": "827994aa80804c15d91a727615fe72f6de601a21cf77b9f7b929eb94572a96d7",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-逃-1-75-gap0",
+      "target": "逃",
+      "expect": "pass",
+      "inkSha256": "afcb26bb1f6adf19b3e977360f6129b0cc734c77858cd7aad5f34d597d48cbb4",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-逃-1-75-gap2",
+      "target": "逃",
+      "expect": "pass",
+      "inkSha256": "99c2bd8ec45ed5eaf5709023ace90d4e226f793644e2d2def20a4065a48fe6cb",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-逃-2-50-gap0",
+      "target": "逃",
+      "expect": "pass",
+      "inkSha256": "2eaf1eb7b08b9404b461dcb14c1a640d9ecc6876c0a8d6f1c51a863f85f76bc2",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-逃-3-50-gap0",
+      "target": "逃",
+      "expect": "pass",
+      "inkSha256": "129747e87e0594a6369ebc03b516a759e24c2ba6adc268cb34b15cf4a8d502a1",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/penlift-逃-3-50-gap2",
+      "target": "逃",
+      "expect": "pass",
+      "inkSha256": "8675c4c230aeb2e262b6259129df727cdd2ebbc88de60b53534cd48d24909b15",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/penlift-逃-4-25-gap0",
+      "target": "逃",
+      "expect": "pass",
+      "inkSha256": "bcd54fdae3f9b74acd6782061f9085922e37bfefc6b9bf2f30f2dba142332e95",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-逃-4-25-gap2",
+      "target": "逃",
+      "expect": "pass",
+      "inkSha256": "ee47e2ceadf8dafb07576c9dc283624f56c4e0db960bac9836dd94421b5d267e",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-逃-4-50-gap0",
+      "target": "逃",
+      "expect": "pass",
+      "inkSha256": "47abd48ea05006452ddfe9dfd0da1a166d8228558a1c9b13dc23919868ec0ca9",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-逃-4-50-gap2",
+      "target": "逃",
+      "expect": "pass",
+      "inkSha256": "df721515f508b36e2940c3f504c0259ebf8a0487ceb267611016bf1c501c39a0",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-逃-4-75-gap0",
+      "target": "逃",
+      "expect": "pass",
+      "inkSha256": "e5bd5d0d30d237ec9fc94be4a4f88d0a8e37a9d8a6b81fc1c015e54f653c801c",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-逃-4-75-gap2",
+      "target": "逃",
+      "expect": "pass",
+      "inkSha256": "fbe04affeeaa3c7f9ba7f16052d7d3603386a67a2b2e4e125fc2dcf196cc17f1",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-逃-5-50-gap0",
+      "target": "逃",
+      "expect": "pass",
+      "inkSha256": "1ed9fbb6c468178a043bbdf631e4c7850157ab2beb493c5738ce29afd5e0b8dc",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/penlift-逃-5-50-gap2",
+      "target": "逃",
+      "expect": "pass",
+      "inkSha256": "ebf5fa4556e68c32cc41149692f2c8e58ce9747732da32d1ce24af816d6c8474",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/penlift-逃-6-50-gap0",
+      "target": "逃",
+      "expect": "pass",
+      "inkSha256": "b98786beedcf1fa3e6ce52fa67746f4bcf8a64ecf07d1bb654a7990f976cc5f6",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/penlift-逃-6-50-gap2",
+      "target": "逃",
+      "expect": "pass",
+      "inkSha256": "b7646570dced21927da71b423bf5a2f551340c1c047813d08eea3777742fb4cb",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/penlift-逃-7-50-gap0",
+      "target": "逃",
+      "expect": "pass",
+      "inkSha256": "2decb5488329ba501304458e82694971701a64602119ae7d857fb98600c39744",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/penlift-逃-7-50-gap2",
+      "target": "逃",
+      "expect": "pass",
+      "inkSha256": "d933db077e51114abe49f897e4450fda4a94964f9cc7d79c5a4adb15afafe589",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/penlift-逃-8-25-gap0",
+      "target": "逃",
+      "expect": "pass",
+      "inkSha256": "624d4b49c15d9bd81ee255ea4f5d3e3d908d9c2e487de7fa6f023d6caff18a7d",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-逃-8-25-gap2",
+      "target": "逃",
+      "expect": "pass",
+      "inkSha256": "144a77b4614efc213bef3b7765bfb5a93a581f47ba4bf237b13e58e222d91409",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-逃-8-50-gap0",
+      "target": "逃",
+      "expect": "pass",
+      "inkSha256": "86be6d364fb3874048b5539c5a715ff62343117850aaf770e99cd38f115db935",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-逃-8-50-gap2",
+      "target": "逃",
+      "expect": "pass",
+      "inkSha256": "46023363f799f8c8c1d842275b641d1539f829ff0bae0beacf3c158967050d79",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-逃-8-75-gap0",
+      "target": "逃",
+      "expect": "pass",
+      "inkSha256": "d19f0567c3d197644ae4b87b5c734b2b0fe24f4957a5c4ce8fead6e900b6139c",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-逃-8-75-gap2",
+      "target": "逃",
+      "expect": "pass",
+      "inkSha256": "276e5a2cca5c65c43738447deebd3d24e5c7ac2d74be6205e7368efd19761514",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-逃-8-corner-gap0",
+      "target": "逃",
+      "expect": "pass",
+      "inkSha256": "1181367a336ffec6cde441282662d05d972c66299b85add400934413feeaaa53",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-逃-8-corner-gap2",
+      "target": "逃",
+      "expect": "pass",
+      "inkSha256": "f92e06a0423d734c9fc9c370c1edf6080a9908728daade39a92661e810651b80",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/rotate90-逃-9--1",
+      "target": "逃",
+      "expect": "fail",
+      "inkSha256": "a53938de1f87d4f3eb1d1675101887ea7e6521f7693de6872e7d688ddce44ed8",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/rotate90-逃-9-1",
+      "target": "逃",
+      "expect": "fail",
+      "inkSha256": "e6f17970119ddd67e85d3c5ff728edadcf59f9392ba039319b0e0d84f7db309c",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/penlift-逃-9-25-gap0",
+      "target": "逃",
+      "expect": "pass",
+      "inkSha256": "28ad52f9dbcbae0c254f3dbf3a0247cd5f336faf085157f8b64564f4858b4930",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-逃-9-25-gap2",
+      "target": "逃",
+      "expect": "pass",
+      "inkSha256": "95665734fe190bd7b86ee450f784c7bb5bce91583cec1ebab1d93f0207b5074d",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-逃-9-50-gap0",
+      "target": "逃",
+      "expect": "pass",
+      "inkSha256": "8e7bbe44da5d8ee25931d1aaa8ffaf0c822d84ba60075d7fec8a9e09015daefb",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-逃-9-50-gap2",
+      "target": "逃",
+      "expect": "pass",
+      "inkSha256": "0d5f48a0f089ce736662ac8cba41ba2155c8d077387f802c5fe74e29ec8c8359",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-逃-9-75-gap0",
+      "target": "逃",
+      "expect": "pass",
+      "inkSha256": "d0208ba667d3a11c8b962e7afb74d8252b7ff0f78642403b3c5dff1f2afc0f8e",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-逃-9-75-gap2",
+      "target": "逃",
+      "expect": "pass",
+      "inkSha256": "38ab3c46c4ea238cb5565a7874d0328f11825430eb4f11a8b11afeef81985449",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/missing-walking-radical-逃",
+      "target": "逃",
+      "expect": "fail",
+      "inkSha256": "ef2e1224c8a7461399a8568a81037135918a520a25263db136c04b22d69660cf",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/standard-类",
+      "target": "类",
+      "expect": "pass",
+      "inkSha256": "6676301f119d5466953b673d61343ef7b03c209eedf7af362e63ad1f1c73c2c5",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/small-shifted-类",
+      "target": "类",
+      "expect": "pass",
+      "inkSha256": "abf6aa37286fcf2d907c3062784026e32609dbe19ed44dba9f02b40553c8528d",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/reordered-类",
+      "target": "类",
+      "expect": "pass",
+      "inkSha256": "847bcf2ff41146662359e17dfb1b9f97a4dc8d0c56ef4c9f30ebe86de2a82d52",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/delete-类-1",
+      "target": "类",
+      "expect": "fail",
+      "inkSha256": "ca8fced39ba463accdb2da6463ff6bdd77538bf78662d51d0fb0bb681bf21965",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/delete-类-1-reversed",
+      "target": "类",
+      "expect": "fail",
+      "inkSha256": "b6780e77b1fbded00a7666a22d6674eebc914c546b0e1b776d8e0d66b4e5552a",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/delete-类-2",
+      "target": "类",
+      "expect": "fail",
+      "inkSha256": "560c657acae6c2e31575fba94dbe663b407f7f91d036168061c7d68c049b0f94",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/delete-类-2-reversed",
+      "target": "类",
+      "expect": "fail",
+      "inkSha256": "adcfb7c4c4bafeaa2c93de675e6544c958289e43d281bf4d1e12ec7979f39f60",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/delete-类-3",
+      "target": "类",
+      "expect": "fail",
+      "inkSha256": "4c3a60394809e34d718a775fa1063239da93736ae568b74fd7d257e5e5b05897",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/delete-类-3-reversed",
+      "target": "类",
+      "expect": "fail",
+      "inkSha256": "f749f2369e8e484bb2f6c8cfb00252aedfac01131f1689e869b99a2635913dd5",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/delete-类-4",
+      "target": "类",
+      "expect": "fail",
+      "inkSha256": "d64e78a53ad5bcb183d21bd54d5c700f64eca83a1d7eaff70f50b69b70435538",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/delete-类-4-reversed",
+      "target": "类",
+      "expect": "fail",
+      "inkSha256": "8505637544b751722bfbd77578ead9dc690a90100b4d44652331ae29feee7e5d",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/delete-类-5",
+      "target": "类",
+      "expect": "fail",
+      "inkSha256": "5e79421f9c900592f8f1adc59d7fa9af9d8715f68319a75bd72b254873b9a1c0",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/delete-类-5-reversed",
+      "target": "类",
+      "expect": "fail",
+      "inkSha256": "58b19ea787f300055da1c6b8666d6a3c471b51a8cfccc1b0681284a9a26f2b3e",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/delete-类-6",
+      "target": "类",
+      "expect": "fail",
+      "inkSha256": "39321a161190f4387b9347ac1d77f584d97f679b36a95c932d2d62c9c1c02bc6",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/delete-类-6-reversed",
+      "target": "类",
+      "expect": "fail",
+      "inkSha256": "6ac4dfa309734ab0d5818c9b57022a201e1b2fed317e9d204548102aaf733b87",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/delete-类-7",
+      "target": "类",
+      "expect": "fail",
+      "inkSha256": "47428704b2977aae8bf1c0476333d3be270518e0843bafbdff7648f5c13a264e",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/delete-类-7-reversed",
+      "target": "类",
+      "expect": "fail",
+      "inkSha256": "97f561f5ed478af9c3dd4636e191334ce4c0803a7fa828166f4897625aeaff36",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/delete-类-8",
+      "target": "类",
+      "expect": "fail",
+      "inkSha256": "fb91631f49a8c81b998219c2bb32c03b1e80b4a1ea4423b505d88f3dd789d7e1",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/delete-类-8-reversed",
+      "target": "类",
+      "expect": "fail",
+      "inkSha256": "b99d70d6fa282e7cf8187e982b3448a8d8faf5f4ae4e0c3d3212391a642a901f",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/delete-类-9",
+      "target": "类",
+      "expect": "fail",
+      "inkSha256": "6515e56f1181382edad8c5e7a31763f2b2d427ce8f5ec9fda52452159f2617da",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/delete-类-9-reversed",
+      "target": "类",
+      "expect": "fail",
+      "inkSha256": "8a08f83e018efcb8b1573d95b81e5a99fbfce56af5dad9009b00d85f161bb2f0",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/extra-类-0",
+      "target": "类",
+      "expect": "fail",
+      "inkSha256": "054150d821b1cfa554dc44023352c5e639346e10a15da539e974d4509963045a",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/extra-类-1",
+      "target": "类",
+      "expect": "fail",
+      "inkSha256": "1e51dc99aea1c8e22ce1f782ea9a220ebc5ab7d40729bef3f7c8951427bc2dee",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/extra-类-2",
+      "target": "类",
+      "expect": "fail",
+      "inkSha256": "6215d252e56977986c3e7ee170b82fac560393537ee6ca24ac6aeb4228845ff4",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/extra-类-3",
+      "target": "类",
+      "expect": "fail",
+      "inkSha256": "4b6947f96c0df30a440498469c33f4ccde64f2330a40c9cc8e5af68027bc2f73",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/extra-类-4",
+      "target": "类",
+      "expect": "fail",
+      "inkSha256": "ae1e9434ba58c3074e49d9f6c6f187f11493172c60fcfdf4305fed46d28d801e",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/extra-类-5",
+      "target": "类",
+      "expect": "fail",
+      "inkSha256": "de0a8fc4fe65a4cd411420c0e752f28dbafc381cfe94ae6979fd8ca2a98db764",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/extra-类-6",
+      "target": "类",
+      "expect": "fail",
+      "inkSha256": "4e8939b6d4d4c6356911a5680994f35f8d83fd262706338d047b97de3d0dec1c",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/extra-类-7",
+      "target": "类",
+      "expect": "fail",
+      "inkSha256": "79cd99315d1a01fee30b3e06bef0222b020ed7ec243175155d868653c5a05d45",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/penlift-类-1-50-gap0",
+      "target": "类",
+      "expect": "pass",
+      "inkSha256": "019ab46482d2ff9e1ad27d28cf2741cad2bd63109ed64231e8f78535771cd36a",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/penlift-类-1-50-gap2",
+      "target": "类",
+      "expect": "pass",
+      "inkSha256": "ba4246f668d8ba500affcd44e788e470aa024fb3d9c230f2370c95a9f905613a",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/penlift-类-2-50-gap0",
+      "target": "类",
+      "expect": "pass",
+      "inkSha256": "2dd9646cb48a9ff7be44e1bbfba3e13d3b6c6fcf6d0baeb339c323822a2492ef",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/penlift-类-2-50-gap2",
+      "target": "类",
+      "expect": "pass",
+      "inkSha256": "e0b04cd6f0af61b9720a7cd6e6c6c867eb1761e24c16f125c6e65633b7b4b582",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/rotate90-类-3--1",
+      "target": "类",
+      "expect": "fail",
+      "inkSha256": "653cffa517cb2226396a37359ea53feee815bbb53c2aed8decda2fda7ca8060f",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/rotate90-类-3-1",
+      "target": "类",
+      "expect": "fail",
+      "inkSha256": "634606fcb8a6d19b014c035199c66641d9744900bc840f007e304b6bf0c51168",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/penlift-类-3-25-gap0",
+      "target": "类",
+      "expect": "pass",
+      "inkSha256": "89199da73359e73cc19cc8760198057c958e42614d1993ea417203dc0ca96ce8",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-类-3-25-gap2",
+      "target": "类",
+      "expect": "pass",
+      "inkSha256": "ce8a3aeb01f62fef050897a67a4e783a4ede4bd55497f55b3438d5ba66121036",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-类-3-50-gap0",
+      "target": "类",
+      "expect": "pass",
+      "inkSha256": "0376748cb6d607c807f5a2baddf58abd1a2ed16a617ff2dba3faee34625ba141",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-类-3-50-gap2",
+      "target": "类",
+      "expect": "pass",
+      "inkSha256": "196eec23f168605e6a9e02646f6be9c24fbaa9fac84589c1b0dfbc0af4f01591",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-类-3-75-gap0",
+      "target": "类",
+      "expect": "pass",
+      "inkSha256": "95f218147bd5e2008a403f22d53e115c909de461765111a82732f33e10e7cb11",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-类-3-75-gap2",
+      "target": "类",
+      "expect": "pass",
+      "inkSha256": "12ae4830c5164ff00b23c15d02384f087674f966c6a33cf2a6fb0574d684dc1c",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/rotate90-类-4--1",
+      "target": "类",
+      "expect": "fail",
+      "inkSha256": "6b01e6b1a025dd374f165cb29c7f084b83c873e1f30aa15f24982766b01e1adf",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/rotate90-类-4-1",
+      "target": "类",
+      "expect": "fail",
+      "inkSha256": "1b004206b2572d1dc6e79c1fb47606bcd2c004d62867d741ec9289074554b2cb",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/penlift-类-4-25-gap0",
+      "target": "类",
+      "expect": "pass",
+      "inkSha256": "65b0166523d2d5227401c7cc6fe7974cd5d97e2824fbb00ef81510a33f26ef7f",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-类-4-25-gap2",
+      "target": "类",
+      "expect": "pass",
+      "inkSha256": "141f26c82917df59a2eda3e3bfdcc924b93f96777df48075119551e7ec7e71d4",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-类-4-50-gap0",
+      "target": "类",
+      "expect": "pass",
+      "inkSha256": "82620760abede60f6370d0050612fb4d00b177c3247a23ccb62b1c25bf13a044",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-类-4-50-gap2",
+      "target": "类",
+      "expect": "pass",
+      "inkSha256": "31f88402cca685af11e2220414679f90ed410aa3990d735912abd138bb01f5b4",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-类-4-75-gap0",
+      "target": "类",
+      "expect": "pass",
+      "inkSha256": "554936b4c4d2d1c025a32f8836481fdfa58ab14cf8e3c90dd9f7cc490435b14c",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-类-4-75-gap2",
+      "target": "类",
+      "expect": "pass",
+      "inkSha256": "edd866de491edfa306c79e86d76cc2db85bde8fc692f87470693b13e43ff9424",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/rotate90-类-5--1",
+      "target": "类",
+      "expect": "fail",
+      "inkSha256": "313e61ba2ed8a7606677eb3dea206106aceca5568c9844ef8503e781b36741c1",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/rotate90-类-5-1",
+      "target": "类",
+      "expect": "fail",
+      "inkSha256": "43567203e0298231314c5ddb1be2f27ffdd59770dd95dffbaa409d3c8c8bdec5",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/penlift-类-5-25-gap0",
+      "target": "类",
+      "expect": "pass",
+      "inkSha256": "61b2cbbccbad2289002262225dfc1b4bcc063b85c1959c4f2632eb124ab1de26",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-类-5-25-gap2",
+      "target": "类",
+      "expect": "pass",
+      "inkSha256": "33a0f7d7d723312a3a611f51d47c1080372b0d386852f35acb286ef187131f69",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-类-5-50-gap0",
+      "target": "类",
+      "expect": "pass",
+      "inkSha256": "be4bc1763488ae34392eca5e68ead2f160a5881c2a7394808e3859fa3697cd24",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/penlift-类-5-50-gap2",
+      "target": "类",
+      "expect": "pass",
+      "inkSha256": "94611c34522b39cb9e66617b0bfdf529c3d71a14510ec53a1f33fec1b4554b47",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/penlift-类-5-75-gap0",
+      "target": "类",
+      "expect": "pass",
+      "inkSha256": "4daeca2c9cb84cc73fb4229767181c9828e1bf0d7eb461720e5593e5bd27d940",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-类-5-75-gap2",
+      "target": "类",
+      "expect": "pass",
+      "inkSha256": "b91de89263521582f47080d9bb4807dbc29107b83a8dc60ebe6979e6913ab462",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/rotate90-类-6--1",
+      "target": "类",
+      "expect": "fail",
+      "inkSha256": "f5c3468a27a5fc19e0166764637a56f2def878ae920acff2013f9c88c9776500",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/rotate90-类-6-1",
+      "target": "类",
+      "expect": "fail",
+      "inkSha256": "397704a82cca164a61ffca3d77ebe7738918845a77a6076adf615c3c7233a12e",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/penlift-类-6-25-gap0",
+      "target": "类",
+      "expect": "pass",
+      "inkSha256": "be802db5014b14a009741bf8a6d23c6ffe1561973bb05f9d3fc5e0cad1161e71",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/penlift-类-6-50-gap0",
+      "target": "类",
+      "expect": "pass",
+      "inkSha256": "45ecb2e2efcc86581217a2e484f44d7e4176d9b2753a04534cfcb73a555515f8",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/penlift-类-6-50-gap2",
+      "target": "类",
+      "expect": "pass",
+      "inkSha256": "ba8cd5f01e140fefc0deb57ce9676f387db04f663e7107e5849f99dc48f4d02a",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/penlift-类-6-75-gap0",
+      "target": "类",
+      "expect": "pass",
+      "inkSha256": "2d51769d69c19af43d822f1ed07c2150f183da5cb836417a247bfd85f56af495",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/rotate90-类-7--1",
+      "target": "类",
+      "expect": "fail",
+      "inkSha256": "b669998a9de60f67790021dae8354dd37afa68b38079eb4eb834e1e94fefd9c3",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/rotate90-类-7-1",
+      "target": "类",
+      "expect": "fail",
+      "inkSha256": "3e88ba498d9cf769501042fe249d9fe43424249e363f0b584c0fe08d06b8fade",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/penlift-类-7-25-gap0",
+      "target": "类",
+      "expect": "pass",
+      "inkSha256": "a1b2b4c194da21391fba672f76150466f75081671ec319532e5f89ff6cb41eea",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-类-7-25-gap2",
+      "target": "类",
+      "expect": "pass",
+      "inkSha256": "854778dc4ffeca77f5312fd3241908d63853e6b576bee8d80379d5cb9ebb1fc1",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-类-7-50-gap0",
+      "target": "类",
+      "expect": "pass",
+      "inkSha256": "3bd373e4c57a1d15cc587fb0043acb66927c1a9750719f6baa3c841e966707bb",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-类-7-50-gap2",
+      "target": "类",
+      "expect": "pass",
+      "inkSha256": "545f181b6a4c87e123798b538916b570eef9c1b4bdcbf0e62efb1b2aee8a4825",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-类-7-75-gap0",
+      "target": "类",
+      "expect": "pass",
+      "inkSha256": "ff87b655dbd4f140422bfb4a0416f10292909cd288c5ee9f63dbf9eece53275d",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-类-7-75-gap2",
+      "target": "类",
+      "expect": "pass",
+      "inkSha256": "99661b566d342de8acb4fd4ecb97b7001f88695510caf490c8df4e2c1049d870",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/rotate90-类-8--1",
+      "target": "类",
+      "expect": "fail",
+      "inkSha256": "d6dcf0bef31e545f3175756cb974f722a6dc6ed205e57968ca78c39c8fe35b7e",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/rotate90-类-8-1",
+      "target": "类",
+      "expect": "fail",
+      "inkSha256": "2a48c70e7bebaf2073aabadb69af9cd1082f75f87bb5b1459a3a514fdc33d12e",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/penlift-类-8-25-gap0",
+      "target": "类",
+      "expect": "pass",
+      "inkSha256": "4c06ea5f4a7099e5e82eb31db9250733a0b25650e3b6f5f5749665801ceea4b6",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-类-8-25-gap2",
+      "target": "类",
+      "expect": "pass",
+      "inkSha256": "bd9c452bb0956fcd552d2ad4403a6b1b1fa95cb83589e3c61a15555e8a180350",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-类-8-50-gap0",
+      "target": "类",
+      "expect": "pass",
+      "inkSha256": "67c87168dd342e1178ed44c8f44bf91de7f7d04baff031c47a732dbdb33c33e3",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-类-8-50-gap2",
+      "target": "类",
+      "expect": "pass",
+      "inkSha256": "f72933b9544e365be6bdb087ed80be45492e81ff49bbe41894d07e7034b1f200",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-类-8-75-gap0",
+      "target": "类",
+      "expect": "pass",
+      "inkSha256": "a13ba02a93577d96cf5ddc42727a430a59a219793cccef295ca8b483f09c6c6d",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-类-8-75-gap2",
+      "target": "类",
+      "expect": "pass",
+      "inkSha256": "6112bf10094f764fbb686de21066d304fb61dddf8f9b560ecd54e716264eadc0",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/rotate90-类-9--1",
+      "target": "类",
+      "expect": "fail",
+      "inkSha256": "455aa88f5d6e6107a4d1a05d20794d374902d5f5a717e02f85cf42ad2c4e6efe",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/rotate90-类-9-1",
+      "target": "类",
+      "expect": "fail",
+      "inkSha256": "277fd0c11aad6cee32afe351bd5d0a45499546ff4e1391e39b4b66352bb0019b",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/penlift-类-9-25-gap0",
+      "target": "类",
+      "expect": "pass",
+      "inkSha256": "f53c95f5280a3e12774ea83217506fb2d25592d6eaab1ca5aea59e6ef5f4b9da",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-类-9-25-gap2",
+      "target": "类",
+      "expect": "pass",
+      "inkSha256": "0b4e3e8288bbab6e98f66c42e80c295333bedacbe289a5603690073a28373763",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-类-9-50-gap0",
+      "target": "类",
+      "expect": "pass",
+      "inkSha256": "2b65ce2ee7cdc12e6b23d56462ddacbd66cf112310d2466e64d28b420046ed40",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-类-9-50-gap2",
+      "target": "类",
+      "expect": "pass",
+      "inkSha256": "9bb9599a469200121811ddd3b78311d4ee6379ee9a311f047dbdf35ccd625628",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-类-9-75-gap0",
+      "target": "类",
+      "expect": "pass",
+      "inkSha256": "7337fd74cff57c58e4bf0dc6f567885a5d0f84ea6c10f5751f453b488ad8bd7b",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/penlift-类-9-75-gap2",
+      "target": "类",
+      "expect": "pass",
+      "inkSha256": "56f728d93dfd969389ef70ca75fde0a65c2614ecbe5338d189d42dd17eb0e2ab",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/both-dots-left-类",
+      "target": "类",
+      "expect": "fail",
+      "inkSha256": "33703aeea02b7ae07cd507a34b597647649c191bd64f6c282d6283972c3e4ec0",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/both-dots-right-类",
+      "target": "类",
+      "expect": "fail",
+      "inkSha256": "f0968b2d44e3329381e712ba71e320f8fe96248a264ff098f2f1c1df3100f9e0",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/overlong-dot-类-1",
+      "target": "类",
+      "expect": "fail",
+      "inkSha256": "6999269d102a64b8ff1558d74ca25d03992e992dc8c97bb668bb3d5c0b1eec95",
+      "actual": "fail"
+    },
+    {
+      "id": "round4/overlong-dot-类-2",
+      "target": "类",
+      "expect": "fail",
+      "inkSha256": "2de2f7a2817f916c0ac90dccc61eb7537b324abe06bd1c70a6abce5fbe96d490",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/short-crossbar-类-0.4",
+      "target": "类",
+      "expect": "pass",
+      "inkSha256": "403f3fb6a950ed290c04d7de2abd7d2b85d46eb13a63d5af831d02d036c473a1",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/short-crossbar-类-0.6",
+      "target": "类",
+      "expect": "pass",
+      "inkSha256": "b0af4e4048384d40fbb158882e8da256f3ae14491b7883c8f821f7c7ac776ad8",
+      "actual": "pass"
+    },
+    {
+      "id": "round4/short-crossbar-类-0.8",
+      "target": "类",
+      "expect": "pass",
+      "inkSha256": "88673131547ff1fb4aa8f9a87aba35e6d3f1c310badff3c5162103ade6373b90",
+      "actual": "pass"
+    },
+    {
+      "id": "round4-real-ink/raw-delete-燕-1",
+      "target": "燕",
+      "expect": "fail",
+      "inkSha256": "5d86b29c5fa807898a48523b154b138e4c4f32fee99a72209dbe1f238a9b303d",
+      "actual": "fail"
+    },
+    {
+      "id": "round4-real-ink/raw-delete-燕-2",
+      "target": "燕",
+      "expect": "fail",
+      "inkSha256": "97a5aa4afc08bf0521961fade9eef1b337422f0c92c2c3dc46f23f09fa126a93",
+      "actual": "fail"
+    },
+    {
+      "id": "round4-real-ink/raw-delete-燕-3",
+      "target": "燕",
+      "expect": "fail",
+      "inkSha256": "f08a270a59e6c0e668c16056e79d0af024eb0234eb164a43d231ffaa835abca5",
+      "actual": "fail"
+    },
+    {
+      "id": "round4-real-ink/raw-delete-燕-4",
+      "target": "燕",
+      "expect": "fail",
+      "inkSha256": "8db059d9e6f4f367cd1a1b79a3853df9b3ba05bc76a5b04d70fc3d3d98834b9f",
+      "actual": "fail"
+    },
+    {
+      "id": "round4-real-ink/raw-delete-燕-5",
+      "target": "燕",
+      "expect": "fail",
+      "inkSha256": "b5dae925766ecd861e08bbea248a502c1f9ed3db6129c3449ec7ef06f4fd2e7d",
+      "actual": "fail"
+    },
+    {
+      "id": "round4-real-ink/raw-delete-燕-6",
+      "target": "燕",
+      "expect": "fail",
+      "inkSha256": "0c2983382a7728b8d00b8ad63bff84801dbde2da1324d179b5539f2ecc1a9365",
+      "actual": "fail"
+    },
+    {
+      "id": "round4-real-ink/raw-delete-燕-7",
+      "target": "燕",
+      "expect": "fail",
+      "inkSha256": "bb45cec197f39e64759905b4c77ea3c181df60592d0d881e729ccaa2b188fade",
+      "actual": "fail"
+    },
+    {
+      "id": "round4-real-ink/raw-delete-燕-8",
+      "target": "燕",
+      "expect": "fail",
+      "inkSha256": "e47b65a493bb70abf341e05c3cbce81e859fb9cc5dbaeff9753bdcc3aba1bf15",
+      "actual": "fail"
+    },
+    {
+      "id": "round4-real-ink/raw-delete-燕-9",
+      "target": "燕",
+      "expect": "fail",
+      "inkSha256": "25c955409f93f6220f4be90df02e71e9e3c22b9ece9a3226dedf364a2decebdf",
+      "actual": "fail"
+    },
+    {
+      "id": "round4-real-ink/raw-delete-燕-10",
+      "target": "燕",
+      "expect": "fail",
+      "inkSha256": "80ce42f1d6ec437372d4cecf4ba71dec4ce97f638621fed7e9f2b9ea72100201",
+      "actual": "fail"
+    },
+    {
+      "id": "round4-real-ink/raw-delete-燕-11",
+      "target": "燕",
+      "expect": "fail",
+      "inkSha256": "26fff36b624cb54a00ca940f43c5ddb5a2d8b44d79a60184de63e9d1df15ffe5",
+      "actual": "fail"
+    },
+    {
+      "id": "round4-real-ink/raw-delete-燕-12",
+      "target": "燕",
+      "expect": "fail",
+      "inkSha256": "169bf892aa5f6e98f4cbb04483e862794b3e34a4457c50701f9f1d7368e46ab7",
+      "actual": "fail"
+    },
+    {
+      "id": "round4-real-ink/raw-delete-燕-13",
+      "target": "燕",
+      "expect": "fail",
+      "inkSha256": "97deaee2b9dd4752c50dbcd8c4123bc40c8bfb32b33c3c43b3ecc2523219e483",
+      "actual": "fail"
+    },
+    {
+      "id": "round4-real-ink/raw-delete-燕-14",
+      "target": "燕",
+      "expect": "fail",
+      "inkSha256": "856f09261d5077c4ca414e57c521bb188ab05a27dc20f956095868d782b09f15",
+      "actual": "fail"
+    }
+  ]
+}

@@ -95,6 +95,8 @@ https://lucyisalive.github.io/
 
 ```sh
 node tests/grader-regression.cjs
+node tests/released-grader-regression.cjs
+node tests/released-grader-policy.cjs
 node tests/grader-safety.cjs
 node tests/structural-safety.cjs
 node tests/practice-selector.cjs
@@ -118,6 +120,10 @@ node tests/yan-connected-strokes.cjs
 node tests/parent-validation.cjs
 node tests/parent-validation-integration.cjs
 ```
+
+`released-grader-regression.cjs` 额外保护已发布 2026.11.03.5 中符合明确预期的结果，基准来自正式提交 `17c1d00d43fef79c3b6527a8015cf33c3a735dc8`，保存为 `data/released-grader-baseline-2026.11.03.5.json`。早期结构门禁只和最初基线比较，不能完整保护后来修好的案例；新增检查把已修好后再次退步的案例判为失败，无论同次还有多少改善。正确书写被新增误拒、错误书写被新增误放，两种都阻止发布。基准中的未解决错误继续单列，未知人工标签不进入保护表；不改预期来迎合现状。已有案例的期望、目标、笔迹哈希改变，或案例缺失、标识重复，同样失败。新增明确案例若不符合预期也失败。测试不会自动更新基准，不提供覆盖冻结结果的选项。
+
+后续正式发布时，在旧保护检查通过及发布验证完成后另建该版快照，用于下一轮保护；旧快照保留，保护已确认成果只能累积。新测试运行不修改游戏页面或判分规则。
 
 结构安全检查（`structural-safety.cjs`）将新增错误作为失败，同时明确列出继承漏洞。真实笔迹的已知失败始终保留为失败；不能修改期望答案来让测试变绿。测试使用网页实际判定函数及本项目字形数据，不连接网络，不修改浏览器进度。
 
