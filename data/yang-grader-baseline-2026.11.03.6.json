@@ -1,0 +1,1075 @@
+{
+  "schemaVersion": 1,
+  "description": "Public synthetic 仰 controls generated exclusively from the original frozen bundled glyph. A failed expected control remains a failure specification even when the old implementation accepts it. No personal handwriting or device metadata is included.",
+  "sourceVersion": "2026.11.03.6",
+  "sourceCommit": "58a4cf9cef4c37976c70a7a1fe8e49f658ad1f99",
+  "sourceHtmlSha256": "e73eb18082c415336d58b8c58703abc4543c9bed397680b99159aabb876cc968",
+  "sourceGradingSha256": "d47b62c80fc37164c4d21485c78267cab053891d944e96002eb904dfd971dbe0",
+  "sourceReferenceSha256": "c48c3a9d75cbeca9d5da722a805d3d205be24e32c9d0ce713c846b697345bae0",
+  "sourceBundledFiles": {
+    "hanzi-data.js": "7a093c5273f13d1a6142d1c81444fcbb355435a13ea1938f7d22ff63609d6424",
+    "curriculum-hanzi-data.js": "77211011ac88386dc9cdbf08cfbbe5bf357c329fa05107d5b0c00996fdd80010"
+  },
+  "generatorSha256": "3733d8b3df9ecdfe8c0ac90537321bd9de0b3a71580ac839143b42c6159d2145",
+  "caseCount": 126,
+  "controlsSha256": "e97dfbe1dd5d9625b9b4a4619e32a5a705c8dfdc495edeff6ae4c4b735e09095",
+  "baselineSummary": {
+    "correct": 82,
+    "inheritedErrors": [
+      "yang-missing0",
+      "yang-missing0-duplicate1",
+      "yang-missing0-duplicate2",
+      "yang-missing0-duplicate3",
+      "yang-missing0-duplicate5",
+      "yang-missing1-duplicate0",
+      "yang-missing1-duplicate3",
+      "yang-missing1-duplicate4",
+      "yang-missing1-duplicate5",
+      "yang-missing2",
+      "yang-missing2-duplicate0",
+      "yang-missing2-duplicate1",
+      "yang-missing2-duplicate4",
+      "yang-lift2-0.25-0",
+      "yang-lift2-0.25-2",
+      "yang-lift2-0.5-0",
+      "yang-lift2-0.5-2",
+      "yang-lift2-0.75-0",
+      "yang-lift2-0.75-2",
+      "yang-missing3-duplicate0",
+      "yang-missing3-duplicate1",
+      "yang-missing3-duplicate5",
+      "yang-rotate3-1",
+      "yang-rotate3--1",
+      "yang-reverse-path4",
+      "yang-missing4",
+      "yang-missing4-duplicate0",
+      "yang-missing4-duplicate1",
+      "yang-missing4-duplicate5",
+      "yang-rotate4-1",
+      "yang-rotate4--1",
+      "yang-missing5-duplicate0",
+      "yang-missing5-duplicate1",
+      "yang-missing5-duplicate3",
+      "yang-missing5-duplicate4",
+      "yang-connected-0-1-variant1",
+      "yang-connected-4-5-variant1",
+      "yang-connected-4-5-variant2",
+      "yang-connected-0-1_2-3-variant1",
+      "yang-connected-0-1_2-3-variant2",
+      "yang-connected-0-1_4-5-variant1",
+      "yang-connected-0-1_4-5-variant2",
+      "yang-connected-2-3_4-5-variant1",
+      "yang-connected-2-3_4-5-variant2"
+    ]
+  },
+  "cases": [
+    {
+      "id": "yang-reference",
+      "target": "仰",
+      "expect": "pass",
+      "kind": "reference",
+      "inkSha256": "1b92c828c691741b98619f812a1e16cad646e62d09c0471cd84d22b0617cc5ac",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-reverse-list",
+      "target": "仰",
+      "expect": "pass",
+      "kind": "order",
+      "inkSha256": "35f69f2906f392c705db243c918dd571004f9490fa12ba1edfe8ea9990844ca0",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-cycle1",
+      "target": "仰",
+      "expect": "pass",
+      "kind": "order",
+      "inkSha256": "bc70f99e29d181cd663d1461439eb524ca2861b490ef34fc5ad1a12608a5d9fd",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-cycle2",
+      "target": "仰",
+      "expect": "pass",
+      "kind": "order",
+      "inkSha256": "2b1ea2e6848449185501b57e477aff279028ecf787a808ebf8a38d8a777de056",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-cycle3",
+      "target": "仰",
+      "expect": "pass",
+      "kind": "order",
+      "inkSha256": "bb51fe4d7c0411cf29a9a49a69d425de1382cd5857386d3d3af7487f7fc515ac",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-cycle4",
+      "target": "仰",
+      "expect": "pass",
+      "kind": "order",
+      "inkSha256": "953079362735f6ae6b752fb77b16cfe957579f417ea4248f09c4b48bb72e273e",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-cycle5",
+      "target": "仰",
+      "expect": "pass",
+      "kind": "order",
+      "inkSha256": "14e519ce23021ae0540117ab96a3835f15a9920bf3c7e5d91180eba4b49faab3",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-scale0.5",
+      "target": "仰",
+      "expect": "pass",
+      "kind": "scale",
+      "inkSha256": "b0b42823d8c59648bed01f9dc743780290731d12837b7945faaba2e7fe27a78d",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-scale1.5",
+      "target": "仰",
+      "expect": "pass",
+      "kind": "scale",
+      "inkSha256": "11bd2165a17139070e3a91aeb1ece5ba9952aab9b85bbc94deb0a58f72efff79",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-reverse-path0",
+      "target": "仰",
+      "expect": "pass",
+      "kind": "path-direction",
+      "inkSha256": "326537bce19a994e784aa0322d91433d8174bff15024a6da79d7bc1873da73f4",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-missing0",
+      "target": "仰",
+      "expect": "fail",
+      "kind": "missing",
+      "inkSha256": "1443a7288f1127e5ca2b60568ecc5d281bf3681bc5038891578f93f0a92a61be",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-missing0-duplicate1",
+      "target": "仰",
+      "expect": "fail",
+      "kind": "compensation",
+      "inkSha256": "e50a1f33adcfc78b866366825f5fd3d27f0b524e7393736b6bb6a88fc1f6dede",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-missing0-duplicate2",
+      "target": "仰",
+      "expect": "fail",
+      "kind": "compensation",
+      "inkSha256": "0b41eec129d33f129013c1b77424f1651454bbbcb39e1f01311f6a20874853f7",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-missing0-duplicate3",
+      "target": "仰",
+      "expect": "fail",
+      "kind": "compensation",
+      "inkSha256": "b4b4b06051294519e950646c7320d4c0aa0a0bc1ad701459a366ee2df8546d31",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-missing0-duplicate4",
+      "target": "仰",
+      "expect": "fail",
+      "kind": "compensation",
+      "inkSha256": "f4c00e9d05c546494cb110cae3d05967d9f028743836b6be58d8b5d2092cf98d",
+      "baseline": "fail"
+    },
+    {
+      "id": "yang-missing0-duplicate5",
+      "target": "仰",
+      "expect": "fail",
+      "kind": "compensation",
+      "inkSha256": "a51c3b492de5ff7ca31a56dabfbeaf53efa182ac27666ebcb4881f2d8f6e1286",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-lift0-0.25-0",
+      "target": "仰",
+      "expect": "pass",
+      "kind": "pen-lift",
+      "inkSha256": "47b5c2cfc9f5bc5b28f0012f0af965e06866f0a4428cd5a8e044cf09354f765c",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-lift0-0.25-2",
+      "target": "仰",
+      "expect": "pass",
+      "kind": "pen-lift",
+      "inkSha256": "2f95af67a187a8d00ec9cd9c5ff7b1aeebe7c98682170e9e2773655f14766254",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-lift0-0.5-0",
+      "target": "仰",
+      "expect": "pass",
+      "kind": "pen-lift",
+      "inkSha256": "15aed97cc79aeb620e77a0c0e5eade45292d6a3c60f9485737d384c66c32cf23",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-lift0-0.5-2",
+      "target": "仰",
+      "expect": "pass",
+      "kind": "pen-lift",
+      "inkSha256": "2c77d15e26abce51c81d009a0d4078a1e0b5a06fd09b4147e497f40162121bf4",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-lift0-0.75-0",
+      "target": "仰",
+      "expect": "pass",
+      "kind": "pen-lift",
+      "inkSha256": "5ec6ecc2d363590976a2c99fdea43231d3fb6f8c928ac403c42f0df398a565a1",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-lift0-0.75-2",
+      "target": "仰",
+      "expect": "pass",
+      "kind": "pen-lift",
+      "inkSha256": "790e001c8c76540c7707ec64e2fdf0b41d872380f602e3fcd34633f50d5e1711",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-rotate0-1",
+      "target": "仰",
+      "expect": "fail",
+      "kind": "rotation",
+      "inkSha256": "fe6d1330502e437ee9ed927c6d95ee0dd59f5b7467b8a0029d08b57fa85bcd3f",
+      "baseline": "fail"
+    },
+    {
+      "id": "yang-rotate0--1",
+      "target": "仰",
+      "expect": "fail",
+      "kind": "rotation",
+      "inkSha256": "5d8825819ebcd222df2dbdc8dc4f8488e925f7b514f827948d64c13bee5d22d9",
+      "baseline": "fail"
+    },
+    {
+      "id": "yang-reverse-path1",
+      "target": "仰",
+      "expect": "pass",
+      "kind": "path-direction",
+      "inkSha256": "752fe0259342ad2e65af795ef2b0f24739edc7f0aeac0450c10fb023785ee141",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-missing1",
+      "target": "仰",
+      "expect": "fail",
+      "kind": "missing",
+      "inkSha256": "3f791214de0d91a18d68b19ce49a83f7b1d93697d4f627cc456b4e0f474446af",
+      "baseline": "fail"
+    },
+    {
+      "id": "yang-missing1-duplicate0",
+      "target": "仰",
+      "expect": "fail",
+      "kind": "compensation",
+      "inkSha256": "43b7402f792b8abef43f9cf3ce57905e97c96a3bba2406e4357f5155f0591077",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-missing1-duplicate2",
+      "target": "仰",
+      "expect": "fail",
+      "kind": "compensation",
+      "inkSha256": "07ee0261e193356f4cbe13bd0192e5d1fcff95d1a9107884becf44f22a0f470e",
+      "baseline": "fail"
+    },
+    {
+      "id": "yang-missing1-duplicate3",
+      "target": "仰",
+      "expect": "fail",
+      "kind": "compensation",
+      "inkSha256": "5d8908e228d39af51dbb0806cb32408a648d8768ddd47931b29c2d2af7dd3fb7",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-missing1-duplicate4",
+      "target": "仰",
+      "expect": "fail",
+      "kind": "compensation",
+      "inkSha256": "5197f5ba2a66d182fcf444dec9378dcf269848bc769cf635cc139805bee0de67",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-missing1-duplicate5",
+      "target": "仰",
+      "expect": "fail",
+      "kind": "compensation",
+      "inkSha256": "365c8997d160173389c987ddd800622cb3a90b51e15ce6a2aadcb1e4a2144001",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-lift1-0.25-0",
+      "target": "仰",
+      "expect": "pass",
+      "kind": "pen-lift",
+      "inkSha256": "93df32cb8cfd6b84c79eecbf33175bb86d29e710b0ac9c31febc5896ed46e610",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-lift1-0.25-2",
+      "target": "仰",
+      "expect": "pass",
+      "kind": "pen-lift",
+      "inkSha256": "00930f70f43cb7ebf5828d52d1d56a39042e582b9714b3dfb1e7d27700257116",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-lift1-0.5-0",
+      "target": "仰",
+      "expect": "pass",
+      "kind": "pen-lift",
+      "inkSha256": "57f4e11b2977c0264dd356d27e9a960a36354d27f93cac5195fcd6e9fe172b23",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-lift1-0.5-2",
+      "target": "仰",
+      "expect": "pass",
+      "kind": "pen-lift",
+      "inkSha256": "36c4efb484d7f922b4c231a8796579227cd64363628357cd5f48ac24f6d1eea7",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-lift1-0.75-0",
+      "target": "仰",
+      "expect": "pass",
+      "kind": "pen-lift",
+      "inkSha256": "60e8a9418d49497539782ec761e1b561eccd9818a914db72740de6b335d7ca20",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-lift1-0.75-2",
+      "target": "仰",
+      "expect": "pass",
+      "kind": "pen-lift",
+      "inkSha256": "209e906d17ea1c680001da2ca7ba6922627441dd96a262e02f5a79544952fcf0",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-rotate1-1",
+      "target": "仰",
+      "expect": "fail",
+      "kind": "rotation",
+      "inkSha256": "1575ec0fe22748dce73b7567a1c8bdad17e22a53d52c85ee8424336af8ae20f1",
+      "baseline": "fail"
+    },
+    {
+      "id": "yang-rotate1--1",
+      "target": "仰",
+      "expect": "fail",
+      "kind": "rotation",
+      "inkSha256": "bb2366fa6a3071f0aaf5af0d19fb2e9adb24b9ffffabf38ca6ba56ee8fbdbda6",
+      "baseline": "fail"
+    },
+    {
+      "id": "yang-reverse-path2",
+      "target": "仰",
+      "expect": "pass",
+      "kind": "path-direction",
+      "inkSha256": "6bad2bdf47bb3fb0aec366f434435158fc5bb37efc872b09540fbc776a3ea920",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-missing2",
+      "target": "仰",
+      "expect": "fail",
+      "kind": "missing",
+      "inkSha256": "6e1c898537d99b362fa7731d2f13452d13024847ceb9f1998e3a85d4dae457dc",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-missing2-duplicate0",
+      "target": "仰",
+      "expect": "fail",
+      "kind": "compensation",
+      "inkSha256": "9fa7ec991ee9000790fc29e2227ecbaeea2f993fb281979edb622b92d3b7355d",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-missing2-duplicate1",
+      "target": "仰",
+      "expect": "fail",
+      "kind": "compensation",
+      "inkSha256": "f0718e79812c7f393721d052cd8e3b12f70b9e3594eb50957ea4f7b1db702a7f",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-missing2-duplicate3",
+      "target": "仰",
+      "expect": "fail",
+      "kind": "compensation",
+      "inkSha256": "cf147df5ec85f0d49c15a775904843bebf52a441d19939a6c00753b5027c2730",
+      "baseline": "fail"
+    },
+    {
+      "id": "yang-missing2-duplicate4",
+      "target": "仰",
+      "expect": "fail",
+      "kind": "compensation",
+      "inkSha256": "cb4881c7acaec63abf1a1d968ac7264a5a61ae11d90e49bbcb7a376f9ca76933",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-missing2-duplicate5",
+      "target": "仰",
+      "expect": "fail",
+      "kind": "compensation",
+      "inkSha256": "3682d4b82174777af2c1c967ebf1e828f6a001bebc0187a3bca84ccf3bb0af6b",
+      "baseline": "fail"
+    },
+    {
+      "id": "yang-lift2-0.25-0",
+      "target": "仰",
+      "expect": "pass",
+      "kind": "pen-lift",
+      "inkSha256": "a3c9a22b2f94dab514eb0a19863f6de07ddea8e2fcfe079a3fa8c4c354448af9",
+      "baseline": "fail"
+    },
+    {
+      "id": "yang-lift2-0.25-2",
+      "target": "仰",
+      "expect": "pass",
+      "kind": "pen-lift",
+      "inkSha256": "98839867e2e7a9b148d77dcdac6b24c7bf399bebfc17c11c0a84d79db544521f",
+      "baseline": "fail"
+    },
+    {
+      "id": "yang-lift2-0.5-0",
+      "target": "仰",
+      "expect": "pass",
+      "kind": "pen-lift",
+      "inkSha256": "a056ee9d65849000d6155fd085eb77ef1fb85b3ddd6ac7a1ee5d5e3d15293753",
+      "baseline": "fail"
+    },
+    {
+      "id": "yang-lift2-0.5-2",
+      "target": "仰",
+      "expect": "pass",
+      "kind": "pen-lift",
+      "inkSha256": "4cb331a1103075a32ad15f89d6fd3c8c2859ffe78a81426decfbe6a65167d568",
+      "baseline": "fail"
+    },
+    {
+      "id": "yang-lift2-0.75-0",
+      "target": "仰",
+      "expect": "pass",
+      "kind": "pen-lift",
+      "inkSha256": "40467e8355f3a0f944cfa5eff85d4caa40c506bf1c1c584d278262e19fb83772",
+      "baseline": "fail"
+    },
+    {
+      "id": "yang-lift2-0.75-2",
+      "target": "仰",
+      "expect": "pass",
+      "kind": "pen-lift",
+      "inkSha256": "6e03d2bad5148bb730de15b5ad76ddc5b1c95650b73dd37ea1c713bbfc112671",
+      "baseline": "fail"
+    },
+    {
+      "id": "yang-rotate2-1",
+      "target": "仰",
+      "expect": "fail",
+      "kind": "rotation",
+      "inkSha256": "c717374508152071017246c6266c80d34c2caa557d1c75c266b5c903076c8ace",
+      "baseline": "fail"
+    },
+    {
+      "id": "yang-rotate2--1",
+      "target": "仰",
+      "expect": "fail",
+      "kind": "rotation",
+      "inkSha256": "5ed0e53dc83d41aa297e8250f7e579cc8c2114aab6585eb478addeff2f4532d6",
+      "baseline": "fail"
+    },
+    {
+      "id": "yang-reverse-path3",
+      "target": "仰",
+      "expect": "pass",
+      "kind": "path-direction",
+      "inkSha256": "bed9aa7d5879bb6ed1342593da6ada07549f0111de7cab6f1644a72fc7e60222",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-missing3",
+      "target": "仰",
+      "expect": "fail",
+      "kind": "missing",
+      "inkSha256": "021d647c0df4863a6593bee8c576acd3adc0a1c119c0b03e3895a8b3ffda6da8",
+      "baseline": "fail"
+    },
+    {
+      "id": "yang-missing3-duplicate0",
+      "target": "仰",
+      "expect": "fail",
+      "kind": "compensation",
+      "inkSha256": "32f6bdd590a792a9fc9577bc08cff41f900c189d1a0596fc1872ce7b6d2dac54",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-missing3-duplicate1",
+      "target": "仰",
+      "expect": "fail",
+      "kind": "compensation",
+      "inkSha256": "aa3e5119d45748fecee089fe73430466ae3f7572ebaa02552e38acf035e85c07",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-missing3-duplicate2",
+      "target": "仰",
+      "expect": "fail",
+      "kind": "compensation",
+      "inkSha256": "679ddf3395e60c5feef89c8f845d057f13b6f7b52a9cda4e956c36ea7da1b344",
+      "baseline": "fail"
+    },
+    {
+      "id": "yang-missing3-duplicate4",
+      "target": "仰",
+      "expect": "fail",
+      "kind": "compensation",
+      "inkSha256": "a2df6692e6f60797fcc29591a79e80de0934d6262cfc6eb6764305ce23cb5136",
+      "baseline": "fail"
+    },
+    {
+      "id": "yang-missing3-duplicate5",
+      "target": "仰",
+      "expect": "fail",
+      "kind": "compensation",
+      "inkSha256": "256a8a0269df381d16a960768a38a736c586f433ae3f6ca7caad34c45754a872",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-lift3-0.25-0",
+      "target": "仰",
+      "expect": "pass",
+      "kind": "pen-lift",
+      "inkSha256": "44af65d2874f59b73c613f4c7248446d5a476e0a9efb02cbd876ac98ab273ba4",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-lift3-0.25-2",
+      "target": "仰",
+      "expect": "pass",
+      "kind": "pen-lift",
+      "inkSha256": "4c1aa0924d146143df126b4e2b1f884d7c2d399c1903d17fb13e1da9b4714a2f",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-lift3-0.5-0",
+      "target": "仰",
+      "expect": "pass",
+      "kind": "pen-lift",
+      "inkSha256": "4da4e4548ea13b12e4451ee386abefc6f0e0703bdb68fb84a0d022883b2c5f77",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-lift3-0.5-2",
+      "target": "仰",
+      "expect": "pass",
+      "kind": "pen-lift",
+      "inkSha256": "711cba509c8d325f87102ff06a970d0b49d4ec163795cb26a81a14061e5c8a3c",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-lift3-0.75-0",
+      "target": "仰",
+      "expect": "pass",
+      "kind": "pen-lift",
+      "inkSha256": "0b40897d88a57bbf3b89e2e40c960f6e72ec15f75cd24720c2d6540968199fa2",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-lift3-0.75-2",
+      "target": "仰",
+      "expect": "pass",
+      "kind": "pen-lift",
+      "inkSha256": "ea81ce6ddfa1f33714bb729922bcbe463c15c0e271f084e03b91725e1c3f6e61",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-rotate3-1",
+      "target": "仰",
+      "expect": "fail",
+      "kind": "rotation",
+      "inkSha256": "ef965d55ccb4f2de5f57b8411dfa5977c12de75d4e59d6295586fe2cf8a14be6",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-rotate3--1",
+      "target": "仰",
+      "expect": "fail",
+      "kind": "rotation",
+      "inkSha256": "3814c19d431de096ac02921b781d3579393ca18e96737e4db14f75cede69387c",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-reverse-path4",
+      "target": "仰",
+      "expect": "pass",
+      "kind": "path-direction",
+      "inkSha256": "5ddf29a012e35da98ef0759b688fd2c36d1d5af080aec58a5e29fc7b36cb801f",
+      "baseline": "fail"
+    },
+    {
+      "id": "yang-missing4",
+      "target": "仰",
+      "expect": "fail",
+      "kind": "missing",
+      "inkSha256": "53e5d0e8fa61df2d4f86e569bfa29ad246620526829b3e6614238f338e50437c",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-missing4-duplicate0",
+      "target": "仰",
+      "expect": "fail",
+      "kind": "compensation",
+      "inkSha256": "8afc32fb5aad9f75a741962b804c0a4400dac6dc2fca0769185db536a83908c9",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-missing4-duplicate1",
+      "target": "仰",
+      "expect": "fail",
+      "kind": "compensation",
+      "inkSha256": "d11b0fd99a04bacdbb4c81a7213fe1819e607bc9c4b0979e3f3a48781a82801e",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-missing4-duplicate2",
+      "target": "仰",
+      "expect": "fail",
+      "kind": "compensation",
+      "inkSha256": "d535910189842a639d95a2f1545c0359095583862e1dc7437632bc40b266e81e",
+      "baseline": "fail"
+    },
+    {
+      "id": "yang-missing4-duplicate3",
+      "target": "仰",
+      "expect": "fail",
+      "kind": "compensation",
+      "inkSha256": "777763d879f1c50254590f53db75ca417e5b0f05a928a4c033e371f296b37a05",
+      "baseline": "fail"
+    },
+    {
+      "id": "yang-missing4-duplicate5",
+      "target": "仰",
+      "expect": "fail",
+      "kind": "compensation",
+      "inkSha256": "bc13049f9c165bc63f0f57d2521e577fb529aa65839d150c0bbbc17ec04e53ae",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-lift4-0.25-0",
+      "target": "仰",
+      "expect": "pass",
+      "kind": "pen-lift",
+      "inkSha256": "a93bb359bef5d1ec4c1804b73d0a5f3a3fb205e028bff8470c33162b4f035f9a",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-lift4-0.25-2",
+      "target": "仰",
+      "expect": "pass",
+      "kind": "pen-lift",
+      "inkSha256": "fbc62d1e0461b6b32708b3af7f9095d74adab9175c50dd6046e3207d377c1fa0",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-lift4-0.5-0",
+      "target": "仰",
+      "expect": "pass",
+      "kind": "pen-lift",
+      "inkSha256": "15315e085801d690f7caa1325ee4d40f726f1beb4d84a3e6da2e778cb257d11d",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-lift4-0.5-2",
+      "target": "仰",
+      "expect": "pass",
+      "kind": "pen-lift",
+      "inkSha256": "521caa175209c6c2e4695a4daf94ece27e0014c3ecc4d6a1c004ceb170012f68",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-lift4-0.75-0",
+      "target": "仰",
+      "expect": "pass",
+      "kind": "pen-lift",
+      "inkSha256": "4a096d88ba681e4cfbffcd1a0d5e35a3cccaa130503ef3270463422d93825f72",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-lift4-0.75-2",
+      "target": "仰",
+      "expect": "pass",
+      "kind": "pen-lift",
+      "inkSha256": "fa7990565c9a0d2245cbfb7f6ab161124adc331f16b310637c8e1c23ece181f7",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-rotate4-1",
+      "target": "仰",
+      "expect": "fail",
+      "kind": "rotation",
+      "inkSha256": "be89793ad6da16ddf01ad713411b6eea1cf6b8d8cd0aa33fc8cd55a0e69dcbbd",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-rotate4--1",
+      "target": "仰",
+      "expect": "fail",
+      "kind": "rotation",
+      "inkSha256": "1ae57d328afa484fd1e4a0c1221a4ecce802b617ad80aeb165aa952b8e1e3c85",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-reverse-path5",
+      "target": "仰",
+      "expect": "pass",
+      "kind": "path-direction",
+      "inkSha256": "021dd8c09ef3fa3c1cebc1839bfa7708eb6f02fea7b325eddd7b39b4224f657d",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-missing5",
+      "target": "仰",
+      "expect": "fail",
+      "kind": "missing",
+      "inkSha256": "26c47466bed58065817876ab7da98c9cf09550b4e3644754f6a125af599b03ac",
+      "baseline": "fail"
+    },
+    {
+      "id": "yang-missing5-duplicate0",
+      "target": "仰",
+      "expect": "fail",
+      "kind": "compensation",
+      "inkSha256": "7c351ae5abea85eb14bcb88c77a87f99124a29ff4175021eda196a7be6f5f8fe",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-missing5-duplicate1",
+      "target": "仰",
+      "expect": "fail",
+      "kind": "compensation",
+      "inkSha256": "897e924d48883e8e466ab3c232f5b5e23ae0ca5bddd69b61c97b2f0fc78a807a",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-missing5-duplicate2",
+      "target": "仰",
+      "expect": "fail",
+      "kind": "compensation",
+      "inkSha256": "82eb4499469a11c15db069bac48ea5ccb1bd220dda246ad717696fa112b8dade",
+      "baseline": "fail"
+    },
+    {
+      "id": "yang-missing5-duplicate3",
+      "target": "仰",
+      "expect": "fail",
+      "kind": "compensation",
+      "inkSha256": "28a5644ba87e6f683126b3b79524749238b923f011eb4840de5781ae5d3ba5cd",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-missing5-duplicate4",
+      "target": "仰",
+      "expect": "fail",
+      "kind": "compensation",
+      "inkSha256": "af461d07ef1a18224637e968af13e8687b83bdc3d1d8b1445b85df5f343dbf67",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-lift5-0.25-0",
+      "target": "仰",
+      "expect": "pass",
+      "kind": "pen-lift",
+      "inkSha256": "b5b77954319e2739fe6e419e52b9c989cd71488f2785401251cd12f9ee277665",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-lift5-0.25-2",
+      "target": "仰",
+      "expect": "pass",
+      "kind": "pen-lift",
+      "inkSha256": "67dd03301ada4a73b0bc83c9a0a1c9b71529c4c5ef961b0e6109fc994a7730d1",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-lift5-0.5-0",
+      "target": "仰",
+      "expect": "pass",
+      "kind": "pen-lift",
+      "inkSha256": "4251cfac06bc7e4566d66e2a5860a0080d3b2a29448eb8fc51233475b2f24c1d",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-lift5-0.5-2",
+      "target": "仰",
+      "expect": "pass",
+      "kind": "pen-lift",
+      "inkSha256": "5f0a159cc0ef8ba3cd884391c2f899308b441fc6d99ea4ed0a7938379dac3abf",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-lift5-0.75-0",
+      "target": "仰",
+      "expect": "pass",
+      "kind": "pen-lift",
+      "inkSha256": "14e3692272053a929a77d0e3077692a82e37f76dec1305120b2a2e1bb56f1630",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-lift5-0.75-2",
+      "target": "仰",
+      "expect": "pass",
+      "kind": "pen-lift",
+      "inkSha256": "44ef691320a4eff075dffbbdfecc0e23dfae193c30ec7e10159ed45bec20f124",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-rotate5-1",
+      "target": "仰",
+      "expect": "fail",
+      "kind": "rotation",
+      "inkSha256": "ed7b4a8b385cb94a8c46a27faaaa56c23b05a9545baea3f431dc18f0720cbdb9",
+      "baseline": "fail"
+    },
+    {
+      "id": "yang-rotate5--1",
+      "target": "仰",
+      "expect": "fail",
+      "kind": "rotation",
+      "inkSha256": "8499079cef8da93a9648ea88969c0ecb7fec6aad7d4e8d171bd63c9a92503cd6",
+      "baseline": "fail"
+    },
+    {
+      "id": "yang-connected-0-1-variant0",
+      "target": "仰",
+      "expect": "pass",
+      "kind": "connected",
+      "inkSha256": "92e3c89427134c740acaf31484a19a290f62616886c83040edda43cbe69fefdf",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-connected-0-1-variant1",
+      "target": "仰",
+      "expect": "pass",
+      "kind": "connected",
+      "inkSha256": "4253172af8e297269fad61221a393b46c5e9b992f2bcd866d3db63f8f523a27f",
+      "baseline": "fail"
+    },
+    {
+      "id": "yang-connected-0-1-variant2",
+      "target": "仰",
+      "expect": "pass",
+      "kind": "connected",
+      "inkSha256": "349b70ca869d5bb1fa463b4ae38a9eb121ff6ef5a89484a741d3ce8bdb1c6945",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-connected-0-1-variant3",
+      "target": "仰",
+      "expect": "pass",
+      "kind": "connected",
+      "inkSha256": "53a0ff9bafc5e6c167347c15c6bfc811b4b4c6594a5dc048a330daa470ee1e68",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-connected-2-3-variant0",
+      "target": "仰",
+      "expect": "pass",
+      "kind": "connected",
+      "inkSha256": "cb1d01acc5d1dce6e9f1e00dd5216747aa65e7d34ed0edfbe69d0624c13cf9ca",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-connected-2-3-variant1",
+      "target": "仰",
+      "expect": "pass",
+      "kind": "connected",
+      "inkSha256": "539652ed959e8c0018fb33c6933364e2b04a64db6342157b3e286bf959be96e8",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-connected-2-3-variant2",
+      "target": "仰",
+      "expect": "pass",
+      "kind": "connected",
+      "inkSha256": "256516d9fab09629fdb55a8629fd95be19405dcf306453d3bd66fc40a134fab8",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-connected-2-3-variant3",
+      "target": "仰",
+      "expect": "pass",
+      "kind": "connected",
+      "inkSha256": "d1104aaf8ab05b9a2385c4ddca47f099a781de8fa63e6eb66e7b7af254e0a9d2",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-connected-4-5-variant0",
+      "target": "仰",
+      "expect": "pass",
+      "kind": "connected",
+      "inkSha256": "e3a1de3304cae50d155ed062067111dda323203ab534e49e3748d734ebe1a019",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-connected-4-5-variant1",
+      "target": "仰",
+      "expect": "pass",
+      "kind": "connected",
+      "inkSha256": "9e744306f2ea48f2071342e1d71c3617d95f062446e8f9699a81831e6dd39fe7",
+      "baseline": "fail"
+    },
+    {
+      "id": "yang-connected-4-5-variant2",
+      "target": "仰",
+      "expect": "pass",
+      "kind": "connected",
+      "inkSha256": "d83146d77f8bc684d87eac55f5e1db24e376153a3d22f132b0894b7c40b98046",
+      "baseline": "fail"
+    },
+    {
+      "id": "yang-connected-4-5-variant3",
+      "target": "仰",
+      "expect": "pass",
+      "kind": "connected",
+      "inkSha256": "452573b3913393298284317ad0ae707419e2c5fabdc06e3a80e2a34594d63bc9",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-connected-0-1_2-3-variant0",
+      "target": "仰",
+      "expect": "pass",
+      "kind": "connected",
+      "inkSha256": "6f0b59f740f9f3e52db49c78bd67cd38923d902971bd374ee55030e8bfdbffb9",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-connected-0-1_2-3-variant1",
+      "target": "仰",
+      "expect": "pass",
+      "kind": "connected",
+      "inkSha256": "5f84d36c9f221ff396d1324d6f6069b7cfa15bc0520cc209a7715de29a6c2dcf",
+      "baseline": "fail"
+    },
+    {
+      "id": "yang-connected-0-1_2-3-variant2",
+      "target": "仰",
+      "expect": "pass",
+      "kind": "connected",
+      "inkSha256": "33fcd6520502e02420b7b861adbd7f85d67c7e7e9205a938025c7391d692b19c",
+      "baseline": "fail"
+    },
+    {
+      "id": "yang-connected-0-1_2-3-variant3",
+      "target": "仰",
+      "expect": "pass",
+      "kind": "connected",
+      "inkSha256": "3915c14734e2aeb9e1ebbe3382559661a4a852630a342af488545641c4b65463",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-connected-0-1_4-5-variant0",
+      "target": "仰",
+      "expect": "pass",
+      "kind": "connected",
+      "inkSha256": "f41f1504ccfa737e10fbdc3caa46a1392e39377e5e665369f9a567a897c419ee",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-connected-0-1_4-5-variant1",
+      "target": "仰",
+      "expect": "pass",
+      "kind": "connected",
+      "inkSha256": "02392aaa99076e2d8753dc60dce329d8cca532385b83cb8321e84c0d7827fdd4",
+      "baseline": "fail"
+    },
+    {
+      "id": "yang-connected-0-1_4-5-variant2",
+      "target": "仰",
+      "expect": "pass",
+      "kind": "connected",
+      "inkSha256": "99fe1266fbb882565bc385b95c37ac04c6a7f8367ff820794753a71138e31566",
+      "baseline": "fail"
+    },
+    {
+      "id": "yang-connected-0-1_4-5-variant3",
+      "target": "仰",
+      "expect": "pass",
+      "kind": "connected",
+      "inkSha256": "08cca2ef229c547c73671eea4f07c024eb6e78257a0b586e91343f3f7040f488",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-connected-2-3_4-5-variant0",
+      "target": "仰",
+      "expect": "pass",
+      "kind": "connected",
+      "inkSha256": "ea4a8bf634553db1618404d037d28d77bffdcf6cea8a6a4633035b02568e9533",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-connected-2-3_4-5-variant1",
+      "target": "仰",
+      "expect": "pass",
+      "kind": "connected",
+      "inkSha256": "14113925f65244478cf4f595650a8a3aa55b75ff66863a9aaed32531b2fb5d76",
+      "baseline": "fail"
+    },
+    {
+      "id": "yang-connected-2-3_4-5-variant2",
+      "target": "仰",
+      "expect": "pass",
+      "kind": "connected",
+      "inkSha256": "9016d6551dcdcb7cd508cc5fa2745f6466c6ae5b9b3e367390704fe03d8284c1",
+      "baseline": "fail"
+    },
+    {
+      "id": "yang-connected-2-3_4-5-variant3",
+      "target": "仰",
+      "expect": "pass",
+      "kind": "connected",
+      "inkSha256": "77c3488d3cc35083c541cf22f296b100aeafbccdb01e1d3cd093418b589ccef8",
+      "baseline": "pass"
+    },
+    {
+      "id": "yang-extra0",
+      "target": "仰",
+      "expect": "fail",
+      "kind": "extra",
+      "inkSha256": "85df6c51280e48fd42b035910d6ee7d6293f0a5d8df5893b4e497eb1820c6092",
+      "baseline": "fail"
+    },
+    {
+      "id": "yang-extra1",
+      "target": "仰",
+      "expect": "fail",
+      "kind": "extra",
+      "inkSha256": "9a748b1412978ba0cb85daa91fa95810685c8b9ccdd75a05af372154e62ec2dd",
+      "baseline": "fail"
+    },
+    {
+      "id": "yang-extra2",
+      "target": "仰",
+      "expect": "fail",
+      "kind": "extra",
+      "inkSha256": "5a8dc98adf862ae4883b26b1961cd008faf7925cf9c14ecae19463a3c755b114",
+      "baseline": "fail"
+    }
+  ]
+}

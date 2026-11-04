@@ -3,7 +3,7 @@
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
-<meta name="game-version" content="2026.11.03.6">
+<meta name="game-version" content="2026.11.04.1">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>汉字魔法门</title>
 <style data-source="game-feedback.css">
@@ -731,7 +731,7 @@
     </p>
 
     <button class="btn-close-panel" id="closePanelBtn">关闭</button>
-    <p class="hint-text" id="gameVersion">版本 2026.11.03.6</p>
+    <p class="hint-text" id="gameVersion">版本 2026.11.04.1</p>
   </div>
 </div>
 
@@ -2776,7 +2776,7 @@ function defaultBank(){
 // device that has already played keeps its old characters for ever and never sees the new
 // set — the change would reach nobody who actually uses the game.
 const BANK_VERSION = 5;
-const GAME_VERSION = '2026.11.03.6';
+const GAME_VERSION = '2026.11.04.1';
 
 let state = {
   bank: defaultBank(),
@@ -3902,7 +3902,10 @@ function matchComponent(officialStrokes, userStrokesIn, label, charDiag, diag, s
         if(options.unorderedYanPair && yanPlan && o.label==='5..6' && !mergeCovers(u.pts,o.parts,charDiag))veto='merge-not-covered';
         if(!veto && u.id.includes('+') && qq.lenRatio > 1.3) veto = 'join-inflates-length';
         c = { ...qq, veto, mergeChecked: !o.merged || !strictMerges,
-          checkMerge: () => mergeCovers(u.pts, o.parts, charDiag) };
+          // 仰's additional confirmation accepts either order of a real two-stroke
+          // connection. It still requires each part's shape and relative position.
+          checkMerge: () => mergeCovers(u.pts, o.parts, charDiag) ||
+            (options.yangCoverage && o.parts.length===2 && unorderedYanPairCovers(u.pts,o.parts)) };
         cellCache.set(key, c);
       }
       return c;
@@ -4277,7 +4280,7 @@ async function gradeDrawing(char){
         return;
       }
       const aligned = alignClusterUniform(cluster, bboxOf(c.strokes));
-      const r = matchComponent(c.strokes, aligned, c.label, charDiag, diag, STRICT_MERGE_CHARACTERS.has(char), false, options);
+      const r = matchComponent(c.strokes, aligned, c.label, charDiag, diag, STRICT_MERGE_CHARACTERS.has(char)||options.yangCoverage, false, options);
       rows = rows.concat(r.rows || []);
     });
     if(pass && rows.length){
@@ -4323,6 +4326,15 @@ async function gradeDrawing(char){
   if(!result.pass && char==='颜' && rawUser.length===15 && officialAll.length===15){
     const rescue=rescueYanFaceFixedPair(result,officialAll,user,charDiag);
     if(rescue){result=rescue;flipNote+=' (validated 颜 fixed pair)';}
+  }
+
+  // A passing 仰 must also explain every part of its connected strokes. Keep the
+  // original result as a prerequisite: this confirmation can only reject ink,
+  // never turn an old failure into a pass. Re-matching preserves valid connections
+  // that the original assignment explained with the wrong neighbouring stroke.
+  if(char==='仰' && result.pass){
+    const covered=runWith(baseAssign,{yangCoverage:true});
+    if(!covered.pass)result={...result,pass:false,diag:[...result.diag,...covered.diag,'仰 coverage confirmation failed']};
   }
 
   // TEMPORARY diagnostics — prints exactly why a drawing passed/failed, so grading can
@@ -5130,6 +5142,10 @@ onTap(submitBtn, async function(){
   if(parentSession && (parentSession.busy || parentSession.pendingRecord || parentSession.session.finished())) return;
   if(parentSession && (isDrawing || !strokesPoints.length)){
     statusLine.textContent = '请先写完这个字，再点“写好了”。';
+    return;
+  }
+  if(!parentSession && strokesPoints.length === 0){
+    statusLine.textContent = '请先写出这个字，再点“写好了”。';
     return;
   }
   if(parentSession){
