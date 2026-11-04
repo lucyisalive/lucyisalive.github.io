@@ -3,7 +3,7 @@
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
-<meta name="game-version" content="2026.11.04.1">
+<meta name="game-version" content="2026.11.04.2">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>汉字魔法门</title>
 <style data-source="game-feedback.css">
@@ -458,6 +458,23 @@
 
   .playzone.hide{ display:none; }
 
+  .player-dispute{ display:grid; grid-template-columns:52px minmax(0,1fr) auto; gap:3px 9px;
+    align-items:center; margin-top:10px; padding:9px; border:1px solid rgba(255,246,214,.25);
+    border-radius:12px; background:rgba(0,0,0,.16); color:var(--star); }
+  .player-dispute[hidden]{ display:none; }
+  .player-dispute-thumb{ grid-row:1 / 3; width:52px; height:52px; border-radius:7px;
+    background:var(--paper); color:#6b6355; position:relative; overflow:hidden; }
+  .player-dispute-thumb svg{ width:100%; height:100%; display:block; }
+  .player-dispute-thumb [hidden]{ display:none; }
+  .player-dispute-placeholder{ position:absolute; inset:0; display:flex; align-items:center;
+    justify-content:center; font-size:12px; }
+  .player-dispute-verdict{ font-size:12px; line-height:1.5; }
+  .player-dispute button{ min-height:44px; max-width:145px; padding:8px 10px; border-radius:9px;
+    border:1px solid rgba(255,246,214,.5); background:rgba(255,255,255,.1); color:var(--star);
+    font:inherit; font-size:13px; cursor:pointer; }
+  .player-dispute button[aria-pressed=true]{ background:var(--gold); color:#3a2416; }
+  .player-dispute-message{ grid-column:2 / 4; font-size:11px; line-height:1.4; color:rgba(255,246,214,.8); }
+
   /* ---------- settings panel ---------- */
   .panel-overlay{
     display:none; position:fixed; inset:0; background:rgba(0,0,0,.55);
@@ -466,9 +483,13 @@
   .panel-overlay.show{ display:flex; }
   .panel{
     width:100%; max-width:480px; background:var(--paper);
-    border-radius:18px 18px 0 0; padding:18px 16px 22px; max-height:85vh; overflow-y:auto;
+    border-radius:18px 18px 0 0; padding:0 16px 22px; max-height:85vh; overflow-y:auto;
     touch-action:pan-y;
   }
+  .panel-header{ position:sticky; top:0; z-index:2; display:flex; align-items:center;
+    justify-content:space-between; gap:12px; margin:0 -16px 14px; padding:12px 16px;
+    background:var(--paper); border-bottom:1px solid #ddd2b8; }
+  .panel .panel-header h2{ margin:0; }
   .panel h2{ font-family:'Ma Shan Zheng', cursive; color:var(--seal-dark); margin:0 0 12px; font-size:24px; }
   .panel label{ display:block; font-size:12px; color:#6b6355; margin:10px 0 4px; font-weight:700; }
   .panel input[type=text]{
@@ -501,7 +522,8 @@
   }
   .btn-save{ background:var(--jade); color:#fff; }
   .btn-load{ background:var(--gold); color:#3a2416; }
-  .btn-close-panel{ background:#cfc4a8; color:#3a2416; width:100%; margin-top:8px; }
+  .btn-close-panel{ background:#e6dcc0; color:#3a2416; width:44px; height:44px;
+    flex-shrink:0; border:0; border-radius:50%; font-size:28px; cursor:pointer; }
   .hint-text{ font-size:11.5px; color:#8a8272; margin-top:8px; line-height:1.5; }
   #fileInput{ display:none; }
   .daily-count-row{ display:flex; align-items:center; gap:8px; margin-top:6px; }
@@ -659,11 +681,23 @@
     <p id="finaleDetail" style="white-space:pre-line;"></p>
     <button class="game-btn btn-submit" id="restartBtn" style="margin-top:8px;">再来一轮</button>
   </div>
+  <div class="player-dispute" id="playerDisputeCard" hidden>
+    <div class="player-dispute-thumb" aria-hidden="true">
+      <svg id="playerDisputePreview" viewBox="0 0 300 300"></svg>
+      <span class="player-dispute-placeholder" id="playerDisputePlaceholder">刚才</span>
+    </div>
+    <div class="player-dispute-verdict" id="playerDisputeVerdict"></div>
+    <button id="playerDisputeBtn" aria-pressed="false">不认同这个批改</button>
+    <div class="player-dispute-message" id="playerDisputeMessage" role="status"></div>
+  </div>
 </div>
 
 <div class="panel-overlay" id="panelOverlay">
   <div class="panel">
-    <h2>今日汉字设置</h2>
+    <div class="panel-header">
+      <h2>今日汉字设置</h2>
+      <button class="btn-close-panel" id="closePanelBtn" aria-label="关闭设置" title="关闭设置">×</button>
+    </div>
     <div class="parent-entry">
       <b>家长识别验收</b>
       <p class="hint-text">每轮 6 次，分别检查完整字和故意漏笔。单独保存笔迹，不计入孩子的答错、掌握和复习记录。请在尚未动笔的普通题开始。</p>
@@ -730,8 +764,7 @@
       字库会按"记忆规律"自动滚动：今天答错、靠教学环节才写对的字，会更快安排复习；一次就写对的字，安排复习的间隔会拉长。你随时可以在这里加"今天最想让孩子先练"的字，这些字会排在最前面。
     </p>
 
-    <button class="btn-close-panel" id="closePanelBtn">关闭</button>
-    <p class="hint-text" id="gameVersion">版本 2026.11.04.1</p>
+    <p class="hint-text" id="gameVersion">版本 2026.11.04.2</p>
   </div>
 </div>
 
@@ -2776,7 +2809,7 @@ function defaultBank(){
 // device that has already played keeps its old characters for ever and never sees the new
 // set — the change would reach nobody who actually uses the game.
 const BANK_VERSION = 5;
-const GAME_VERSION = '2026.11.04.1';
+const GAME_VERSION = '2026.11.04.2';
 
 let state = {
   bank: defaultBank(),
@@ -2900,6 +2933,7 @@ function recordInk(payload, verdict){
   }
   inkLog.unshift(entry);
   saveInkLog();
+  if(typeof showPlayerDispute === 'function') showPlayerDispute(entry);
 }
 
 // ---------- automatic save ----------
@@ -3032,6 +3066,7 @@ function svgPointFromEvent(e){
 let capturedPointerId = null;
 
 drawSvg.addEventListener('pointerdown', (e) => {
+  if(submitBtn.disabled) return;
   if(parentValidation && (parentValidation.busy || parentValidation.pendingRecord || parentValidation.session.finished())) return;
   e.preventDefault();
   isDrawing = true;
@@ -4425,6 +4460,81 @@ const saveProgressBtn = document.getElementById('saveProgressBtn');
 const loadProgressBtn = document.getElementById('loadProgressBtn');
 const fileInput = document.getElementById('fileInput');
 
+// A complaint is a child's review request, never a confirmed grading label.
+// Keep the exact record object: the current question may already have changed.
+const playerDisputeCard = document.getElementById('playerDisputeCard');
+const playerDisputePreview = document.getElementById('playerDisputePreview');
+const playerDisputePlaceholder = document.getElementById('playerDisputePlaceholder');
+const playerDisputeVerdict = document.getElementById('playerDisputeVerdict');
+const playerDisputeBtn = document.getElementById('playerDisputeBtn');
+const playerDisputeMessage = document.getElementById('playerDisputeMessage');
+let playerDisputeEntry = null;
+let playerDisputePressedEntry = null;
+function showPlayerDispute(entry){
+  playerDisputeEntry = entry;
+  renderPlayerDispute();
+}
+function renderPlayerDispute(){
+  const entry = playerDisputeEntry;
+  const valid = entry && inkLog.includes(entry) && (entry.v === 'pass' || entry.v === 'fail');
+  playerDisputeCard.hidden = !valid || !!parentValidation;
+  if(!valid){
+    playerDisputePreview.innerHTML = '';
+    playerDisputeVerdict.textContent = playerDisputeMessage.textContent = '';
+    playerDisputeBtn.textContent = '不认同这个批改';
+    playerDisputeBtn.setAttribute('aria-pressed', 'false');
+    playerDisputePressedEntry = null;
+    return;
+  }
+  const marked = entry.playerReview && entry.playerReview.source === 'player';
+  playerDisputeVerdict.textContent = '刚才这次 · 系统判' + (entry.v === 'pass' ? '对' : '错');
+  playerDisputeBtn.textContent = marked ? '取消标记' : '不认同这个批改';
+  playerDisputeBtn.setAttribute('aria-pressed', marked ? 'true' : 'false');
+  playerDisputeMessage.textContent = inkSaveNotice
+    ? '暂存失败，笔迹和标记目前只留在这个页面，请先不要关闭。'
+    : marked ? '已标记：' + (entry.v === 'pass' ? '写错判对' : '写对判错') + '，等大人核查。'
+    : '觉得刚才判得不对？点一下标记。';
+  playerDisputePreview.innerHTML = '';
+  const strokes = Array.isArray(entry.rawS) ? entry.rawS : entry.s;
+  for(const stroke of Array.isArray(strokes) ? strokes : []){
+    const points = Array.isArray(stroke) ? stroke.filter(p => Array.isArray(p) && Number.isFinite(p[0]) && Number.isFinite(p[1])) : [];
+    if(!points.length) continue;
+    const path = document.createElementNS(svgNS, 'path');
+    path.setAttribute('d', points.map((p,i) => (i ? 'L ' : 'M ') + p[0] + ' ' + p[1]).join(' ') + (points.length === 1 ? ' l .01 .01' : ''));
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke', '#22201C');
+    path.setAttribute('stroke-width', '13');
+    path.setAttribute('stroke-linecap', 'round');
+    path.setAttribute('stroke-linejoin', 'round');
+    playerDisputePreview.appendChild(path);
+  }
+  // Even old handwriting can reveal the answer during a memory exercise.
+  const writing = writeSlot.style.display === 'flex' && !finale.classList.contains('show');
+  playerDisputePreview.hidden = writing;
+  playerDisputePreview.style.display = writing ? 'none' : 'block';
+  playerDisputePlaceholder.hidden = !writing;
+}
+function togglePlayerDispute(entry = playerDisputeEntry){
+  if(parentValidation || !entry || !inkLog.includes(entry) || !['pass','fail'].includes(entry.v)) return;
+  if(entry.playerReview && entry.playerReview.source === 'player'){
+    entry.disputed = !!entry.playerReview.priorDisputed;
+    delete entry.playerReview;
+  } else {
+    entry.playerReview = {source:'player', reportedExpected:entry.v === 'pass' ? 'fail' : 'pass',
+      reportedAt:Date.now(), priorDisputed:!!entry.disputed};
+    entry.disputed = true;
+  }
+  saveInkLog();
+  renderPlayerDispute();
+}
+playerDisputeBtn.addEventListener('pointerdown', () => { playerDisputePressedEntry = playerDisputeEntry; });
+playerDisputeBtn.addEventListener('pointercancel', () => { playerDisputePressedEntry = null; });
+onTap(playerDisputeBtn, () => {
+  const entry = playerDisputePressedEntry || playerDisputeEntry;
+  playerDisputePressedEntry = null;
+  if(entry === playerDisputeEntry) togglePlayerDispute(entry);
+});
+
 // ---------- starfield ----------
 (function initStars(){
   const bg = document.getElementById('starsBg');
@@ -4701,6 +4811,7 @@ function setWritingView(on){
     cancelTeachingRound();
     showDemoGlyph('', false);
   }
+  renderPlayerDispute();
 }
 
 // The parent types a whole word plus which character is being tested; the hint shows that
@@ -5148,6 +5259,10 @@ onTap(submitBtn, async function(){
     statusLine.textContent = '请先写出这个字，再点“写好了”。';
     return;
   }
+  if(!parentSession && isDrawing){
+    statusLine.textContent = '请先抬笔，再点“写好了”。';
+    return;
+  }
   if(parentSession){
     parentSession.busy = true;
     parentSession.gradingStep = parentSession.session.current();
@@ -5230,7 +5345,7 @@ onTap(closePanelBtn, () => {
     finale.classList.remove('show');
     playzone.classList.remove('hide');
     loadNextDoor();
-  } else if(currentMode === 'free' && !strokesPoints.length && !isDrawing && nextParentPriority()){
+  } else if(currentMode === 'free' && !strokesPoints.length && !isDrawing && !submitBtn.disabled && nextParentPriority()){
     // Replace only an untouched free question. It already counted as a filler,
     // so this must not increment the delayed-retest gap a second time.
     presentDoor(pickNextChar(), 'free', 1);
@@ -5362,11 +5477,11 @@ function renderMasteredList(){
     '<div style="font-size:12px;color:#8a8272;">还没有字通过 3 天考验</div>';
 }
 
-// 判得不对的，家长点一下标红——这就是我拿到的"标准答案"，光有笔迹不知道他到底写对没写对。
+// 标记是待核查线索；孩子反馈与家长标记都不自动成为确认过的标准答案。
 function renderInkList(){
   inkList.innerHTML = inkLog.map((it, i) => `
     <div class="ink-item ${it.disputed ? 'marked' : ''}">
-      <span><span class="ch">${it.c}</span><span class="meta">${it.d} · 系统判<span class="${it.v === 'pass' ? 'v-pass' : 'v-fail'}">${it.v === 'pass' ? '对' : '错'}</span> · ${it.s.length}笔</span></span>
+      <span><span class="ch">${it.c}</span><span class="meta">${it.d} · 系统判<span class="${it.v === 'pass' ? 'v-pass' : 'v-fail'}">${it.v === 'pass' ? '对' : '错'}</span> · ${it.s.length}笔${it.playerReview ? ' · 孩子反馈：' + (it.playerReview.reportedExpected === 'pass' ? '写对判错' : '写错判对') : ''}</span></span>
       <button class="ink-mark" data-i="${i}">${it.disputed ? '✓ 已标记' : '判得不对'}</button>
     </div>`).join('') ||
     '<div style="font-size:12px;color:#8a8272;">还没有笔迹记录，让孩子写几个字就有了</div>';
@@ -5381,8 +5496,10 @@ function renderInkList(){
     onTap(el, () => {
       if(!it || !inkLog.includes(it)) return;
       it.disputed = !it.disputed;
+      if(!it.disputed) delete it.playerReview;
       saveInkLog();
       renderInkList();
+      if(typeof renderPlayerDispute === 'function') renderPlayerDispute();
     });
   });
 }
@@ -5396,7 +5513,8 @@ function inkPayloadText(only){
     ({ c: x.c, verdict: x.v, day: x.d, disputed: !!x.disputed, s: x.s,
        graderVersion: x.graderVersion || null, timestamp: x.timestamp || null,
        filtering: x.filtering || null,
-       formatVersion: x.formatVersion || 1, rawS: x.rawS, phase: x.phase || null })) });
+       formatVersion: x.formatVersion || 1, rawS: x.rawS, phase: x.phase || null,
+       ...(x.playerReview ? {playerReview:x.playerReview} : {}) })) });
 }
 
 // ---------- batch paste ----------
@@ -5481,8 +5599,10 @@ onTap(inkDownloadBtn, () => {
 });
 
 onTap(inkClearBtn, () => {
-  inkLog = []; saveInkLog(); renderInkList();
-  inkOut.value = ''; inkMsg.textContent = '已清空';
+  if(submitBtn.disabled){ inkMsg.textContent = '正在批改，请等这次完成后再清空。'; return; }
+  inkLog = []; const saved = saveInkLog(); renderInkList();
+  playerDisputeEntry = playerDisputePressedEntry = null; renderPlayerDispute();
+  inkOut.value = ''; inkMsg.textContent = saved ? '已清空' : '暂存失败，清空尚未保存。';
 });
 
 onTap(batchAddBtn, () => {
@@ -5519,7 +5639,10 @@ onTap(saveProgressBtn, () => {
   URL.revokeObjectURL(url);
 });
 
-onTap(loadProgressBtn, () => fileInput.click());
+onTap(loadProgressBtn, () => {
+  if(submitBtn.disabled){ alert('正在批改，请等这次完成后再读取存档。'); return; }
+  fileInput.click();
+});
 fileInput.addEventListener('change', (e) => {
   const file = e.target.files[0];
   if(!file) return;
@@ -5530,6 +5653,11 @@ fileInput.addEventListener('change', (e) => {
     if(parentValidation){
       fileInput.value = '';
       alert('正在进行家长验收，本次没有读取存档。退出验收后可重新选择存档。');
+      return;
+    }
+    if(submitBtn.disabled){
+      fileInput.value = '';
+      alert('正在批改，本次没有读取存档。请等这次完成后重新选择存档。');
       return;
     }
     try{
@@ -5587,6 +5715,7 @@ function showFinale(bankEmpty){
   showDemoGlyph('', false);
   playzone.classList.add('hide');
   finale.classList.add('show');
+  renderPlayerDispute();
   if(bankEmpty){
     // Two very different reasons the pool can run dry, and they need opposite responses from
     // the parent: everything mastered means add more characters, everything parked means go
@@ -5623,6 +5752,7 @@ renderQueueList();
 renderMasteredList();
 renderStuckList();
 renderInkList();
+showPlayerDispute(inkLog.find(entry => entry && (entry.v === 'pass' || entry.v === 'fail')) || null);
 onTap(speakBtn, speakPrompt);
 onTap(sentenceBtn, speakSentence);
 charInput.addEventListener('focus',loadPinyinForParent);
