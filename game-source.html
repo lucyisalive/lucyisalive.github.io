@@ -2,7 +2,7 @@
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
-<meta name="game-version" content="2026.11.05.1">
+<meta name="game-version" content="2026.11.05.2">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>汉字魔法门</title>
 <link rel="stylesheet" href="game-feedback.css?v=2026.11.02.4">
@@ -460,6 +460,7 @@
     border-bottom:1.5px dashed var(--seal); padding-bottom:1px;
   }
 </style>
+<link rel="stylesheet" href="mountain-journey.css">
 </head>
 <body>
 <div class="startup-notice" id="startupNotice" role="status">正在准备汉字，马上就能开始…</div>
@@ -657,7 +658,7 @@
       字库会按"记忆规律"自动滚动：今天答错、靠教学环节才写对的字，会更快安排复习；一次就写对的字，安排复习的间隔会拉长。你随时可以在这里加"今天最想让孩子先练"的字，这些字会排在最前面。
     </p>
 
-    <p class="hint-text" id="gameVersion">版本 2026.11.05.1</p>
+    <p class="hint-text" id="gameVersion">版本 2026.11.05.2</p>
   </div>
 </div>
 
@@ -670,6 +671,7 @@
 <script src="learning-timing.js"></script>
 <script src="parent-validation.js"></script>
 <script src="progress-sync.js"></script>
+<script src="mountain-journey.js"></script>
 <script>
 /* ============================================================
    汉字魔法门 — 默写版
@@ -726,7 +728,7 @@ function defaultBank(){
 // device that has already played keeps its old characters for ever and never sees the new
 // set — the change would reach nobody who actually uses the game.
 const BANK_VERSION = 5;
-const GAME_VERSION = '2026.11.05.1';
+const GAME_VERSION = '2026.11.05.2';
 
 let state = {
   bank: defaultBank(),
@@ -2720,7 +2722,7 @@ function renderProgressPath(){
 
 // ---------- door state ----------
 // Audio and particles are independent of grading and learning records.
-function setDoorClosed(){ doorpanel.classList.remove('open'); }
+function setDoorClosed(){ doorpanel.classList.remove('open'); if(typeof mountainCall === 'function') mountainCall('arrive', passedCount); }
 function setDoorOpen(){ doorpanel.classList.add('open'); }
 
 // ---------- drawing a printed glyph from the grading data ----------
@@ -2788,6 +2790,19 @@ function feedbackCall(method, ...args){
     }
     return result;
   }catch(e){ /* Feedback is optional; the game action still runs. */ }
+}
+
+let mountainJourney = null;
+function initMountainJourney(){
+  try{ mountainJourney = window.HanziMountainJourney.create({document, window}); }
+  catch(_){ mountainJourney = null; }
+}
+function mountainCall(method, ...args){
+  try{
+    if(!mountainJourney || typeof mountainJourney[method] !== 'function') return;
+    const result = mountainJourney[method](...args);
+    if(result && typeof result.then === 'function') Promise.resolve(result).catch(() => {});
+  }catch(_){ /* Scenery never controls lesson flow or persistence. */ }
 }
 
 function sentenceFor(item){
@@ -2866,6 +2881,7 @@ function setWritingView(on){
     showDemoGlyph('', false);
   }
   renderPlayerDispute();
+  if(typeof mountainCall === 'function') mountainCall('showWriting', on);
 }
 
 // The parent types a whole word plus which character is being tested; the hint shows that
@@ -2994,6 +3010,7 @@ function markPassed(item, outcome, message){
   recordResult(item, outcome);
   renderProgressPath();
   continueBtn.classList.add('show');
+  if(typeof mountainCall === 'function') mountainCall('depart');
 }
 
 function markAbandonedToday(item){
@@ -3755,14 +3772,10 @@ fileInput.addEventListener('change', (e) => {
 });
 
 // ---------- scenes (cosmetic reward for finishing today's target) ----------
-const SCENES = [
-  { name:'魔法花房',   img:'scene2.jpg', sky:['#3a2a12','#6b4a1f','#b9862f'], wood:['#5b3a24','#3a2416'] },
-  { name:'观星塔',     img:'scene3.jpg', sky:['#12213b','#1e3a5f','#3f7a8c'], wood:['#2b2440','#171224'] },
-  { name:'月光花园',   img:'scene4.jpg', sky:['#131c3d','#232f5c','#3a4a8c'], wood:['#3e4a52','#232b31'] },
-  { name:'萌宠草坪',   img:'scene5.jpg', sky:['#3a2a12','#6b4a1f','#8a5a1f'], wood:['#7a5a2e','#4a361a'] },
-  { name:'魔法图书馆', img:'scene6.jpg', sky:['#3a1f10','#5c3018','#8a5228'], wood:['#4a2a1a','#2c180e'] },
-  { name:'彩虹草原',   img:'scene1.jpg', sky:['#2a1a4a','#4b2a6b','#7b3f8f'], wood:['#5b3a24','#3a2416'], fit:'top' },
-];
+const SCENES = [{
+  name:'萤光山径', img:'assets/mountain-journey/forest-trail.webp',
+  sky:['#193d32','#315d48','#72917c'], wood:['#705238','#392d21'],
+}];
 
 function applyScene(index){
   const scene = SCENES[index % SCENES.length];
@@ -3773,7 +3786,9 @@ function applyScene(index){
   root.setProperty('--door-wood', scene.wood[0]);
   root.setProperty('--door-wood-dark', scene.wood[1]);
   sceneImg.src = scene.img;
-  sceneImg.style.objectPosition = scene.fit === 'top' ? '50% 8%' : '50% 35%';
+  sceneImg.decoding = 'async';
+  sceneImg.style.objectPosition = '55% 35%';
+  if(typeof mountainCall === 'function') mountainCall('arrive', passedCount);
 }
 
 function showFinale(bankEmpty){
@@ -3803,7 +3818,7 @@ function showFinale(bankEmpty){
   const masteredNote = justMastered.length
     ? `\n「${justMastered.map(b => b.char).join('、')}」已经在 ${MASTERED_DAYS} 个不同的日子写对了，永久掌握，不用再练啦！`
     : '';
-  finaleDetail.textContent = `今天推开了 ${passedCount} 扇门！解锁了新场景：${sceneName}` + masteredNote;
+  finaleDetail.textContent = `今天推开了 ${passedCount} 扇山门！今天的${sceneName}探索完成啦。` + masteredNote;
   if(!syncSceneAwarded){
     syncSceneAwarded = true;
     state.scenesUnlocked += 1;
@@ -3817,6 +3832,7 @@ function showFinale(bankEmpty){
 loadSavedState();
 loadInkLog();
 loadParentTestInkLog();
+initMountainJourney();
 initProgressSync();
 applyScene(state.scenesUnlocked);
 dailyCountInput.value = state.dailyCount;

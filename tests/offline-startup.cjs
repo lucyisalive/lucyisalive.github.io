@@ -14,9 +14,16 @@ const scripts = [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script\s*>/gi)]
   .map(match => ({attributes: match[1], source: match[2]}));
 const mainIndex = scripts.findIndex(script => script.source.includes('function newBankItem(') && script.source.includes('function onTap('));
 const modules = ['curriculum-data.js', 'practice-selector.js', 'sentence-hints.js',
-  'game-feedback.js', 'glyph-catalog.js', 'glyph-loader.js', 'learning-timing.js', 'parent-validation.js', 'progress-sync.js'];
+  'game-feedback.js', 'glyph-catalog.js', 'glyph-loader.js', 'learning-timing.js', 'parent-validation.js', 'progress-sync.js',
+  'mountain-journey.js'];
+const styles = ['game-feedback.css', 'mountain-journey.css'];
 assert.ok(scripts.every(script => !/\bsrc\s*=/i.test(script.attributes)), 'Critical scripts must be embedded');
 for(const file of modules) assert.equal(scripts.filter(script => script.attributes.includes('data-source="'+file+'"')).length,1,'Embed exactly one '+file);
+assert.deepEqual(scripts.filter(script => /\bdata-source=/.test(script.attributes))
+  .map(script => script.attributes.match(/\bdata-source=["']([^"']+)["']/)[1]), modules, 'Exact small-module load order');
+const embeddedStyles = [...html.matchAll(/<style\b([^>]*)>/gi)].map(match => match[1]);
+assert.deepEqual(embeddedStyles.filter(attributes => /\bdata-source=/.test(attributes))
+  .map(attributes => attributes.match(/\bdata-source=["']([^"']+)["']/)[1]), styles, 'Exact local startup styles');
 for(const file of ['hanzi-data.js','curriculum-hanzi-data.js','pinyin-data.js']) {
   assert.ok(!scripts.some(script => script.attributes.includes('data-source="'+file+'"')), 'Do not preload '+file);
 }
@@ -24,7 +31,7 @@ assert.ok(mainIndex>=modules.length, 'Load the small behavior modules and catalo
 assert.ok(!html.includes('bundledGlyphsLoaded')&&!html.includes('resolveBundledGlyphs'),'No bulk-ready gate');
 assert.ok(!/<link\b[^>]*\brel\s*=\s*["']stylesheet["']/i.test(html), 'No separate startup stylesheet');
 assert.ok(!/<link\b[^>]*\bhref\s*=\s*["'][^"']*fonts\.(?:googleapis|gstatic)\.com/i.test(html), 'No remote fonts');
-assert.ok(/<style\b[^>]*data-source=["']game-feedback\.css["'][^>]*>/i.test(html), 'Embed feedback CSS');
+for (const file of styles) assert.ok(embeddedStyles.some(attributes => attributes.includes('data-source="'+file+'"')), 'Embed '+file);
 assert.ok(/\.startup-notice\[hidden\]\s*\{[^}]*display\s*:\s*none/i.test(html), 'Hidden cover must not intercept buttons');
 if(!fromSource) assert.equal(fs.readFileSync(path.join(root,'汉字魔法门_4.html'),'utf8'),html);
 function seeded(seed){let n=seed>>>0;return()=>((n=(Math.imul(n,1664525)+1013904223)>>>0)/4294967296);}
@@ -32,6 +39,7 @@ const fixtureContext=vm.createContext({window:{}});
 for(const file of ['hanzi-data.js','curriculum-hanzi-data.js','glyph-catalog.js']) vm.runInContext(fs.readFileSync(path.join(root,file),'utf8'),fixtureContext);
 const frozenGlyphs=fixtureContext.window.HANZI_LOCAL_DATA;
 const catalog=fixtureContext.window.HANZI_GLYPH_CATALOG;
+const startupScripts=scripts;
 function dependencyGroup(char){const out=new Set();function visit(c){if(out.has(c))return;catalog.glyphs[c].deps.forEach(visit);out.add(c);}visit(char);return out;}
 const flush=()=>new Promise(resolve=>setImmediate(resolve));
 class Element {
@@ -56,6 +64,10 @@ class Element {
   get firstChild() { return this.children[0] || null; }
   get isConnected() { return this.tagName === 'BODY' || Boolean(this.parentNode && this.parentNode.isConnected); }
   appendChild(child) { child.parentNode = this; this.children.push(child); if(this.onAppend) this.onAppend(child); return child; }
+  insertBefore(child, before) {
+    const index=this.children.indexOf(before);if(index<0)return this.appendChild(child);
+    child.parentNode=this;this.children.splice(index,0,child);if(this.onAppend)this.onAppend(child);return child;
+  }
   removeChild(child) { this.children = this.children.filter(item => item !== child); child.parentNode = null; return child; }
   remove() { if (this.parentNode) this.parentNode.removeChild(this); }
   setAttribute(key, value) { this.attributes[key] = String(value); if (key === 'class') this.className = String(value); }
@@ -81,14 +93,19 @@ class Element {
   closest(selector) { return selector.split(',').some(part => part.trim().startsWith('.') && this.classList.contains(part.trim().slice(1))) ? this : null; }
 }
 
-function environment({initialSave=null,initialStorage=null,mode='online'}={}) {
+function environment({initialSave=null,initialStorage=null,mode='online',omitMountain=false}={}) {
+  // The builder must package the decorative module. At runtime it remains an
+  // optional enhancement: an absent API must leave every learning control usable.
+  const scripts = omitMountain ? startupScripts.map(script => script.attributes.includes('data-source="mountain-journey.js"')
+    ? {...script,source:''} : script) : startupScripts;
   const ids=new Map(),body=new Element('body'),documentElement=new Element('html');
   for(const match of html.matchAll(/<([a-z][\w:-]*)\b([^>]*\bid=["']([^"']+)["'][^>]*)>/gi)) {
     const node=new Element(match[1],match[3]);const cls=match[2].match(/\bclass=["']([^"']*)["']/i);if(cls)node.className=cls[1];
     const value=match[2].match(/\bvalue=["']([^"']*)["']/i);if(value)node.value=value[1];
     node.hidden=/\bhidden(?:\s|=|$)/i.test(match[2]);ids.set(node.id,node);body.appendChild(node);
   }
-  const document={body,documentElement,hidden:false,readyState:'complete',getElementById:id=>ids.get(id)||null,
+  function findId(node,id){if(node.id===id)return node;for(const child of node.children){const found=findId(child,id);if(found)return found;}return null;}
+  const document={body,documentElement,hidden:false,readyState:'complete',getElementById:id=>ids.get(id)||findId(body,id),
     createElement:tag=>new Element(tag),createElementNS:(_,tag)=>new Element(tag),addEventListener(){}};
   const network=[],storage=new Map(initialStorage||[]),timers=new Map(),spoken=[];
   if(initialSave)storage.set('hanzi-magic-door-state-v1',JSON.stringify(initialSave));
@@ -159,6 +176,16 @@ function inkFor(e,char){e.context.testMedians=frozenGlyphs[char].medians;e.run('
   const first=environment();assertBootAndSettings(first);
   assert.equal(Object.keys(first.context.window.HANZI_LOCAL_DATA||{}).length,0,'No bulk geometry is parsed at startup');
   const firstChar=first.run('currentItem.char');await flush();assertOnlyRequestedGroup(first,firstChar);
+  // No images, decoding API, or decoration module is needed to start, write,
+  // score, and open settings. CSS image requests cannot gate the main program.
+  const undecorated=environment({omitMountain:true});assertBootAndSettings(undecorated);await flush();
+  const undecoratedChar=undecorated.run('currentItem.char');
+  assert.equal(undecorated.context.window.HanziMountainJourney,undefined);
+  inkFor(undecorated,undecoratedChar);undecorated.tap('submitBtn');await flush();
+  assert.equal(undecorated.ids.get('submitBtn').disabled,false);
+  assert.equal(undecorated.run('passedCount'),1,'Missing decoration must not change a correct attempt');
+  assert.equal(undecorated.run('inkLog.length'),1);
+  assertOnlyRequestedGroup(undecorated,undecoratedChar);
   const warmedStorage=new Map(first.storage);
   const cached=environment({initialStorage:warmedStorage,mode:'offline'});assertBootAndSettings(cached);await flush();
   assert.equal(cached.run('currentItem.char'),firstChar);assert.deepEqual(cached.network,[],'Warm target loads from persistent cache offline');

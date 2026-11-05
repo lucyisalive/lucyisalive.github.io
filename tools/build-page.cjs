@@ -15,9 +15,11 @@ const OUTPUT_FILES = ['index.html', '汉字魔法门_4.html'];
 const SCRIPT_FILES = [
   'curriculum-data.js', 'practice-selector.js', 'sentence-hints.js',
   'game-feedback.js', 'glyph-catalog.js', 'glyph-loader.js', 'learning-timing.js', 'parent-validation.js',
-  'progress-sync.js',
+  'progress-sync.js', 'mountain-journey.js',
 ];
+// Keep the original singular export for callers that only need feedback CSS.
 const CSS_FILE = 'game-feedback.css';
+const CSS_FILES = [CSS_FILE, 'mountain-journey.css'];
 const GLYPH_FILES = ['hanzi-data.js', 'curriculum-hanzi-data.js'];
 const NOTICE = '<!-- 由 tools/build-page.cjs 生成。游戏逻辑请改 game-source.html；模块请改各 JS/CSS 原文件，再重新构建。 -->';
 const SCRIPT_TAG = /<script\b((?:"[^"]*"|'[^']*'|[^'">])*)>([\s\S]*?)<\/script\s*>/gi;
@@ -120,11 +122,11 @@ function inlinePage(source, readAsset) {
     const attrs = attributes(raw);
     if (!(attrs.rel || '').toLowerCase().split(/\s+/).includes('stylesheet')) return tag;
     const file = localFile(attrs.href || '');
-    if (file !== CSS_FILE) throw new Error('Unexpected startup stylesheet: ' + file);
+    if (!CSS_FILES.includes(file)) throw new Error('Unexpected startup stylesheet: ' + file);
     if (Object.keys(attrs).some(key => key !== 'href' && key !== 'rel')) {
       throw new Error('Stylesheet has attributes that cannot be silently removed: ' + file);
     }
-    if (styles.length) throw new Error('Duplicate startup stylesheet: ' + file);
+    if (styles.includes(file)) throw new Error('Duplicate startup stylesheet: ' + file);
     const original = readAsset(file);
     validateCss(original, file);
     assets.push({ file, source: original });
@@ -138,7 +140,9 @@ function inlinePage(source, readAsset) {
   if (scripts.length !== SCRIPT_FILES.length || SCRIPT_FILES.some(file => !scripts.some(entry => entry.file === file))) {
     throw new Error('Expected all ' + SCRIPT_FILES.length + ' local startup scripts exactly once');
   }
-  if (styles.length !== 1) throw new Error('Expected game-feedback.css exactly once');
+  if (styles.length !== CSS_FILES.length || CSS_FILES.some(file => !styles.includes(file))) {
+    throw new Error('Expected all ' + CSS_FILES.length + ' local startup stylesheets exactly once');
+  }
   if (!/^\s*<!doctype html>/i.test(html)) throw new Error('Source must begin with the HTML doctype');
   html = html.replace(/^(\s*<!doctype html>)[\t ]*(?:\r?\n)?/i, '$1\n' + NOTICE + '\n');
   assertNoStartupLinks(html);
@@ -207,7 +211,7 @@ function main(args = process.argv.slice(2)) {
   console.log(JSON.stringify({ mode: args.includes('--check') ? 'check' : 'build', ...result.summary }, null, 2));
 }
 
-module.exports = { inlinePage, buildPage, verifyGlyphGeometry, assertNoStartupLinks, SCRIPT_FILES, CSS_FILE, OUTPUT_FILES };
+module.exports = { inlinePage, buildPage, verifyGlyphGeometry, assertNoStartupLinks, SCRIPT_FILES, CSS_FILE, CSS_FILES, OUTPUT_FILES };
 if (require.main === module) {
   try { main(); }
   catch (error) { console.error('Page build failed: ' + error.message); process.exitCode = 1; }

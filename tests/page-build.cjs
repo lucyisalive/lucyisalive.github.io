@@ -5,16 +5,19 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 const { inlinePage, buildPage, verifyGlyphGeometry, assertNoStartupLinks,
-  SCRIPT_FILES, CSS_FILE, OUTPUT_FILES } = require('../tools/build-page.cjs');
+  SCRIPT_FILES, CSS_FILE, CSS_FILES, OUTPUT_FILES } = require('../tools/build-page.cjs');
 
 const assets = Object.fromEntries(SCRIPT_FILES.map(file => [file, 'window.loaded.push(' + JSON.stringify(file) + ');']));
-assets[CSS_FILE] = '.sample { color: red; }';
+assert.equal(CSS_FILE, 'game-feedback.css', 'Keep the existing singular CSS export compatible');
+assert.deepEqual(CSS_FILES, [CSS_FILE, 'mountain-journey.css']);
+for (const file of CSS_FILES) assets[file] = '.sample { color: red; }';
 // Include closing tags inside JS and CSS strings, where packaging must escape
 // the HTML terminator without changing the string value used by the program.
 assets['sentence-hints.js'] += '\nwindow.example = "</script><script>notExecutable()</script>";';
 assets['sentence-hints.js'] += '\nwindow.linkExample = \'<link rel="stylesheet" href="game-feedback.css">\';';
-assets[CSS_FILE] += '\n.sample::after { content: "</style>"; }';
-const source = '<!DOCTYPE html>\n<html><head><link rel="stylesheet" href="game-feedback.css?v=123"></head><body>\n' +
+for (const file of CSS_FILES) assets[file] += '\n.sample::after { content: "</style>"; }';
+const styleLinks = CSS_FILES.map(file => '<link rel="stylesheet" href="' + file + '?v=123">').join('');
+const source = '<!DOCTYPE html>\n<html><head>' + styleLinks + '</head><body>\n' +
   SCRIPT_FILES.map((file, i) => '<script src=' + (i % 2 ? "'" + file + "?v=123'" : '"' + file + '"') + '></script>').join('\n') +
   '\n<script>window.loaded.push("game");</script></body></html>';
 const compile = (html = source, files = assets) => inlinePage(html, file => {
@@ -24,13 +27,15 @@ const compile = (html = source, files = assets) => inlinePage(html, file => {
 const compiled = compile();
 assert.equal(compile().html, compiled.html, 'Build output must be deterministic');
 assert.equal(compiled.scripts.length, SCRIPT_FILES.length);
-assert.equal(compiled.styles.length, 1);
+assert.deepEqual(compiled.styles, CSS_FILES);
 assert.ok(compiled.html.includes('game-source.html'), 'Generated file must explain where to edit');
 assert.equal([...compiled.html.matchAll(/<script\b[^>]*>[\s\S]*?<\/script\s*>/gi)].length, SCRIPT_FILES.length + 1,
   'Data strings must not create executable tags');
-assert.equal((compiled.html.match(/<style\b/g) || []).length, 1, 'CSS strings must not terminate the style element');
+assert.equal((compiled.html.match(/<style\b/g) || []).length, CSS_FILES.length, 'CSS strings must not terminate a style element');
 assert.ok(compiled.html.includes('<script data-source="glyph-catalog.js">'));
 assert.ok(compiled.html.includes('<style data-source="game-feedback.css">'));
+assert.ok(compiled.html.includes('<script data-source="mountain-journey.js">'));
+assert.ok(compiled.html.includes('<style data-source="mountain-journey.css">'));
 assert.equal(/<script\b[^>]*\bsrc\s*=/i.test(compiled.html), false, 'All startup JS must be inline');
 assertNoStartupLinks(compiled.html);
 const context = vm.createContext({ window: { loaded: [] } });
@@ -43,7 +48,7 @@ assert.equal(context.window.linkExample, '<link rel="stylesheet" href="game-feed
 // Source order and extra inline blocks must remain intact. Neither the large
 // glyph bundles nor the optional pinyin table belong in startup markup anymore.
 const smallFiles = SCRIPT_FILES.slice(0, 3), remaining = SCRIPT_FILES.slice(3);
-const reordered = '<!DOCTYPE html><html><head><link rel="stylesheet" href="game-feedback.css"></head><body>' +
+const reordered = '<!DOCTYPE html><html><head>' + styleLinks + '</head><body>' +
   smallFiles.map(file => '<script src="' + file + '"></script>').join('') +
   '<script>window.loaded.push("interactive");</script>' +
   remaining.map(file => '<script src="' + file + '"></script>').join('') +
@@ -71,9 +76,15 @@ assert.throws(() => compile(source.replace(/<script src="curriculum-data.js"><\/
 for (const bulk of ['hanzi-data.js', 'curriculum-hanzi-data.js', 'pinyin-data.js']) {
   assert.throws(() => compile(source.replace('</body>', '<script src="' + bulk + '"></script></body>')), /Unexpected/);
 }
-assert.throws(() => compile(source.replace('<link rel="stylesheet" href="game-feedback.css?v=123">', '')), /exactly once/);
-assert.throws(() => compile(source, { ...assets, [CSS_FILE]: '@import "extra.css";' }), /@import/);
-assert.throws(() => compile(source, { ...assets, [CSS_FILE]: 'p { background: url(https://example.com/a.png); }' }), /external CSS/);
+for (const file of CSS_FILES) {
+  assert.throws(() => compile(source.replace('<link rel="stylesheet" href="' + file + '?v=123">', '')), /exactly once/);
+  assert.throws(() => compile(source.replace('</head>', '<link rel="stylesheet" href="' + file + '"></head>')), /Duplicate/);
+  assert.throws(() => compile(source, { ...assets, [file]: '@import "extra.css";' }), /@import/);
+  assert.throws(() => compile(source, { ...assets, [file]: 'p { background: url(https://example.com/a.png); }' }), /external CSS/);
+}
+assert.throws(() => compile(source.replace('mountain-journey.css', '../mountain-journey.css')), /Invalid local/);
+assert.throws(() => compile(source.replace('mountain-journey.css', 'unknown.css')), /Unexpected/);
+assert.throws(() => compile(source.replace(/<script src=["']mountain-journey\.js(?:\?[^"']*)?["']><\/script>/, '')), /startup scripts exactly once/);
 assert.throws(() => assertNoStartupLinks('<style>p { background: url("//example.com/a.png"); }</style>'), /external CSS/);
 assertNoStartupLinks('<script>const reference="https://example.com/metadata";</script><svg xmlns="http://www.w3.org/2000/svg"></svg>');
 
@@ -96,11 +107,29 @@ if (!process.argv.includes('--unit')) {
     assert.equal(fs.readFileSync(path.join(root, file), 'utf8'), built.html, 'Published page must rebuild exactly: ' + file);
   }
   assert.equal(built.summary.glyphs.count, 167);
-  assert.equal(built.summary.startupAssetRequestsRemoved, SCRIPT_FILES.length + 1);
+  assert.equal(built.summary.startupAssetRequestsRemoved, SCRIPT_FILES.length + CSS_FILES.length);
   assert.equal(built.summary.gzipBytes.singlePage > 0, true);
   assert.equal(built.summary.scripts.length, SCRIPT_FILES.length);
   const sourceScriptOrder = [...fs.readFileSync(path.join(root, 'game-source.html'), 'utf8')
     .matchAll(/<script\b[^>]*\bsrc=["']([^"'?]+)(?:\?[^"']*)?["'][^>]*>/g)].map(match => match[1]);
   assert.deepEqual(built.summary.scripts, sourceScriptOrder);
+  const sourceStyleOrder = [...fs.readFileSync(path.join(root, 'game-source.html'), 'utf8')
+    .matchAll(/<link\b[^>]*\bhref=["']([^"'?]+\.css)(?:\?[^"']*)?["'][^>]*>/g)].map(match => match[1]);
+  assert.deepEqual(built.summary.styles, sourceStyleOrder);
+  assert.equal(built.summary.styles.length, CSS_FILES.length);
+  // Images stay separate from the small startup page. The browser fixture does
+  // not implement a CSS image loader, so verify these real deployment files too.
+  const mountainCss = fs.readFileSync(path.join(root, 'mountain-journey.css'), 'utf8');
+  const images = [...mountainCss.matchAll(/url\(\s*["']?([^"')\s]+)["']?\s*\)/g)].map(match => match[1]);
+  assert.deepEqual(new Set(images), new Set(['assets/mountain-journey/forest-trail.webp',
+    'assets/mountain-journey/gate-frame.webp', 'assets/mountain-journey/gate-doors.webp']));
+  for (const image of images) {
+    const url = new URL(image, 'https://lucyisalive.github.io/');
+    assert.equal(url.origin, 'https://lucyisalive.github.io', 'Scenery must stay on the game origin');
+    const file = fs.readFileSync(path.join(root, image));
+    assert.ok(file.length >= 12, 'Image must exist and be nonempty: ' + image);
+    assert.equal(file.subarray(0, 4).toString('ascii'), 'RIFF', 'Real WebP header: ' + image);
+    assert.equal(file.subarray(8, 12).toString('ascii'), 'WEBP', 'Real WebP format: ' + image);
+  }
   console.log('Page build: reproducible identical HTML, small inline modules, CSS, and 167 exact on-demand glyphs passed.');
 } else console.log('Page build unit checks: order, closing-tag safety, external resource rejection, and geometry-change detection passed.');

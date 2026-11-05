@@ -3,7 +3,7 @@
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
-<meta name="game-version" content="2026.11.05.1">
+<meta name="game-version" content="2026.11.05.2">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>汉字魔法门</title>
 <style data-source="game-feedback.css">
@@ -604,6 +604,146 @@
     border-bottom:1.5px dashed var(--seal); padding-bottom:1px;
   }
 </style>
+<style data-source="mountain-journey.css">
+/* Scenic decoration only. The original door leaves, writing tile, glyphs,
+   controls, and learning flow keep their own dimensions and behavior. */
+body.mountain-journey {
+  --journey-landscape: url("assets/mountain-journey/forest-trail.webp");
+  --journey-foreground-image: none;
+  --journey-frame-image: url("assets/mountain-journey/gate-frame.webp");
+  --journey-door-image: url("assets/mountain-journey/gate-doors.webp");
+  --journey-pan-x: -0.6%;
+  --door-wood: #705238;
+  --door-wood-dark: #392d21;
+  background: #193d32;
+}
+#mountainJourney {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+  background: linear-gradient(180deg, #648c77 0%, #315d48 45%, #163c30 100%);
+}
+#mountainJourney > div {
+  position: absolute;
+  inset: -3%;
+  pointer-events: none;
+}
+#mountainJourney .journey-background {
+  background-image: var(--journey-landscape), linear-gradient(180deg, #72917c, #244d3b);
+  background-position: 50% 56%;
+  background-repeat: no-repeat;
+  background-size: cover;
+  transform: translate3d(var(--journey-pan-x), 0, 0) scale(1.03);
+  transform-origin: 50% 60%;
+  transition: transform 650ms ease-out, filter 400ms ease-out;
+}
+#mountainJourney .journey-wash {
+  background: linear-gradient(180deg, rgba(9, 30, 23, .08), rgba(9, 30, 23, .12) 55%, rgba(9, 30, 23, .35));
+  transition: background-color 350ms ease-out;
+}
+#mountainJourney .journey-foreground {
+  background-image: var(--journey-foreground-image);
+  background-position: 50% 100%;
+  background-repeat: no-repeat;
+  background-size: cover;
+  opacity: .85;
+  transform: scale(1.02);
+  transition: opacity 350ms ease-out;
+}
+body.mountain-journey .stars-bg { display: none; }
+body.mountain-journey .stage { z-index: 1; }
+body.mountain-journey .scene {
+  background: rgba(15, 42, 32, .32);
+  border-color: rgba(227, 241, 204, .16);
+  box-shadow: 0 15px 40px rgba(8, 26, 18, .3);
+}
+body.mountain-journey .scene.writing {
+  background: rgba(20, 48, 37, .95);
+  box-shadow: 0 15px 40px rgba(8, 26, 18, .35);
+}
+body.mountain-journey .topbar {
+  border-radius: 14px;
+  background: rgba(15, 42, 32, .24);
+}
+/* Frame art uses the complete 3:4 canvas. Its transparent opening occupies
+   x=22..77%, y=22..92%; every inner layer shares this single aperture. */
+body.mountain-journey .approach-path { display: none; }
+body.mountain-journey .doorway {
+  width: 300px;
+  height: 400px;
+  max-width: 100%;
+  overflow: visible;
+}
+body.mountain-journey .doorframe {
+  inset: 0;
+  padding: 0;
+  background: none;
+  box-shadow: none;
+  border-radius: 0;
+  overflow: visible;
+}
+body.mountain-journey .scene-backdrop,
+body.mountain-journey .doorpanel,
+body.mountain-journey .doorpanel-content {
+  inset: 22% 23% 8% 22%;
+  border-radius: 50% 50% 3px 3px / 30% 30% 3px 3px;
+}
+body.mountain-journey .door-leaf-left,
+body.mountain-journey .door-leaf-right { border-radius: 0; }
+body.mountain-journey .doorway::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  background-image: var(--journey-frame-image);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 100% 100%;
+  pointer-events: none;
+}
+body.mountain-journey .door-leaf {
+  background-image: linear-gradient(180deg, rgba(255, 236, 173, .04), rgba(25, 19, 10, .19)),
+    var(--journey-door-image), linear-gradient(180deg, var(--door-wood), var(--door-wood-dark));
+  background-size: 100% 100%, 200% 100%, 100% 100%;
+  background-position: center, left center, center;
+  background-repeat: no-repeat;
+}
+body.mountain-journey .door-leaf-right { background-position: center, right center, center; }
+body.journey-writing #mountainJourney .journey-background { filter: saturate(.65) brightness(.72); }
+body.journey-writing #mountainJourney .journey-wash { background-color: rgba(12, 30, 23, .3); }
+body.journey-writing #mountainJourney .journey-foreground { opacity: .2; }
+body.journey-departing #mountainJourney .journey-background {
+  animation: journeyStepForward 850ms ease-out forwards;
+}
+@keyframes journeyStepForward {
+  from { transform: translate3d(var(--journey-pan-x), 0, 0) scale(1.03); }
+  to { transform: translate3d(var(--journey-pan-x), 1.2%, 0) scale(1.13); }
+}
+@media (orientation: portrait) {
+  #mountainJourney .journey-background { background-position: 50% 58%; }
+  #mountainJourney .journey-foreground { background-position: 50% 100%; }
+}
+@media (max-height: 760px) {
+  body.mountain-journey .doorway { width: 250px; height: 333.333px; }
+}
+@media (max-height: 620px), (max-width: 380px) {
+  body.mountain-journey .doorway { width: 210px; height: 280px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #mountainJourney .journey-background,
+  #mountainJourney .journey-wash,
+  #mountainJourney .journey-foreground { transition: none; }
+  body.journey-departing #mountainJourney .journey-background { animation: none; }
+  body.mountain-journey .door-leaf { transition: none; }
+  body.mountain-journey .firefly,
+  body.mountain-journey .doorpanel.open .door-glow-seam { animation: none; }
+}
+
+</style>
 </head>
 <body>
 <div class="startup-notice" id="startupNotice" role="status">正在准备汉字，马上就能开始…</div>
@@ -801,7 +941,7 @@
       字库会按"记忆规律"自动滚动：今天答错、靠教学环节才写对的字，会更快安排复习；一次就写对的字，安排复习的间隔会拉长。你随时可以在这里加"今天最想让孩子先练"的字，这些字会排在最前面。
     </p>
 
-    <p class="hint-text" id="gameVersion">版本 2026.11.05.1</p>
+    <p class="hint-text" id="gameVersion">版本 2026.11.05.2</p>
   </div>
 </div>
 
@@ -3466,6 +3606,85 @@ window.HANZI_GLYPH_CATALOG={"version":"41b38d977b270e08ea493526a4ee0f8643a59bbf2
 }));
 
 </script>
+<script data-source="mountain-journey.js">
+(function (root, factory) {
+  'use strict';
+  if (typeof module === 'object' && module.exports) module.exports = factory(root);
+  else root.HanziMountainJourney = factory(root);
+}(typeof window !== 'undefined' ? window : (typeof globalThis !== 'undefined' ? globalThis : this), function (root) {
+  'use strict';
+
+  // This is a visual companion only. Commands are synchronous and never wait
+  // for an image, animation, event, timer, or a learning-state callback.
+  function create(options) {
+    options = options || {};
+    var host, backdrop;
+    var inert = { showWriting: function () {}, arrive: function () {}, depart: function () {}, reset: function () {} };
+    function safely(action) {
+      return function () { try { action.apply(null, arguments); } catch (_) { /* Decoration cannot interrupt a lesson. */ } };
+    }
+    function imageValue(url) {
+      return 'url("' + url.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/[\r\n\f]/g, '') + '")';
+    }
+    try {
+      var doc = options.document || (options.window && options.window.document) || root.document;
+      if (!doc || !doc.body || typeof doc.createElement !== 'function') return inert;
+      host = doc.body;
+      backdrop = doc.getElementById('mountainJourney');
+      if (!backdrop) {
+        backdrop = doc.createElement('div');
+        backdrop.id = 'mountainJourney';
+        backdrop.setAttribute('aria-hidden', 'true');
+        // Pointer safety is present even when the stylesheet fails to load.
+        backdrop.style.pointerEvents = 'none';
+        ['journey-background', 'journey-wash', 'journey-foreground'].forEach(function (name) {
+          var layer = doc.createElement('div');
+          layer.className = name;
+          layer.style.pointerEvents = 'none';
+          backdrop.appendChild(layer);
+        });
+        host.insertBefore(backdrop, host.firstChild);
+      }
+      host.classList.add('mountain-journey');
+      // Foreground is optional; omitting it never requests a missing asset.
+      [['backgroundUrl', '--journey-landscape'], ['foregroundUrl', '--journey-foreground-image'],
+        ['gateFrameUrl', '--journey-frame-image'], ['gateDoorsUrl', '--journey-door-image']].forEach(function (entry) {
+        if (typeof options[entry[0]] === 'string' && options[entry[0]]) {
+          host.style.setProperty(entry[1], imageValue(options[entry[0]]));
+        }
+      });
+    } catch (_) { return inert; }
+
+    function arrive(index) {
+      var step = Number(index);
+      if (!Number.isFinite(step)) step = 0;
+      step = Math.max(0, Math.floor(step));
+      // A small framing variation gives successive doors a sense of travel;
+      // this number never changes or represents saved learning progress.
+      host.style.setProperty('--journey-pan-x', ((step % 3) - 1) * 0.6 + '%');
+      host.classList.remove('journey-departing');
+    }
+    var api = {
+      showWriting: safely(function (on) {
+        host.classList.toggle('journey-writing', !!on);
+        if (on) host.classList.remove('journey-departing');
+      }),
+      arrive: safely(arrive),
+      depart: safely(function () {
+        if (!host.classList.contains('journey-writing')) host.classList.add('journey-departing');
+      }),
+      reset: safely(function () {
+        host.classList.remove('journey-writing');
+        arrive(0);
+      })
+    };
+    api.arrive(0);
+    return api;
+  }
+  return { create: create };
+}));
+
+</script>
 <script>
 /* ============================================================
    汉字魔法门 — 默写版
@@ -3522,7 +3741,7 @@ function defaultBank(){
 // device that has already played keeps its old characters for ever and never sees the new
 // set — the change would reach nobody who actually uses the game.
 const BANK_VERSION = 5;
-const GAME_VERSION = '2026.11.05.1';
+const GAME_VERSION = '2026.11.05.2';
 
 let state = {
   bank: defaultBank(),
@@ -5516,7 +5735,7 @@ function renderProgressPath(){
 
 // ---------- door state ----------
 // Audio and particles are independent of grading and learning records.
-function setDoorClosed(){ doorpanel.classList.remove('open'); }
+function setDoorClosed(){ doorpanel.classList.remove('open'); if(typeof mountainCall === 'function') mountainCall('arrive', passedCount); }
 function setDoorOpen(){ doorpanel.classList.add('open'); }
 
 // ---------- drawing a printed glyph from the grading data ----------
@@ -5584,6 +5803,19 @@ function feedbackCall(method, ...args){
     }
     return result;
   }catch(e){ /* Feedback is optional; the game action still runs. */ }
+}
+
+let mountainJourney = null;
+function initMountainJourney(){
+  try{ mountainJourney = window.HanziMountainJourney.create({document, window}); }
+  catch(_){ mountainJourney = null; }
+}
+function mountainCall(method, ...args){
+  try{
+    if(!mountainJourney || typeof mountainJourney[method] !== 'function') return;
+    const result = mountainJourney[method](...args);
+    if(result && typeof result.then === 'function') Promise.resolve(result).catch(() => {});
+  }catch(_){ /* Scenery never controls lesson flow or persistence. */ }
 }
 
 function sentenceFor(item){
@@ -5662,6 +5894,7 @@ function setWritingView(on){
     showDemoGlyph('', false);
   }
   renderPlayerDispute();
+  if(typeof mountainCall === 'function') mountainCall('showWriting', on);
 }
 
 // The parent types a whole word plus which character is being tested; the hint shows that
@@ -5790,6 +6023,7 @@ function markPassed(item, outcome, message){
   recordResult(item, outcome);
   renderProgressPath();
   continueBtn.classList.add('show');
+  if(typeof mountainCall === 'function') mountainCall('depart');
 }
 
 function markAbandonedToday(item){
@@ -6551,14 +6785,10 @@ fileInput.addEventListener('change', (e) => {
 });
 
 // ---------- scenes (cosmetic reward for finishing today's target) ----------
-const SCENES = [
-  { name:'魔法花房',   img:'scene2.jpg', sky:['#3a2a12','#6b4a1f','#b9862f'], wood:['#5b3a24','#3a2416'] },
-  { name:'观星塔',     img:'scene3.jpg', sky:['#12213b','#1e3a5f','#3f7a8c'], wood:['#2b2440','#171224'] },
-  { name:'月光花园',   img:'scene4.jpg', sky:['#131c3d','#232f5c','#3a4a8c'], wood:['#3e4a52','#232b31'] },
-  { name:'萌宠草坪',   img:'scene5.jpg', sky:['#3a2a12','#6b4a1f','#8a5a1f'], wood:['#7a5a2e','#4a361a'] },
-  { name:'魔法图书馆', img:'scene6.jpg', sky:['#3a1f10','#5c3018','#8a5228'], wood:['#4a2a1a','#2c180e'] },
-  { name:'彩虹草原',   img:'scene1.jpg', sky:['#2a1a4a','#4b2a6b','#7b3f8f'], wood:['#5b3a24','#3a2416'], fit:'top' },
-];
+const SCENES = [{
+  name:'萤光山径', img:'assets/mountain-journey/forest-trail.webp',
+  sky:['#193d32','#315d48','#72917c'], wood:['#705238','#392d21'],
+}];
 
 function applyScene(index){
   const scene = SCENES[index % SCENES.length];
@@ -6569,7 +6799,9 @@ function applyScene(index){
   root.setProperty('--door-wood', scene.wood[0]);
   root.setProperty('--door-wood-dark', scene.wood[1]);
   sceneImg.src = scene.img;
-  sceneImg.style.objectPosition = scene.fit === 'top' ? '50% 8%' : '50% 35%';
+  sceneImg.decoding = 'async';
+  sceneImg.style.objectPosition = '55% 35%';
+  if(typeof mountainCall === 'function') mountainCall('arrive', passedCount);
 }
 
 function showFinale(bankEmpty){
@@ -6599,7 +6831,7 @@ function showFinale(bankEmpty){
   const masteredNote = justMastered.length
     ? `\n「${justMastered.map(b => b.char).join('、')}」已经在 ${MASTERED_DAYS} 个不同的日子写对了，永久掌握，不用再练啦！`
     : '';
-  finaleDetail.textContent = `今天推开了 ${passedCount} 扇门！解锁了新场景：${sceneName}` + masteredNote;
+  finaleDetail.textContent = `今天推开了 ${passedCount} 扇山门！今天的${sceneName}探索完成啦。` + masteredNote;
   if(!syncSceneAwarded){
     syncSceneAwarded = true;
     state.scenesUnlocked += 1;
@@ -6613,6 +6845,7 @@ function showFinale(bankEmpty){
 loadSavedState();
 loadInkLog();
 loadParentTestInkLog();
+initMountainJourney();
 initProgressSync();
 applyScene(state.scenesUnlocked);
 dailyCountInput.value = state.dailyCount;

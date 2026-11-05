@@ -1,0 +1,137 @@
+/* Scenic decoration only. The original door leaves, writing tile, glyphs,
+   controls, and learning flow keep their own dimensions and behavior. */
+body.mountain-journey {
+  --journey-landscape: url("assets/mountain-journey/forest-trail.webp");
+  --journey-foreground-image: none;
+  --journey-frame-image: url("assets/mountain-journey/gate-frame.webp");
+  --journey-door-image: url("assets/mountain-journey/gate-doors.webp");
+  --journey-pan-x: -0.6%;
+  --door-wood: #705238;
+  --door-wood-dark: #392d21;
+  background: #193d32;
+}
+#mountainJourney {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+  background: linear-gradient(180deg, #648c77 0%, #315d48 45%, #163c30 100%);
+}
+#mountainJourney > div {
+  position: absolute;
+  inset: -3%;
+  pointer-events: none;
+}
+#mountainJourney .journey-background {
+  background-image: var(--journey-landscape), linear-gradient(180deg, #72917c, #244d3b);
+  background-position: 50% 56%;
+  background-repeat: no-repeat;
+  background-size: cover;
+  transform: translate3d(var(--journey-pan-x), 0, 0) scale(1.03);
+  transform-origin: 50% 60%;
+  transition: transform 650ms ease-out, filter 400ms ease-out;
+}
+#mountainJourney .journey-wash {
+  background: linear-gradient(180deg, rgba(9, 30, 23, .08), rgba(9, 30, 23, .12) 55%, rgba(9, 30, 23, .35));
+  transition: background-color 350ms ease-out;
+}
+#mountainJourney .journey-foreground {
+  background-image: var(--journey-foreground-image);
+  background-position: 50% 100%;
+  background-repeat: no-repeat;
+  background-size: cover;
+  opacity: .85;
+  transform: scale(1.02);
+  transition: opacity 350ms ease-out;
+}
+body.mountain-journey .stars-bg { display: none; }
+body.mountain-journey .stage { z-index: 1; }
+body.mountain-journey .scene {
+  background: rgba(15, 42, 32, .32);
+  border-color: rgba(227, 241, 204, .16);
+  box-shadow: 0 15px 40px rgba(8, 26, 18, .3);
+}
+body.mountain-journey .scene.writing {
+  background: rgba(20, 48, 37, .95);
+  box-shadow: 0 15px 40px rgba(8, 26, 18, .35);
+}
+body.mountain-journey .topbar {
+  border-radius: 14px;
+  background: rgba(15, 42, 32, .24);
+}
+/* Frame art uses the complete 3:4 canvas. Its transparent opening occupies
+   x=22..77%, y=22..92%; every inner layer shares this single aperture. */
+body.mountain-journey .approach-path { display: none; }
+body.mountain-journey .doorway {
+  width: 300px;
+  height: 400px;
+  max-width: 100%;
+  overflow: visible;
+}
+body.mountain-journey .doorframe {
+  inset: 0;
+  padding: 0;
+  background: none;
+  box-shadow: none;
+  border-radius: 0;
+  overflow: visible;
+}
+body.mountain-journey .scene-backdrop,
+body.mountain-journey .doorpanel,
+body.mountain-journey .doorpanel-content {
+  inset: 22% 23% 8% 22%;
+  border-radius: 50% 50% 3px 3px / 30% 30% 3px 3px;
+}
+body.mountain-journey .door-leaf-left,
+body.mountain-journey .door-leaf-right { border-radius: 0; }
+body.mountain-journey .doorway::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  background-image: var(--journey-frame-image);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 100% 100%;
+  pointer-events: none;
+}
+body.mountain-journey .door-leaf {
+  background-image: linear-gradient(180deg, rgba(255, 236, 173, .04), rgba(25, 19, 10, .19)),
+    var(--journey-door-image), linear-gradient(180deg, var(--door-wood), var(--door-wood-dark));
+  background-size: 100% 100%, 200% 100%, 100% 100%;
+  background-position: center, left center, center;
+  background-repeat: no-repeat;
+}
+body.mountain-journey .door-leaf-right { background-position: center, right center, center; }
+body.journey-writing #mountainJourney .journey-background { filter: saturate(.65) brightness(.72); }
+body.journey-writing #mountainJourney .journey-wash { background-color: rgba(12, 30, 23, .3); }
+body.journey-writing #mountainJourney .journey-foreground { opacity: .2; }
+body.journey-departing #mountainJourney .journey-background {
+  animation: journeyStepForward 850ms ease-out forwards;
+}
+@keyframes journeyStepForward {
+  from { transform: translate3d(var(--journey-pan-x), 0, 0) scale(1.03); }
+  to { transform: translate3d(var(--journey-pan-x), 1.2%, 0) scale(1.13); }
+}
+@media (orientation: portrait) {
+  #mountainJourney .journey-background { background-position: 50% 58%; }
+  #mountainJourney .journey-foreground { background-position: 50% 100%; }
+}
+@media (max-height: 760px) {
+  body.mountain-journey .doorway { width: 250px; height: 333.333px; }
+}
+@media (max-height: 620px), (max-width: 380px) {
+  body.mountain-journey .doorway { width: 210px; height: 280px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #mountainJourney .journey-background,
+  #mountainJourney .journey-wash,
+  #mountainJourney .journey-foreground { transition: none; }
+  body.journey-departing #mountainJourney .journey-background { animation: none; }
+  body.mountain-journey .door-leaf { transition: none; }
+  body.mountain-journey .firefly,
+  body.mountain-journey .doorpanel.open .door-glow-seam { animation: none; }
+}
