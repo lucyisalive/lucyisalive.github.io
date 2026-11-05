@@ -2,7 +2,7 @@
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
-<meta name="game-version" content="2026.11.04.2">
+<meta name="game-version" content="2026.11.05.1">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>汉字魔法门</title>
 <link rel="stylesheet" href="game-feedback.css?v=2026.11.02.4">
@@ -56,6 +56,16 @@
   .parent-confirm{ display:flex; justify-content:center; flex-wrap:wrap; gap:8px; margin-top:8px; }
   .parent-entry{ padding:10px; background:#e6eee5; border-radius:10px; margin-bottom:16px; }
   .parent-entry button{ margin:4px 4px 4px 0; }
+  .cloud-sync{ padding:12px; border:1px solid #c6d8c5; background:#e6eee5; border-radius:10px; margin-bottom:16px; }
+  .cloud-sync p{ font-size:12px; line-height:1.6; color:#514d40; margin:7px 0; }
+  .cloud-sync-actions{ display:flex; gap:7px; flex-wrap:wrap; margin-top:7px; }
+  .cloud-sync button{ min-height:44px; border:0; border-radius:8px; padding:9px 12px;
+    background:var(--jade); color:#fff; font:inherit; font-size:12px; cursor:pointer; }
+  .cloud-sync button:disabled{ opacity:.5; cursor:default; }
+  .cloud-sync .secondary{ background:#d5ddce; color:#3a493a; }
+  .cloud-sync [hidden]{ display:none; }
+  .cloud-sync .cloud-code{ font-family:ui-monospace,Menlo,monospace; font-size:13px; letter-spacing:.3px; }
+  .cloud-conflict{ border:1px solid #c38f6c; border-radius:8px; background:#fff1dc; padding:9px; margin-top:9px; }
   #parentTestInstruction{ font-weight:700; }
   #parentTestSummary{ color:#604d2c; }
   #parentTestMsg{ color:var(--seal); font-size:13px; }
@@ -554,6 +564,33 @@
       <h2>今日汉字设置</h2>
       <button class="btn-close-panel" id="closePanelBtn" aria-label="关闭设置" title="关闭设置">×</button>
     </div>
+    <div class="cloud-sync">
+      <b>跨设备同步</b>
+      <p id="cloudSyncStatus" role="status">尚未开启，学习记录保存在这台设备。</p>
+      <p>先在有学习记录的 iPad 开启，再在另一台设备粘贴相同同步码。学习进度、家长加入的字和设置会加密同步；笔迹与误判标记留在本机。</p>
+      <button id="cloudSyncCreateBtn">为这份进度开启同步</button>
+      <div id="cloudSyncCodeWrap" hidden>
+        <label for="cloudSyncCode">这份进度的同步码</label>
+        <input type="text" class="cloud-code" id="cloudSyncCode" readonly aria-label="这份进度的同步码">
+        <div class="cloud-sync-actions">
+          <button id="cloudSyncCopyBtn">复制同步码</button>
+          <button class="secondary" id="cloudSyncNowBtn">立即同步</button>
+          <button class="secondary" id="cloudSyncDisconnectBtn">断开这台设备</button>
+        </div>
+        <p>同步码用于连接这份家庭进度，请只交给自己的家人。断开会保留本机学习记录。</p>
+      </div>
+      <label for="cloudSyncJoinInput">接上另一台设备的进度</label>
+      <input type="text" class="cloud-code" id="cloudSyncJoinInput" placeholder="粘贴另一台设备的同步码" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="60">
+      <div class="cloud-sync-actions"><button id="cloudSyncJoinBtn">接入这份进度</button></div>
+      <p>接入前会保留本机进度备份。换设备从一道完整题开始，正在写的笔迹和教学倒计时不会跨设备接力。</p>
+      <div class="cloud-conflict" id="cloudSyncConflict" hidden>
+        <p>两台设备各有新进度，已暂停覆盖。两份会先保留本机备份，再按你的选择继续。</p>
+        <div class="cloud-sync-actions">
+          <button id="cloudKeepLocalBtn">用这台设备的进度</button>
+          <button class="secondary" id="cloudUseRemoteBtn">接上云端进度</button>
+        </div>
+      </div>
+    </div>
     <div class="parent-entry">
       <b>家长识别验收</b>
       <p class="hint-text">每轮 6 次，分别检查完整字和故意漏笔。单独保存笔迹，不计入孩子的答错、掌握和复习记录。请在尚未动笔的普通题开始。</p>
@@ -620,7 +657,7 @@
       字库会按"记忆规律"自动滚动：今天答错、靠教学环节才写对的字，会更快安排复习；一次就写对的字，安排复习的间隔会拉长。你随时可以在这里加"今天最想让孩子先练"的字，这些字会排在最前面。
     </p>
 
-    <p class="hint-text" id="gameVersion">版本 2026.11.04.2</p>
+    <p class="hint-text" id="gameVersion">版本 2026.11.05.1</p>
   </div>
 </div>
 
@@ -632,6 +669,7 @@
 <script src="glyph-loader.js"></script>
 <script src="learning-timing.js"></script>
 <script src="parent-validation.js"></script>
+<script src="progress-sync.js"></script>
 <script>
 /* ============================================================
    汉字魔法门 — 默写版
@@ -645,7 +683,7 @@
    5. 家长可添加"今日优先字"，存档/读档保存长期进度
    ============================================================ */
 
-const STORAGE_KEY_HINT = "本地网页无法自动联网保存，需要手动导出/导入存档文件";
+const STORAGE_KEY_HINT = "进度先保存在本机；可在家长设置中开启跨设备同步。";
 
 // ---------- calendar days ----------
 // Scheduling used to count "days" as "number of times 再来一轮 was pressed", which meant three
@@ -688,7 +726,7 @@ function defaultBank(){
 // device that has already played keeps its old characters for ever and never sees the new
 // set — the change would reach nobody who actually uses the game.
 const BANK_VERSION = 5;
-const GAME_VERSION = '2026.11.04.2';
+const GAME_VERSION = '2026.11.05.1';
 
 let state = {
   bank: defaultBank(),
@@ -818,14 +856,31 @@ function recordInk(payload, verdict){
 // ---------- automatic save ----------
 // Everything lives in localStorage and is rewritten on every change. Without this the whole
 // cross-day review schedule is theatre: close the tab and the boxes, intervals and mastery
-// dates are gone, so every session starts the child from scratch. Manual export/import stays
-// as the way to carry progress to a different device.
+// dates are gone, so every session starts the child from scratch. Manual export/import
+// remains available alongside optional encrypted progress synchronization.
 const SAVE_KEY = 'hanzi-magic-door-state-v1';
+let cloudSyncController = null;
+let syncApplying = false;
+let syncExplicitAdopt = false;
+let syncFileReading = false;
+let syncRoundId = '';
+let syncRoundDay = todayStr();
+let syncRoundCompleted = false;
+let syncSceneAwarded = false;
+let progressSaveNotice = '';
 
 function saveState(){
   if(typeof parentValidation !== 'undefined' && parentValidation) return;
-  try{ localStorage.setItem(SAVE_KEY, JSON.stringify(state)); }
-  catch(e){ /* private mode or quota — the session still works, it just won't survive a reload */ }
+  if(cloudSyncController && cloudSyncController.status().connected && !syncApplying){
+    state.sessionProgress = syncSessionSnapshot();
+  }
+  try{ localStorage.setItem(SAVE_KEY, JSON.stringify(state)); progressSaveNotice = ''; }
+  catch(e){
+    progressSaveNotice = '本机进度暂存未成功，当前页面仍保留；请先不要关闭。';
+    if(typeof renderCloudSyncStatus === 'function') renderCloudSyncStatus();
+    return;
+  }
+  if(cloudSyncController && !syncApplying) cloudSyncController.changed();
 }
 
 // Old saves counted days as integers and have no mastery record. Rather than invent dates
@@ -2414,6 +2469,126 @@ onTap(playerDisputeBtn, () => {
   if(entry === playerDisputeEntry) togglePlayerDispute(entry);
 });
 
+// Cloud progress is deliberately separate from all ink and parent-test logs.
+function syncSessionSnapshot(){
+  if(!syncRoundId) syncRoundId = Date.now().toString(36) + '-' + Math.random().toString(36).slice(2);
+  return {version:1, day:syncRoundDay, roundId:syncRoundId, passedCount,
+    completed:syncRoundCompleted, sceneAwarded:syncSceneAwarded};
+}
+function getCloudProgressState(){
+  if(progressSaveNotice) throw new Error(progressSaveNotice);
+  return {...state, sessionProgress:syncSessionSnapshot()};
+}
+function syncQuestionSafe(){
+  if(parentValidation || isDrawing || submitBtn.disabled || syncFileReading || parentQueueChanged || pendingRetests.length) return false;
+  if(finale.classList.contains('show') || continueBtn.classList.contains('show')) return true;
+  return currentMode === 'free' && strokesPoints.length === 0;
+}
+function syncCanApplyProgress(){
+  return syncQuestionSafe() && (!panelOverlay.classList.contains('show') || syncExplicitAdopt);
+}
+function restoreSyncedRound(){
+  const saved = state.sessionProgress;
+  if(saved && saved.version === 1 && saved.day === todayStr() && typeof saved.roundId === 'string' &&
+      Number.isInteger(saved.passedCount) && saved.passedCount >= 0 && saved.passedCount <= 1000){
+    syncRoundId = saved.roundId; syncRoundDay = saved.day; passedCount = saved.passedCount;
+    syncRoundCompleted = saved.completed === true; syncSceneAwarded = saved.sceneAwarded === true;
+  } else {
+    syncRoundId = ''; syncRoundDay = todayStr(); passedCount = 0; syncRoundCompleted = syncSceneAwarded = false;
+  }
+}
+function showSyncedFinale(){
+  setWritingView(false);
+  playzone.classList.add('hide'); finale.classList.add('show');
+  finaleDetail.textContent = `这份进度本轮已通过 ${passedCount} 个字。可以休息，也可以再来一轮。`;
+  renderProgressPath(); renderPlayerDispute();
+}
+function presentSyncedProgress(){
+  if(syncRoundCompleted && !unfinishedParentEntries().length){ showSyncedFinale(); return; }
+  if(syncRoundCompleted){ syncRoundId = ''; syncRoundDay = todayStr(); syncRoundCompleted = syncSceneAwarded = false; }
+  if(passedCount >= state.dailyCount && !unfinishedParentEntries().length){
+    // Completion was earned but the child had not pressed Continue to settle it.
+    // Restore the action without replaying a pass or awarding a scene on a pull.
+    setWritingView(false); setDoorOpen(); showGlowChar('', false);
+    submitBtn.style.display = clearBtn.style.display = 'none';
+    resultBanner.textContent = '已接上这轮的通过记录'; resultBanner.className = 'result-banner correct';
+    statusLine.textContent = '点“继续”完成本轮结算';
+    continueBtn.classList.add('show'); renderProgressPath(); return;
+  }
+  loadNextDoor();
+}
+function applySyncedProgress(remote){
+  const next = migrateState(JSON.parse(JSON.stringify(remote)));
+  if(!next || !syncCanApplyProgress()) throw new Error('请先完成当前练习，再接上云端进度。');
+  // Persist before replacing live objects. A quota failure leaves this question intact.
+  localStorage.setItem(SAVE_KEY, JSON.stringify(next));
+  syncApplying = true;
+  try{
+    cancelTeachingRound(); stopPromptSpeech(); feedbackCall('reset');
+    state = next; currentItem = null; currentMode = 'free'; currentRound = 1;
+    currentParentRequestId = null; stepIndex = stepAttempts = 0; pendingRetests = [];
+    priorityConsumedToday = new Set(); selectionSession = window.HanziPracticeSelector.createSession();
+    parentQueueChanged = false; continueBtn.classList.remove('show');
+    finale.classList.remove('show'); playzone.classList.remove('hide'); clearCanvas();
+    restoreSyncedRound(); applyScene(state.scenesUnlocked);
+    dailyCountInput.value = state.dailyCount;
+    renderQueueList(); renderMasteredList(); renderStuckList();
+    presentSyncedProgress();
+  } finally { syncApplying = false; }
+}
+function renderCloudSyncStatus(){
+  const status = cloudSyncController ? cloudSyncController.status() : {kind:'off',connected:false,message:'尚未开启，学习记录保存在这台设备。'};
+  document.getElementById('cloudSyncStatus').textContent = progressSaveNotice || status.message;
+  document.getElementById('cloudSyncCodeWrap').hidden = !status.connected;
+  document.getElementById('cloudSyncCreateBtn').hidden = !!status.connected;
+  document.getElementById('cloudSyncConflict').hidden = status.kind !== 'conflict';
+  document.getElementById('cloudSyncCode').value = cloudSyncController ? cloudSyncController.code() : '';
+  const disabled = !cloudSyncController || status.kind === 'syncing' || status.kind === 'unsupported';
+  for(const id of ['cloudSyncCreateBtn','cloudSyncJoinBtn','cloudSyncNowBtn','cloudKeepLocalBtn','cloudUseRemoteBtn']) document.getElementById(id).disabled = disabled;
+}
+function syncTick(){
+  if(!cloudSyncController || !cloudSyncController.status().connected || parentValidation) return;
+  if(progressSaveNotice){ saveState(); if(progressSaveNotice) return; }
+  Promise.resolve(cloudSyncController.sync()).catch(() => {});
+}
+async function cloudSyncAction(action, adopt){
+  if(!cloudSyncController) return;
+  if(adopt && !syncQuestionSafe()){
+    document.getElementById('cloudSyncStatus').textContent = '请先完成正在进行的练习，再接入或切换进度。'; return;
+  }
+  syncExplicitAdopt = !!adopt;
+  try{ await action(); }
+  finally{ syncExplicitAdopt = false; renderCloudSyncStatus(); }
+  if(cloudSyncController.status().connected && !['conflict','error'].includes(cloudSyncController.status().kind)) saveState();
+}
+function initProgressSync(){
+  try{
+    cloudSyncController = window.HanziProgressSync.create({projectId:"game-e-40894", storage:localStorage,
+      fetch:window.fetch ? window.fetch.bind(window) : fetch, crypto:window.crypto,
+      getState:getCloudProgressState, applyState:applySyncedProgress, canApply:syncCanApplyProgress,
+      onStatus:renderCloudSyncStatus, setTimeout, clearTimeout, now:() => Date.now()});
+    if(cloudSyncController.status().connected) restoreSyncedRound();
+    renderCloudSyncStatus();
+  }catch(_){
+    cloudSyncController = null;
+    document.getElementById('cloudSyncStatus').textContent = '这个浏览器暂时无法开启同步，游戏和本机记录仍可使用。';
+  }
+}
+onTap(document.getElementById('cloudSyncCreateBtn'), () => cloudSyncAction(() => cloudSyncController.createFamily(), false));
+onTap(document.getElementById('cloudSyncJoinBtn'), () => cloudSyncAction(() => cloudSyncController.joinFamily(document.getElementById('cloudSyncJoinInput').value), true));
+onTap(document.getElementById('cloudSyncNowBtn'), syncTick);
+onTap(document.getElementById('cloudKeepLocalBtn'), () => cloudSyncAction(() => cloudSyncController.resolveConflict('local'), false));
+onTap(document.getElementById('cloudUseRemoteBtn'), () => cloudSyncAction(() => cloudSyncController.resolveConflict('remote'), true));
+onTap(document.getElementById('cloudSyncDisconnectBtn'), () => { if(cloudSyncController) cloudSyncController.disconnect(); renderCloudSyncStatus(); });
+onTap(document.getElementById('cloudSyncCopyBtn'), async () => {
+  const code = document.getElementById('cloudSyncCode');
+  try{ await navigator.clipboard.writeText(code.value); document.getElementById('cloudSyncStatus').textContent = '同步码已复制，可粘贴到另一台设备。'; }
+  catch(_){ code.focus(); code.select(); document.getElementById('cloudSyncStatus').textContent = '请长按同步码，选择复制。'; }
+});
+window.addEventListener('online', syncTick);
+window.addEventListener('focus', syncTick);
+document.addEventListener('visibilitychange', () => { if(!document.hidden) syncTick(); });
+
 // ---------- starfield ----------
 (function initStars(){
   const bg = document.getElementById('starsBg');
@@ -2737,6 +2912,7 @@ function loadNextDoor(){
 }
 
 function presentDoor(item, mode, round, parentRequestId = null){
+  syncRoundCompleted = false;
   cancelTeachingRound();
   showDemoGlyph('', false);
   stopPromptSpeech();
@@ -2814,8 +2990,8 @@ function markPassed(item, outcome, message){
   resultBanner.textContent = message;
   resultBanner.className = 'result-banner correct';
   statusLine.textContent = '';
-  recordResult(item, outcome);
   passedCount += 1;
+  recordResult(item, outcome);
   renderProgressPath();
   continueBtn.classList.add('show');
 }
@@ -3205,6 +3381,7 @@ onTap(restartBtn, function(){
   // Another round on the same afternoon is NOT another day — the review intervals are keyed
   // to the calendar now, so this only resets the counters for this sitting.
   passedCount = 0;
+  syncRoundId = ''; syncRoundDay = todayStr(); syncRoundCompleted = syncSceneAwarded = false;
   pendingRetests = [];
   priorityConsumedToday = new Set();
   selectionSession = window.HanziPracticeSelector.createSession();
@@ -3212,15 +3389,17 @@ onTap(restartBtn, function(){
   finale.classList.remove('show');
   playzone.classList.remove('hide');
   loadNextDoor();
+  if(cloudSyncController && cloudSyncController.status().connected) saveState();
 });
 
 // ---------- settings panel ----------
-onTap(settingsBtn, () => { stopPromptSpeech(); renderQueueList(); renderMasteredList(); renderStuckList(); renderInkList(); inkMsg.textContent = inkSaveNotice; panelOverlay.classList.add('show'); });
+onTap(settingsBtn, () => { stopPromptSpeech(); renderQueueList(); renderMasteredList(); renderStuckList(); renderInkList(); inkMsg.textContent = inkSaveNotice; panelOverlay.classList.add('show'); if(typeof renderCloudSyncStatus === 'function') renderCloudSyncStatus(); if(typeof syncTick === 'function') syncTick(); });
 onTap(closePanelBtn, () => {
   panelOverlay.classList.remove('show');
-  if(!parentQueueChanged) return;
+  if(!parentQueueChanged){ if(typeof syncTick === 'function') syncTick(); return; }
   parentQueueChanged = false;
   if(finale.classList.contains('show')){
+    syncRoundId = ''; syncRoundDay = todayStr(); syncRoundCompleted = syncSceneAwarded = false;
     finale.classList.remove('show');
     playzone.classList.remove('hide');
     loadNextDoor();
@@ -3229,6 +3408,7 @@ onTap(closePanelBtn, () => {
     // so this must not increment the delayed-retest gap a second time.
     presentDoor(pickNextChar(), 'free', 1);
   }
+  if(typeof syncTick === 'function') syncTick();
 });
 
 // ---------- pinyin ----------
@@ -3337,6 +3517,7 @@ function renderStuckList(){
       renderStuckList();
       // If the day had already ended for lack of anything to practise, reopen it.
       if(finale.classList.contains('show')){
+        syncRoundId = ''; syncRoundDay = todayStr(); syncRoundCompleted = syncSceneAwarded = false;
         finale.classList.remove('show');
         playzone.classList.remove('hide');
         loadNextDoor();
@@ -3525,8 +3706,10 @@ onTap(loadProgressBtn, () => {
 fileInput.addEventListener('change', (e) => {
   const file = e.target.files[0];
   if(!file) return;
+  syncFileReading = true;
   const reader = new FileReader();
   reader.onload = (ev) => {
+    syncFileReading = false;
     // A previously opened file picker/read can finish after acceptance starts.
     // Do not replace the child's bank or its session underneath the saved item.
     if(parentValidation){
@@ -3543,19 +3726,22 @@ fileInput.addEventListener('change', (e) => {
       const loaded = JSON.parse(ev.target.result);
       if(loaded && loaded.bank){
         state = migrateState(loaded) || state;
-        saveState();
         renderQueueList();
         renderMasteredList();
         renderStuckList();
         dailyCountInput.value = state.dailyCount || 5;
         passedCount = 0;
+        syncRoundId = ''; syncRoundDay = todayStr(); syncRoundCompleted = syncSceneAwarded = false;
+        if(cloudSyncController && cloudSyncController.status().connected) restoreSyncedRound();
         pendingRetests = [];
         priorityConsumedToday = new Set();
         selectionSession = window.HanziPracticeSelector.createSession();
         applyScene(state.scenesUnlocked);
         finale.classList.remove('show');
         playzone.classList.remove('hide');
-        loadNextDoor();
+        if(cloudSyncController && cloudSyncController.status().connected) presentSyncedProgress();
+        else loadNextDoor();
+        saveState();
         alert('存档读取成功！');
       } else {
         alert('这个文件看起来不是有效的存档。');
@@ -3564,6 +3750,7 @@ fileInput.addEventListener('change', (e) => {
       alert('读取失败，文件可能损坏。');
     }
   };
+  reader.onerror = reader.onabort = () => { syncFileReading = false; alert('这次没有读到存档，本机进度已保留。'); };
   reader.readAsText(file);
 });
 
@@ -3590,6 +3777,7 @@ function applyScene(index){
 }
 
 function showFinale(bankEmpty){
+  syncRoundCompleted = true;
   cancelTeachingRound();
   showDemoGlyph('', false);
   playzone.classList.add('hide');
@@ -3603,6 +3791,7 @@ function showFinale(bankEmpty){
     finaleDetail.textContent = stuck.length
       ? `今天推开了 ${passedCount} 扇门。剩下的「${stuck.map(b=>b.char).join('、')}」在等爸爸妈妈讲一讲——讲完在 ⚙️ 里点「我讲过了」，今天还能继续闯。`
       : `字库里的字全部永久掌握啦！点 ⚙️ 加新的字，就能继续闯关。今天推开了 ${passedCount} 扇门。`;
+    if(cloudSyncController && cloudSyncController.status().connected) saveState();
     return;
   }
   const sceneName = SCENES[state.scenesUnlocked % SCENES.length].name;
@@ -3615,7 +3804,10 @@ function showFinale(bankEmpty){
     ? `\n「${justMastered.map(b => b.char).join('、')}」已经在 ${MASTERED_DAYS} 个不同的日子写对了，永久掌握，不用再练啦！`
     : '';
   finaleDetail.textContent = `今天推开了 ${passedCount} 扇门！解锁了新场景：${sceneName}` + masteredNote;
-  state.scenesUnlocked += 1;
+  if(!syncSceneAwarded){
+    syncSceneAwarded = true;
+    state.scenesUnlocked += 1;
+  }
   saveState();
 }
 
@@ -3625,6 +3817,7 @@ function showFinale(bankEmpty){
 loadSavedState();
 loadInkLog();
 loadParentTestInkLog();
+initProgressSync();
 applyScene(state.scenesUnlocked);
 dailyCountInput.value = state.dailyCount;
 renderQueueList();
@@ -3636,8 +3829,10 @@ onTap(speakBtn, speakPrompt);
 onTap(sentenceBtn, speakSentence);
 charInput.addEventListener('focus',loadPinyinForParent);
 batchInput.addEventListener('focus',loadPinyinForParent);
-loadNextDoor();
+if(cloudSyncController && cloudSyncController.status().connected) presentSyncedProgress();
+else loadNextDoor();
 document.getElementById('startupNotice').hidden = true;
+if(cloudSyncController) Promise.resolve(cloudSyncController.start()).catch(() => {});
 </script>
 </body>
 </html>

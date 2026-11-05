@@ -14,7 +14,7 @@ const scripts = [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script\s*>/gi)]
   .map(match => ({attributes: match[1], source: match[2]}));
 const mainIndex = scripts.findIndex(script => script.source.includes('function newBankItem(') && script.source.includes('function onTap('));
 const modules = ['curriculum-data.js', 'practice-selector.js', 'sentence-hints.js',
-  'game-feedback.js', 'glyph-catalog.js', 'glyph-loader.js', 'learning-timing.js', 'parent-validation.js'];
+  'game-feedback.js', 'glyph-catalog.js', 'glyph-loader.js', 'learning-timing.js', 'parent-validation.js', 'progress-sync.js'];
 assert.ok(scripts.every(script => !/\bsrc\s*=/i.test(script.attributes)), 'Critical scripts must be embedded');
 for(const file of modules) assert.equal(scripts.filter(script => script.attributes.includes('data-source="'+file+'"')).length,1,'Embed exactly one '+file);
 for(const file of ['hanzi-data.js','curriculum-hanzi-data.js','pinyin-data.js']) {

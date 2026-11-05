@@ -63,12 +63,13 @@ function environment() {
       requests.push(char);
       return plans.length ? plans.shift() : Promise.resolve(glyph(6));
     },
-    stopPromptSpeech() {}, feedbackCall() {}, parentPriorityEntries: () => [],
+    stopPromptSpeech() {}, feedbackCall() {}, renderPlayerDispute() {}, parentPriorityEntries: () => [],
     setDoorClosed() {}, renderProgressPath() {},
   });
   const run = code => vm.runInContext(code, context);
   run(`let currentItem=null,currentMode='free',currentRound=1,currentParentRequestId=null;
-    let stepIndex=0,stepAttempts=0,timerHandle=null,teachingRunId=0,strokesPoints=[];`);
+    let stepIndex=0,stepAttempts=0,timerHandle=null,teachingRunId=0,strokesPoints=[];
+    let syncRoundCompleted=false;`);
   const timingModule = html.match(/<script data-source="learning-timing\.js">([\s\S]*?)<\/script>/);
   if (sourceMode) run(fs.readFileSync(path.join(__dirname, '..', 'learning-timing.js'), 'utf8'));
   else { assert.ok(timingModule, 'Published timing module must be embedded'); run(timingModule[1]); }

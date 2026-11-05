@@ -3,7 +3,7 @@
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
-<meta name="game-version" content="2026.11.04.2">
+<meta name="game-version" content="2026.11.05.1">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>汉字魔法门</title>
 <style data-source="game-feedback.css">
@@ -200,6 +200,16 @@
   .parent-confirm{ display:flex; justify-content:center; flex-wrap:wrap; gap:8px; margin-top:8px; }
   .parent-entry{ padding:10px; background:#e6eee5; border-radius:10px; margin-bottom:16px; }
   .parent-entry button{ margin:4px 4px 4px 0; }
+  .cloud-sync{ padding:12px; border:1px solid #c6d8c5; background:#e6eee5; border-radius:10px; margin-bottom:16px; }
+  .cloud-sync p{ font-size:12px; line-height:1.6; color:#514d40; margin:7px 0; }
+  .cloud-sync-actions{ display:flex; gap:7px; flex-wrap:wrap; margin-top:7px; }
+  .cloud-sync button{ min-height:44px; border:0; border-radius:8px; padding:9px 12px;
+    background:var(--jade); color:#fff; font:inherit; font-size:12px; cursor:pointer; }
+  .cloud-sync button:disabled{ opacity:.5; cursor:default; }
+  .cloud-sync .secondary{ background:#d5ddce; color:#3a493a; }
+  .cloud-sync [hidden]{ display:none; }
+  .cloud-sync .cloud-code{ font-family:ui-monospace,Menlo,monospace; font-size:13px; letter-spacing:.3px; }
+  .cloud-conflict{ border:1px solid #c38f6c; border-radius:8px; background:#fff1dc; padding:9px; margin-top:9px; }
   #parentTestInstruction{ font-weight:700; }
   #parentTestSummary{ color:#604d2c; }
   #parentTestMsg{ color:var(--seal); font-size:13px; }
@@ -698,6 +708,33 @@
       <h2>今日汉字设置</h2>
       <button class="btn-close-panel" id="closePanelBtn" aria-label="关闭设置" title="关闭设置">×</button>
     </div>
+    <div class="cloud-sync">
+      <b>跨设备同步</b>
+      <p id="cloudSyncStatus" role="status">尚未开启，学习记录保存在这台设备。</p>
+      <p>先在有学习记录的 iPad 开启，再在另一台设备粘贴相同同步码。学习进度、家长加入的字和设置会加密同步；笔迹与误判标记留在本机。</p>
+      <button id="cloudSyncCreateBtn">为这份进度开启同步</button>
+      <div id="cloudSyncCodeWrap" hidden>
+        <label for="cloudSyncCode">这份进度的同步码</label>
+        <input type="text" class="cloud-code" id="cloudSyncCode" readonly aria-label="这份进度的同步码">
+        <div class="cloud-sync-actions">
+          <button id="cloudSyncCopyBtn">复制同步码</button>
+          <button class="secondary" id="cloudSyncNowBtn">立即同步</button>
+          <button class="secondary" id="cloudSyncDisconnectBtn">断开这台设备</button>
+        </div>
+        <p>同步码用于连接这份家庭进度，请只交给自己的家人。断开会保留本机学习记录。</p>
+      </div>
+      <label for="cloudSyncJoinInput">接上另一台设备的进度</label>
+      <input type="text" class="cloud-code" id="cloudSyncJoinInput" placeholder="粘贴另一台设备的同步码" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="60">
+      <div class="cloud-sync-actions"><button id="cloudSyncJoinBtn">接入这份进度</button></div>
+      <p>接入前会保留本机进度备份。换设备从一道完整题开始，正在写的笔迹和教学倒计时不会跨设备接力。</p>
+      <div class="cloud-conflict" id="cloudSyncConflict" hidden>
+        <p>两台设备各有新进度，已暂停覆盖。两份会先保留本机备份，再按你的选择继续。</p>
+        <div class="cloud-sync-actions">
+          <button id="cloudKeepLocalBtn">用这台设备的进度</button>
+          <button class="secondary" id="cloudUseRemoteBtn">接上云端进度</button>
+        </div>
+      </div>
+    </div>
     <div class="parent-entry">
       <b>家长识别验收</b>
       <p class="hint-text">每轮 6 次，分别检查完整字和故意漏笔。单独保存笔迹，不计入孩子的答错、掌握和复习记录。请在尚未动笔的普通题开始。</p>
@@ -764,7 +801,7 @@
       字库会按"记忆规律"自动滚动：今天答错、靠教学环节才写对的字，会更快安排复习；一次就写对的字，安排复习的间隔会拉长。你随时可以在这里加"今天最想让孩子先练"的字，这些字会排在最前面。
     </p>
 
-    <p class="hint-text" id="gameVersion">版本 2026.11.04.2</p>
+    <p class="hint-text" id="gameVersion">版本 2026.11.05.1</p>
   </div>
 </div>
 
@@ -2753,6 +2790,682 @@ window.HANZI_GLYPH_CATALOG={"version":"41b38d977b270e08ea493526a4ee0f8643a59bbf2
 });
 
 </script>
+<script data-source="progress-sync.js">
+(function (root, factory) {
+  'use strict';
+  if (typeof module === 'object' && module.exports) module.exports = factory(root);
+  else root.HanziProgressSync = factory(root);
+}(typeof window !== 'undefined' ? window : (typeof globalThis !== 'undefined' ? globalThis : this), function (root) {
+  'use strict';
+
+  // This module only projects learning state. Handwriting, grades awaiting review,
+  // and every unknown field are deliberately never read or copied into a payload.
+  var META_KEY = 'hanzi-magic-door-sync-v1';
+  var BACKUP_KEY = 'hanzi-magic-door-sync-backups-v1';
+  var APP = 'hanzi-magic-door';
+  var MAX_BYTES = 600 * 1024;
+  var DEBOUNCE_MS = 800;
+  var TIMEOUT_MS = 6000;
+  var own = Function.call.bind(Object.prototype.hasOwnProperty);
+
+  function problem(message, kind) {
+    var error = new Error(message);
+    error.syncKind = kind || 'error';
+    return error;
+  }
+  function object(value) { return value && typeof value === 'object' && !Array.isArray(value); }
+  function string(value, max, label) {
+    if (typeof value !== 'string' || value.length > max || /[\u0000-\u0008\u000b\u000c\u000e-\u001f]/.test(value)) {
+      throw problem('进度中的' + label + '格式不正确');
+    }
+    return value;
+  }
+  function integer(value, min, max, label) {
+    if (!Number.isSafeInteger(value) || value < min || value > max) throw problem('进度中的' + label + '数值不正确');
+    return value;
+  }
+  function bool(value, label) {
+    if (typeof value !== 'boolean') throw problem('进度中的' + label + '格式不正确');
+    return value;
+  }
+  function day(value, label, nullable) {
+    if (nullable && value === null) return null;
+    if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) throw problem('进度中的' + label + '日期不正确');
+    var date = new Date(value + 'T00:00:00.000Z');
+    if (!Number.isFinite(date.getTime()) || date.toISOString().slice(0, 10) !== value) throw problem('进度中的' + label + '日期不正确');
+    return value;
+  }
+  function char(value) {
+    string(value, 2, '汉字');
+    var point = value.codePointAt(0);
+    if (Array.from(value).length !== 1 || !((point >= 0x3400 && point <= 0x9fff) ||
+        (point >= 0xf900 && point <= 0xfaff) || (point >= 0x20000 && point <= 0x323af))) {
+      throw problem('进度中有无效的汉字');
+    }
+    return value;
+  }
+  function textFields(input, result, fields) {
+    fields.forEach(function (pair) {
+      if (own(input, pair[0])) result[pair[0]] = string(input[pair[0]], pair[1], pair[0]);
+    });
+  }
+  function bankItem(input) {
+    if (!object(input)) throw problem('字库记录格式不正确');
+    var result = { char: char(input.char) };
+    textFields(input, result, [['pinyin', 120], ['word', 300], ['sentence', 2000], ['structure', 100], ['curriculumId', 200]]);
+    [['box', 0, 6], ['interval', 0, 36500], ['wrongToday', 0, 1000], ['strokeCount', 1, 100]].forEach(function (rule) {
+      if (own(input, rule[0])) result[rule[0]] = integer(input[rule[0]], rule[1], rule[2], rule[0]);
+    });
+    ['lastSeen', 'wrongDay', 'stuckDay'].forEach(function (key) {
+      if (own(input, key)) result[key] = day(input[key], key, true);
+    });
+    ['stuck', 'fromParent', 'retired'].forEach(function (key) {
+      if (own(input, key)) result[key] = bool(input[key], key);
+    });
+    ['unit', 'lesson'].forEach(function (key) {
+      if (own(input, key)) result[key] = input[key] === null ? null : (typeof input[key] === 'number'
+        ? integer(input[key], 0, 10000, key) : string(input[key], 100, key));
+    });
+    if (own(input, 'history')) {
+      if (!Array.isArray(input.history) || input.history.length > 5000) throw problem('学习历史过长或格式不正确');
+      result.history = input.history.map(function (entry) {
+        if (!object(entry) || ['first-try', 'retest-pass', 'abandoned'].indexOf(entry.outcome) < 0) throw problem('学习历史结果不正确');
+        return { day: day(entry.day, 'history'), outcome: entry.outcome };
+      });
+    }
+    if (own(input, 'passedDays')) {
+      if (!Array.isArray(input.passedDays) || input.passedDays.length > 5000) throw problem('掌握日期格式不正确');
+      result.passedDays = input.passedDays.map(function (entry) { return day(entry, 'passedDays'); });
+    }
+    return result;
+  }
+  function priorityItem(input) {
+    if (!object(input)) throw problem('家长选字记录格式不正确');
+    var result = { char: char(input.char) };
+    textFields(input, result, [['pinyin', 120], ['word', 300], ['sentence', 2000], ['requestId', 200]]);
+    if (own(input, 'alts')) {
+      if (!Array.isArray(input.alts) || input.alts.length > 30) throw problem('读音记录格式不正确');
+      result.alts = input.alts.map(function (value) { return string(value, 120, 'alts'); });
+    }
+    ['addedDay', 'completedDay'].forEach(function (key) {
+      if (own(input, key)) result[key] = day(input[key], key, true);
+    });
+    return result;
+  }
+  function uniqueList(input, label, project) {
+    if (!Array.isArray(input) || input.length > 2000) throw problem(label + '格式不正确或数量过多');
+    var seen = Object.create(null);
+    return input.map(function (value) {
+      var result = project(value);
+      if (seen[result.char]) throw problem(label + '含重复汉字');
+      seen[result.char] = true;
+      return result;
+    });
+  }
+  function project(input) {
+    if (!object(input)) throw problem('学习进度格式不正确');
+    var result = {
+      bank: uniqueList(input.bank, '字库', bankItem),
+      bankVersion: own(input, 'bankVersion') ? integer(input.bankVersion, 0, 1000000, 'bankVersion') : 0,
+      priorityQueue: uniqueList(own(input, 'priorityQueue') ? input.priorityQueue : [], '家长选字', priorityItem),
+      dailyCount: own(input, 'dailyCount') ? integer(input.dailyCount, 1, 30, 'dailyCount') : 5,
+      scenesUnlocked: own(input, 'scenesUnlocked') ? integer(input.scenesUnlocked, 0, 1000000, 'scenesUnlocked') : 0
+    };
+    if (own(input, 'sessionProgress')) {
+      var session = input.sessionProgress;
+      if (!object(session) || session.version !== 1) throw problem('本轮进度格式不正确');
+      result.sessionProgress = {
+        version: 1, day: day(session.day, 'sessionProgress'),
+        roundId: string(session.roundId, 100, 'roundId'),
+        passedCount: integer(session.passedCount, 0, 1000, 'passedCount'),
+        completed: bool(session.completed, 'completed'),
+        sceneAwarded: bool(session.sceneAwarded, 'sceneAwarded')
+      };
+      if (!result.sessionProgress.roundId) throw problem('本轮编号不能为空');
+    }
+    return result;
+  }
+  function normalizeCode(value) {
+    if (typeof value !== 'string') throw problem('请输入完整的汉字游戏同步码');
+    var normalized = value.replace(/[\s-]/g, '').toLowerCase();
+    if (!/^[0-9a-f]{32}$/.test(normalized)) throw problem('同步码应为四组、每组八位的字母和数字');
+    return normalized;
+  }
+  function displayCode(value) { return value ? value.match(/.{8}/g).join('-') : ''; }
+  function hex(bytes) {
+    return Array.prototype.map.call(new Uint8Array(bytes), function (b) { return b.toString(16).padStart(2, '0'); }).join('');
+  }
+  function base64(bytes) {
+    var alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+    var out = '';
+    for (var i = 0; i < bytes.length; i += 3) {
+      var a = bytes[i], b = bytes[i + 1], c = bytes[i + 2];
+      out += alphabet[a >> 2] + alphabet[((a & 3) << 4) | ((b || 0) >> 4)] +
+        (i + 1 < bytes.length ? alphabet[((b & 15) << 2) | ((c || 0) >> 6)] : '=') +
+        (i + 2 < bytes.length ? alphabet[c & 63] : '=');
+    }
+    return out;
+  }
+  function unbase64(value, max) {
+    if (typeof value !== 'string' || value.length > Math.ceil(max / 3) * 4 ||
+        !/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(value)) throw problem('云端加密数据格式不正确');
+    var alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+    var output = [];
+    for (var i = 0; i < value.length; i += 4) {
+      var a = alphabet.indexOf(value[i]), b = alphabet.indexOf(value[i + 1]);
+      var c = alphabet.indexOf(value[i + 2]), d = alphabet.indexOf(value[i + 3]);
+      output.push((a << 2) | (b >> 4));
+      if (c >= 0) output.push(((b & 15) << 4) | (c >> 2));
+      if (d >= 0) output.push(((c & 3) << 6) | d);
+    }
+    if (output.length > max) throw problem('云端进度超过大小限制');
+    return new Uint8Array(output);
+  }
+
+  function create(options) {
+    options = options || {};
+    var environment = typeof globalThis !== 'undefined' ? globalThis : root;
+    var fetcher = options.fetch || (root.fetch && root.fetch.bind(root)) || (environment.fetch && environment.fetch.bind(environment));
+    var crypt = own(options, 'crypto') ? options.crypto : (root.crypto || environment.crypto);
+    var Encoder = root.TextEncoder || environment.TextEncoder;
+    var Decoder = root.TextDecoder || environment.TextDecoder;
+    var Abort = root.AbortController || environment.AbortController;
+    var storage;
+    try { storage = own(options, 'storage') ? options.storage : root.localStorage; } catch (_) { storage = null; }
+    var later = options.setTimeout || (root.setTimeout && root.setTimeout.bind(root)) || (environment.setTimeout && environment.setTimeout.bind(environment));
+    var cancelTimer = options.clearTimeout || (root.clearTimeout && root.clearTimeout.bind(root)) || (environment.clearTimeout && environment.clearTimeout.bind(environment));
+    var now = options.now || Date.now;
+    var meta = null, started = false, epoch = 0, revision = 0, observedJSON = null;
+    var debounce = null, inFlight = null, keysCache = null, applying = false;
+    var controllers = [], conflictRemote = null;
+    var view = { kind: 'off', message: '尚未开启跨设备同步', connected: false, lastSyncedAt: null };
+
+    function status() { return Object.assign({}, view); }
+    function emit(kind, message) {
+      view = { kind: kind, message: message, connected: !!(meta && meta.code),
+        lastSyncedAt: meta && meta.lastSyncedAt !== null ? meta.lastSyncedAt : null };
+      if (meta && meta.code) view.code = displayCode(meta.code);
+      try { if (typeof options.onStatus === 'function') options.onStatus(status()); } catch (_) { /* UI callbacks cannot break saving. */ }
+      return status();
+    }
+    function requireStorage() {
+      if (!storage || typeof storage.getItem !== 'function' || typeof storage.setItem !== 'function') throw problem('本机存储不可用，进度仍保留在当前页面，暂不能同步');
+    }
+    function persist(candidate) {
+      requireStorage();
+      try { storage.setItem(META_KEY, JSON.stringify(candidate)); }
+      catch (_) { throw problem('本机同步设置未能保存，请保留此页面并检查存储空间'); }
+    }
+    function saveMeta() { if (meta) persist(meta); }
+    function snapshot() {
+      if (typeof options.getState !== 'function') throw problem('无法读取本机学习进度');
+      var value = project(options.getState());
+      var json = JSON.stringify(value);
+      if (typeof Encoder !== 'function') throw problem('此浏览器不支持安全同步，请更新浏览器', 'unsupported');
+      if (new Encoder().encode(json).length > MAX_BYTES) throw problem('学习进度超过600KB，暂不能同步；本机进度仍保留');
+      return { state: value, json: json };
+    }
+    function refreshLocal() {
+      var current = snapshot();
+      if (observedJSON !== null && observedJSON !== current.json) {
+        revision += 1;
+        if (meta) { meta.dirty = true; saveMeta(); }
+      }
+      observedJSON = current.json;
+      return current;
+    }
+    function ensureEpoch(token) { if (token !== epoch) throw problem('同步操作已取消', 'cancelled'); }
+    function ensureUnchanged(token, localRevision) {
+      ensureEpoch(token);
+      refreshLocal();
+      if (revision !== localRevision) throw problem('同步期间本机进度又有变化，两份进度都已保留，请选择保留哪份', 'conflict');
+    }
+    function capable() {
+      if (!crypt || !crypt.subtle || typeof crypt.getRandomValues !== 'function' ||
+          typeof crypt.subtle.digest !== 'function' || typeof crypt.subtle.importKey !== 'function' ||
+          typeof crypt.subtle.encrypt !== 'function' || typeof crypt.subtle.decrypt !== 'function' ||
+          typeof Encoder !== 'function' || typeof Decoder !== 'function' || typeof Abort !== 'function' ||
+          typeof later !== 'function' || typeof cancelTimer !== 'function') throw problem('此浏览器不支持安全同步；本机游戏仍可使用', 'unsupported');
+      if (typeof fetcher !== 'function') throw problem('此浏览器暂不能连接同步服务', 'unsupported');
+      if (typeof options.projectId !== 'string' || !/^[a-zA-Z0-9][a-zA-Z0-9-]{2,99}$/.test(options.projectId)) throw problem('同步服务尚未配置');
+    }
+    async function hash(json) { return hex(await crypt.subtle.digest('SHA-256', new Encoder().encode(json))); }
+    async function keys(code, token) {
+      capable();
+      if (!keysCache || keysCache.code !== code) {
+        keysCache = { code: code, promise: (async function () {
+          var encoder = new Encoder();
+          var digests = await Promise.all([
+            crypt.subtle.digest('SHA-256', encoder.encode('hanzi-magic-door:document:v1:' + code)),
+            crypt.subtle.digest('SHA-256', encoder.encode('hanzi-magic-door:key:v1:' + code))
+          ]);
+          return {
+            id: 'hanzi-v1-' + hex(digests[0]),
+            key: await crypt.subtle.importKey('raw', digests[1], { name: 'AES-GCM' }, false, ['encrypt', 'decrypt'])
+          };
+        }()) };
+      }
+      var result = await keysCache.promise;
+      ensureEpoch(token);
+      return result;
+    }
+    function address(derived) {
+      return 'https://firestore.googleapis.com/v1/projects/' + encodeURIComponent(options.projectId) +
+        '/databases/(default)/documents/families/' + derived.id;
+    }
+    async function request(url, init, token) {
+      ensureEpoch(token);
+      var controller = new Abort();
+      controllers.push(controller);
+      var timer, timedOut = false;
+      try {
+        return await Promise.race([
+          (async function () {
+            ensureEpoch(token);
+            var response = await fetcher(url, Object.assign({ cache: 'no-store', credentials: 'omit', signal: controller.signal }, init));
+            ensureEpoch(token);
+            if (response.status === 404 && (!init || init.method === 'GET')) return null;
+            if (!response.ok) {
+              if (response.status === 409 || response.status === 412) throw problem('云端进度刚刚发生变化，两份进度都已保留，请重新选择', 'conflict');
+              // Firestore may encode a CAS failure as HTTP 400. Read only its
+              // status identifier, within the same request/body timeout; never
+              // surface backend messages or project configuration to the UI.
+              var errorBody = null;
+              try {
+                if (typeof response.text === 'function') {
+                  var errorText = await response.text();
+                  if (errorText.length <= 16384) errorBody = JSON.parse(errorText);
+                } else errorBody = await response.json();
+              } catch (_) { /* An unreadable error still receives a safe HTTP classification. */ }
+              ensureEpoch(token);
+              if (errorBody && object(errorBody.error) &&
+                  ['FAILED_PRECONDITION', 'ABORTED', 'ALREADY_EXISTS'].indexOf(errorBody.error.status) >= 0) {
+                throw problem('云端进度刚刚发生变化，两份进度都已保留，请重新选择', 'conflict');
+              }
+              if (response.status >= 500 || response.status === 429) throw problem('暂时连接不上同步服务；本机进度和待同步改动仍保留', 'offline');
+              throw problem('同步服务拒绝了请求（' + response.status + '）；本机进度仍保留');
+            }
+            var data;
+            if (typeof response.text === 'function') {
+              var text = await response.text();
+              if (text.length > MAX_BYTES * 2) throw problem('云端数据超过大小限制');
+              try { data = JSON.parse(text); } catch (_) { throw problem('云端数据不是有效的进度文件'); }
+            } else data = await response.json();
+            ensureEpoch(token);
+            return data;
+          }()),
+          new Promise(function (_, reject) {
+            timer = later(function () {
+              timedOut = true;
+              controller.abort();
+              reject(problem('同步连接超时；本机进度和待同步改动仍保留', 'offline'));
+            }, TIMEOUT_MS);
+          })
+        ]);
+      } catch (error) {
+        ensureEpoch(token);
+        if (error.syncKind) throw error;
+        throw problem(timedOut ? '同步连接超时；本机进度仍保留' : '当前无法联网；本机进度和待同步改动仍保留', 'offline');
+      } finally {
+        if (timer !== undefined) cancelTimer(timer);
+        var index = controllers.indexOf(controller);
+        if (index >= 0) controllers.splice(index, 1);
+      }
+    }
+    async function readRemote(derived, token) {
+      var doc = await request(address(derived), { method: 'GET' }, token);
+      if (doc === null) return null;
+      if (!object(doc) || typeof doc.updateTime !== 'string' || !doc.updateTime || doc.updateTime.length > 100 || !object(doc.fields)) throw problem('云端进度缺少版本信息');
+      var fields = doc.fields;
+      if (!fields.app || fields.app.stringValue !== APP || !fields.formatVersion || String(fields.formatVersion.integerValue) !== '1' ||
+          !fields.iv || !fields.payload) throw problem('这不是汉字游戏的同步进度，未读取其他应用的数据');
+      var iv = unbase64(fields.iv.stringValue, 12);
+      if (iv.length !== 12) throw problem('云端加密参数不正确');
+      var encrypted = unbase64(fields.payload.stringValue, MAX_BYTES + 16);
+      if (encrypted.length < 16) throw problem('云端加密内容不完整');
+      var plaintext;
+      try { plaintext = await crypt.subtle.decrypt({ name: 'AES-GCM', iv: iv }, derived.key, encrypted); }
+      catch (_) { throw problem('同步码不匹配或云端进度已损坏，本机进度未被替换'); }
+      ensureEpoch(token);
+      if (plaintext.byteLength > MAX_BYTES) throw problem('云端进度超过600KB');
+      var decoded;
+      try { decoded = JSON.parse(new Decoder('utf-8', { fatal: true }).decode(plaintext)); }
+      catch (_) { throw problem('云端进度内容无法读取，本机进度未被替换'); }
+      var state = project(decoded);
+      var json = JSON.stringify(state);
+      var fingerprint = await hash(json);
+      ensureEpoch(token);
+      return { state: state, json: json, hash: fingerprint, updateTime: doc.updateTime };
+    }
+    async function encrypt(current, derived, token) {
+      var iv = crypt.getRandomValues(new Uint8Array(12));
+      var payload = await crypt.subtle.encrypt({ name: 'AES-GCM', iv: iv }, derived.key, new Encoder().encode(current.json));
+      ensureEpoch(token);
+      return { fields: {
+        formatVersion: { integerValue: '1' }, app: { stringValue: APP },
+        iv: { stringValue: base64(iv) }, payload: { stringValue: base64(new Uint8Array(payload)) }
+      } };
+    }
+    function backup(local, remote, reason) {
+      requireStorage();
+      try {
+        var previous = storage.getItem(BACKUP_KEY);
+        var groups = previous ? JSON.parse(previous) : [];
+        if (!Array.isArray(groups)) throw new Error('Invalid backup');
+        // Existing records are from this module, but project them again so a
+        // malformed local backup can never smuggle handwriting into a new one.
+        groups = groups.slice(-2).map(function (group) {
+          if (!object(group)) throw new Error('Invalid backup');
+          return {
+            timestamp: integer(group.timestamp, 0, Number.MAX_SAFE_INTEGER, 'backup time'),
+            reason: string(group.reason, 100, 'backup reason'),
+            local: project(group.local), remote: group.remote === null ? null : project(group.remote),
+            remoteUpdateTime: group.remoteUpdateTime === null ? null : string(group.remoteUpdateTime, 100, 'backup version')
+          };
+        });
+        groups.push({ timestamp: now(), reason: reason, local: local.state,
+          remote: remote ? remote.state : null, remoteUpdateTime: remote ? remote.updateTime : null });
+        storage.setItem(BACKUP_KEY, JSON.stringify(groups));
+      } catch (_) { throw problem('未能在本机备份两份进度，尚未替换任何进度；请检查存储空间'); }
+    }
+    function mayApply() {
+      try { return typeof options.canApply !== 'function' || options.canApply() === true; }
+      catch (_) { return false; }
+    }
+    async function adopt(remote, token, localRevision, reason, candidateMeta) {
+      ensureUnchanged(token, localRevision);
+      if (!mayApply()) return emit('pending', '云端有更新，等这一题结束后再同步');
+      var before = snapshot();
+      backup(before, remote, reason);
+      ensureUnchanged(token, localRevision);
+      if (!mayApply()) return emit('pending', '云端有更新，等这一题结束后再同步');
+      if (typeof options.applyState !== 'function') throw problem('当前页面暂不能恢复同步进度');
+      var stagedMeta = Object.assign({}, candidateMeta || meta, { dirty: true, requireConflict: true });
+      // Adoption is a two-step local transaction. Keep the previous baseline
+      // until the page has actually accepted the remote state. The durable
+      // barrier also protects a reload/crash between identity and primary save.
+      persist(stagedMeta);
+      meta = stagedMeta;
+      applying = true;
+      var result;
+      try { result = options.applyState(remote.state); }
+      catch (error) {
+        ensureEpoch(token);
+        throw problem('恢复进度未完成；两份进度已在本机备份，请重新选择保留哪份', 'conflict');
+      }
+      finally { applying = false; }
+      try {
+        if (result && typeof result.then === 'function') result = await result;
+        if (result === false) throw new Error('Page refused progress');
+      } catch (_) {
+        ensureEpoch(token);
+        throw problem('当前页面未接受云端进度；两份进度已在本机备份，请重新选择保留哪份', 'conflict');
+      }
+      ensureEpoch(token);
+      var actual = snapshot();
+      observedJSON = actual.json;
+      var nextMeta = Object.assign({}, stagedMeta, {
+        baseUpdateTime: remote.updateTime, baseHash: remote.hash,
+        dirty: actual.json !== remote.json, requireConflict: false, lastSyncedAt: now()
+      });
+      // If this commit fails, keep the in-memory and on-disk barrier in place.
+      persist(nextMeta);
+      meta = nextMeta;
+      conflictRemote = null;
+      if (meta.dirty) return emit('pending', '进度已读取，但本机还有新的改动；请再次同步');
+      return emit('synced', '两台设备的学习进度已同步');
+    }
+    async function write(current, derived, remote, token, localRevision) {
+      var body = await encrypt(current, derived, token);
+      ensureUnchanged(token, localRevision);
+      var precondition = remote ? 'currentDocument.updateTime=' + encodeURIComponent(remote.updateTime) : 'currentDocument.exists=false';
+      var response = await request(address(derived) + '?' + precondition, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
+      }, token);
+      if (!response || typeof response.updateTime !== 'string' || !response.updateTime || response.updateTime.length > 100) throw problem('服务器未确认保存版本；本机改动仍保留为待同步');
+      var fingerprint = await hash(current.json);
+      ensureEpoch(token);
+      var actual = snapshot();
+      observedJSON = actual.json;
+      var nextMeta = Object.assign({}, meta, { baseUpdateTime: response.updateTime, baseHash: fingerprint,
+        dirty: actual.json !== current.json, requireConflict: false, lastSyncedAt: now() });
+      persist(nextMeta);
+      meta = nextMeta;
+      conflictRemote = null;
+      if (meta.dirty) { schedule(); return emit('idle', '上一份进度已同步，新改动正在等待同步'); }
+      return emit('synced', '学习进度已安全同步');
+    }
+    function beginEpoch() {
+      epoch += 1;
+      if (debounce !== null) { cancelTimer(debounce); debounce = null; }
+      controllers.slice().forEach(function (controller) { try { controller.abort(); } catch (_) {} });
+      controllers = [];
+      inFlight = null;
+      return epoch;
+    }
+    function failure(error, token) {
+      if (token !== epoch || error.syncKind === 'cancelled') return status();
+      if (error.syncKind === 'conflict') {
+        if (meta) { meta.dirty = true; try { saveMeta(); } catch (storageError) { return emit('error', storageError.message); } }
+        return emit('conflict', error.message);
+      }
+      return emit(error.syncKind === 'offline' || error.syncKind === 'unsupported' ? error.syncKind : 'error', error.message || '同步未完成；本机进度仍保留');
+    }
+    function run(token, action) {
+      var job = Promise.resolve().then(function () {
+        // Cancellation may happen before this very first microtask starts.
+        // In particular, a queued create must not restore its code afterwards.
+        ensureEpoch(token);
+        return action();
+      }).catch(function (error) { return failure(error, token); });
+      inFlight = job;
+      job.then(function () { if (inFlight === job) inFlight = null; });
+      return job;
+    }
+    function schedule() {
+      if (!meta || !meta.code || !meta.dirty || meta.requireConflict || view.kind === 'conflict') return;
+      if (debounce !== null) cancelTimer(debounce);
+      debounce = later(function () { debounce = null; sync(); }, DEBOUNCE_MS);
+    }
+    function changed() {
+      // An ordinary save on a device that never enabled sync needs neither
+      // serialization nor any cryptography/browser synchronization APIs.
+      if (!started || !meta || !meta.code) return status();
+      try {
+        var current = snapshot();
+        if (applying) { observedJSON = current.json; return status(); }
+        if (observedJSON === current.json) return status();
+        observedJSON = current.json;
+        revision += 1;
+        if (!meta || !meta.code) return status();
+        meta.dirty = true;
+        saveMeta();
+        if (view.kind !== 'conflict' && view.kind !== 'syncing') emit('idle', '新进度已在本机，等待同步');
+        schedule();
+        return status();
+      } catch (error) { return failure(error, epoch); }
+    }
+    function loadMeta() {
+      requireStorage();
+      var saved;
+      try { saved = storage.getItem(META_KEY); }
+      catch (_) { throw problem('无法读取本机同步设置；本机学习仍可继续'); }
+      if (!saved) return null;
+      var input;
+      try { input = JSON.parse(saved); } catch (_) { throw problem('本机同步设置损坏，尚未连接云端'); }
+      if (!object(input) || input.version !== 1) throw problem('本机同步设置版本不受支持');
+      var result = { version: 1, code: normalizeCode(input.code),
+        baseUpdateTime: input.baseUpdateTime === null ? null : string(input.baseUpdateTime, 100, 'baseUpdateTime'),
+        baseHash: input.baseHash === null ? null : string(input.baseHash, 64, 'baseHash'),
+        dirty: bool(input.dirty, 'dirty'), requireConflict: own(input, 'requireConflict') ? bool(input.requireConflict, 'requireConflict') : false,
+        lastSyncedAt: input.lastSyncedAt === null ? null : integer(input.lastSyncedAt, 0, Number.MAX_SAFE_INTEGER, 'lastSyncedAt') };
+      if (result.baseHash !== null && !/^[0-9a-f]{64}$/.test(result.baseHash)) throw problem('本机同步摘要不正确');
+      return result;
+    }
+    function start() {
+      if (started) return meta ? sync() : Promise.resolve(status());
+      started = true;
+      try {
+        meta = loadMeta();
+        if (!meta) return Promise.resolve(emit('off', '尚未开启跨设备同步'));
+        observedJSON = snapshot().json;
+        if (meta.requireConflict) return Promise.resolve(emit('conflict', '上次采用进度未确认完成；两份进度仍保留，请选择保留哪份'));
+      } catch (error) { return Promise.resolve(failure(error, epoch)); }
+      return sync();
+    }
+    function sync() {
+      if (!started) return start();
+      if (!meta || !meta.code) return Promise.resolve(emit('off', '尚未开启跨设备同步'));
+      if (inFlight) return inFlight;
+      if (meta.requireConflict) return Promise.resolve(emit('conflict', '上次采用进度未确认完成；两份进度仍保留，请选择保留哪份'));
+      if (view.kind === 'conflict') return Promise.resolve(status());
+      var token = epoch;
+      return run(token, async function () {
+        var local = refreshLocal();
+        var localRevision = revision;
+        var derived = await keys(meta.code, token);
+        var fingerprint = await hash(local.json);
+        ensureUnchanged(token, localRevision);
+        if (!meta.baseHash || fingerprint !== meta.baseHash) meta.dirty = true;
+        saveMeta();
+        emit('syncing', '正在同步学习进度');
+        var remote = await readRemote(derived, token);
+        conflictRemote = remote;
+        ensureUnchanged(token, localRevision);
+        if (!remote) {
+          // A fresh create may be retried offline. A deleted established family
+          // never gets recreated automatically using possibly outdated progress.
+          if (meta.baseUpdateTime !== null) throw problem('云端进度已被移除，本机进度仍保留；请重新建立同步', 'conflict');
+          meta.dirty = true;
+          saveMeta();
+          return write(local, derived, null, token, localRevision);
+        }
+        // A PATCH can commit successfully even when its response times out.
+        // Identical authenticated progress is already synchronized, regardless
+        // of which device wrote it or which updateTime we last received.
+        if (remote.hash === fingerprint) {
+          meta.baseUpdateTime = remote.updateTime;
+          meta.baseHash = remote.hash;
+          meta.dirty = false;
+          meta.lastSyncedAt = now();
+          saveMeta();
+          conflictRemote = null;
+          return emit('synced', '两台设备的学习进度已同步');
+        }
+        if (remote.updateTime !== meta.baseUpdateTime) {
+          if (meta.dirty) throw problem('两台设备都更新过学习进度，请选择保留哪份；两份都还在', 'conflict');
+          return adopt(remote, token, localRevision, 'remote-update');
+        }
+        if (remote.hash !== meta.baseHash) throw problem('云端版本与本机摘要不一致，两份进度均已保留', 'conflict');
+        if (fingerprint === meta.baseHash) {
+          meta.dirty = false;
+          meta.lastSyncedAt = now();
+          saveMeta();
+          return emit('synced', '两台设备的学习进度已同步');
+        }
+        return write(local, derived, remote, token, localRevision);
+      });
+    }
+    function createFamily() {
+      var token = beginEpoch();
+      started = true;
+      return run(token, async function () {
+        capable();
+        var current = refreshLocal();
+        var code = hex(crypt.getRandomValues(new Uint8Array(16)));
+        var candidate = { version: 1, code: code, baseUpdateTime: null, baseHash: null, dirty: true, lastSyncedAt: null };
+        persist(candidate);
+        meta = candidate;
+        conflictRemote = null;
+        var localRevision = revision;
+        emit('syncing', '正在建立汉字游戏同步');
+        var derived = await keys(code, token);
+        var remote = await readRemote(derived, token);
+        conflictRemote = remote;
+        ensureUnchanged(token, localRevision);
+        if (remote) throw problem('此同步位置已存在，未覆盖任何进度；请重新生成同步码', 'conflict');
+        return write(current, derived, null, token, localRevision);
+      });
+    }
+    function joinFamily(value) {
+      var normalized;
+      try {
+        normalized = normalizeCode(value);
+        if (!mayApply()) return Promise.resolve(emit('pending', '请先结束当前书写，再连接另一台设备的进度'));
+      } catch (error) { return Promise.resolve(failure(error, epoch)); }
+      var token = beginEpoch();
+      started = true;
+      return run(token, async function () {
+        refreshLocal();
+        var localRevision = revision;
+        emit('syncing', '正在验证同步码和云端进度');
+        var derived = await keys(normalized, token);
+        var remote = await readRemote(derived, token);
+        ensureUnchanged(token, localRevision);
+        if (!remote) throw problem('没有找到这个汉字游戏同步码；本机进度未被替换');
+        if (!mayApply()) return emit('pending', '当前正在书写，尚未连接或替换进度；结束后请重试');
+        // adopt() re-reads and backs up the *current* local state, rather than
+        // relying on a stale snapshot captured before the network request.
+        return adopt(remote, token, localRevision, 'join-family', {
+          version: 1, code: normalized, baseUpdateTime: null, baseHash: null, dirty: true, lastSyncedAt: null
+        });
+      });
+    }
+    function resolveConflict(choice) {
+      if (choice !== 'local' && choice !== 'remote') return Promise.resolve(emit('error', '请选择保留本机或云端进度'));
+      if (!meta || view.kind !== 'conflict') return Promise.resolve(status());
+      var token = beginEpoch();
+      return run(token, async function () {
+        var current = refreshLocal();
+        var localRevision = revision;
+        emit('syncing', '正在备份并处理两份学习进度');
+        var derived = await keys(meta.code, token);
+        var remote = await readRemote(derived, token);
+        conflictRemote = remote;
+        ensureUnchanged(token, localRevision);
+        if (choice === 'remote') {
+          if (!remote) throw problem('云端已没有这份进度，本机进度仍保留', 'conflict');
+          if (!mayApply()) return emit('conflict', '请先结束当前书写，再选择采用云端进度');
+          return adopt(remote, token, localRevision, 'conflict-remote');
+        }
+        backup(current, remote, 'conflict-local');
+        ensureUnchanged(token, localRevision);
+        meta.dirty = true;
+        saveMeta();
+        return write(current, derived, remote, token, localRevision);
+      });
+    }
+    function disconnect() {
+      beginEpoch();
+      meta = null;
+      conflictRemote = null;
+      keysCache = null;
+      started = true;
+      try {
+        requireStorage();
+        if (typeof storage.removeItem !== 'function') throw new Error('Storage cannot remove settings');
+        storage.removeItem(META_KEY);
+      } catch (_) { return emit('error', '本次同步已停止，但未能清除本机连接设置；请保留页面并检查存储空间'); }
+      return emit('off', '已断开同步；本机学习进度和备份仍保留');
+    }
+    // Reading this module's tiny connection record is synchronous and offline.
+    // The page can restore its saved session before calling asynchronous start().
+    try {
+      meta = loadMeta();
+      if (meta) view = { kind: meta.requireConflict ? 'conflict' : 'idle',
+        message: meta.requireConflict ? '上次采用进度未确认完成；两份进度仍保留，请选择保留哪份' : '已保存同步连接，等待同步', connected: true,
+        lastSyncedAt: meta.lastSyncedAt, code: displayCode(meta.code) };
+    } catch (error) {
+      view = { kind: 'error', message: error.message, connected: false, lastSyncedAt: null };
+    }
+    return { start: start, createFamily: createFamily, joinFamily: joinFamily, sync: sync, changed: changed,
+      resolveConflict: resolveConflict, disconnect: disconnect, status: status, code: function () { return displayCode(meta && meta.code); } };
+  }
+
+  return { create: create };
+}));
+
+</script>
 <script>
 /* ============================================================
    汉字魔法门 — 默写版
@@ -2766,7 +3479,7 @@ window.HANZI_GLYPH_CATALOG={"version":"41b38d977b270e08ea493526a4ee0f8643a59bbf2
    5. 家长可添加"今日优先字"，存档/读档保存长期进度
    ============================================================ */
 
-const STORAGE_KEY_HINT = "本地网页无法自动联网保存，需要手动导出/导入存档文件";
+const STORAGE_KEY_HINT = "进度先保存在本机；可在家长设置中开启跨设备同步。";
 
 // ---------- calendar days ----------
 // Scheduling used to count "days" as "number of times 再来一轮 was pressed", which meant three
@@ -2809,7 +3522,7 @@ function defaultBank(){
 // device that has already played keeps its old characters for ever and never sees the new
 // set — the change would reach nobody who actually uses the game.
 const BANK_VERSION = 5;
-const GAME_VERSION = '2026.11.04.2';
+const GAME_VERSION = '2026.11.05.1';
 
 let state = {
   bank: defaultBank(),
@@ -2939,14 +3652,31 @@ function recordInk(payload, verdict){
 // ---------- automatic save ----------
 // Everything lives in localStorage and is rewritten on every change. Without this the whole
 // cross-day review schedule is theatre: close the tab and the boxes, intervals and mastery
-// dates are gone, so every session starts the child from scratch. Manual export/import stays
-// as the way to carry progress to a different device.
+// dates are gone, so every session starts the child from scratch. Manual export/import
+// remains available alongside optional encrypted progress synchronization.
 const SAVE_KEY = 'hanzi-magic-door-state-v1';
+let cloudSyncController = null;
+let syncApplying = false;
+let syncExplicitAdopt = false;
+let syncFileReading = false;
+let syncRoundId = '';
+let syncRoundDay = todayStr();
+let syncRoundCompleted = false;
+let syncSceneAwarded = false;
+let progressSaveNotice = '';
 
 function saveState(){
   if(typeof parentValidation !== 'undefined' && parentValidation) return;
-  try{ localStorage.setItem(SAVE_KEY, JSON.stringify(state)); }
-  catch(e){ /* private mode or quota — the session still works, it just won't survive a reload */ }
+  if(cloudSyncController && cloudSyncController.status().connected && !syncApplying){
+    state.sessionProgress = syncSessionSnapshot();
+  }
+  try{ localStorage.setItem(SAVE_KEY, JSON.stringify(state)); progressSaveNotice = ''; }
+  catch(e){
+    progressSaveNotice = '本机进度暂存未成功，当前页面仍保留；请先不要关闭。';
+    if(typeof renderCloudSyncStatus === 'function') renderCloudSyncStatus();
+    return;
+  }
+  if(cloudSyncController && !syncApplying) cloudSyncController.changed();
 }
 
 // Old saves counted days as integers and have no mastery record. Rather than invent dates
@@ -4535,6 +5265,126 @@ onTap(playerDisputeBtn, () => {
   if(entry === playerDisputeEntry) togglePlayerDispute(entry);
 });
 
+// Cloud progress is deliberately separate from all ink and parent-test logs.
+function syncSessionSnapshot(){
+  if(!syncRoundId) syncRoundId = Date.now().toString(36) + '-' + Math.random().toString(36).slice(2);
+  return {version:1, day:syncRoundDay, roundId:syncRoundId, passedCount,
+    completed:syncRoundCompleted, sceneAwarded:syncSceneAwarded};
+}
+function getCloudProgressState(){
+  if(progressSaveNotice) throw new Error(progressSaveNotice);
+  return {...state, sessionProgress:syncSessionSnapshot()};
+}
+function syncQuestionSafe(){
+  if(parentValidation || isDrawing || submitBtn.disabled || syncFileReading || parentQueueChanged || pendingRetests.length) return false;
+  if(finale.classList.contains('show') || continueBtn.classList.contains('show')) return true;
+  return currentMode === 'free' && strokesPoints.length === 0;
+}
+function syncCanApplyProgress(){
+  return syncQuestionSafe() && (!panelOverlay.classList.contains('show') || syncExplicitAdopt);
+}
+function restoreSyncedRound(){
+  const saved = state.sessionProgress;
+  if(saved && saved.version === 1 && saved.day === todayStr() && typeof saved.roundId === 'string' &&
+      Number.isInteger(saved.passedCount) && saved.passedCount >= 0 && saved.passedCount <= 1000){
+    syncRoundId = saved.roundId; syncRoundDay = saved.day; passedCount = saved.passedCount;
+    syncRoundCompleted = saved.completed === true; syncSceneAwarded = saved.sceneAwarded === true;
+  } else {
+    syncRoundId = ''; syncRoundDay = todayStr(); passedCount = 0; syncRoundCompleted = syncSceneAwarded = false;
+  }
+}
+function showSyncedFinale(){
+  setWritingView(false);
+  playzone.classList.add('hide'); finale.classList.add('show');
+  finaleDetail.textContent = `这份进度本轮已通过 ${passedCount} 个字。可以休息，也可以再来一轮。`;
+  renderProgressPath(); renderPlayerDispute();
+}
+function presentSyncedProgress(){
+  if(syncRoundCompleted && !unfinishedParentEntries().length){ showSyncedFinale(); return; }
+  if(syncRoundCompleted){ syncRoundId = ''; syncRoundDay = todayStr(); syncRoundCompleted = syncSceneAwarded = false; }
+  if(passedCount >= state.dailyCount && !unfinishedParentEntries().length){
+    // Completion was earned but the child had not pressed Continue to settle it.
+    // Restore the action without replaying a pass or awarding a scene on a pull.
+    setWritingView(false); setDoorOpen(); showGlowChar('', false);
+    submitBtn.style.display = clearBtn.style.display = 'none';
+    resultBanner.textContent = '已接上这轮的通过记录'; resultBanner.className = 'result-banner correct';
+    statusLine.textContent = '点“继续”完成本轮结算';
+    continueBtn.classList.add('show'); renderProgressPath(); return;
+  }
+  loadNextDoor();
+}
+function applySyncedProgress(remote){
+  const next = migrateState(JSON.parse(JSON.stringify(remote)));
+  if(!next || !syncCanApplyProgress()) throw new Error('请先完成当前练习，再接上云端进度。');
+  // Persist before replacing live objects. A quota failure leaves this question intact.
+  localStorage.setItem(SAVE_KEY, JSON.stringify(next));
+  syncApplying = true;
+  try{
+    cancelTeachingRound(); stopPromptSpeech(); feedbackCall('reset');
+    state = next; currentItem = null; currentMode = 'free'; currentRound = 1;
+    currentParentRequestId = null; stepIndex = stepAttempts = 0; pendingRetests = [];
+    priorityConsumedToday = new Set(); selectionSession = window.HanziPracticeSelector.createSession();
+    parentQueueChanged = false; continueBtn.classList.remove('show');
+    finale.classList.remove('show'); playzone.classList.remove('hide'); clearCanvas();
+    restoreSyncedRound(); applyScene(state.scenesUnlocked);
+    dailyCountInput.value = state.dailyCount;
+    renderQueueList(); renderMasteredList(); renderStuckList();
+    presentSyncedProgress();
+  } finally { syncApplying = false; }
+}
+function renderCloudSyncStatus(){
+  const status = cloudSyncController ? cloudSyncController.status() : {kind:'off',connected:false,message:'尚未开启，学习记录保存在这台设备。'};
+  document.getElementById('cloudSyncStatus').textContent = progressSaveNotice || status.message;
+  document.getElementById('cloudSyncCodeWrap').hidden = !status.connected;
+  document.getElementById('cloudSyncCreateBtn').hidden = !!status.connected;
+  document.getElementById('cloudSyncConflict').hidden = status.kind !== 'conflict';
+  document.getElementById('cloudSyncCode').value = cloudSyncController ? cloudSyncController.code() : '';
+  const disabled = !cloudSyncController || status.kind === 'syncing' || status.kind === 'unsupported';
+  for(const id of ['cloudSyncCreateBtn','cloudSyncJoinBtn','cloudSyncNowBtn','cloudKeepLocalBtn','cloudUseRemoteBtn']) document.getElementById(id).disabled = disabled;
+}
+function syncTick(){
+  if(!cloudSyncController || !cloudSyncController.status().connected || parentValidation) return;
+  if(progressSaveNotice){ saveState(); if(progressSaveNotice) return; }
+  Promise.resolve(cloudSyncController.sync()).catch(() => {});
+}
+async function cloudSyncAction(action, adopt){
+  if(!cloudSyncController) return;
+  if(adopt && !syncQuestionSafe()){
+    document.getElementById('cloudSyncStatus').textContent = '请先完成正在进行的练习，再接入或切换进度。'; return;
+  }
+  syncExplicitAdopt = !!adopt;
+  try{ await action(); }
+  finally{ syncExplicitAdopt = false; renderCloudSyncStatus(); }
+  if(cloudSyncController.status().connected && !['conflict','error'].includes(cloudSyncController.status().kind)) saveState();
+}
+function initProgressSync(){
+  try{
+    cloudSyncController = window.HanziProgressSync.create({projectId:"game-e-40894", storage:localStorage,
+      fetch:window.fetch ? window.fetch.bind(window) : fetch, crypto:window.crypto,
+      getState:getCloudProgressState, applyState:applySyncedProgress, canApply:syncCanApplyProgress,
+      onStatus:renderCloudSyncStatus, setTimeout, clearTimeout, now:() => Date.now()});
+    if(cloudSyncController.status().connected) restoreSyncedRound();
+    renderCloudSyncStatus();
+  }catch(_){
+    cloudSyncController = null;
+    document.getElementById('cloudSyncStatus').textContent = '这个浏览器暂时无法开启同步，游戏和本机记录仍可使用。';
+  }
+}
+onTap(document.getElementById('cloudSyncCreateBtn'), () => cloudSyncAction(() => cloudSyncController.createFamily(), false));
+onTap(document.getElementById('cloudSyncJoinBtn'), () => cloudSyncAction(() => cloudSyncController.joinFamily(document.getElementById('cloudSyncJoinInput').value), true));
+onTap(document.getElementById('cloudSyncNowBtn'), syncTick);
+onTap(document.getElementById('cloudKeepLocalBtn'), () => cloudSyncAction(() => cloudSyncController.resolveConflict('local'), false));
+onTap(document.getElementById('cloudUseRemoteBtn'), () => cloudSyncAction(() => cloudSyncController.resolveConflict('remote'), true));
+onTap(document.getElementById('cloudSyncDisconnectBtn'), () => { if(cloudSyncController) cloudSyncController.disconnect(); renderCloudSyncStatus(); });
+onTap(document.getElementById('cloudSyncCopyBtn'), async () => {
+  const code = document.getElementById('cloudSyncCode');
+  try{ await navigator.clipboard.writeText(code.value); document.getElementById('cloudSyncStatus').textContent = '同步码已复制，可粘贴到另一台设备。'; }
+  catch(_){ code.focus(); code.select(); document.getElementById('cloudSyncStatus').textContent = '请长按同步码，选择复制。'; }
+});
+window.addEventListener('online', syncTick);
+window.addEventListener('focus', syncTick);
+document.addEventListener('visibilitychange', () => { if(!document.hidden) syncTick(); });
+
 // ---------- starfield ----------
 (function initStars(){
   const bg = document.getElementById('starsBg');
@@ -4858,6 +5708,7 @@ function loadNextDoor(){
 }
 
 function presentDoor(item, mode, round, parentRequestId = null){
+  syncRoundCompleted = false;
   cancelTeachingRound();
   showDemoGlyph('', false);
   stopPromptSpeech();
@@ -4935,8 +5786,8 @@ function markPassed(item, outcome, message){
   resultBanner.textContent = message;
   resultBanner.className = 'result-banner correct';
   statusLine.textContent = '';
-  recordResult(item, outcome);
   passedCount += 1;
+  recordResult(item, outcome);
   renderProgressPath();
   continueBtn.classList.add('show');
 }
@@ -5326,6 +6177,7 @@ onTap(restartBtn, function(){
   // Another round on the same afternoon is NOT another day — the review intervals are keyed
   // to the calendar now, so this only resets the counters for this sitting.
   passedCount = 0;
+  syncRoundId = ''; syncRoundDay = todayStr(); syncRoundCompleted = syncSceneAwarded = false;
   pendingRetests = [];
   priorityConsumedToday = new Set();
   selectionSession = window.HanziPracticeSelector.createSession();
@@ -5333,15 +6185,17 @@ onTap(restartBtn, function(){
   finale.classList.remove('show');
   playzone.classList.remove('hide');
   loadNextDoor();
+  if(cloudSyncController && cloudSyncController.status().connected) saveState();
 });
 
 // ---------- settings panel ----------
-onTap(settingsBtn, () => { stopPromptSpeech(); renderQueueList(); renderMasteredList(); renderStuckList(); renderInkList(); inkMsg.textContent = inkSaveNotice; panelOverlay.classList.add('show'); });
+onTap(settingsBtn, () => { stopPromptSpeech(); renderQueueList(); renderMasteredList(); renderStuckList(); renderInkList(); inkMsg.textContent = inkSaveNotice; panelOverlay.classList.add('show'); if(typeof renderCloudSyncStatus === 'function') renderCloudSyncStatus(); if(typeof syncTick === 'function') syncTick(); });
 onTap(closePanelBtn, () => {
   panelOverlay.classList.remove('show');
-  if(!parentQueueChanged) return;
+  if(!parentQueueChanged){ if(typeof syncTick === 'function') syncTick(); return; }
   parentQueueChanged = false;
   if(finale.classList.contains('show')){
+    syncRoundId = ''; syncRoundDay = todayStr(); syncRoundCompleted = syncSceneAwarded = false;
     finale.classList.remove('show');
     playzone.classList.remove('hide');
     loadNextDoor();
@@ -5350,6 +6204,7 @@ onTap(closePanelBtn, () => {
     // so this must not increment the delayed-retest gap a second time.
     presentDoor(pickNextChar(), 'free', 1);
   }
+  if(typeof syncTick === 'function') syncTick();
 });
 
 // ---------- pinyin ----------
@@ -5458,6 +6313,7 @@ function renderStuckList(){
       renderStuckList();
       // If the day had already ended for lack of anything to practise, reopen it.
       if(finale.classList.contains('show')){
+        syncRoundId = ''; syncRoundDay = todayStr(); syncRoundCompleted = syncSceneAwarded = false;
         finale.classList.remove('show');
         playzone.classList.remove('hide');
         loadNextDoor();
@@ -5646,8 +6502,10 @@ onTap(loadProgressBtn, () => {
 fileInput.addEventListener('change', (e) => {
   const file = e.target.files[0];
   if(!file) return;
+  syncFileReading = true;
   const reader = new FileReader();
   reader.onload = (ev) => {
+    syncFileReading = false;
     // A previously opened file picker/read can finish after acceptance starts.
     // Do not replace the child's bank or its session underneath the saved item.
     if(parentValidation){
@@ -5664,19 +6522,22 @@ fileInput.addEventListener('change', (e) => {
       const loaded = JSON.parse(ev.target.result);
       if(loaded && loaded.bank){
         state = migrateState(loaded) || state;
-        saveState();
         renderQueueList();
         renderMasteredList();
         renderStuckList();
         dailyCountInput.value = state.dailyCount || 5;
         passedCount = 0;
+        syncRoundId = ''; syncRoundDay = todayStr(); syncRoundCompleted = syncSceneAwarded = false;
+        if(cloudSyncController && cloudSyncController.status().connected) restoreSyncedRound();
         pendingRetests = [];
         priorityConsumedToday = new Set();
         selectionSession = window.HanziPracticeSelector.createSession();
         applyScene(state.scenesUnlocked);
         finale.classList.remove('show');
         playzone.classList.remove('hide');
-        loadNextDoor();
+        if(cloudSyncController && cloudSyncController.status().connected) presentSyncedProgress();
+        else loadNextDoor();
+        saveState();
         alert('存档读取成功！');
       } else {
         alert('这个文件看起来不是有效的存档。');
@@ -5685,6 +6546,7 @@ fileInput.addEventListener('change', (e) => {
       alert('读取失败，文件可能损坏。');
     }
   };
+  reader.onerror = reader.onabort = () => { syncFileReading = false; alert('这次没有读到存档，本机进度已保留。'); };
   reader.readAsText(file);
 });
 
@@ -5711,6 +6573,7 @@ function applyScene(index){
 }
 
 function showFinale(bankEmpty){
+  syncRoundCompleted = true;
   cancelTeachingRound();
   showDemoGlyph('', false);
   playzone.classList.add('hide');
@@ -5724,6 +6587,7 @@ function showFinale(bankEmpty){
     finaleDetail.textContent = stuck.length
       ? `今天推开了 ${passedCount} 扇门。剩下的「${stuck.map(b=>b.char).join('、')}」在等爸爸妈妈讲一讲——讲完在 ⚙️ 里点「我讲过了」，今天还能继续闯。`
       : `字库里的字全部永久掌握啦！点 ⚙️ 加新的字，就能继续闯关。今天推开了 ${passedCount} 扇门。`;
+    if(cloudSyncController && cloudSyncController.status().connected) saveState();
     return;
   }
   const sceneName = SCENES[state.scenesUnlocked % SCENES.length].name;
@@ -5736,7 +6600,10 @@ function showFinale(bankEmpty){
     ? `\n「${justMastered.map(b => b.char).join('、')}」已经在 ${MASTERED_DAYS} 个不同的日子写对了，永久掌握，不用再练啦！`
     : '';
   finaleDetail.textContent = `今天推开了 ${passedCount} 扇门！解锁了新场景：${sceneName}` + masteredNote;
-  state.scenesUnlocked += 1;
+  if(!syncSceneAwarded){
+    syncSceneAwarded = true;
+    state.scenesUnlocked += 1;
+  }
   saveState();
 }
 
@@ -5746,6 +6613,7 @@ function showFinale(bankEmpty){
 loadSavedState();
 loadInkLog();
 loadParentTestInkLog();
+initProgressSync();
 applyScene(state.scenesUnlocked);
 dailyCountInput.value = state.dailyCount;
 renderQueueList();
@@ -5757,8 +6625,10 @@ onTap(speakBtn, speakPrompt);
 onTap(sentenceBtn, speakSentence);
 charInput.addEventListener('focus',loadPinyinForParent);
 batchInput.addEventListener('focus',loadPinyinForParent);
-loadNextDoor();
+if(cloudSyncController && cloudSyncController.status().connected) presentSyncedProgress();
+else loadNextDoor();
 document.getElementById('startupNotice').hidden = true;
+if(cloudSyncController) Promise.resolve(cloudSyncController.start()).catch(() => {});
 </script>
 </body>
 </html>
