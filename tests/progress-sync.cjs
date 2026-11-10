@@ -5,7 +5,7 @@
 // account, family code, learner state, ink, or network service is used.
 const assert=require('node:assert/strict');
 const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
-const {webcrypto,createHash}=require('node:crypto');
+const {webcrypto,createHash,pbkdf2Sync}=require('node:crypto');
 const {create}=require('../progress-sync.js');
 const PROJECT='synthetic-hanzi-sync-test';
 const META='hanzi-magic-door-sync-v1';
@@ -57,7 +57,8 @@ function firestore(){
     fetchFor(client){return async(url,init={})=>{
       const parsed=new URL(String(url)),method=init.method||'GET';
       assert.equal(parsed.origin,'https://firestore.googleapis.com');
-      assert.ok(parsed.pathname.startsWith('/v1/projects/'+PROJECT+'/databases/(default)/documents/families/hanzi-v1-'));
+      const prefix='/v1/projects/'+PROJECT+'/databases/(default)/documents/families/';
+      assert.ok(parsed.pathname.startsWith(prefix)&&/^hanzi-(?:password-)?v1-[0-9a-f]{64}$/.test(parsed.pathname.slice(prefix.length)));
       assert.ok(method==='GET'||method==='PATCH','No destructive or unrelated Firestore operation');
       const call={client,url:parsed,path:parsed.pathname,method,signal:init.signal,body:init.body?JSON.parse(init.body):undefined};calls.push(call);
       if(offline.has(client))throw Error('synthetic offline');
@@ -442,6 +443,172 @@ test('disconnect in the same tick cancels family creation before its first micro
   const operation=d.client.createFamily();d.client.disconnect();await bounded(operation,'cancelled creation');await turn();
   assert.equal(server.calls.length,0);assert.equal(server.docs.size,0);assert.ok(!d.client.code());assert.equal(kind(d),'off');
   assert.equal(d.storage.getItem(META),null);assert.equal(d.applied.length,0);unchangedState(d,before);
+});
+
+// Synthetic phrase, never used against a live service. The accent is tested
+// in both canonical encodings to exercise cross-device Unicode input.
+const PASSWORD='orchid Cafe\u0301 harbor comet 8';
+function passwordDoc(server){
+  const entries=[...server.docs.entries()].filter(([url])=>url.includes('/hanzi-password-v1-'));
+  assert.equal(entries.length,1);return entries[0];
+}
+async function passwordPair(){
+  const server=firestore(),a=device(server,'A'),b=device(server,'B',progress('other',0));
+  await a.client.createPasswordFamily(PASSWORD);assert.equal(kind(a),'synced');
+  await b.client.joinPasswordFamily(PASSWORD);assert.equal(kind(b),'synced');
+  return {server,a,b};
+}
+
+test('password setup uses a separate encrypted document and never stores or exposes the entered password',async()=>{
+  const server=firestore(),state=progress('password-source',3);
+  state.inkLog=[{rawS:'synthetic-private'}];state.bank[0].playerReview={synthetic:true};
+  const a=device(server,'A',state),before=copy(a.value);
+  await a.client.createFamily();const oldCode=a.client.code(),[oldPath,oldDoc]=[...server.docs.entries()][0];
+  assert.equal(a.client.status().credentialMode,'code');
+  await a.client.createPasswordFamily(PASSWORD);assert.equal(kind(a),'synced');unchangedState(a,before);
+  assert.equal(a.client.status().credentialMode,'password');assert.equal(a.client.code(),'');
+  assert.equal(Object.hasOwn(a.client.status(),'code'),false);
+  assert.deepEqual(server.docs.get(oldPath),oldDoc,'Switching credentials never writes the legacy family');
+  const [pathname,doc]=passwordDoc(server),stored=JSON.parse(a.storage.getItem(META));
+  assert.equal(stored.version,2);assert.match(stored.passwordSeed,/^[0-9a-f]{64}$/);
+  // Independently derive the protocol identity and decrypt the wire document.
+  const expectedSeed=pbkdf2Sync(PASSWORD.normalize('NFC'),'hanzi-magic-door:password-family:v1:'+PROJECT,600000,32,'sha256').toString('hex');
+  assert.equal(stored.passwordSeed,expectedSeed);
+  const id=sha('hanzi-magic-door:document:password-v1:'+expectedSeed);
+  assert.ok(pathname.endsWith('/families/hanzi-password-v1-'+id));
+  const key=await webcrypto.subtle.importKey('raw',Buffer.from(sha('hanzi-magic-door:key:password-v1:'+expectedSeed),'hex'),'AES-GCM',false,['decrypt']);
+  const plaintext=JSON.parse(Buffer.from(await webcrypto.subtle.decrypt({name:'AES-GCM',iv:Buffer.from(doc.fields.iv.stringValue,'base64')},
+    key,Buffer.from(doc.fields.payload.stringValue,'base64'))).toString('utf8'));
+  assertNoInk(plaintext);assert.equal(plaintext.scenesUnlocked,3);
+  assert.equal(plaintext.dailyCount,5,'Legacy dailyCount remains a wire-compatible field');
+  for(const serialized of [JSON.stringify(a.storage.writes),JSON.stringify(a.statuses),JSON.stringify(server.calls)]){
+    assert.ok(!serialized.includes(PASSWORD)&&!serialized.includes(PASSWORD.normalize('NFC')));
+  }
+  assert.ok(!JSON.stringify(a.statuses).includes(expectedSeed),'UI never exposes the saved derived capability');
+  assert.ok(!JSON.stringify(server.calls).includes(expectedSeed),'Cloud only receives an opaque locator and ciphertext');
+  const b=device(server,'B',progress('empty device',0)),patches=patchCount(server);
+  await b.client.joinPasswordFamily(PASSWORD.normalize('NFC'));
+  assert.equal(kind(b),'synced');assert.deepEqual(b.value,plaintext);assert.equal(patchCount(server),patches);
+  // Reload reads only the derived local identity, not a stored plaintext or a
+  // new slow derivation; loading the old code on another device still works.
+  const subtle=Object.create(webcrypto.subtle);
+  Object.defineProperty(subtle,'deriveBits',{value(){throw Error('Reload must not derive the password again');}});
+  for(const method of ['digest','importKey','encrypt','decrypt'])Object.defineProperty(subtle,method,{value:webcrypto.subtle[method].bind(webcrypto.subtle)});
+  const reload=device(server,'reload',b.value,{storage:b.storage,overrides:{crypto:{subtle,getRandomValues:webcrypto.getRandomValues.bind(webcrypto)}}});
+  assert.equal(reload.client.status().credentialMode,'password');await reload.client.start();
+  assert.equal(kind(reload),'synced');assert.equal(patchCount(server),patches);
+  const oldDevice=device(server,'legacy device',progress('legacy join',0));
+  await oldDevice.client.joinFamily(oldCode);assert.equal(kind(oldDevice),'synced');assert.equal(oldDevice.client.code(),oldCode);
+  assert.equal(oldDevice.value.scenesUnlocked,3);assert.equal(patchCount(server),patches);
+});
+
+test('weak, malformed and wrong passwords neither enroll the device nor create remote progress',async()=>{
+  const server=firestore(),d=device(server,'password validation'),before=copy(d.value);
+  for(const invalid of ['', 'short words', '123456789012', '１２３４５６７８９０１２', 'a'.repeat(12),
+    'a-b-c d-e-f!'.repeat(12), 'password\nwith control', '\ud800password-with-bad-unicode']){
+    await d.client.createPasswordFamily(invalid);assert.equal(kind(d),'error');
+    await d.client.joinPasswordFamily(invalid);assert.equal(kind(d),'error');
+  }
+  assert.equal(server.calls.length,0,'Invalid input must fail before any cloud call');
+  const source=device(server,'source');await source.client.createPasswordFamily(PASSWORD);const doc=copy(server.current());
+  await d.client.joinPasswordFamily(PASSWORD.toUpperCase());assert.equal(kind(d),'error');
+  assert.equal(d.client.status().connected,false);assert.equal(d.storage.getItem(META),null);unchangedState(d,before);
+  assert.equal(patchCount(server),1);assert.deepEqual(server.current(),doc);
+});
+
+test('a browser without password derivation can still join and read the original code document',async()=>{
+  const server=firestore(),source=device(server,'legacy source',progress('legacy code',3));
+  await source.client.createFamily();const code=source.client.code(),oldPath=server.calls[0].path;
+  const subtle=Object.fromEntries(['digest','importKey','encrypt','decrypt'].map(method=>[method,webcrypto.subtle[method].bind(webcrypto.subtle)]));
+  const d=device(server,'no password derivation',progress('legacy destination',0),{overrides:{crypto:{subtle,getRandomValues:webcrypto.getRandomValues.bind(webcrypto)}}});
+  const calls=server.calls.length;
+  await d.client.joinPasswordFamily(PASSWORD);assert.equal(kind(d),'error','Do not disable the independent legacy-code UI');
+  assert.equal(server.calls.length,calls);
+  await d.client.joinFamily(code);assert.equal(kind(d),'synced');assert.equal(d.client.code(),code);
+  assert.equal(d.value.scenesUnlocked,3);assert.equal(server.calls.at(-1).path,oldPath);assert.equal(patchCount(server),1);
+});
+
+test('duplicate password setup and create-only races never overwrite the first family',async()=>{
+  const server=firestore(),first=device(server,'winner',progress('winning family',4)),second=device(server,'race',progress('empty device',0));
+  const gate=server.holdNext(call=>call.client==='race'&&call.method==='PATCH');
+  const pending=second.client.createPasswordFamily(PASSWORD);
+  const create=await bounded(gate.arrived,'competing password setup');
+  assert.equal(create.url.searchParams.get('currentDocument.exists'),'false');
+  await first.client.createPasswordFamily(PASSWORD);assert.equal(kind(first),'synced');
+  const document=copy(server.current());gate.release();await bounded(pending,'lost password setup race');
+  assert.equal(kind(second),'error');assert.match(second.client.status().message,/已有云端进度.*接入/);
+  assert.equal(second.client.status().connected,false);assert.equal(second.storage.getItem(META),null);
+  assert.deepEqual(server.current(),document);assert.equal(second.value.scenesUnlocked,0);
+  const count=patchCount(server);await second.client.createPasswordFamily(PASSWORD);
+  assert.equal(patchCount(server),count,'Known existing documents never receive a create attempt');
+  await second.client.joinPasswordFamily(PASSWORD);assert.equal(kind(second),'synced');assert.equal(second.value.scenesUnlocked,4);
+  assert.equal(patchCount(server),count);assert.deepEqual(server.current(),document);
+});
+
+test('an existing connection remains unchanged if password setup is offline or its old progress is pending',async()=>{
+  const {server,a,b}=await pair(),oldA=a.client.code(),oldB=b.client.code();
+  const oldMetaA=a.storage.getItem(META),oldCloud=copy(server.current());
+  server.offline.add('A');await a.client.createPasswordFamily(PASSWORD);
+  assert.equal(kind(a),'offline');assert.equal(a.client.code(),oldA);assert.equal(a.storage.getItem(META),oldMetaA);
+  assert.deepEqual(server.current(),oldCloud);server.offline.delete('A');
+  changed(a,'pending legacy save',2);const beforePending=server.calls.length;
+  await a.client.createPasswordFamily(PASSWORD);
+  assert.equal(kind(a),'pending');assert.equal(a.client.code(),oldA);assert.equal(server.calls.length,beforePending);
+  await a.client.sync();assert.equal(kind(a),'synced');
+  changed(b,'conflicting legacy save',3);await b.client.sync();assert.equal(kind(b),'conflict');
+  const beforeConflict=server.calls.length;await b.client.joinPasswordFamily(PASSWORD);
+  assert.equal(kind(b),'conflict');assert.equal(b.client.code(),oldB);assert.equal(server.calls.length,beforeConflict);
+  assert.equal(b.value.scenesUnlocked,3);assert.equal(server.docs.size,1);
+});
+
+test('password join rechecks active writing after the read and retains the old code until safe',async()=>{
+  const server=firestore(),a=device(server,'source',progress('password family',4)),b=device(server,'writing',progress('old local',2));
+  await a.client.createPasswordFamily(PASSWORD);await b.client.createFamily();
+  const oldCode=b.client.code(),oldMeta=b.storage.getItem(META),before=copy(b.value),patches=patchCount(server);
+  const gate=server.holdNext(call=>call.client==='writing'&&call.method==='GET'&&call.path.includes('/hanzi-password-v1-'));
+  const join=b.client.joinPasswordFamily(PASSWORD);await bounded(gate.arrived,'pending password read');
+  b.busy=true;gate.release();await bounded(join,'password join while handwriting');
+  assert.equal(kind(b),'pending');assert.equal(b.client.code(),oldCode);assert.equal(b.storage.getItem(META),oldMeta);
+  assert.equal(b.applied.length,0);unchangedState(b,before);assert.equal(patchCount(server),patches);
+  b.busy=false;await b.client.joinPasswordFamily(PASSWORD);assert.equal(kind(b),'synced');
+  assert.equal(b.client.status().credentialMode,'password');assert.equal(b.value.scenesUnlocked,4);assert.equal(patchCount(server),patches);
+});
+
+test('password families preserve offline changes and still require an explicit conflict choice',async()=>{
+  const {server,a,b}=await passwordPair();const initial=copy(server.current());
+  server.offline.add('B');changed(b,'local offline password family',3);await b.client.sync();
+  assert.equal(kind(b),'offline');assert.deepEqual(server.current(),initial);assert.equal(b.value.scenesUnlocked,3);
+  changed(a,'newer password family',2);await a.client.sync();assert.equal(kind(a),'synced');
+  server.offline.delete('B');const remote=copy(server.current()),patches=patchCount(server);
+  await b.client.sync();assert.equal(kind(b),'conflict');assert.deepEqual(server.current(),remote);
+  assert.equal(b.value.scenesUnlocked,3);assert.equal(patchCount(server),patches);
+  await b.client.resolveConflict('remote');assert.equal(kind(b),'synced');assert.equal(b.value.scenesUnlocked,2);
+  assert.equal(patchCount(server),patches);assert.deepEqual(server.current(),remote);
+});
+
+test('failed password adoption preserves the durable conflict barrier across reload',async()=>{
+  const server=firestore(),a=device(server,'source',progress('cloud survives',2));await a.client.createPasswordFamily(PASSWORD);
+  const cloud=copy(server.current()),b=device(server,'failure',progress('local survives',3)),before=copy(b.value);
+  b.failApply='throw';await b.client.joinPasswordFamily(PASSWORD);assert.equal(kind(b),'conflict');unchangedState(b,before);
+  assert.equal(JSON.parse(b.storage.getItem(META)).requireConflict,true);
+  const calls=server.calls.length,reloaded=device(server,'reload after failed adoption',before,{storage:b.storage});
+  await reloaded.client.start();await reloaded.client.sync();assert.equal(kind(reloaded),'conflict');
+  assert.equal(reloaded.client.status().credentialMode,'password');assert.equal(server.calls.length,calls);
+  assert.deepEqual(server.current(),cloud);unchangedState(reloaded,before);
+  await reloaded.client.resolveConflict('remote');assert.equal(kind(reloaded),'synced');
+  assert.equal(reloaded.value.scenesUnlocked,2);assert.equal(patchCount(server),1);
+});
+
+test('disconnect during slow password derivation cannot recreate the connection',async()=>{
+  const server=firestore(),arrived=deferred(),release=deferred();
+  const subtle=Object.create(webcrypto.subtle);
+  for(const method of ['digest','importKey','encrypt','decrypt'])Object.defineProperty(subtle,method,{value:webcrypto.subtle[method].bind(webcrypto.subtle)});
+  Object.defineProperty(subtle,'deriveBits',{value:async(...args)=>{arrived.resolve();await release.promise;return webcrypto.subtle.deriveBits(...args);}});
+  const d=device(server,'cancel password',progress(),{overrides:{crypto:{subtle,getRandomValues:webcrypto.getRandomValues.bind(webcrypto)}}});
+  const before=copy(d.value),operation=d.client.createPasswordFamily(PASSWORD);
+  await bounded(arrived.promise,'password derivation');assert.equal(kind(d),'syncing');
+  d.client.disconnect();release.resolve();await bounded(operation,'cancelled password derivation');
+  assert.equal(kind(d),'off');assert.equal(d.storage.getItem(META),null);assert.equal(server.calls.length,0);unchangedState(d,before);
 });
 
 async function main(){

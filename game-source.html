@@ -2,7 +2,7 @@
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
-<meta name="game-version" content="2026.11.05.2">
+<meta name="game-version" content="2026.11.10.1">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>汉字魔法门</title>
 <link rel="stylesheet" href="game-feedback.css?v=2026.11.02.4">
@@ -65,6 +65,8 @@
   .cloud-sync .secondary{ background:#d5ddce; color:#3a493a; }
   .cloud-sync [hidden]{ display:none; }
   .cloud-sync .cloud-code{ font-family:ui-monospace,Menlo,monospace; font-size:13px; letter-spacing:.3px; }
+  .cloud-sync details, .optional-sentence{ margin:10px 0; font-size:12px; color:#514d40; }
+  .cloud-sync summary, .optional-sentence summary{ padding:7px 0; cursor:pointer; }
   .cloud-conflict{ border:1px solid #c38f6c; border-radius:8px; background:#fff1dc; padding:9px; margin-top:9px; }
   #parentTestInstruction{ font-weight:700; }
   #parentTestSummary{ color:#604d2c; }
@@ -358,7 +360,7 @@
   .panel .panel-header h2{ margin:0; }
   .panel h2{ font-family:'Ma Shan Zheng', cursive; color:var(--seal-dark); margin:0 0 12px; font-size:24px; }
   .panel label{ display:block; font-size:12px; color:#6b6355; margin:10px 0 4px; font-weight:700; }
-  .panel input[type=text]{
+  .panel input[type=text], .panel input[type=password]{
     width:100%; padding:9px 10px; border-radius:8px; border:1.5px solid #cfc4a8;
     font-family:'Baloo 2', sans-serif; font-size:14px; background:#fff;
     -webkit-user-select:text; user-select:text; -webkit-touch-callout:default;
@@ -392,8 +394,6 @@
     flex-shrink:0; border:0; border-radius:50%; font-size:28px; cursor:pointer; }
   .hint-text{ font-size:11.5px; color:#8a8272; margin-top:8px; line-height:1.5; }
   #fileInput{ display:none; }
-  .daily-count-row{ display:flex; align-items:center; gap:8px; margin-top:6px; }
-  .daily-count-row input[type=number]{ width:70px; padding:8px; border-radius:8px; border:1.5px solid #cfc4a8; }
   #batchInput{
     width:100%; box-sizing:border-box; padding:9px 10px; border-radius:8px;
     border:1.5px solid #cfc4a8; font-family:inherit; font-size:14px; line-height:1.6; resize:vertical;
@@ -544,9 +544,9 @@
   </div>
 
   <div class="finale" id="finale">
-    <div class="big">今天的门都推开啦！</div>
+    <div class="big">这一关结束啦！</div>
     <p id="finaleDetail" style="white-space:pre-line;"></p>
-    <button class="game-btn btn-submit" id="restartBtn" style="margin-top:8px;">再来一轮</button>
+    <button class="game-btn btn-submit" id="restartBtn" style="margin-top:8px;">继续下一关</button>
   </div>
   <div class="player-dispute" id="playerDisputeCard" hidden>
     <div class="player-dispute-thumb" aria-hidden="true">
@@ -568,22 +568,35 @@
     <div class="cloud-sync">
       <b>跨设备同步</b>
       <p id="cloudSyncStatus" role="status">尚未开启，学习记录保存在这台设备。</p>
-      <p>先在有学习记录的 iPad 开启，再在另一台设备粘贴相同同步码。学习进度、家长加入的字和设置会加密同步；笔迹与误判标记留在本机。</p>
-      <button id="cloudSyncCreateBtn">为这份进度开启同步</button>
-      <div id="cloudSyncCodeWrap" hidden>
-        <label for="cloudSyncCode">这份进度的同步码</label>
-        <input type="text" class="cloud-code" id="cloudSyncCode" readonly aria-label="这份进度的同步码">
+      <p>先在有学习记录的 iPad 设一个专用于游戏的家庭密码。以后在其他设备打开同一个网址，输入同样的密码即可接入。</p>
+      <div id="cloudSyncPasswordSetup">
+        <label for="cloudSyncPassword">家庭密码（至少 12 个字符，可用中文）</label>
+        <input type="password" id="cloudSyncPassword" placeholder="输入你自己设定的家庭密码" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="cloudSyncPasswordHint">
+        <p id="cloudSyncPasswordHint">可以用几个不相干的词组合，区分大小写。</p>
         <div class="cloud-sync-actions">
-          <button id="cloudSyncCopyBtn">复制同步码</button>
-          <button class="secondary" id="cloudSyncNowBtn">立即同步</button>
-          <button class="secondary" id="cloudSyncDisconnectBtn">断开这台设备</button>
+          <button id="cloudSyncCreateBtn">用这个密码首次开启</button>
+          <button class="secondary" id="cloudSyncJoinBtn">用这个密码接入</button>
         </div>
-        <p>同步码用于连接这份家庭进度，请只交给自己的家人。断开会保留本机学习记录。</p>
       </div>
-      <label for="cloudSyncJoinInput">接上另一台设备的进度</label>
-      <input type="text" class="cloud-code" id="cloudSyncJoinInput" placeholder="粘贴另一台设备的同步码" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="60">
-      <div class="cloud-sync-actions"><button id="cloudSyncJoinBtn">接入这份进度</button></div>
-      <p>接入前会保留本机进度备份。换设备从一道完整题开始，正在写的笔迹和教学倒计时不会跨设备接力。</p>
+      <div class="cloud-sync-actions" id="cloudSyncConnectedActions" hidden>
+        <button class="secondary" id="cloudSyncNowBtn">立即同步</button>
+        <button class="secondary" id="cloudSyncDisconnectBtn">断开这台设备</button>
+      </div>
+      <div id="cloudSyncCodeWrap" hidden>
+        <label for="cloudSyncCode">当前连接使用旧同步码</label>
+        <input type="text" class="cloud-code" id="cloudSyncCode" readonly>
+        <p>改用家庭密码前，可以先复制旧码留存。旧进度仍会保留；其他设备要改用新密码接入。</p>
+        <div class="cloud-sync-actions">
+          <button class="secondary" id="cloudSyncCopyBtn">复制旧同步码</button>
+        </div>
+      </div>
+      <details>
+        <summary>使用以前的同步码</summary>
+        <label for="cloudSyncJoinInput">旧同步码</label>
+        <input type="text" class="cloud-code" id="cloudSyncJoinInput" placeholder="粘贴以前的同步码" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="60">
+        <div class="cloud-sync-actions"><button class="secondary" id="cloudSyncLegacyJoinBtn">用旧同步码接入</button></div>
+      </details>
+      <p>学习进度和家长加入的字会加密同步。笔迹与误判标记留在本机；接入已有进度前会保留本机备份。</p>
       <div class="cloud-conflict" id="cloudSyncConflict" hidden>
         <p>两台设备各有新进度，已暂停覆盖。两份会先保留本机备份，再按你的选择继续。</p>
         <div class="cloud-sync-actions">
@@ -611,7 +624,7 @@
       「奇迹的迹」= 组词"奇迹"、要默写"迹"。分隔符用 ；，、空格或换行都行。<br>
       也可以只写一个字（就没有组词提示），或写「单薄的薄 bó」手动指定拼音。<br>
       拼音自动填好；<b style="color:var(--seal);">标红的是多音字</b>，点一下可以换读音。
-      <br>今天加入的字优先默写；重复字只提前复习，保留原来的学习记录。新一批排在旧队列前面。
+      <br>今天加入的字优先默写。每关通过 10 个字，同日继续下一关会优先练剩余的字。重复字只提前复习，保留原来的学习记录。
     </p>
 
     <label>逐个添加</label>
@@ -621,8 +634,12 @@
       <input type="text" id="wordInput" placeholder="词语（可选）">
       <button id="addCharBtn">加入</button>
     </div>
-    <label for="sentenceInput">句子提示（选填，常用词语会自动配好）</label>
-    <input type="text" id="sentenceInput" placeholder="例如：我们去公园放风筝。" maxlength="100">
+    <p class="hint-text">有组词就自动配例句，孩子点“句子提示”可以听。</p>
+    <details class="optional-sentence">
+      <summary>自定义例句（选填）</summary>
+      <label for="sentenceInput">例句</label>
+      <input type="text" id="sentenceInput" placeholder="例如：我们去公园放风筝。" maxlength="100">
+    </details>
     <div class="queue-list" id="queueList"></div>
 
     <label>需要家长讲解（今天错了 3 次，已经停下来）</label>
@@ -631,11 +648,8 @@
     <label>已永久掌握（在 3 个不同的日子写对过，不再出现）</label>
     <div class="mastered-list" id="masteredList"></div>
 
-    <label>每天要通过几个字才算完成</label>
-    <div class="daily-count-row">
-      <input type="number" id="dailyCount" min="1" max="30" value="5">
-      <span style="font-size:12px;color:#6b6355;">个字（真正通过，不含放弃重来的）</span>
-    </div>
+    <label>关卡目标</label>
+    <div style="font-size:12px;color:#6b6355;">每关通过 10 个字。家长加入的字会优先安排，剩下的留到下一关。</div>
 
     <label>笔迹记录（判得不对的，标一下发给我）<span id="inkCount" style="font-weight:400;color:#8a8272;"></span></label>
     <div class="ink-list" id="inkList"></div>
@@ -658,7 +672,7 @@
       字库会按"记忆规律"自动滚动：今天答错、靠教学环节才写对的字，会更快安排复习；一次就写对的字，安排复习的间隔会拉长。你随时可以在这里加"今天最想让孩子先练"的字，这些字会排在最前面。
     </p>
 
-    <p class="hint-text" id="gameVersion">版本 2026.11.05.2</p>
+    <p class="hint-text" id="gameVersion">版本 2026.11.10.1</p>
   </div>
 </div>
 
@@ -728,13 +742,14 @@ function defaultBank(){
 // device that has already played keeps its old characters for ever and never sees the new
 // set — the change would reach nobody who actually uses the game.
 const BANK_VERSION = 5;
-const GAME_VERSION = '2026.11.05.2';
+const ROUND_GOAL = 10;
+const GAME_VERSION = '2026.11.10.1';
 
 let state = {
   bank: defaultBank(),
   bankVersion: BANK_VERSION,
   priorityQueue: [],   // chars typed in today by parent, always go first
-  dailyCount: 5,        // how many characters must be PASSED (not just attempted) to finish today
+  dailyCount: ROUND_GOAL, // retained for compatibility with older saves and sync
   scenesUnlocked: 0,    // how many magic-world scenes have been unlocked so far (persisted)
 };
 
@@ -892,7 +907,7 @@ function saveState(){
 function migrateState(s){
   if(!s || !Array.isArray(s.bank)) return null;
   delete s.daysElapsed;
-  if(typeof s.dailyCount !== 'number') s.dailyCount = 5;
+  if(!Number.isInteger(s.dailyCount) || s.dailyCount < 1 || s.dailyCount > 30) s.dailyCount = ROUND_GOAL;
   if(typeof s.scenesUnlocked !== 'number') s.scenesUnlocked = 0;
   if(!Array.isArray(s.priorityQueue)) s.priorityQueue = [];
   // Undated entries are from the old queue. Adopt them once, without changing
@@ -962,7 +977,7 @@ function loadSavedState(){
 }
 
 // ---------- session runtime ----------
-let passedCount = 0;          // characters PASSED so far this session (goal: state.dailyCount)
+let passedCount = 0;          // characters formally passed in the current level
 let currentItem = null;       // the character object currently on screen
 let currentMode = 'free';     // 'free' | 'teaching' | 'retest'
 let currentRound = 1;         // 1 or 2, only meaningful in teaching mode
@@ -2391,7 +2406,6 @@ const inkDownloadBtn = document.getElementById('inkDownloadBtn');
 const inkClearBtn = document.getElementById('inkClearBtn');
 const speakBtn = document.getElementById('speakBtn');
 const sentenceBtn = document.getElementById('sentenceBtn');
-const dailyCountInput = document.getElementById('dailyCount');
 const saveProgressBtn = document.getElementById('saveProgressBtn');
 const loadProgressBtn = document.getElementById('loadProgressBtn');
 const fileInput = document.getElementById('fileInput');
@@ -2506,15 +2520,14 @@ function showSyncedFinale(){
   renderProgressPath(); renderPlayerDispute();
 }
 function presentSyncedProgress(){
-  if(syncRoundCompleted && !unfinishedParentEntries().length){ showSyncedFinale(); return; }
-  if(syncRoundCompleted){ syncRoundId = ''; syncRoundDay = todayStr(); syncRoundCompleted = syncSceneAwarded = false; }
-  if(passedCount >= state.dailyCount && !unfinishedParentEntries().length){
+  if(syncRoundCompleted){ showSyncedFinale(); return; }
+  if(passedCount >= ROUND_GOAL){
     // Completion was earned but the child had not pressed Continue to settle it.
     // Restore the action without replaying a pass or awarding a scene on a pull.
     setWritingView(false); setDoorOpen(); showGlowChar('', false);
     submitBtn.style.display = clearBtn.style.display = 'none';
     resultBanner.textContent = '已接上这轮的通过记录'; resultBanner.className = 'result-banner correct';
-    statusLine.textContent = '点“继续”完成本轮结算';
+    statusLine.textContent = '点“继续”完成本关结算';
     continueBtn.classList.add('show'); renderProgressPath(); return;
   }
   loadNextDoor();
@@ -2533,35 +2546,53 @@ function applySyncedProgress(remote){
     parentQueueChanged = false; continueBtn.classList.remove('show');
     finale.classList.remove('show'); playzone.classList.remove('hide'); clearCanvas();
     restoreSyncedRound(); applyScene(state.scenesUnlocked);
-    dailyCountInput.value = state.dailyCount;
     renderQueueList(); renderMasteredList(); renderStuckList();
     presentSyncedProgress();
   } finally { syncApplying = false; }
 }
+let syncUiBusy = false;
 function renderCloudSyncStatus(){
   const status = cloudSyncController ? cloudSyncController.status() : {kind:'off',connected:false,message:'尚未开启，学习记录保存在这台设备。'};
+  const legacyCode = status.connected && cloudSyncController ? cloudSyncController.code() : '';
   document.getElementById('cloudSyncStatus').textContent = progressSaveNotice || status.message;
-  document.getElementById('cloudSyncCodeWrap').hidden = !status.connected;
-  document.getElementById('cloudSyncCreateBtn').hidden = !!status.connected;
+  document.getElementById('cloudSyncPasswordSetup').hidden = status.connected && status.credentialMode === 'password';
+  document.getElementById('cloudSyncConnectedActions').hidden = !status.connected;
+  document.getElementById('cloudSyncCodeWrap').hidden = !legacyCode;
+  document.getElementById('cloudSyncCreateBtn').textContent = legacyCode ? '用这个密码另建同步' : '用这个密码首次开启';
   document.getElementById('cloudSyncConflict').hidden = status.kind !== 'conflict';
-  document.getElementById('cloudSyncCode').value = cloudSyncController ? cloudSyncController.code() : '';
-  const disabled = !cloudSyncController || status.kind === 'syncing' || status.kind === 'unsupported';
-  for(const id of ['cloudSyncCreateBtn','cloudSyncJoinBtn','cloudSyncNowBtn','cloudKeepLocalBtn','cloudUseRemoteBtn']) document.getElementById(id).disabled = disabled;
+  document.getElementById('cloudSyncCode').value = legacyCode || '';
+  const disabled = !cloudSyncController || syncUiBusy || status.kind === 'syncing' || status.kind === 'unsupported';
+  for(const id of ['cloudSyncCreateBtn','cloudSyncJoinBtn','cloudSyncLegacyJoinBtn','cloudSyncNowBtn','cloudKeepLocalBtn','cloudUseRemoteBtn']) document.getElementById(id).disabled = disabled;
 }
 function syncTick(){
-  if(!cloudSyncController || !cloudSyncController.status().connected || parentValidation) return;
+  if(!cloudSyncController || syncUiBusy || !cloudSyncController.status().connected || parentValidation) return;
   if(progressSaveNotice){ saveState(); if(progressSaveNotice) return; }
   Promise.resolve(cloudSyncController.sync()).catch(() => {});
 }
 async function cloudSyncAction(action, adopt){
-  if(!cloudSyncController) return;
+  if(!cloudSyncController || syncUiBusy) return;
   if(adopt && !syncQuestionSafe()){
     document.getElementById('cloudSyncStatus').textContent = '请先完成正在进行的练习，再接入或切换进度。'; return;
   }
+  syncUiBusy = true;
   syncExplicitAdopt = !!adopt;
+  renderCloudSyncStatus();
+  let failed = false;
   try{ await action(); }
-  finally{ syncExplicitAdopt = false; renderCloudSyncStatus(); }
+  catch(_){ failed = true; }
+  finally{ syncExplicitAdopt = false; syncUiBusy = false; renderCloudSyncStatus(); }
+  if(failed){
+    document.getElementById('cloudSyncStatus').textContent = '这次没有完成同步，本机仍可继续学习。'; return;
+  }
   if(cloudSyncController.status().connected && !['conflict','error'].includes(cloudSyncController.status().kind)) saveState();
+}
+function syncWithCredential(method, inputId, adopt){
+  return cloudSyncAction(() => {
+    const input = document.getElementById(inputId);
+    const value = input.value;
+    input.value = '';
+    return cloudSyncController[method](value);
+  }, adopt);
 }
 function initProgressSync(){
   try{
@@ -2576,8 +2607,9 @@ function initProgressSync(){
     document.getElementById('cloudSyncStatus').textContent = '这个浏览器暂时无法开启同步，游戏和本机记录仍可使用。';
   }
 }
-onTap(document.getElementById('cloudSyncCreateBtn'), () => cloudSyncAction(() => cloudSyncController.createFamily(), false));
-onTap(document.getElementById('cloudSyncJoinBtn'), () => cloudSyncAction(() => cloudSyncController.joinFamily(document.getElementById('cloudSyncJoinInput').value), true));
+onTap(document.getElementById('cloudSyncCreateBtn'), () => syncWithCredential('createPasswordFamily', 'cloudSyncPassword', false));
+onTap(document.getElementById('cloudSyncJoinBtn'), () => syncWithCredential('joinPasswordFamily', 'cloudSyncPassword', true));
+onTap(document.getElementById('cloudSyncLegacyJoinBtn'), () => syncWithCredential('joinFamily', 'cloudSyncJoinInput', true));
 onTap(document.getElementById('cloudSyncNowBtn'), syncTick);
 onTap(document.getElementById('cloudKeepLocalBtn'), () => cloudSyncAction(() => cloudSyncController.resolveConflict('local'), false));
 onTap(document.getElementById('cloudUseRemoteBtn'), () => cloudSyncAction(() => cloudSyncController.resolveConflict('remote'), true));
@@ -2713,8 +2745,7 @@ function pickNextChar(){
 }
 
 function renderProgressPath(){
-  const target = Math.max(state.dailyCount, passedCount + unfinishedParentEntries().length);
-  progressPath.innerHTML = Array.from({length: target}).map((_, i) => {
+  progressPath.innerHTML = Array.from({length: ROUND_GOAL}).map((_, i) => {
     const cls = i < passedCount ? 'progress-dot done' : 'progress-dot';
     return `<div class="${cls}"></div>`;
   }).join('');
@@ -2863,7 +2894,7 @@ function speakSentence(){
   if(!currentItem) return;
   const sentence = sentenceFor(currentItem);
   if(sentence) speakText(sentence, sentenceBtn);
-  else statusLine.textContent = '这个词还没有配句子，请爸爸妈妈在设置里补一句提示。';
+  else statusLine.textContent = '这题可以点小喇叭听读音。';
 }
 
 // The demo character overlays the 米字格 at exactly the size and position of the square the
@@ -2897,10 +2928,9 @@ function hintFor(item){
 // ---------- main flow ----------
 function loadNextDoor(){
   if(typeof parentValidation !== 'undefined' && parentValidation) return;
-  // Hitting the day's target ends the day, full stop. Waiting for every interleaved retest
-  // to also come good meant the child could have written his five characters, be told he was
-  // done by the dots, and still be handed more — the retests just carry over to tomorrow.
-  if(passedCount >= state.dailyCount && !unfinishedParentEntries().length){
+  // Cap formal passes before choosing any new question. Unfinished priority
+  // requests and pending retests remain available for the next level.
+  if(passedCount >= ROUND_GOAL){
     showFinale();
     return;
   }
@@ -3395,11 +3425,11 @@ onTap(continueBtn, function(){
 });
 
 onTap(restartBtn, function(){
-  // Another round on the same afternoon is NOT another day — the review intervals are keyed
-  // to the calendar now, so this only resets the counters for this sitting.
+  // The next level on the same day keeps waiting retests and their actual
+  // filler counts. Calendar-based learning history and priority dates stay intact.
+  if(syncRoundDay !== todayStr()) pendingRetests = [];
   passedCount = 0;
   syncRoundId = ''; syncRoundDay = todayStr(); syncRoundCompleted = syncSceneAwarded = false;
-  pendingRetests = [];
   priorityConsumedToday = new Set();
   selectionSession = window.HanziPracticeSelector.createSession();
   applyScene(state.scenesUnlocked);
@@ -3415,8 +3445,9 @@ onTap(closePanelBtn, () => {
   panelOverlay.classList.remove('show');
   if(!parentQueueChanged){ if(typeof syncTick === 'function') syncTick(); return; }
   parentQueueChanged = false;
+  if(passedCount >= ROUND_GOAL){ if(typeof syncTick === 'function') syncTick(); return; }
   if(finale.classList.contains('show')){
-    syncRoundId = ''; syncRoundDay = todayStr(); syncRoundCompleted = syncSceneAwarded = false;
+    syncRoundCompleted = false;
     finale.classList.remove('show');
     playzone.classList.remove('hide');
     loadNextDoor();
@@ -3475,8 +3506,8 @@ function renderQueueList(){
     const sentence = sentenceFor(p);
     return `
     <div class="queue-item">
-      <span>${escapeText(p.char)}（${py}）${p.word ? ' · '+escapeText(p.word) : ''}<small>${status}${sentence ? ' · 已配句子' : ' · 可补句子'}</small></span>
-      <span class="queue-actions"><button class="edit-sentence" data-i="${i}">${sentence ? '改句子' : '补句子'}</button><button class="del" data-i="${i}">删除</button></span>
+      <span>${escapeText(p.char)}（${py}）${p.word ? ' · '+escapeText(p.word) : ''}<small>${status}${sentence ? (p.sentence ? ' · 自定义例句' : ' · 自动例句') : ''}</small></span>
+      <span class="queue-actions">${sentence ? `<button class="edit-sentence" data-i="${i}">换例句</button>` : ''}<button class="del" data-i="${i}">删除</button></span>
     </div>`;
   }).join('') || '<div style="font-size:12px;color:#8a8272;">暂无今日优先字</div>';
 
@@ -3501,11 +3532,14 @@ function renderQueueList(){
   queueList.querySelectorAll('.edit-sentence').forEach(el => {
     onTap(el, () => {
       const it = state.priorityQueue[Number(el.dataset.i)];
-      const sentence = prompt('写一句能说明词语意思的短句，孩子点“句子提示”时会听到：', sentenceFor(it) || '');
+      const sentence = prompt('可以换一句提示；清空就恢复自动例句。', sentenceFor(it) || '');
       if(sentence === null) return;
-      it.sentence = sentence.trim().slice(0,100);
+      const custom = sentence.trim().slice(0,100);
+      if(custom) it.sentence = custom; else delete it.sentence;
       const bankItem = state.bank.find(b => b.char === it.char);
-      if(bankItem) bankItem.sentence = it.sentence;
+      if(bankItem && bankItem.word === it.word){
+        if(custom) bankItem.sentence = custom; else delete bankItem.sentence;
+      }
       saveState();
       renderQueueList();
     });
@@ -3532,9 +3566,9 @@ function renderStuckList(){
       it.wrongToday = 0;      // a fresh three tries, now that it's been explained
       saveState();
       renderStuckList();
-      // If the day had already ended for lack of anything to practise, reopen it.
-      if(finale.classList.contains('show')){
-        syncRoundId = ''; syncRoundDay = todayStr(); syncRoundCompleted = syncSceneAwarded = false;
+      // A level stopped early for lack of work can resume; a full level stays complete.
+      if(finale.classList.contains('show') && passedCount < ROUND_GOAL){
+        syncRoundCompleted = false;
         finale.classList.remove('show');
         playzone.classList.remove('hide');
         loadNextDoor();
@@ -3687,7 +3721,7 @@ onTap(batchAddBtn, () => {
   const { items, bad } = parseBatch(batchInput.value);
   const added = enqueueParentItems(items);
   const polyphonic = items.filter(it => it.alts.length > 1).length;
-  let msg = added ? `${added} 个字已排到今天最前面，重复字保留原记录` : '没认出任何字';
+  let msg = added ? `已加入 ${added} 个字，本关满 10 后剩余字留给下一关` : '没认出任何字';
   if(polyphonic) msg += `，其中 ${polyphonic} 个多音字（标红的），点一下确认读音`;
   if(bad.length) msg += `；没认出：${bad.join('、')}`;
   if(bad.length && !window.PINYIN_MAP) msg += '；输入已保留，拼音表加载后可以再点加入';
@@ -3695,11 +3729,6 @@ onTap(batchAddBtn, () => {
   if(items.length && !bad.length) batchInput.value = '';
   saveState();
   renderQueueList();
-});
-
-dailyCountInput.addEventListener('change', () => {
-  const v = parseInt(dailyCountInput.value, 10);
-  if(v > 0){ state.dailyCount = v; saveState(); }
 });
 
 onTap(saveProgressBtn, () => {
@@ -3746,7 +3775,6 @@ fileInput.addEventListener('change', (e) => {
         renderQueueList();
         renderMasteredList();
         renderStuckList();
-        dailyCountInput.value = state.dailyCount || 5;
         passedCount = 0;
         syncRoundId = ''; syncRoundDay = todayStr(); syncRoundCompleted = syncSceneAwarded = false;
         if(cloudSyncController && cloudSyncController.status().connected) restoreSyncedRound();
@@ -3797,15 +3825,13 @@ function showFinale(bankEmpty){
   showDemoGlyph('', false);
   playzone.classList.add('hide');
   finale.classList.add('show');
+  renderProgressPath();
   renderPlayerDispute();
   if(bankEmpty){
-    // Two very different reasons the pool can run dry, and they need opposite responses from
-    // the parent: everything mastered means add more characters, everything parked means go
-    // and explain the ones waiting.
     const stuck = state.bank.filter(b => !b.retired && isStuck(b));
     finaleDetail.textContent = stuck.length
-      ? `今天推开了 ${passedCount} 扇门。剩下的「${stuck.map(b=>b.char).join('、')}」在等爸爸妈妈讲一讲——讲完在 ⚙️ 里点「我讲过了」，今天还能继续闯。`
-      : `字库里的字全部永久掌握啦！点 ⚙️ 加新的字，就能继续闯关。今天推开了 ${passedCount} 扇门。`;
+      ? `这关通过了 ${passedCount} 个字，现在没有可练的字了。「${stuck.map(b=>b.char).join('、')}」在等爸爸妈妈讲一讲。`
+      : `这关通过了 ${passedCount} 个字，现在没有可练的新字或复习题了。可以休息，也可以请家长加字继续练。`;
     if(cloudSyncController && cloudSyncController.status().connected) saveState();
     return;
   }
@@ -3818,7 +3844,9 @@ function showFinale(bankEmpty){
   const masteredNote = justMastered.length
     ? `\n「${justMastered.map(b => b.char).join('、')}」已经在 ${MASTERED_DAYS} 个不同的日子写对了，永久掌握，不用再练啦！`
     : '';
-  finaleDetail.textContent = `今天推开了 ${passedCount} 扇山门！今天的${sceneName}探索完成啦。` + masteredNote;
+  const remaining = unfinishedParentEntries().length;
+  const nextNote = remaining ? `\n还有 ${remaining} 个家长安排的字，下一关优先练。` : '';
+  finaleDetail.textContent = `这关推开了 ${passedCount} 扇山门！${sceneName}探索完成啦。` + nextNote + masteredNote;
   if(!syncSceneAwarded){
     syncSceneAwarded = true;
     state.scenesUnlocked += 1;
@@ -3835,7 +3863,6 @@ loadParentTestInkLog();
 initMountainJourney();
 initProgressSync();
 applyScene(state.scenesUnlocked);
-dailyCountInput.value = state.dailyCount;
 renderQueueList();
 renderMasteredList();
 renderStuckList();

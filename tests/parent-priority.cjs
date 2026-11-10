@@ -8,7 +8,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 const root = path.resolve(__dirname, '..');
 const read = file => fs.readFileSync(path.join(root, file), 'utf8');
-const html = read('index.html');
+const html = process.argv.includes('--source') ? require('../tools/build-page.cjs').buildPage().html : read('index.html');
 const clone = value => JSON.parse(JSON.stringify(value));
 function section(start, end) {
   const a = html.indexOf(start), b = html.indexOf(end, a);
@@ -33,7 +33,7 @@ function element(id) {
 const ui = {};
 for (const id of ['progressPath', 'resultBanner', 'continueBtn', 'timerRing', 'pinyinTag', 'statusLine',
   'submitBtn', 'clearBtn', 'charInput', 'pinyinInput', 'wordInput', 'sentenceInput', 'batchInput', 'batchMsg',
-  'addCharBtn', 'batchAddBtn', 'closePanelBtn', 'panelOverlay', 'finale', 'playzone']) ui[id] = element(id);
+  'addCharBtn', 'batchAddBtn', 'closePanelBtn', 'restartBtn', 'panelOverlay', 'finale', 'playzone']) ui[id] = element(id);
 const saved = new Map(), handlers = new Map();
 const math = Object.create(Math); math.random = seeded(70);
 const feedback = { reset() {}, celebrate() {}, playCorrect() {}, playWrong() {} };
@@ -54,17 +54,18 @@ run(section('function newBankItem(', '// ---------- freehand drawing surface'));
 run(section('function parentPriorityEntries(){', '// ---------- door state ----------'));
 run(section('function hintFor(item){', '// ---------- main flow ----------'));
 run(section('function feedbackCall(', 'let activeSpeech = null;'));
-run(`let strokesPoints=[];let isDrawing=false;let finaleCalls=0;
+run(`let strokesPoints=[];let isDrawing=false;let finaleCalls=0;let finaleBankEmpty=false;
   function stopPromptSpeech(){} function setDoorClosed(){} function setDoorOpen(){}
   function showGlowChar(){} function showDemoGlyph(){} function setWritingView(){} function renderQueueList(){}
   function clearCanvas(){strokesPoints=[];} function getCharData(){return Promise.resolve({});}
   function startTeachingRound(){} function applyScene(){}
-  function showFinale(){finaleCalls++;finale.classList.add('show');}`);
+  function showFinale(bankEmpty){finaleCalls++;finaleBankEmpty=!!bankEmpty;finale.classList.add('show');}`);
 run(section('function loadNextDoor(){', 'function startTeachingRound(){'));
 run(section('let pinyinLoading =', 'function renderQueueList(){'));
 run(section('const PY_LETTERS =', 'onTap(addCharBtn,'));
 run(section('onTap(addCharBtn,', 'onTap(inkCopyBtn,'));
-run(section('onTap(batchAddBtn,', "dailyCountInput.addEventListener('change'"));
+run(section('onTap(batchAddBtn,', 'onTap(saveProgressBtn,'));
+run(section('onTap(restartBtn,', '// ---------- settings panel ----------'));
 run(section('onTap(closePanelBtn,', '// ---------- pinyin ----------'));
 const initialState = plain('state');
 const TODAY = run('todayStr()');
@@ -76,7 +77,8 @@ function reset(state = initialState) {
   run(`state=testState;passedCount=0;currentItem=null;currentMode='free';currentRound=1;
     stepIndex=0;stepAttempts=0;pendingRetests=[];priorityConsumedToday=new Set();
     selectionSession=window.HanziPracticeSelector.createSession(testRandom);
-    currentParentRequestId=null;parentQueueChanged=false;strokesPoints=[];isDrawing=false;finaleCalls=0;`);
+    currentParentRequestId=null;parentQueueChanged=false;strokesPoints=[];isDrawing=false;finaleCalls=0;finaleBankEmpty=false;
+    syncRoundId='';syncRoundDay=todayStr();syncRoundCompleted=false;syncSceneAwarded=false;`);
   for (const el of Object.values(ui)) { el.value = ''; el.innerHTML = ''; el.classList.clear(); }
 }
 function enqueue(items) { context.testItems = items; return run('enqueueParentItems(testItems)'); }
@@ -88,6 +90,7 @@ const bankItem = char => { context.testChar = char; return plain('state.bank.fin
 const queue = () => plain('state.priorityQueue');
 const priority = () => plain('nextParentPriority() || null');
 const close = () => handlers.get('closePanelBtn')();
+const restart = () => handlers.get('restartBtn')();
 
 // Enqueue updates context in place, not the accumulated learning record.
 const keep = { box: 4, interval: 14, lastSeen: '2026-10-12', history: [{ day: '2026-10-12', outcome: 'first-try' }],
@@ -138,19 +141,39 @@ assert.equal(queue().filter(item => item.char === '慧').length, 1);
 assert.equal(bankItem('警').word, '警察');
 assert.ok(saved.has(run('SAVE_KEY')));
 
-// Every requested item runs before random questions, even past the five-pass goal.
-reset(); enqueueChars('慧警藏器燃澡霎薄');
-for (let i = 0; i < 8; i++) {
+// Every requested item runs before random questions, but a level ends at ten
+// actual passes. The remaining same-day requests keep their order and identity.
+const batch = [...'慧警藏器燃澡霎薄燕辩类收历'];
+reset({ ...initialState, dailyCount:30 }); enqueueChars(batch.join(''));
+const originalRequests = queue();
+for (let i = 0; i < 10; i++) {
   next();
   assert.equal(run('finaleCalls'), 0);
-  assert.equal(current().char, [...'慧警藏器燃澡霎薄'][i]);
-  assert.equal((ui.progressPath.innerHTML.match(/class="progress-dot/g) || []).length, 8);
+  assert.equal(current().char, batch[i]);
+  assert.equal((ui.progressPath.innerHTML.match(/class="progress-dot/g) || []).length, 10);
   answer(true);
 }
-assert.equal(run('passedCount'), 8);
-assert.ok(queue().every(item => item.completedDay === TODAY));
+assert.equal(run('passedCount'), 10);
+assert.ok(queue().slice(0, 10).every(item => item.completedDay === TODAY));
 next(); assert.equal(run('finaleCalls'), 1);
-assert.equal(run('state.dailyCount'), 5, 'Do not overwrite the parent daily-count setting');
+assert.equal(run('state.dailyCount'), 30, 'Leave a compatible saved legacy goal intact');
+assert.deepEqual(queue().slice(10), originalRequests.slice(10), 'Do not consume the next level’s priority requests');
+restart(); assert.equal(run('passedCount'), 0); assert.equal(ui.finale.classList.contains('show'), false);
+for (const expected of originalRequests.slice(10)) {
+  assert.equal(current().char, expected.char);
+  assert.equal(run('currentParentRequestId'), expected.requestId);
+  answer(true); next();
+}
+assert.equal(run('passedCount'), 3);
+assert.ok(queue().every(item => item.completedDay === TODAY));
+
+// A smaller legacy target does not end a live level early, but an exhausted
+// pool with fewer than ten available characters ends without repeating passes.
+reset({ ...initialState, dailyCount:1, bank:initialState.bank.slice(0, 2) });
+next(); const firstOfTwo = current().char; answer(true); next();
+assert.notEqual(current().char, firstOfTwo); assert.equal(run('finaleCalls'), 0);
+answer(true); next();
+assert.equal(run('passedCount'), 2); assert.equal(run('finaleCalls'), 1); assert.equal(run('finaleBankEmpty'), true);
 
 // A mastered/repeated character gets a new test, not a reset of its old passes.
 reset();
@@ -214,6 +237,7 @@ reset(); enqueueChars('龙山石林'); next();
 const delayedId = run('currentParentRequestId');
 answer(false); run('stepIndex=TEACHING_STEPS.length-1;'); answer(true);
 assert.equal(plain('pendingRetests')[0].parentRequestId, delayedId);
+assert.equal(run('passedCount'), 0, 'Blind teaching success is not a formal pass');
 assert.equal(queue()[0].completedDay, null);
 next(); assert.equal(current().char, '山'); answer(true);
 next(); assert.equal(current().char, '石'); answer(true);
@@ -222,6 +246,20 @@ next(); assert.equal(current().char, '林'); answer(true);
 next(); assert.equal(current().char, '龙'); assert.equal(run('currentMode'), 'retest');
 assert.equal(run('currentParentRequestId'), delayedId); answer(true);
 assert.equal(queue().find(item => item.char === '龙').completedDay, TODAY);
+
+// A delayed retest at the boundary neither counts as a pass nor takes an
+// eleventh slot. Next level can use the same retest and its first real filler.
+reset(); enqueueChars('龙山石'); run('passedCount=9;'); next();
+const carriedRetestId = run('currentParentRequestId');
+answer(false); run('stepIndex=TEACHING_STEPS.length-1;'); answer(true);
+assert.equal(run('passedCount'), 9);
+next(); assert.equal(current().char, '山'); answer(true); next();
+assert.equal(run('finaleCalls'), 1); assert.equal(run('passedCount'), 10);
+assert.equal(plain('pendingRetests')[0].fillersSeen, 1);
+restart(); assert.equal(current().char, '石'); answer(true); next();
+assert.equal(current().char, '龙'); assert.equal(run('currentMode'), 'retest');
+assert.equal(run('currentParentRequestId'), carriedRetestId); answer(true);
+assert.equal(run('passedCount'), 2);
 
 // Replacing a request while its old blind retest waits cannot consume the new
 // request. The existing retest finishes with its captured identity first.
@@ -284,12 +322,12 @@ assert.equal(queue()[0].completedDay, TODAY);
 context.queueList = {innerHTML: '', querySelectorAll() { return []; }};
 run(section('function escapeText(value){', 'function renderStuckList(){'));
 run('renderQueueList()');
-assert.ok(context.queueList.innerHTML.includes('已配句子'));
+assert.ok(context.queueList.innerHTML.includes('自定义例句'));
 assert.ok(context.queueList.innerHTML.includes('今天已完成'));
 context.window.HanziSentenceHints = {get() { throw Error('Optional sentence module failed'); }};
 assert.equal(run('sentenceFor(state.priorityQueue[0])'), '飞龙飞过天空。');
 run('renderQueueList()');
-assert.ok(context.queueList.innerHTML.includes('已配句子'));
+assert.ok(context.queueList.innerHTML.includes('自定义例句'));
 assert.equal(run('sentenceFor(null)'), '');
 
-console.log('parent-priority: enqueue preservation, full queue, dates, repeat/mastery, parking, request races, retests, settings preemption, and missing optional modules passed');
+console.log('parent-priority: ten-pass levels, overflow and retest carryover, short-level completion, enqueue preservation, dates, mastery, parking, request races, settings preemption, and missing optional modules passed');

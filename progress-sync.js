@@ -10,6 +10,7 @@
   var META_KEY = 'hanzi-magic-door-sync-v1';
   var BACKUP_KEY = 'hanzi-magic-door-sync-backups-v1';
   var APP = 'hanzi-magic-door';
+  var PASSWORD_ROUNDS = 600000;
   var MAX_BYTES = 600 * 1024;
   var DEBOUNCE_MS = 800;
   var TIMEOUT_MS = 6000;
@@ -138,6 +139,21 @@
     if (!/^[0-9a-f]{32}$/.test(normalized)) throw problem('同步码应为四组、每组八位的字母和数字');
     return normalized;
   }
+  function normalizePassword(value) {
+    if (typeof value !== 'string' || value.length > 256 || /[\u0000-\u001f\u007f\ud800-\udfff]/u.test(value)) {
+      throw problem('请输入 12 到 128 个字符的家庭同步密码');
+    }
+    // Canonically equivalent Unicode input matches across devices. Otherwise
+    // preserve the password as typed, including its case and spaces.
+    var normalized = value.normalize('NFC');
+    var chars = Array.from(normalized.trim());
+    if (chars.length < 12 || Array.from(normalized).length > 128) throw problem('家庭同步密码须有 12 到 128 个字符');
+    if (/^[0-9０-９\s]+$/.test(normalized) || new Set(chars.filter(function (c) { return !/\s/.test(c); })).size < 4) {
+      throw problem('密码太容易猜，请使用不相关的词语组成较长的密码');
+    }
+    return normalized;
+  }
+  function credentialMode(value) { return value ? (value.version === 2 ? 'password' : 'code') : null; }
   function displayCode(value) { return value ? value.match(/.{8}/g).join('-') : ''; }
   function hex(bytes) {
     return Array.prototype.map.call(new Uint8Array(bytes), function (b) { return b.toString(16).padStart(2, '0'); }).join('');
@@ -185,11 +201,11 @@
     var meta = null, started = false, epoch = 0, revision = 0, observedJSON = null;
     var debounce = null, inFlight = null, keysCache = null, applying = false;
     var controllers = [], conflictRemote = null;
-    var view = { kind: 'off', message: '尚未开启跨设备同步', connected: false, lastSyncedAt: null };
+    var view = { kind: 'off', message: '尚未开启跨设备同步', connected: false, lastSyncedAt: null, credentialMode: null };
 
     function status() { return Object.assign({}, view); }
     function emit(kind, message) {
-      view = { kind: kind, message: message, connected: !!(meta && meta.code),
+      view = { kind: kind, message: message, connected: !!meta, credentialMode: credentialMode(meta),
         lastSyncedAt: meta && meta.lastSyncedAt !== null ? meta.lastSyncedAt : null };
       if (meta && meta.code) view.code = displayCode(meta.code);
       try { if (typeof options.onStatus === 'function') options.onStatus(status()); } catch (_) { /* UI callbacks cannot break saving. */ }
@@ -227,6 +243,11 @@
       refreshLocal();
       if (revision !== localRevision) throw problem('同步期间本机进度又有变化，两份进度都已保留，请选择保留哪份', 'conflict');
     }
+    function ensureConnectionUnchanged(token, localRevision) {
+      ensureEpoch(token);
+      refreshLocal();
+      if (revision !== localRevision) throw problem('连接期间本机进度有变化，尚未切换同步；请完成这次练习后重试');
+    }
     function capable() {
       if (!crypt || !crypt.subtle || typeof crypt.getRandomValues !== 'function' ||
           typeof crypt.subtle.digest !== 'function' || typeof crypt.subtle.importKey !== 'function' ||
@@ -237,17 +258,35 @@
       if (typeof options.projectId !== 'string' || !/^[a-zA-Z0-9][a-zA-Z0-9-]{2,99}$/.test(options.projectId)) throw problem('同步服务尚未配置');
     }
     async function hash(json) { return hex(await crypt.subtle.digest('SHA-256', new Encoder().encode(json))); }
-    async function keys(code, token) {
+    async function passwordSeed(password, token) {
       capable();
-      if (!keysCache || keysCache.code !== code) {
-        keysCache = { code: code, promise: (async function () {
+      if (typeof crypt.subtle.deriveBits !== 'function') throw problem('此浏览器不支持家庭密码同步，仍可接入旧同步码或继续本机学习');
+      var encoder = new Encoder();
+      var bytes = encoder.encode(password), imported;
+      try { imported = await crypt.subtle.importKey('raw', bytes, 'PBKDF2', false, ['deriveBits']); }
+      finally { bytes.fill(0); }
+      ensureEpoch(token);
+      // A deterministic, project-specific salt permits password-only discovery.
+      // The expensive derivation is needed only when the parent enters a password.
+      var seed = await crypt.subtle.deriveBits({ name: 'PBKDF2', hash: 'SHA-256', iterations: PASSWORD_ROUNDS,
+        salt: encoder.encode(APP + ':password-family:v1:' + options.projectId) }, imported, 256);
+      ensureEpoch(token);
+      return hex(seed);
+    }
+    async function keys(connection, token) {
+      capable();
+      var mode = credentialMode(connection);
+      var secret = mode === 'password' ? connection.passwordSeed : connection.code;
+      if (!keysCache || keysCache.mode !== mode || keysCache.secret !== secret) {
+        keysCache = { mode: mode, secret: secret, promise: (async function () {
           var encoder = new Encoder();
+          var domain = mode === 'password' ? 'password-v1:' : 'v1:';
           var digests = await Promise.all([
-            crypt.subtle.digest('SHA-256', encoder.encode('hanzi-magic-door:document:v1:' + code)),
-            crypt.subtle.digest('SHA-256', encoder.encode('hanzi-magic-door:key:v1:' + code))
+            crypt.subtle.digest('SHA-256', encoder.encode(APP + ':document:' + domain + secret)),
+            crypt.subtle.digest('SHA-256', encoder.encode(APP + ':key:' + domain + secret))
           ]);
           return {
-            id: 'hanzi-v1-' + hex(digests[0]),
+            id: (mode === 'password' ? 'hanzi-password-v1-' : 'hanzi-v1-') + hex(digests[0]),
             key: await crypt.subtle.importKey('raw', digests[1], { name: 'AES-GCM' }, false, ['encrypt', 'decrypt'])
           };
         }()) };
@@ -332,7 +371,7 @@
       if (encrypted.length < 16) throw problem('云端加密内容不完整');
       var plaintext;
       try { plaintext = await crypt.subtle.decrypt({ name: 'AES-GCM', iv: iv }, derived.key, encrypted); }
-      catch (_) { throw problem('同步码不匹配或云端进度已损坏，本机进度未被替换'); }
+      catch (_) { throw problem('同步凭据不匹配或云端进度已损坏，本机进度未被替换'); }
       ensureEpoch(token);
       if (plaintext.byteLength > MAX_BYTES) throw problem('云端进度超过600KB');
       var decoded;
@@ -422,21 +461,32 @@
       if (meta.dirty) return emit('pending', '进度已读取，但本机还有新的改动；请再次同步');
       return emit('synced', '两台设备的学习进度已同步');
     }
-    async function write(current, derived, remote, token, localRevision) {
+    async function write(current, derived, remote, token, localRevision, candidateMeta) {
       var body = await encrypt(current, derived, token);
-      ensureUnchanged(token, localRevision);
+      if (candidateMeta) ensureConnectionUnchanged(token, localRevision);
+      else ensureUnchanged(token, localRevision);
       var precondition = remote ? 'currentDocument.updateTime=' + encodeURIComponent(remote.updateTime) : 'currentDocument.exists=false';
-      var response = await request(address(derived) + '?' + precondition, {
-        method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
-      }, token);
+      var response;
+      try {
+        response = await request(address(derived) + '?' + precondition, {
+          method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
+        }, token);
+      } catch (error) {
+        if (candidateMeta && error.syncKind === 'conflict') throw problem('这个密码已有云端进度，请用密码接入；没有覆盖原有进度');
+        throw error;
+      }
       if (!response || typeof response.updateTime !== 'string' || !response.updateTime || response.updateTime.length > 100) throw problem('服务器未确认保存版本；本机改动仍保留为待同步');
       var fingerprint = await hash(current.json);
       ensureEpoch(token);
       var actual = snapshot();
       observedJSON = actual.json;
-      var nextMeta = Object.assign({}, meta, { baseUpdateTime: response.updateTime, baseHash: fingerprint,
+      var nextMeta = Object.assign({}, candidateMeta || meta, { baseUpdateTime: response.updateTime, baseHash: fingerprint,
         dirty: actual.json !== current.json, requireConflict: false, lastSyncedAt: now() });
-      persist(nextMeta);
+      try { persist(nextMeta); }
+      catch (error) {
+        if (candidateMeta) throw problem('云端已建立进度，但本机未能保存连接；存储恢复后可用相同密码接入');
+        throw error;
+      }
       meta = nextMeta;
       conflictRemote = null;
       if (meta.dirty) { schedule(); return emit('idle', '上一份进度已同步，新改动正在等待同步'); }
@@ -470,21 +520,21 @@
       return job;
     }
     function schedule() {
-      if (!meta || !meta.code || !meta.dirty || meta.requireConflict || view.kind === 'conflict') return;
+      if (!meta || !meta.dirty || meta.requireConflict || view.kind === 'conflict') return;
       if (debounce !== null) cancelTimer(debounce);
       debounce = later(function () { debounce = null; sync(); }, DEBOUNCE_MS);
     }
     function changed() {
       // An ordinary save on a device that never enabled sync needs neither
       // serialization nor any cryptography/browser synchronization APIs.
-      if (!started || !meta || !meta.code) return status();
+      if (!started || !meta) return status();
       try {
         var current = snapshot();
         if (applying) { observedJSON = current.json; return status(); }
         if (observedJSON === current.json) return status();
         observedJSON = current.json;
         revision += 1;
-        if (!meta || !meta.code) return status();
+        if (!meta) return status();
         meta.dirty = true;
         saveMeta();
         if (view.kind !== 'conflict' && view.kind !== 'syncing') emit('idle', '新进度已在本机，等待同步');
@@ -500,12 +550,17 @@
       if (!saved) return null;
       var input;
       try { input = JSON.parse(saved); } catch (_) { throw problem('本机同步设置损坏，尚未连接云端'); }
-      if (!object(input) || input.version !== 1) throw problem('本机同步设置版本不受支持');
-      var result = { version: 1, code: normalizeCode(input.code),
+      if (!object(input) || (input.version !== 1 && input.version !== 2)) throw problem('本机同步设置版本不受支持');
+      var result = { version: input.version,
         baseUpdateTime: input.baseUpdateTime === null ? null : string(input.baseUpdateTime, 100, 'baseUpdateTime'),
         baseHash: input.baseHash === null ? null : string(input.baseHash, 64, 'baseHash'),
         dirty: bool(input.dirty, 'dirty'), requireConflict: own(input, 'requireConflict') ? bool(input.requireConflict, 'requireConflict') : false,
         lastSyncedAt: input.lastSyncedAt === null ? null : integer(input.lastSyncedAt, 0, Number.MAX_SAFE_INTEGER, 'lastSyncedAt') };
+      if (input.version === 1) result.code = normalizeCode(input.code);
+      else {
+        if (typeof input.passwordSeed !== 'string' || !/^[0-9a-f]{64}$/.test(input.passwordSeed)) throw problem('本机家庭连接凭据不正确');
+        result.passwordSeed = input.passwordSeed;
+      }
       if (result.baseHash !== null && !/^[0-9a-f]{64}$/.test(result.baseHash)) throw problem('本机同步摘要不正确');
       return result;
     }
@@ -522,7 +577,7 @@
     }
     function sync() {
       if (!started) return start();
-      if (!meta || !meta.code) return Promise.resolve(emit('off', '尚未开启跨设备同步'));
+      if (!meta) return Promise.resolve(emit('off', '尚未开启跨设备同步'));
       if (inFlight) return inFlight;
       if (meta.requireConflict) return Promise.resolve(emit('conflict', '上次采用进度未确认完成；两份进度仍保留，请选择保留哪份'));
       if (view.kind === 'conflict') return Promise.resolve(status());
@@ -530,7 +585,7 @@
       return run(token, async function () {
         var local = refreshLocal();
         var localRevision = revision;
-        var derived = await keys(meta.code, token);
+        var derived = await keys(meta, token);
         var fingerprint = await hash(local.json);
         ensureUnchanged(token, localRevision);
         if (!meta.baseHash || fingerprint !== meta.baseHash) meta.dirty = true;
@@ -586,7 +641,7 @@
         conflictRemote = null;
         var localRevision = revision;
         emit('syncing', '正在建立汉字游戏同步');
-        var derived = await keys(code, token);
+        var derived = await keys(candidate, token);
         var remote = await readRemote(derived, token);
         conflictRemote = remote;
         ensureUnchanged(token, localRevision);
@@ -606,16 +661,52 @@
         refreshLocal();
         var localRevision = revision;
         emit('syncing', '正在验证同步码和云端进度');
-        var derived = await keys(normalized, token);
+        var candidate = { version: 1, code: normalized, baseUpdateTime: null, baseHash: null, dirty: true, lastSyncedAt: null };
+        var derived = await keys(candidate, token);
         var remote = await readRemote(derived, token);
         ensureUnchanged(token, localRevision);
         if (!remote) throw problem('没有找到这个汉字游戏同步码；本机进度未被替换');
         if (!mayApply()) return emit('pending', '当前正在书写，尚未连接或替换进度；结束后请重试');
         // adopt() re-reads and backs up the *current* local state, rather than
         // relying on a stale snapshot captured before the network request.
-        return adopt(remote, token, localRevision, 'join-family', {
-          version: 1, code: normalized, baseUpdateTime: null, baseHash: null, dirty: true, lastSyncedAt: null
-        });
+        return adopt(remote, token, localRevision, 'join-family', candidate);
+      });
+    }
+    function connectPassword(value, creating) {
+      var password;
+      try {
+        password = normalizePassword(value);
+        if (!creating && !mayApply()) return Promise.resolve(emit('pending', '请先结束当前书写，再连接另一台设备的进度'));
+        requireStorage();
+        if (meta && (meta.requireConflict || view.kind === 'conflict')) {
+          return Promise.resolve(emit('conflict', '原连接有两份不同的进度；请先处理原冲突，或断开原连接再改用家庭密码'));
+        }
+        if (meta && meta.dirty) {
+          return Promise.resolve(emit('pending', '原连接还有待同步的改动；请先同步，或断开原连接再改用家庭密码'));
+        }
+      } catch (error) { return Promise.resolve(failure(error, epoch)); }
+      var token = beginEpoch();
+      started = true;
+      return run(token, async function () {
+        var local = refreshLocal();
+        var localRevision = revision;
+        emit('syncing', creating ? '正在建立家庭密码同步' : '正在验证家庭密码和云端进度');
+        var seed = await passwordSeed(password, token);
+        var candidate = { version: 2, passwordSeed: seed, baseUpdateTime: null,
+          baseHash: null, dirty: true, lastSyncedAt: null };
+        var derived = await keys(candidate, token);
+        ensureConnectionUnchanged(token, localRevision);
+        var remote = await readRemote(derived, token);
+        ensureConnectionUnchanged(token, localRevision);
+        if (creating) {
+          if (remote) throw problem('这个密码已有云端进度，请用密码接入；没有覆盖原有进度');
+          // Persist the new identity only after a create-only write succeeds.
+          // Failed or timed-out setup never silently enrolls this device.
+          return write(local, derived, null, token, localRevision, candidate);
+        }
+        if (!remote) throw problem('没有找到这份家庭进度，请核对密码；本机进度未被替换');
+        if (!mayApply()) return emit('pending', '当前正在书写，尚未连接或替换进度；结束后请重试');
+        return adopt(remote, token, localRevision, 'join-password-family', candidate);
       });
     }
     function resolveConflict(choice) {
@@ -626,7 +717,7 @@
         var current = refreshLocal();
         var localRevision = revision;
         emit('syncing', '正在备份并处理两份学习进度');
-        var derived = await keys(meta.code, token);
+        var derived = await keys(meta, token);
         var remote = await readRemote(derived, token);
         conflictRemote = remote;
         ensureUnchanged(token, localRevision);
@@ -661,11 +752,14 @@
       meta = loadMeta();
       if (meta) view = { kind: meta.requireConflict ? 'conflict' : 'idle',
         message: meta.requireConflict ? '上次采用进度未确认完成；两份进度仍保留，请选择保留哪份' : '已保存同步连接，等待同步', connected: true,
-        lastSyncedAt: meta.lastSyncedAt, code: displayCode(meta.code) };
+        lastSyncedAt: meta.lastSyncedAt, credentialMode: credentialMode(meta) };
+      if (meta && meta.code) view.code = displayCode(meta.code);
     } catch (error) {
-      view = { kind: 'error', message: error.message, connected: false, lastSyncedAt: null };
+      view = { kind: 'error', message: error.message, connected: false, lastSyncedAt: null, credentialMode: null };
     }
     return { start: start, createFamily: createFamily, joinFamily: joinFamily, sync: sync, changed: changed,
+      createPasswordFamily: function (value) { return connectPassword(value, true); },
+      joinPasswordFamily: function (value) { return connectPassword(value, false); },
       resolveConflict: resolveConflict, disconnect: disconnect, status: status, code: function () { return displayCode(meta && meta.code); } };
   }
 

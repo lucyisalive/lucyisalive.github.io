@@ -18,26 +18,33 @@ const fixtureFactory=new Function('require','__dirname','process','configureSync
   withHook+'\nreturn {environment,flush,inkFor,scripts};');
 const SAVE='hanzi-magic-door-state-v1',INK='hanzi-magic-door-ink-v1',PARENT='hanzi-magic-door-parent-ink-v1';
 const CODE=Array.from({length:4},(_,i)=>String(i+1).repeat(8)).join('-'); // Synthetic test value only.
+const PASSWORD='synthetic four unrelated mountain objects';
 const clone=x=>JSON.parse(JSON.stringify(x));
 const read=(e,source)=>clone(e.run(source));
-const ids=['cloudSyncStatus','cloudSyncCreateBtn','cloudSyncCodeWrap','cloudSyncCode','cloudSyncCopyBtn',
-  'cloudSyncJoinInput','cloudSyncJoinBtn','cloudSyncNowBtn','cloudSyncDisconnectBtn','cloudSyncConflict',
+const ids=['cloudSyncStatus','cloudSyncCreateBtn','cloudSyncPassword','cloudSyncPasswordSetup',
+  'cloudSyncConnectedActions','cloudSyncCodeWrap','cloudSyncCode','cloudSyncCopyBtn',
+  'cloudSyncJoinInput','cloudSyncJoinBtn','cloudSyncLegacyJoinBtn','cloudSyncNowBtn','cloudSyncDisconnectBtn','cloudSyncConflict',
   'cloudKeepLocalBtn','cloudUseRemoteBtn'];
 function fakeRemote({connected=true,startMode='resolve'}={}){
-  const calls={start:0,changed:0,create:0,join:[],sync:0,resolve:[],disconnect:0},capture={options:null};
-  let code=connected?CODE:null,status={kind:connected?'idle':'off',message:'synthetic sync status',connected,lastSyncedAt:null};
+  const calls={start:0,changed:0,create:[],join:[],sync:0,resolve:[],disconnect:0},capture={options:null};
+  let code=connected?CODE:null,status={kind:connected?'idle':'off',message:'synthetic sync status',connected,lastSyncedAt:null,
+    credentialMode:connected?'code':null};
   let joinRelease=null;
   const notify=()=>capture.options?.onStatus({...status,...(code?{code}:{})});
-  const controller={
-    start(){calls.start++;if(startMode==='hang')return new Promise(()=>{});if(startMode==='reject')return Promise.reject(Error('synthetic offline'));return Promise.resolve({...status});},
-    changed(){calls.changed++;},
-    createFamily(){calls.create++;code=CODE;status={...status,kind:'synced',connected:true};notify();return Promise.resolve({...status});},
-    joinFamily(value){calls.join.push(value);return new Promise(resolve=>{joinRelease=async remote=>{
-      code=CODE;status={...status,kind:'synced',connected:true};
+  function join(value,credentialMode){
+    calls.join.push({value,credentialMode});return new Promise(resolve=>{joinRelease=async remote=>{
+      code=credentialMode==='code'?CODE:null;status={...status,kind:'synced',connected:true,credentialMode};
       if(remote){try{await capture.options.applyState(clone(remote));}
         catch(_){status={...status,kind:'pending',message:'synthetic deferred apply'};}}
       notify();resolve({...status});
-    };});},
+    };});
+  }
+  const controller={
+    start(){calls.start++;if(startMode==='hang')return new Promise(()=>{});if(startMode==='reject')return Promise.reject(Error('synthetic offline'));return Promise.resolve({...status});},
+    changed(){calls.changed++;},
+    createPasswordFamily(value){calls.create.push(value);code=null;status={...status,kind:'synced',connected:true,credentialMode:'password'};notify();return Promise.resolve({...status});},
+    joinFamily(value){return join(value,'code');},
+    joinPasswordFamily(value){return join(value,'password');},
     sync(){calls.sync++;notify();return Promise.resolve({...status});},
     resolveConflict(choice){calls.resolve.push(choice);status={...status,kind:'synced'};notify();return Promise.resolve({...status});},
     disconnect(){calls.disconnect++;code=null;status={...status,kind:'off',connected:false};notify();},
@@ -184,13 +191,15 @@ async function apply(e,value){e.context.syntheticRemote=clone(value);return awai
   // A pass earned just before a device switch may await its explicit Continue.
   // Pulling it renders that action without awarding; only Continue settles it,
   // and repeated rendering/Continue cannot increment the scene twice.
-  const unsettled=await boot(),earned=nextRemote(unsettled,{passedCount:5,completed:false,sceneAwarded:false});
-  earned.priorityQueue=[];await apply(unsettled,earned);
+  const unsettled=await boot(),earned=nextRemote(unsettled,{passedCount:10,completed:false,sceneAwarded:false});
+  await apply(unsettled,earned);
   assert.equal(unsettled.run('state.scenesUnlocked'),7);
   assert.equal(unsettled.ids.get('finale').classList.contains('show'),false);
   assert.equal(unsettled.ids.get('continueBtn').classList.contains('show'),true);
   unsettled.tap('continueBtn');await unsettled.flush();
   assert.equal(unsettled.run('state.scenesUnlocked'),8);
+  assert.equal(unsettled.run('state.priorityQueue[0].completedDay'),null,
+    'The tenth pass settles the round without consuming a queued character');
   const settled=read(unsettled,'getCloudProgressState().sessionProgress');
   assert.equal(settled.completed,true);assert.equal(settled.sceneAwarded,true);
   unsettled.run('loadNextDoor();');assert.equal(unsettled.run('state.scenesUnlocked'),8,
@@ -250,8 +259,9 @@ async function apply(e,value){e.context.syntheticRemote=clone(value);return awai
   quota.run(`globalThis.failPrimarySave=true;const primarySetItem=localStorage.setItem;
     localStorage.setItem=(key,value)=>{if(key==='${SAVE}'&&failPrimarySave)throw Error('synthetic primary quota');return primarySetItem(key,value);};`);
   const savedBeforeQuota=quota.storage.get(SAVE),changedBeforeQuota=quota.remote.calls.changed;
-  quota.ids.get('dailyCount').value='7';quota.ids.get('dailyCount').dispatch('change');
-  assert.equal(quota.run('state.dailyCount'),7,'Retain the local edit in RAM');
+  quota.ids.get('charInput').value='燕';quota.ids.get('pinyinInput').value='yàn';
+  quota.ids.get('wordInput').value='海燕';quota.tap('addCharBtn');
+  assert.equal(quota.run('state.priorityQueue[0].word'),'海燕','Retain the local edit in RAM');
   assert.equal(quota.storage.get(SAVE),savedBeforeQuota);
   assert.equal(quota.remote.calls.changed,changedBeforeQuota,'Unsaved primary state must not be marked for upload');
   assert.ok(quota.run('progressSaveNotice.length')>0);
@@ -263,24 +273,33 @@ async function apply(e,value){e.context.syntheticRemote=clone(value);return awai
   assert.equal(quota.remote.calls.changed,changedBeforeQuota);
   quota.run('failPrimarySave=false;');quota.tap('cloudSyncNowBtn');await quota.flush();
   assert.equal(quota.run('progressSaveNotice'),'');
-  assert.equal(JSON.parse(quota.storage.get(SAVE)).dailyCount,7);
+  assert.equal(JSON.parse(quota.storage.get(SAVE)).priorityQueue[0].word,'海燕');
   assert.ok(quota.remote.calls.changed>changedBeforeQuota);
   assert.equal(quota.remote.calls.sync,failedSyncCount+1);
-  assert.equal(quota.remote.capture.options.getState().dailyCount,7);
+  assert.equal(quota.remote.capture.options.getState().priorityQueue[0].word,'海燕');
   assert.ok(!/未成功|失败|未保存/.test(quota.ids.get('cloudSyncStatus').textContent));
 
-  // Creation and explicit join are ordinary UI actions; displaying/copying a
-  // synthetic family code requires a deliberate click and never a new URL.
+  // A parent-defined password connects both devices, is cleared from the
+  // input, and is not put in the local learning save or displayed as a code.
   const creating=await boot({remoteOptions:{connected:false}});creating.tap('settingsBtn');
+  creating.ids.get('cloudSyncPassword').value=PASSWORD;
   creating.tap('cloudSyncCreateBtn');await creating.flush();
-  assert.equal(creating.remote.calls.create,1);
-  assert.equal(creating.ids.get('cloudSyncCodeWrap').hidden,false);
-  assert.equal(creating.ids.get('cloudSyncCode').value,CODE);
-  let copied=null;creating.context.navigator.clipboard={writeText:async text=>{copied=text;}};
-  creating.tap('cloudSyncCopyBtn');await creating.flush();assert.equal(copied,CODE);
+  assert.deepEqual(creating.remote.calls.create,[PASSWORD]);
+  assert.equal(creating.ids.get('cloudSyncPassword').value,'');
+  assert.equal(creating.ids.get('cloudSyncPasswordSetup').hidden,true);
+  assert.equal(creating.ids.get('cloudSyncCodeWrap').hidden,true);
+  assert.equal(creating.ids.get('cloudSyncConnectedActions').hidden,false);
+  assert.equal(JSON.stringify([...creating.storage]).includes(PASSWORD),false);
+
+  const legacy=await boot();legacy.tap('settingsBtn');
+  assert.equal(legacy.ids.get('cloudSyncCodeWrap').hidden,false);
+  assert.equal(legacy.ids.get('cloudSyncCode').value,CODE);
+  let copied=null;legacy.context.navigator.clipboard={writeText:async text=>{copied=text;}};
+  legacy.tap('cloudSyncCopyBtn');await legacy.flush();assert.equal(copied,CODE);
   const joining=await boot({remoteOptions:{connected:false}});joining.tap('settingsBtn');
-  joining.ids.get('cloudSyncJoinInput').value=CODE;joining.tap('cloudSyncJoinBtn');await joining.flush();
-  assert.equal(joining.remote.calls.join.length,1);
+  joining.ids.get('cloudSyncPassword').value=PASSWORD;joining.tap('cloudSyncJoinBtn');await joining.flush();
+  assert.deepEqual(joining.remote.calls.join,[{value:PASSWORD,credentialMode:'password'}]);
+  assert.equal(joining.ids.get('cloudSyncPassword').value,'');
   assert.equal(joining.run('syncExplicitAdopt'),true);
   assert.equal(joining.run('syncCanApplyProgress()'),true,'An explicit safe join may adopt while settings are open');
   const joinedRemote=nextRemote(joining,{passedCount:3});await joining.remote.releaseJoin(joinedRemote);await joining.flush();
@@ -296,8 +315,8 @@ async function apply(e,value){e.context.syntheticRemote=clone(value);return awai
   // An explicit join may open the safe settings gate. If the user leaves it
   // and starts writing before remote data arrives, the final apply recheck wins.
   const late=await boot({remoteOptions:{connected:false}});late.tap('settingsBtn');
-  late.ids.get('cloudSyncJoinInput').value=CODE;late.tap('cloudSyncJoinBtn');await late.flush();
-  assert.equal(late.remote.calls.join.length,1);
+  late.ids.get('cloudSyncJoinInput').value=CODE;late.tap('cloudSyncLegacyJoinBtn');await late.flush();
+  assert.deepEqual(late.remote.calls.join,[{value:CODE,credentialMode:'code'}]);
   late.tap('closePanelBtn');late.run('strokesPoints=[[{x:35,y:40},{x:60,y:80}]];');
   const lateBefore=snapshot(late),remoteLate=nextRemote(late);
   await late.remote.releaseJoin(remoteLate);await late.flush();

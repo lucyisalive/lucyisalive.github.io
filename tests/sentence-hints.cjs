@@ -46,7 +46,7 @@ for (const [char, pinyin, word] of earlier) {
 }
 
 // Context must be tied to the complete word, even when the target or sound is
-// the same. Do not silently reuse the textbook word for an unknown parent word.
+// the same. Do not silently reuse the textbook word for a different parent word.
 for (const [char, word] of [['园', '花园'], ['元', '公元'], ['威', '威风'],
   ['迹', '奇迹'], ['救', '求救'], ['弟', '师弟']]) {
   const sentence = hints.get({ char, word });
@@ -55,17 +55,50 @@ for (const [char, word] of [['园', '花园'], ['元', '公元'], ['威', '威�
 assert.notEqual(hints.get({ char: '园', word: '公园' }), hints.get({ char: '园', word: '花园' }));
 assert.notEqual(hints.get({ char: '园', word: '公园' }), hints.get({ char: '元', word: '公元' }));
 assert.notEqual(hints.get({ char: '微', word: '微风' }), hints.get({ char: '威', word: '威风' }));
-assert.equal(hints.get({ char: '秘', word: '秘密基地' }), null);
-assert.equal(hints.get({ char: '园', word: '园艺' }), null);
-assert.equal(hints.get({ char: '明', word: '小明' }), null, 'Do not invent hints for people');
-assert.equal(hints.get({ char: '州', word: '杭州' }), null, 'Do not invent hints for places');
+assert.equal(hints.get({ char: '园', word: '公园' }), '我们去公园放风筝。', 'Keep an existing reviewed sentence');
+assert.equal(hints.get({ char: '便', pinyin: 'pián', word: '便宜' }), '这支铅笔很便宜，只要一元钱。');
+assert.notEqual(hints.get({ char: '秘', word: '秘密基地' }), hints.get({ char: '秘', word: '秘密' }));
+
+// Familiar parent words, rare words with known usage, and high-confidence
+// categories all use natural scenes. Homophones need different meanings.
+const contexts = [
+  ['园', '园艺', '种花'], ['明', '小明', '捡'], ['州', '杭州', '西湖'],
+  ['工', '工夫', '下午'], ['功', '功夫', '一招一式'],
+  ['示', '启示', '团结合作'], ['事', '启事', '公告栏'],
+  ['辨', '分辨', '两种声音'], ['辩', '分辩', '不是他'],
+  ['熔', '熔化', '铜'], ['融', '融化', '雪人'], ['溶', '溶化', '白糖'],
+  ['罅', '罅隙', '石墙'], ['蹒', '蹒跚', '走'], ['氲', '氤氲', '云雾'],
+  ['莓', '草莓', '水果盘'], ['阅', '阅览室', '想读的书'], ['毽', '踢毽子', '放学后'],
+];
+for (const [char, word, context] of contexts) {
+  const sentence = hints.get({ char, word });
+  assert.ok(sentence && sentence.includes(word) && sentence.includes(context), word + ': should describe an appropriate context');
+  assert.ok(Array.from(sentence).length <= 36 && /[。！？]$/.test(sentence), word + ': keep examples short and complete');
+}
+
+// An unfamiliar word is quoted exactly and not assigned a made-up meaning,
+// person or place. A mixed list is just repeated use of the same pure getter.
+const unknownWords = [
+  { char: '霙', word: '霙羽' }, { char: '𠮷', word: '𠮷字帖' }, { char: '岫', word: '云岫里' },
+  { char: '画', word: 'AI绘画' }, { char: '轻', word: '很_很轻', completedDay: null, fullWord: '很轻很轻' },
+  { char: '一', word: '一'.repeat(24) },
+];
+for (const candidate of unknownWords) {
+  const { fullWord, ...item } = candidate;
+  const frozen = Object.freeze(item), exactWord = fullWord || item.word;
+  const sentence = hints.get(frozen);
+  assert.ok(sentence && sentence.includes('“' + exactWord + '”'), exactWord + ': unfamiliar spelling must remain intact');
+  assert.ok(Array.from(sentence).length <= 36 && /[。！？]$/.test(sentence), exactWord + ': complete short fallback');
+  assert.equal(hints.get(frozen), sentence, 'Automatic fallback must stay stable on a refresh');
+}
 assert.equal(hints.get({ char: '园', word: '公元' }), null, 'A contradictory target cannot use a word');
+assert.equal(hints.get({ char: '岫', word: '云袖里' }), null, 'Never use a homophone as a replacement');
 assert.equal(hints.get({ char: '长', pinyin: 'zhǎng' }), null, 'Do not choose a different reading');
 assert.equal(hints.get({ char: '便' }), null, 'Two bare-character defaults need a reading');
 assert.equal(hints.get({ char: '救', word: '' }), null, 'Extra words are not unreviewed character defaults');
 
 // Parent-supplied sentences take precedence; whitespace and non-text values do
-// not overwrite a reviewed sentence. No names or vocabulary are generated.
+// not overwrite a reviewed sentence. Clearing a custom hint restores automatic generation.
 const parentItem = Object.freeze({ char: '州', word: '杭州', sentence: '  姑姑住在杭州，我们暑假去看她。  ' });
 assert.equal(hints.get(parentItem), '姑姑住在杭州，我们暑假去看她。');
 assert.equal(hints.get({ char: '园', word: '公园', sentence: '周末，我们去公园看花。' }), '周末，我们去公园看花。');
@@ -73,8 +106,14 @@ assert.equal(hints.get({ char: '园', word: '公园', sentence: '  ' }), hints.g
 assert.equal(hints.get({ char: '园', word: '公园', sentence: 123 }), hints.get({ word: '公园' }));
 assert.equal(hints.get({ char: '园', word: '公_' }), hints.get({ char: '园', word: '公园' }));
 assert.equal(hints.get({ char: '轻', word: '_又_' }), null);
+const unknown = { char: '霙', word: '霙羽' };
+assert.equal(hints.get({ ...unknown, sentence: '  这就是我想让孩子听的句子。  ' }), '这就是我想让孩子听的句子。');
+assert.equal(hints.get({ ...unknown, sentence: '' }), hints.get(unknown));
 for (const item of [undefined, null, '', 7, {}, { word: 7 }, { word: '__proto__' }, { word: 'constructor' }]) {
   assert.equal(hints.get(item), null);
+}
+for (const word of ['一'.repeat(25), '图书馆📚', '<svg>画', '画\n图', 'http://example.org/画', 'hello']) {
+  assert.equal(hints.get({ word }), null, 'Do not turn non-word or oversized input into a hint: ' + word);
 }
 
 // A browser can load and call the module with no document, speech, or storage
@@ -85,7 +124,8 @@ vm.createContext(browser);
 vm.runInContext(fs.readFileSync(path.join(root, 'sentence-hints.js'), 'utf8'), browser);
 assert.equal(typeof browser.window.HanziSentenceHints.get, 'function');
 assert.equal(browser.window.HanziSentenceHints.get({ char: '园', word: '公园' }), '我们去公园放风筝。');
+assert.equal(browser.window.HanziSentenceHints.get(unknown), hints.get(unknown), 'Browser generation needs no network, DOM or storage');
 assert.deepEqual(Object.keys(browser.window.HanziSentenceHints), ['get']);
 assert.equal(Object.isFrozen(hints), true);
 
-console.log('Sentence hints: 92 textbook targets, 26 earlier targets, exact-word/custom/default fallback, and browser export passed.');
+console.log('Sentence hints: 92 textbook and 26 earlier targets, custom precedence, homophone/rare contexts, bounded exact-word fallback, and browser export passed.');

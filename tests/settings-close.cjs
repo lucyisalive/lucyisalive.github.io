@@ -118,9 +118,13 @@ function enqueueThroughUi(e){
     assert.equal(e.run('parentQueueChanged'),false);
   }
 
-  const done=await boot();done.run("finale.classList.add('show');playzone.classList.add('hide');passedCount=state.dailyCount;");
+  const done=await boot();done.run("finale.classList.add('show');playzone.classList.add('hide');passedCount=10;");
   open(done);const extra=enqueueThroughUi(done);close(done);await flush();
+  assert.equal(done.ids.get('finale').classList.contains('show'),true,'A full level stays complete after adding another request');
+  assert.equal(done.run('passedCount'),10);
+  done.tap('restartBtn');await flush();
   assert.equal(done.ids.get('finale').classList.contains('show'),false);
-  assert.equal(done.run('currentItem.char'),extra,'New parent input after completion must still resume practice');
-  console.log('Settings close: one labelled 44px sticky-header button; ink/question/teaching preservation, unchanged priority import, pending retest fillers, and post-completion resume passed.');
+  assert.equal(done.run('passedCount'),0);
+  assert.equal(done.run('currentItem.char'),extra,'The next level must start with the newly queued request');
+  console.log('Settings close: one labelled 44px sticky-header button; ink/question/teaching preservation, priority import, pending retest fillers, and next-level carryover passed.');
 })().catch(error=>{console.error(error);process.exitCode=1;});
