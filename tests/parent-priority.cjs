@@ -141,6 +141,26 @@ assert.equal(queue().filter(item => item.char === '慧').length, 1);
 assert.equal(bankItem('警').word, '警察');
 assert.ok(saved.has(run('SAVE_KEY')));
 
+// Dictation punctuation separates complete prompts without becoming part of a word.
+reset();
+ui.batchInput.value = '。，耗费的费。大量的量，智慧的智，';
+handlers.get('batchAddBtn')();
+assert.deepEqual(queue().map(({ char, word }) => [char, word]), [
+  ['费', '耗费'], ['量', '大量'], ['智', '智慧'],
+]);
+assert.equal(ui.batchInput.value, '');
+assert.doesNotMatch(ui.batchMsg.textContent, /没认出/);
+
+// Preserve manual pinyin and the word-space-character form alongside separators.
+reset();
+ui.batchInput.value = '「单薄的薄：bó」……智慧 智:费用的费:fei4？！量．\n山';
+handlers.get('batchAddBtn')();
+assert.deepEqual(queue().map(item => item.char), [...'薄智费量山']);
+assert.equal(bankItem('薄').pinyin, 'bó');
+assert.equal(bankItem('智').word, '智慧');
+assert.equal(bankItem('费').pinyin, 'fei4');
+assert.equal(ui.batchInput.value, '');
+
 // Every requested item runs before random questions, but a level ends at ten
 // actual passes. The remaining same-day requests keep their order and identity.
 const batch = [...'慧警藏器燃澡霎薄燕辩类收历'];

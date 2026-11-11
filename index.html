@@ -3,7 +3,7 @@
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
-<meta name="game-version" content="2026.11.10.1">
+<meta name="game-version" content="2026.11.11.1">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>汉字魔法门</title>
 <style data-source="game-feedback.css">
@@ -898,13 +898,13 @@ body.journey-departing #mountainJourney .journey-background {
     <p class="hint-text">学习范围：统编人教版·三年级下册（2025年10月版）<br>从课本词语表选取的 92 个字词中，搭配难度和结构随机出题；每格写一个字。</p>
 
     <label>批量粘贴（按说话的方式写，拼音自动生成）</label>
-    <textarea id="batchInput" rows="3" placeholder="奇迹的迹；求救的救；师弟的弟"></textarea>
+    <textarea id="batchInput" rows="3" placeholder="奇迹的迹。求救的救，师弟的弟"></textarea>
     <div class="batch-row">
       <button id="batchAddBtn">批量加入</button>
       <span class="batch-msg" id="batchMsg"></span>
     </div>
     <p class="hint-text" style="margin-top:6px;">
-      「奇迹的迹」= 组词"奇迹"、要默写"迹"。分隔符用 ；，、空格或换行都行。<br>
+      「奇迹的迹」会用“奇迹”提示默写“迹”。语音输入里的句号、逗号、分号等标点和换行都可以分开词条。<br>
       也可以只写一个字（就没有组词提示），或写「单薄的薄 bó」手动指定拼音。<br>
       拼音自动填好；<b style="color:var(--seal);">标红的是多音字</b>，点一下可以换读音。
       <br>今天加入的字优先默写。每关通过 10 个字，同日继续下一关会优先练剩余的字。重复字只提前复习，保留原来的学习记录。
@@ -955,7 +955,7 @@ body.journey-departing #mountainJourney .journey-background {
       字库会按"记忆规律"自动滚动：今天答错、靠教学环节才写对的字，会更快安排复习；一次就写对的字，安排复习的间隔会拉长。你随时可以在这里加"今天最想让孩子先练"的字，这些字会排在最前面。
     </p>
 
-    <p class="hint-text" id="gameVersion">版本 2026.11.10.1</p>
+    <p class="hint-text" id="gameVersion">版本 2026.11.11.1</p>
   </div>
 </div>
 
@@ -3971,7 +3971,7 @@ function defaultBank(){
 // set — the change would reach nobody who actually uses the game.
 const BANK_VERSION = 5;
 const ROUND_GOAL = 10;
-const GAME_VERSION = '2026.11.10.1';
+const GAME_VERSION = '2026.11.11.1';
 
 let state = {
   bank: defaultBank(),
@@ -6861,11 +6861,13 @@ function inkPayloadText(only){
 // phrasing is already unambiguous: the word, then 的, then the one character being tested.
 // Also accepts "奇迹 迹", a bare "迹", and an explicit pinyin override tacked on the end.
 const PY_LETTERS = "a-zA-Zāáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜüńňǹ";
+// Keep colons that introduce a manual pinyin override, e.g. "单薄的薄：bó".
+const BATCH_SEPARATOR = new RegExp(`[\\r\\n\\u2028\\u2029]|(?![:：][\\s:：]*[${PY_LETTERS}])\\p{P}`, 'u');
 
 function parseBatch(text){
   const items = [], bad = [];
-  text.split(/[\n\r；;，,、]+/).forEach(raw => {
-    let s = raw.trim().replace(/^[的·\-—]+|[。．.]+$/g, '').trim();
+  text.split(BATCH_SEPARATOR).forEach(raw => {
+    let s = raw.trim().replace(/^的+/, '').trim();
     if(!s) return;
 
     // optional explicit pinyin at the end, e.g. "单薄的薄 bó"
