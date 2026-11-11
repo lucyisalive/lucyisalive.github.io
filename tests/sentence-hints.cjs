@@ -72,6 +72,11 @@ assert.notEqual(hints.get({ char: '秘', word: '秘密基地' }), hints.get({ ch
 // Familiar parent words, rare words with known usage, and high-confidence
 // categories all use natural scenes. Homophones need different meanings.
 const contexts = [
+  ['匕', '匕首', '手掌长'], ['乙', '乙方', '按时归还'],
+  ['互', '互相', '他帮我收书包'], ['精', '精美', '剪得很细致'],
+  ['称', '匀称', '左右两边一样宽'], ['景', '景物', '大树和小河'],
+  ['类', '种类', '童话书、漫画书和科普书'], ['贵', '宝贵', '老照片'],
+  ['巡', '巡航', '船只是否安全'],
   ['栏', '栏杆', '过桥时可以扶着它'], ['杆', '栏杆', '桥两边'],
   ['杆', '旗杆', '国旗'], ['竿', '竹竿', '撑住豆苗'],
   ['园', '公园', '放风筝'], ['元', '公元', '二〇〇八年'],
