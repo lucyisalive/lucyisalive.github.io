@@ -2,7 +2,7 @@
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
-<meta name="game-version" content="2026.11.11.4">
+<meta name="game-version" content="2026.11.11.5">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>汉字魔法门</title>
 <link rel="stylesheet" href="game-feedback.css?v=2026.11.02.4">
@@ -51,11 +51,9 @@
   .parent-validation{ background:var(--paper); border-radius:12px; padding:10px 12px; margin-bottom:10px; font-size:14px; line-height:1.5; }
   .parent-validation[hidden], .parent-confirm[hidden]{ display:none; }
   .parent-validation-head{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
-  .parent-validation button, .parent-confirm button, .parent-entry button{ font:inherit; border:0; border-radius:8px; padding:9px 12px; background:var(--jade); color:white; cursor:pointer; }
+  .parent-validation button, .parent-confirm button{ font:inherit; border:0; border-radius:8px; padding:9px 12px; background:var(--jade); color:white; cursor:pointer; }
   .parent-validation button{ background:#6b6355; }
   .parent-confirm{ display:flex; justify-content:center; flex-wrap:wrap; gap:8px; margin-top:8px; }
-  .parent-entry{ padding:10px; background:#e6eee5; border-radius:10px; margin-bottom:16px; }
-  .parent-entry button{ margin:4px 4px 4px 0; }
   .cloud-sync{ padding:12px; border:1px solid #c6d8c5; background:#e6eee5; border-radius:10px; margin-bottom:16px; }
   .cloud-sync p{ font-size:12px; line-height:1.6; color:#514d40; margin:7px 0; }
   .cloud-sync-actions{ display:flex; gap:7px; flex-wrap:wrap; margin-top:7px; }
@@ -65,8 +63,9 @@
   .cloud-sync .secondary{ background:#d5ddce; color:#3a493a; }
   .cloud-sync [hidden]{ display:none; }
   .cloud-sync .cloud-code{ font-family:ui-monospace,Menlo,monospace; font-size:13px; letter-spacing:.3px; }
-  .cloud-sync details, .optional-sentence{ margin:10px 0; font-size:12px; color:#514d40; }
-  .cloud-sync summary, .optional-sentence summary{ padding:7px 0; cursor:pointer; }
+  .cloud-sync details, .settings-details{ margin:10px 0; font-size:12px; color:#514d40; }
+  .cloud-sync summary, .settings-details summary{ padding:7px 0; cursor:pointer; }
+  .settings-details summary{ padding:10px 0; font-size:14px; font-weight:700; }
   .cloud-conflict{ border:1px solid #c38f6c; border-radius:8px; background:#fff1dc; padding:9px; margin-top:9px; }
   #parentTestInstruction{ font-weight:700; }
   #parentTestSummary{ color:#604d2c; }
@@ -368,12 +367,6 @@
   .panel input[type=number]{
     -webkit-user-select:text; user-select:text; -webkit-touch-callout:default;
   }
-  .add-row{ display:flex; gap:6px; margin-top:6px; }
-  .add-row input{ flex:1; }
-  .add-row button{
-    background:var(--jade); color:#fff; border:none; border-radius:8px; padding:0 14px;
-    font-weight:700; cursor:pointer;
-  }
   .queue-list{ margin-top:10px; max-height:140px; overflow-y:auto; touch-action:pan-y; }
   .queue-item{
     display:flex; justify-content:space-between; align-items:center;
@@ -565,10 +558,60 @@
       <h2>今日汉字设置</h2>
       <button class="btn-close-panel" id="closePanelBtn" aria-label="关闭设置" title="关闭设置">×</button>
     </div>
+    <label for="batchInput">添加今天要练的字</label>
+    <textarea id="batchInput" rows="3" placeholder="奇迹的迹。求救的救，师弟的弟"></textarea>
+    <div class="batch-row">
+      <button id="batchAddBtn">批量加入</button>
+      <span class="batch-msg" id="batchMsg"></span>
+    </div>
+    <p class="hint-text" style="margin-top:6px;">
+      <b>加入后自动保存，今天优先练。</b>关掉设置即可继续。每关通过 10 个字，剩下的留到下一关。<br>
+      「奇迹的迹」会用“奇迹”提示默写“迹”。语音输入里的句号、逗号、分号等标点和换行都可以分开词条。<br>
+      也可以只写一个字（就没有组词提示），或写「单薄的薄 bó」手动指定拼音。<br>
+      <b style="color:var(--seal);">标红的是多音字</b>，点一下可以换读音。重复字保留原学习记录。
+    </p>
+
+    <details class="settings-details" id="aiSentenceSettings">
+      <summary>AI 造句</summary>
+      <p id="aiSentenceStatus" role="status">尚未连接。</p>
+      <p>授权 OpenRouter 后，加入没有例句的词会自动造句。模型服务会收到词语、目标字和读音，可能保留这些文本。请只录普通学习词语。</p>
+      <button id="aiSentenceConnectBtn">连接 AI 造句</button>
+      <button id="aiSentenceFillBtn" hidden>补齐今天的例句</button>
+      <button id="aiSentenceDisconnectBtn" hidden>断开这台设备</button>
+    </details>
+    <div class="queue-list" id="queueList"></div>
+
+    <label>需要家长讲解（今天错了 3 次，已经停下来）</label>
+    <div class="stuck-list" id="stuckList"></div>
+
+    <label>已永久掌握（在 3 个不同的日子写对过，不再出现）</label>
+    <div class="mastered-list" id="masteredList"></div>
+
+    <label>笔迹记录<span id="inkCount" style="font-weight:400;color:#8a8272;"></span></label>
+    <div class="ink-list" id="inkList"></div>
+    <div class="ink-actions">
+      <button class="btn-ink" id="inkCopyBtn">📋 复制标记的</button>
+      <button class="btn-ink" id="inkDownloadBtn">⬇️ 下载全部</button>
+      <button class="btn-ink btn-ink-clear" id="inkClearBtn">清空全部笔迹</button>
+      <span class="batch-msg" id="inkMsg"></span>
+    </div>
+    <textarea id="inkOut" readonly rows="3" placeholder="点上面的「复制标记的」，内容会出现在这里；复制不成功就长按这里全选拷贝。"></textarea>
+
+    <p class="hint-text">学习范围：统编人教版·三年级下册（2025年10月版）<br>从课本词语表选取的 92 个字词中，搭配难度和结构随机出题；每格写一个字。</p>
+
+    <details class="settings-details" id="manualBackupSettings">
+      <summary>手动备份</summary>
+      <p>日常进度自动保存。下载备份可额外留一份进度文件。</p>
+      <div class="panel-actions">
+        <button class="btn-save" id="saveProgressBtn">下载进度备份</button>
+        <button class="btn-load" id="loadProgressBtn">从备份恢复</button>
+      </div>
+      <input type="file" id="fileInput" accept="application/json">
+    </details>
     <div class="cloud-sync">
       <b>跨设备同步</b>
       <p id="cloudSyncStatus" role="status">尚未开启，学习记录保存在这台设备。</p>
-      <p>先在有学习记录的 iPad 设一个专用于游戏的家庭密码。以后在其他设备打开同一个网址，输入同样的密码即可接入。</p>
+      <p>进度会自动保存在当前浏览器。要跨设备接着练，先在有学习记录的浏览器开启同步，再在另一台设备或另一个浏览器用同一个家庭密码接入。接入后，联网时会自动同步。</p>
       <div id="cloudSyncPasswordSetup">
         <label for="cloudSyncPassword">家庭密码（至少 12 个字符，可用中文）</label>
         <input type="password" id="cloudSyncPassword" placeholder="输入你自己设定的家庭密码" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="cloudSyncPasswordHint">
@@ -596,7 +639,7 @@
         <input type="text" class="cloud-code" id="cloudSyncJoinInput" placeholder="粘贴以前的同步码" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="60">
         <div class="cloud-sync-actions"><button class="secondary" id="cloudSyncLegacyJoinBtn">用旧同步码接入</button></div>
       </details>
-      <p>学习进度和家长加入的字会加密同步。笔迹与误判标记留在本机；接入已有进度前会保留本机备份。</p>
+      <p>学习进度和家长加入的字会加密同步。笔迹与批改异议留在当前浏览器。</p>
       <div class="cloud-conflict" id="cloudSyncConflict" hidden>
         <p>两台设备各有新进度，已暂停覆盖。两份会先保留本机备份，再按你的选择继续。</p>
         <div class="cloud-sync-actions">
@@ -605,83 +648,14 @@
         </div>
       </div>
     </div>
-    <div class="parent-entry">
-      <b>家长识别验收</b>
-      <p class="hint-text">每轮 6 次，分别检查完整字和故意漏笔。单独保存笔迹，不计入孩子的答错、掌握和复习记录。请在尚未动笔的普通题开始。</p>
-      <button id="parentTestRound1Btn">第一轮：燕、类、逃</button>
-      <button id="parentTestRound2Btn">第二轮：辩、历、收</button>
-      <div id="parentTestMsg" role="status"></div>
-    </div>
-    <p class="hint-text">学习范围：统编人教版·三年级下册（2025年10月版）<br>从课本词语表选取的 92 个字词中，搭配难度和结构随机出题；每格写一个字。</p>
-
-    <label>批量粘贴（按说话的方式写，拼音自动生成）</label>
-    <textarea id="batchInput" rows="3" placeholder="奇迹的迹。求救的救，师弟的弟"></textarea>
-    <div class="batch-row">
-      <button id="batchAddBtn">批量加入</button>
-      <span class="batch-msg" id="batchMsg"></span>
-    </div>
-    <p class="hint-text" style="margin-top:6px;">
-      「奇迹的迹」会用“奇迹”提示默写“迹”。语音输入里的句号、逗号、分号等标点和换行都可以分开词条。<br>
-      也可以只写一个字（就没有组词提示），或写「单薄的薄 bó」手动指定拼音。<br>
-      拼音自动填好；<b style="color:var(--seal);">标红的是多音字</b>，点一下可以换读音。
-      <br>今天加入的字优先默写。每关通过 10 个字，同日继续下一关会优先练剩余的字。重复字只提前复习，保留原来的学习记录。
-    </p>
-
-    <label>逐个添加</label>
-    <div class="add-row">
-      <input type="text" id="charInput" placeholder="字">
-      <input type="text" id="pinyinInput" placeholder="拼音（自动）">
-      <input type="text" id="wordInput" placeholder="词语（可选）">
-      <button id="addCharBtn">加入</button>
-    </div>
-    <p class="hint-text">有合适的例句时，孩子可以点“句子提示”听一听。</p>
-    <details class="optional-sentence" id="aiSentenceSettings">
-      <summary>AI 造句</summary>
-      <p id="aiSentenceStatus" role="status">尚未连接。</p>
-      <p>授权 OpenRouter 后，加入没有例句的词会自动造句。模型服务会收到词语、目标字和读音，可能保留这些文本。请只录普通学习词语。</p>
-      <button id="aiSentenceConnectBtn">连接 AI 造句</button>
-      <button id="aiSentenceFillBtn" hidden>补齐今天的例句</button>
-      <button id="aiSentenceDisconnectBtn" hidden>断开这台设备</button>
-    </details>
-    <details class="optional-sentence">
-      <summary>自定义例句（选填）</summary>
-      <label for="sentenceInput">例句</label>
-      <input type="text" id="sentenceInput" placeholder="例如：我们去公园放风筝。" maxlength="100">
-    </details>
-    <div class="queue-list" id="queueList"></div>
-
-    <label>需要家长讲解（今天错了 3 次，已经停下来）</label>
-    <div class="stuck-list" id="stuckList"></div>
-
-    <label>已永久掌握（在 3 个不同的日子写对过，不再出现）</label>
-    <div class="mastered-list" id="masteredList"></div>
-
-    <label>关卡目标</label>
-    <div style="font-size:12px;color:#6b6355;">每关通过 10 个字。家长加入的字会优先安排，剩下的留到下一关。</div>
-
-    <label>笔迹记录（判得不对的，标一下发给我）<span id="inkCount" style="font-weight:400;color:#8a8272;"></span></label>
-    <div class="ink-list" id="inkList"></div>
-    <div class="ink-actions">
-      <button class="btn-ink" id="inkCopyBtn">📋 复制标记的</button>
-      <button class="btn-ink" id="inkDownloadBtn">⬇️ 下载全部</button>
-      <button class="btn-ink btn-ink-clear" id="inkClearBtn">清空</button>
-      <span class="batch-msg" id="inkMsg"></span>
-    </div>
-    <textarea id="inkOut" readonly rows="3" placeholder="点上面的「复制标记的」，内容会出现在这里；复制不成功就长按这里全选拷贝。"></textarea>
-
-    <div class="panel-actions">
-      <button class="btn-save" id="saveProgressBtn">💾 保存今天的进度</button>
-      <button class="btn-load" id="loadProgressBtn">📂 读取存档</button>
-    </div>
-    <input type="file" id="fileInput" accept="application/json">
-    <p class="hint-text">
-      提示：进度会自动存在这台设备的浏览器里，关掉页面、隔天再打开都还在，平时不用管。上面的"保存今天的进度"是导出一个存档文件，用来换设备（比如从 iPad 换到电脑），或者担心清了浏览器数据想留个底；在新设备上点"读取存档"选那个文件就能接上。
-      <br><br>
-      字库会按"记忆规律"自动滚动：今天答错、靠教学环节才写对的字，会更快安排复习；一次就写对的字，安排复习的间隔会拉长。你随时可以在这里加"今天最想让孩子先练"的字，这些字会排在最前面。
-    </p>
-
-    <p class="hint-text" id="gameVersion">版本 2026.11.11.4</p>
+    <p class="hint-text" id="gameVersion">版本 2026.11.11.5</p>
   </div>
+</div>
+
+<div hidden>
+  <button id="parentTestRound1Btn">第一轮</button>
+  <button id="parentTestRound2Btn">第二轮</button>
+  <div id="parentTestMsg" role="status"></div>
 </div>
 
 <script src="curriculum-data.js?v=2026.11.02.3"></script>
@@ -705,7 +679,7 @@
    3. 一次就写对 -> 直接开门
    4. 字库用简化的间隔重复：写错次数越多，下次复习间隔越短；
       连续写对，间隔逐渐拉长
-   5. 家长可添加"今日优先字"，存档/读档保存长期进度
+   5. 家长可添加"今日优先字"，学习进度自动保存在浏览器
    ============================================================ */
 
 const STORAGE_KEY_HINT = "进度先保存在本机；可在家长设置中开启跨设备同步。";
@@ -752,7 +726,7 @@ function defaultBank(){
 // set — the change would reach nobody who actually uses the game.
 const BANK_VERSION = 5;
 const ROUND_GOAL = 10;
-const GAME_VERSION = '2026.11.11.4';
+const GAME_VERSION = '2026.11.11.5';
 
 let state = {
   bank: defaultBank(),
@@ -2394,11 +2368,6 @@ const restartBtn = document.getElementById('restartBtn');
 const settingsBtn = document.getElementById('settingsBtn');
 const panelOverlay = document.getElementById('panelOverlay');
 const closePanelBtn = document.getElementById('closePanelBtn');
-const charInput = document.getElementById('charInput');
-const pinyinInput = document.getElementById('pinyinInput');
-const wordInput = document.getElementById('wordInput');
-const sentenceInput = document.getElementById('sentenceInput');
-const addCharBtn = document.getElementById('addCharBtn');
 const batchInput = document.getElementById('batchInput');
 const batchAddBtn = document.getElementById('batchAddBtn');
 const batchMsg = document.getElementById('batchMsg');
@@ -3506,11 +3475,7 @@ function loadPinyinForParent(){
   const script = document.createElement('script');
   script.src = 'pinyin-data.js';
   script.async = true;
-  script.onload = () => {
-    pinyinLoading = false;
-    const char = charInput.value.trim();
-    if(char && !pinyinInput.value.trim()) pinyinInput.value = pinyinAlts(char)[0] || '';
-  };
+  script.onload = () => { pinyinLoading = false; };
   script.onerror = () => { pinyinLoading = false; };
   document.body.appendChild(script);
 }
@@ -3754,22 +3719,6 @@ function parseBatch(text){
   return { items, bad };
 }
 
-onTap(addCharBtn, () => {
-  const c = charInput.value.trim();
-  const w = wordInput.value.trim();
-  if(!c) return;
-  if(!/^[一-鿿]$/.test(c)){ batchMsg.textContent = '每次请填一个汉字；多个字请用上面的批量加入。'; return; }
-  const alts = pinyinAlts(c);
-  const p = pinyinInput.value.trim() || alts[0] || '';
-  if(!p){ loadPinyinForParent(); batchMsg.textContent = '拼音表还在加载，请稍后再点加入；也可以直接填拼音。'; return; }
-  enqueueParentItems([{ char:c, pinyin:p, word:w,
-    ...(sentenceInput.value.trim() ? {sentence:sentenceInput.value.trim()} : {}),
-    alts: pinyinInput.value.trim() ? [p] : alts }]);
-  charInput.value = ''; pinyinInput.value=''; wordInput.value=''; sentenceInput.value='';
-  batchMsg.textContent = '已放到今天最前面；原来的学习记录已保留。';
-  renderQueueList();
-});
-
 onTap(inkCopyBtn, async () => {
   const marked = inkLog.filter(x => x.disputed);
   if(!marked.length){ inkMsg.textContent = '先点一下判得不对的那几条'; return; }
@@ -3813,9 +3762,9 @@ onTap(batchAddBtn, () => {
   if(polyphonic) msg += `，其中 ${polyphonic} 个多音字（标红的），点一下确认读音`;
   if(bad.length) msg += `；没认出：${bad.join('、')}`;
   if(bad.length && !window.PINYIN_MAP) msg += '；输入已保留，拼音表加载后可以再点加入';
-  batchMsg.textContent = msg;
   if(items.length && !bad.length) batchInput.value = '';
   saveState();
+  batchMsg.textContent = progressSaveNotice ? msg + '；' + progressSaveNotice : msg;
   renderQueueList();
 });
 
@@ -3959,7 +3908,6 @@ renderInkList();
 showPlayerDispute(inkLog.find(entry => entry && (entry.v === 'pass' || entry.v === 'fail')) || null);
 onTap(speakBtn, speakPrompt);
 onTap(sentenceBtn, speakSentence);
-charInput.addEventListener('focus',loadPinyinForParent);
 batchInput.addEventListener('focus',loadPinyinForParent);
 if(cloudSyncController && cloudSyncController.status().connected) presentSyncedProgress();
 else loadNextDoor();

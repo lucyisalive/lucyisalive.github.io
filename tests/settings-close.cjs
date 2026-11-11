@@ -12,6 +12,32 @@ const {environment,flush,html}=new Function('require','__dirname','process',star
 
 const markup=html.replace(/<script\b[^>]*>[\s\S]*?<\/script\s*>/gi,'')
   .replace(/<style\b[^>]*>[\s\S]*?<\/style\s*>/gi,'').replace(/<!--[\s\S]*?-->/g,'');
+function divBlock(start){
+  let depth=0;
+  for(const tag of markup.slice(start).matchAll(/<\/?div\b[^>]*>/gi)){
+    depth+=tag[0].startsWith('</')?-1:1;
+    if(depth===0)return markup.slice(start,start+tag.index+tag[0].length);
+  }
+  throw new Error('Unclosed settings div');
+}
+const panelTag=markup.match(/<div\b[^>]*\bid=["']panelOverlay["'][^>]*>/i);
+assert.ok(panelTag,'Keep the settings panel');
+const panelMarkup=divBlock(panelTag.index);
+const firstField=panelMarkup.match(/<(?:input|textarea|select)\b[^>]*>/i)?.[0];
+assert.match(firstField||'',/\bid=["']batchInput["']/,'Adding today’s words is the first input');
+assert.doesNotMatch(markup,/\bid=["'](?:charInput|pinyinInput|wordInput|sentenceInput|addCharBtn)["']/,
+  'One entry handles single and multiple words; do not retain the old form');
+const backup=panelMarkup.match(/<details\b([^>]*\bid=["']manualBackupSettings["'][^>]*)>([\s\S]*?)<\/details\s*>/i);
+assert.ok(backup,'Keep manual backups in a dedicated disclosure');
+assert.doesNotMatch(backup[1],/\bopen(?:\s|=|$)/i,'Manual backups start collapsed');
+for(const id of ['saveProgressBtn','loadProgressBtn'])assert.ok(backup[2].includes(`id="${id}"`),'Backup action must be inside the disclosure: '+id);
+assert.ok(panelMarkup.search(/\bid=["']cloudSyncStatus["']/)>backup.index+backup[0].length,
+  'Cross-device synchronization follows the manual backup section');
+const parentTestIds=['parentTestRound1Btn','parentTestRound2Btn'];
+assert.ok(parentTestIds.every(id=>!panelMarkup.includes(`id="${id}"`)),'Keep internal validation out of parent settings');
+assert.ok([...markup.matchAll(/<div\b([^>]*)>/gi)].some(tag=>
+  /(?:^|\s)hidden(?:\s|=|$)/i.test(tag[1])&&parentTestIds.every(id=>divBlock(tag.index).includes(`id="${id}"`))),
+  'Internal validation buttons remain available to tests under a hidden ancestor');
 const closeTags=[...markup.matchAll(/<button\b[^>]*\bid=["']closePanelBtn["'][^>]*>[\s\S]*?<\/button\s*>/gi)];
 assert.equal(closeTags.length,1,'There must be one close button, with no obsolete footer copy');
 const header=markup.match(/<(?:div|header)\b[^>]*\bclass=["'][^"']*\bpanel-header\b[^"']*["'][^>]*>([\s\S]*?)<\/(?:div|header)\s*>/i);
@@ -79,8 +105,7 @@ function close(e){
 }
 function enqueueThroughUi(e){
   const char=e.run("currentItem.char==='燕'?'理':'燕'");
-  e.ids.get('charInput').value=char;e.ids.get('pinyinInput').value=char==='燕'?'yàn':'lǐ';
-  e.ids.get('wordInput').value=char==='燕'?'燕子':'道理';e.tap('addCharBtn');
+  e.ids.get('batchInput').value=char==='燕'?'燕子的燕 yàn':'道理的理 lǐ';e.tap('batchAddBtn');
   assert.equal(e.run('parentQueueChanged'),true);return char;
 }
 

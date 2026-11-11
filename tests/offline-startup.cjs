@@ -226,10 +226,15 @@ function inkFor(e,char){e.context.testMedians=frozenGlyphs[char].medians;e.run('
   // Settings alone never loads the full dictionary; explicit parent focus does.
   const parent=environment();await flush();assert.equal(parent.context.window.PINYIN_MAP,undefined);
   parent.tap('settingsBtn');assert.equal(parent.network.some(c=>c.kind==='script'),false);
-  parent.ids.get('charInput').value='乙';parent.ids.get('pinyinInput').value='';
+  parent.ids.get('batchInput').value='乙方的乙';
   assert.equal(parent.run("pinyinAlts('乙')[0]"),'yǐ','Reviewed small reading is immediately usable');
-  parent.ids.get('charInput').dispatch('focus');await flush();
+  parent.ids.get('batchInput').dispatch('focus');await flush();
   assert.equal(parent.network.filter(c=>c.kind==='script').length,1);
-  assert.ok(parent.context.window.PINYIN_MAP);assert.equal(parent.ids.get('pinyinInput').value,'yǐ');
+  assert.ok(parent.context.window.PINYIN_MAP);
+  parent.tap('batchAddBtn');await flush();
+  assert.equal(parent.run('state.priorityQueue[0].word'),'乙方');
+  assert.equal(parent.run('state.priorityQueue[0].pinyin'),'yǐ');
+  assert.equal(parent.ids.get('batchInput').value,'');
+  assert.equal(parent.network.filter(c=>c.kind==='script').length,1,'Import reuses the already loaded dictionary');
   console.log('offline-startup: lightweight controls, same-origin per-target/dependency fixtures, cached offline grading, preserved old progress, hung-network timeout/retained-ink retry, and parent-only pinyin passed');
 })().catch(error=>{console.error(error);process.exitCode=1;});

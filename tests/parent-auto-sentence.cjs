@@ -1,6 +1,6 @@
 'use strict';
 
-// Real parent input paths and child speech controls with local synthetic data.
+// The real unified parent input and child speech controls with local synthetic data.
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
@@ -10,20 +10,14 @@ assert.ok(boundary > 0, 'Shared whole-page fixture boundary changed');
 const { environment, flush } = new Function('require', '__dirname', 'process',
   startup.slice(0, boundary) + '\nreturn {environment,flush};')(require, __dirname, process);
 
-async function check(kind, char, word, pinyin, clue) {
+async function check(char, word, pinyin, clue, includeCompanion = false) {
   const e = environment();
   await flush();
   e.tap('settingsBtn');
-  if (kind === 'single') {
-    e.ids.get('charInput').value = char;
-    e.ids.get('pinyinInput').value = pinyin;
-    e.ids.get('wordInput').value = word;
-    assert.equal(e.ids.get('sentenceInput').value, '');
-    e.tap('addCharBtn');
-  } else {
-    e.ids.get('batchInput').value = word + '的' + char + ' ' + pinyin;
-    e.tap('batchAddBtn');
-  }
+  e.ids.get('batchInput').value = word + '的' + char + ' ' + pinyin + (includeCompanion ? '；微风的微 wēi' : '');
+  e.tap('batchAddBtn');
+  assert.deepEqual(JSON.parse(e.run('JSON.stringify(state.priorityQueue.map(item => item.word))')),
+    includeCompanion ? [word, '微风'] : [word], 'The same entry accepts a single prompt or a multiword list');
   assert.match(e.ids.get('queueList').innerHTML, /自动例句/);
   assert.doesNotMatch(e.ids.get('queueList').innerHTML, /可补句子|补句子/);
   assert.equal(e.run('state.priorityQueue[0].sentence'), undefined,
@@ -123,10 +117,10 @@ async function checkAiAfterImport() {
 }
 
 (async () => {
-  await check('single', '燕', '海燕', 'yàn', '贴着海面');
-  await check('batch', '山', '山间薄雾', 'shān', '慢慢散开');
-  await check('batch', '栏', '栏杆', 'lán', '过桥时可以扶着它');
+  await check('燕', '海燕', 'yàn', '贴着海面');
+  await check('山', '山间薄雾', 'shān', '慢慢散开', true);
+  await check('栏', '栏杆', 'lán', '过桥时可以扶着它', true);
   await checkUnknownWord();
   await checkAiAfterImport();
-  console.log('Parent examples: semantic cues on both input paths, word audio without a sentence, and optional custom entry passed.');
+  console.log('Parent examples: semantic cues for one or several words in the same input, word audio without a sentence, and saved custom precedence passed.');
 })().catch(error => { console.error(error); process.exitCode = 1; });

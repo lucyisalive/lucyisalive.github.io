@@ -259,8 +259,7 @@ async function apply(e,value){e.context.syntheticRemote=clone(value);return awai
   quota.run(`globalThis.failPrimarySave=true;const primarySetItem=localStorage.setItem;
     localStorage.setItem=(key,value)=>{if(key==='${SAVE}'&&failPrimarySave)throw Error('synthetic primary quota');return primarySetItem(key,value);};`);
   const savedBeforeQuota=quota.storage.get(SAVE),changedBeforeQuota=quota.remote.calls.changed;
-  quota.ids.get('charInput').value='燕';quota.ids.get('pinyinInput').value='yàn';
-  quota.ids.get('wordInput').value='海燕';quota.tap('addCharBtn');
+  quota.ids.get('batchInput').value='海燕的燕 yàn';quota.tap('batchAddBtn');
   assert.equal(quota.run('state.priorityQueue[0].word'),'海燕','Retain the local edit in RAM');
   assert.equal(quota.storage.get(SAVE),savedBeforeQuota);
   assert.equal(quota.remote.calls.changed,changedBeforeQuota,'Unsaved primary state must not be marked for upload');

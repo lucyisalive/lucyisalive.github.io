@@ -32,8 +32,8 @@ function element(id) {
 }
 const ui = {};
 for (const id of ['progressPath', 'resultBanner', 'continueBtn', 'timerRing', 'pinyinTag', 'statusLine',
-  'submitBtn', 'clearBtn', 'charInput', 'pinyinInput', 'wordInput', 'sentenceInput', 'sentenceBtn', 'batchInput', 'batchMsg',
-  'addCharBtn', 'batchAddBtn', 'closePanelBtn', 'restartBtn', 'panelOverlay', 'finale', 'playzone']) ui[id] = element(id);
+  'submitBtn', 'clearBtn', 'sentenceBtn', 'batchInput', 'batchMsg',
+  'batchAddBtn', 'closePanelBtn', 'restartBtn', 'panelOverlay', 'finale', 'playzone']) ui[id] = element(id);
 const saved = new Map(), handlers = new Map();
 const math = Object.create(Math); math.random = seeded(70);
 const feedback = { reset() {}, celebrate() {}, playCorrect() {}, playWrong() {} };
@@ -62,8 +62,7 @@ run(`let strokesPoints=[];let isDrawing=false;let finaleCalls=0;let finaleBankEm
   function showFinale(bankEmpty){finaleCalls++;finaleBankEmpty=!!bankEmpty;finale.classList.add('show');}`);
 run(section('function loadNextDoor(){', 'function startTeachingRound(){'));
 run(section('let pinyinLoading =', 'function renderQueueList(){'));
-run(section('const PY_LETTERS =', 'onTap(addCharBtn,'));
-run(section('onTap(addCharBtn,', 'onTap(inkCopyBtn,'));
+run(section('const PY_LETTERS =', 'onTap(inkCopyBtn,'));
 run(section('onTap(batchAddBtn,', 'onTap(saveProgressBtn,'));
 run(section('onTap(restartBtn,', '// ---------- settings panel ----------'));
 run(section('onTap(closePanelBtn,', '// ---------- pinyin ----------'));
@@ -126,14 +125,16 @@ enqueue([request('林', '树林', 'lín')]);
 assert.equal(bankItem('林').sentence, undefined, 'A new word must not inherit the old word sentence');
 assert.equal(enqueue([request('老师'), request(''), { char: '生', pinyin: '' }, request('字')]), 1);
 
-// Both real UI entry paths use enqueue, including immediate bank persistence.
+// The unified input accepts one or many prompts and persists them immediately.
 reset();
-ui.charInput.value = '龙'; ui.pinyinInput.value = 'lóng'; ui.wordInput.value = '飞龙';
-ui.sentenceInput.value = '飞龙飞过天空。';
-handlers.get('addCharBtn')();
+ui.batchInput.value = '飞龙的龙 lóng';
+handlers.get('batchAddBtn')();
 assert.equal(bankItem('龙').fromParent, true);
-assert.equal(bankItem('龙').sentence, '飞龙飞过天空。');
+assert.equal(bankItem('龙').word, '飞龙');
+assert.equal(bankItem('龙').pinyin, 'lóng');
 assert.equal(queue()[0].char, '龙'); assert.equal(queue()[0].addedDay, TODAY);
+assert.equal(ui.batchInput.value, '');
+assert.equal(JSON.parse(saved.get(run('SAVE_KEY'))).priorityQueue[0].word, '飞龙');
 ui.batchInput.value = '智慧的慧；警察的警；智慧的慧';
 handlers.get('batchAddBtn')();
 assert.deepEqual(queue().slice(0, 2).map(item => item.char), [...'慧警']);
@@ -332,15 +333,33 @@ assert.equal(run('finaleCalls'), 0);
 reset();
 delete context.window.HanziGameFeedback;
 delete context.window.HanziSentenceHints;
-enqueue([request('龙', '飞龙', 'lóng', '  飞龙飞过天空。  ')]);
+// Use the real queue editor for a custom sentence after importing a word.
+// Only the DOM node and the parent's response are synthetic.
+const editSentence = { id: 'edit-example-0', dataset: { i: '0' } };
+context.queueList = { innerHTML: '', querySelectorAll(selector) {
+  return selector === '.edit-sentence' && /class="edit-sentence"\s+data-i="0"/.test(this.innerHTML) ? [editSentence] : [];
+} };
+let examplePromptCalls = 0;
+context.prompt = (_message, initial) => {
+  examplePromptCalls++;
+  assert.equal(initial, '');
+  return '  飞龙飞过天空。  ';
+};
+run(section('function escapeText(value){', 'function renderStuckList(){'));
+ui.batchInput.value = '飞龙的龙 lóng';
+handlers.get('batchAddBtn')();
+assert.match(context.queueList.innerHTML, /暂无例句/);
+assert.equal(typeof handlers.get(editSentence.id), 'function');
+handlers.get(editSentence.id)();
+assert.equal(examplePromptCalls, 1);
+assert.equal(queue()[0].sentence, '飞龙飞过天空。');
+assert.equal(bankItem('龙').sentence, '飞龙飞过天空。');
+assert.equal(JSON.parse(saved.get(run('SAVE_KEY'))).priorityQueue[0].sentence, '飞龙飞过天空。');
 next(); assert.equal(current().char, '龙');
 assert.equal(run('sentenceFor(currentItem)'), '飞龙飞过天空。');
 answer(true);
 assert.equal(bankItem('龙').history.at(-1).outcome, 'first-try');
 assert.equal(queue()[0].completedDay, TODAY);
-// Run the real queue renderer after the earlier scheduling-only DOM stubs.
-context.queueList = {innerHTML: '', querySelectorAll() { return []; }};
-run(section('function escapeText(value){', 'function renderStuckList(){'));
 run('renderQueueList()');
 assert.ok(context.queueList.innerHTML.includes('自定义例句'));
 assert.ok(context.queueList.innerHTML.includes('今天已完成'));
