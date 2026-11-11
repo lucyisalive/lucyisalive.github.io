@@ -46,7 +46,7 @@ function environment() {
   let now = 0, nextId = 0;
   const timers = new Map(), frames = new Map(), plans = [], requests = [], intervalStarts = [];
   const ui = Object.fromEntries(['demoGlyph', 'charGlow', 'drawSvg', 'playzone', 'writeSlot',
-    'pinyinTag', 'submitBtn', 'clearBtn', 'timerRing', 'statusLine', 'resultBanner', 'continueBtn']
+    'pinyinTag', 'sentenceBtn', 'submitBtn', 'clearBtn', 'timerRing', 'statusLine', 'resultBanner', 'continueBtn']
     .map(name => [name, element()]));
   ui.demoGlyph.classList.add('hidden');
   function schedule(fn, delay, repeating) {
@@ -64,6 +64,7 @@ function environment() {
       return plans.length ? plans.shift() : Promise.resolve(glyph(6));
     },
     stopPromptSpeech() {}, feedbackCall() {}, renderPlayerDispute() {}, parentPriorityEntries: () => [],
+    sentenceFor: () => '',
     setDoorClosed() {}, renderProgressPath() {},
   });
   const run = code => vm.runInContext(code, context);

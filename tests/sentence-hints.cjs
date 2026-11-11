@@ -28,6 +28,16 @@ for (const item of targets) {
     item.word + ': a bare character can use this reviewed default and reading');
 }
 
+const { words } = require('../data/grade3-word-sources.json');
+assert.equal(new Set(words.map(({ word }) => word)).size, 271);
+for (const { word } of words) {
+  const sentence = hints.get({ word });
+  assert.ok(sentence?.includes(word), word + ': full textbook vocabulary needs a contextual example');
+  assert.match(sentence, /[。！？]$/);
+  assert.ok(Array.from(sentence).length >= 8 && Array.from(sentence).length <= 36, word);
+  assert.doesNotMatch(sentence, /词语本|我在书上读到了[“「]|老师请我们用[“「]/, word);
+}
+
 // Saved defaults from the earlier 26-target bank remain available, including the
 // second characters of the same word and the earlier reading 便 biàn.
 const earlier = [
@@ -62,6 +72,10 @@ assert.notEqual(hints.get({ char: '秘', word: '秘密基地' }), hints.get({ ch
 // Familiar parent words, rare words with known usage, and high-confidence
 // categories all use natural scenes. Homophones need different meanings.
 const contexts = [
+  ['栏', '栏杆', '过桥时可以扶着它'], ['杆', '栏杆', '桥两边'],
+  ['杆', '旗杆', '国旗'], ['竿', '竹竿', '撑住豆苗'],
+  ['园', '公园', '放风筝'], ['元', '公元', '二〇〇八年'],
+  ['微', '微风', '树叶轻轻摇'], ['威', '威风', '大公鸡'],
   ['园', '园艺', '种花'], ['明', '小明', '捡'], ['州', '杭州', '西湖'],
   ['工', '工夫', '下午'], ['功', '功夫', '一招一式'],
   ['示', '启示', '团结合作'], ['事', '启事', '公告栏'],
@@ -76,20 +90,16 @@ for (const [char, word, context] of contexts) {
   assert.ok(Array.from(sentence).length <= 36 && /[。！？]$/.test(sentence), word + ': keep examples short and complete');
 }
 
-// An unfamiliar word is quoted exactly and not assigned a made-up meaning,
-// person or place. A mixed list is just repeated use of the same pure getter.
+// A word without a usable context has no sentence. Neither a reference to the
+// spelling nor a substring of a known word is a contextual example.
 const unknownWords = [
   { char: '霙', word: '霙羽' }, { char: '𠮷', word: '𠮷字帖' }, { char: '岫', word: '云岫里' },
-  { char: '画', word: 'AI绘画' }, { char: '轻', word: '很_很轻', completedDay: null, fullWord: '很轻很轻' },
+  { char: '画', word: 'AI绘画' }, { char: '轻', word: '很_很轻', completedDay: null },
   { char: '一', word: '一'.repeat(24) },
+  { char: '栏', word: '栏杆牌' }, { char: '风', word: '藏风' },
 ];
-for (const candidate of unknownWords) {
-  const { fullWord, ...item } = candidate;
-  const frozen = Object.freeze(item), exactWord = fullWord || item.word;
-  const sentence = hints.get(frozen);
-  assert.ok(sentence && sentence.includes('“' + exactWord + '”'), exactWord + ': unfamiliar spelling must remain intact');
-  assert.ok(Array.from(sentence).length <= 36 && /[。！？]$/.test(sentence), exactWord + ': complete short fallback');
-  assert.equal(hints.get(frozen), sentence, 'Automatic fallback must stay stable on a refresh');
+for (const item of unknownWords) {
+  assert.equal(hints.get(Object.freeze(item)), null, item.word + ': do not substitute a filler sentence');
 }
 assert.equal(hints.get({ char: '园', word: '公元' }), null, 'A contradictory target cannot use a word');
 assert.equal(hints.get({ char: '岫', word: '云袖里' }), null, 'Never use a homophone as a replacement');
@@ -128,4 +138,4 @@ assert.equal(browser.window.HanziSentenceHints.get(unknown), hints.get(unknown),
 assert.deepEqual(Object.keys(browser.window.HanziSentenceHints), ['get']);
 assert.equal(Object.isFrozen(hints), true);
 
-console.log('Sentence hints: 92 textbook and 26 earlier targets, custom precedence, homophone/rare contexts, bounded exact-word fallback, and browser export passed.');
+console.log('Sentence hints: all 271 textbook words, earlier targets, custom precedence, semantic cues for homophones, and unavailable contexts passed.');

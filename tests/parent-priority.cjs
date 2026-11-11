@@ -32,7 +32,7 @@ function element(id) {
 }
 const ui = {};
 for (const id of ['progressPath', 'resultBanner', 'continueBtn', 'timerRing', 'pinyinTag', 'statusLine',
-  'submitBtn', 'clearBtn', 'charInput', 'pinyinInput', 'wordInput', 'sentenceInput', 'batchInput', 'batchMsg',
+  'submitBtn', 'clearBtn', 'charInput', 'pinyinInput', 'wordInput', 'sentenceInput', 'sentenceBtn', 'batchInput', 'batchMsg',
   'addCharBtn', 'batchAddBtn', 'closePanelBtn', 'restartBtn', 'panelOverlay', 'finale', 'playzone']) ui[id] = element(id);
 const saved = new Map(), handlers = new Map();
 const math = Object.create(Math); math.random = seeded(70);

@@ -2,7 +2,7 @@
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
-<meta name="game-version" content="2026.11.11.1">
+<meta name="game-version" content="2026.11.11.2">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>汉字魔法门</title>
 <link rel="stylesheet" href="game-feedback.css?v=2026.11.02.4">
@@ -516,7 +516,7 @@
         <!-- Never speaks on its own: reading the pinyin is the skill being practised, so
              the sound is there for when he's stuck, not handed to him every time. -->
         <button class="speak-btn" id="speakBtn" title="读一遍给我听">🔊</button>
-        <button class="sentence-btn" id="sentenceBtn" title="听一句话，分清词语的意思">句子提示</button>
+        <button class="sentence-btn" id="sentenceBtn" title="听一句话，分清词语的意思" hidden>句子提示</button>
       </div>
       <div class="write-canvas-wrap" id="writeTile">
         <div class="grid-lines"></div>
@@ -634,7 +634,7 @@
       <input type="text" id="wordInput" placeholder="词语（可选）">
       <button id="addCharBtn">加入</button>
     </div>
-    <p class="hint-text">有组词就自动配例句，孩子点“句子提示”可以听。</p>
+    <p class="hint-text">有合适的例句时，孩子可以点“句子提示”听一听。</p>
     <details class="optional-sentence">
       <summary>自定义例句（选填）</summary>
       <label for="sentenceInput">例句</label>
@@ -672,7 +672,7 @@
       字库会按"记忆规律"自动滚动：今天答错、靠教学环节才写对的字，会更快安排复习；一次就写对的字，安排复习的间隔会拉长。你随时可以在这里加"今天最想让孩子先练"的字，这些字会排在最前面。
     </p>
 
-    <p class="hint-text" id="gameVersion">版本 2026.11.11.1</p>
+    <p class="hint-text" id="gameVersion">版本 2026.11.11.2</p>
   </div>
 </div>
 
@@ -743,7 +743,7 @@ function defaultBank(){
 // set — the change would reach nobody who actually uses the game.
 const BANK_VERSION = 5;
 const ROUND_GOAL = 10;
-const GAME_VERSION = '2026.11.11.1';
+const GAME_VERSION = '2026.11.11.2';
 
 let state = {
   bank: defaultBank(),
@@ -2907,6 +2907,7 @@ function showDemoGlyph(char, visible){ return setGlyph(demoGlyph, char, visible)
 function setWritingView(on){
   playzone.classList.toggle('writing', on);
   writeSlot.style.display = on ? 'flex' : 'none';
+  if(on) sentenceBtn.hidden = !sentenceFor(currentItem);
   if(!on){
     cancelTeachingRound();
     showDemoGlyph('', false);
@@ -3443,6 +3444,7 @@ onTap(restartBtn, function(){
 onTap(settingsBtn, () => { stopPromptSpeech(); renderQueueList(); renderMasteredList(); renderStuckList(); renderInkList(); inkMsg.textContent = inkSaveNotice; panelOverlay.classList.add('show'); if(typeof renderCloudSyncStatus === 'function') renderCloudSyncStatus(); if(typeof syncTick === 'function') syncTick(); });
 onTap(closePanelBtn, () => {
   panelOverlay.classList.remove('show');
+  sentenceBtn.hidden = !sentenceFor(currentItem);
   if(!parentQueueChanged){ if(typeof syncTick === 'function') syncTick(); return; }
   parentQueueChanged = false;
   if(passedCount >= ROUND_GOAL){ if(typeof syncTick === 'function') syncTick(); return; }
@@ -3504,10 +3506,11 @@ function renderQueueList(){
     const bankItem = state.bank.find(b => b.char === p.char);
     const status = p.completedDay === todayStr() ? '今天已完成' : isStuck(bankItem || {}) ? '先点下方“我讲过了”再复习' : '今天优先复习';
     const sentence = sentenceFor(p);
+    const sentenceStatus = sentence ? (p.sentence ? ' · 自定义例句' : ' · 自动例句') : (p.word ? ' · 暂无例句' : '');
     return `
     <div class="queue-item">
-      <span>${escapeText(p.char)}（${py}）${p.word ? ' · '+escapeText(p.word) : ''}<small>${status}${sentence ? (p.sentence ? ' · 自定义例句' : ' · 自动例句') : ''}</small></span>
-      <span class="queue-actions">${sentence ? `<button class="edit-sentence" data-i="${i}">换例句</button>` : ''}<button class="del" data-i="${i}">删除</button></span>
+      <span>${escapeText(p.char)}（${py}）${p.word ? ' · '+escapeText(p.word) : ''}<small>${status}${sentenceStatus}</small></span>
+      <span class="queue-actions">${sentence || p.word ? `<button class="edit-sentence" data-i="${i}">${sentence ? '换例句' : '加例句'}</button>` : ''}<button class="del" data-i="${i}">删除</button></span>
     </div>`;
   }).join('') || '<div style="font-size:12px;color:#8a8272;">暂无今日优先字</div>';
 
