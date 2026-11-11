@@ -79,6 +79,7 @@ function environment() {
   run(stages[0]);
   run(source('function cancelTeachingRound(){', '// ---------- freehand drawing surface'));
   run(source('function clearCanvas(){', '// ---------- character stroke data'));
+  run(source('function escapeText(value){', 'function renderQueueList(){'));
   run(source('function glyphSvg(', '// ---------- reading the prompt aloud ----------'));
   run(source('function showDemoGlyph(', '// ---------- main flow ----------'));
   run(source('function presentDoor(', '// ---------- result handling & teaching-mode state machine ----------'));

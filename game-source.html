@@ -2,7 +2,7 @@
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
-<meta name="game-version" content="2026.11.11.2">
+<meta name="game-version" content="2026.11.11.3">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>汉字魔法门</title>
 <link rel="stylesheet" href="game-feedback.css?v=2026.11.02.4">
@@ -635,6 +635,14 @@
       <button id="addCharBtn">加入</button>
     </div>
     <p class="hint-text">有合适的例句时，孩子可以点“句子提示”听一听。</p>
+    <details class="optional-sentence" id="aiSentenceSettings">
+      <summary>AI 造句</summary>
+      <p id="aiSentenceStatus" role="status">尚未连接。</p>
+      <p>授权 OpenRouter 后，加入没有例句的词会自动造句。模型服务会收到词语、目标字和读音，可能保留这些文本。请只录普通学习词语。</p>
+      <button id="aiSentenceConnectBtn">连接 AI 造句</button>
+      <button id="aiSentenceFillBtn" hidden>补齐今天的例句</button>
+      <button id="aiSentenceDisconnectBtn" hidden>断开这台设备</button>
+    </details>
     <details class="optional-sentence">
       <summary>自定义例句（选填）</summary>
       <label for="sentenceInput">例句</label>
@@ -672,13 +680,14 @@
       字库会按"记忆规律"自动滚动：今天答错、靠教学环节才写对的字，会更快安排复习；一次就写对的字，安排复习的间隔会拉长。你随时可以在这里加"今天最想让孩子先练"的字，这些字会排在最前面。
     </p>
 
-    <p class="hint-text" id="gameVersion">版本 2026.11.11.2</p>
+    <p class="hint-text" id="gameVersion">版本 2026.11.11.3</p>
   </div>
 </div>
 
 <script src="curriculum-data.js?v=2026.11.02.3"></script>
 <script src="practice-selector.js?v=2026.11.02.3"></script>
 <script src="sentence-hints.js?v=2026.11.02.4"></script>
+<script src="ai-sentences.js"></script>
 <script src="game-feedback.js?v=2026.11.02.4"></script>
 <script src="glyph-catalog.js"></script>
 <script src="glyph-loader.js"></script>
@@ -743,7 +752,7 @@ function defaultBank(){
 // set — the change would reach nobody who actually uses the game.
 const BANK_VERSION = 5;
 const ROUND_GOAL = 10;
-const GAME_VERSION = '2026.11.11.2';
+const GAME_VERSION = '2026.11.11.3';
 
 let state = {
   bank: defaultBank(),
@@ -2650,6 +2659,20 @@ function nextParentPriority(){
   return unfinishedParentEntries().find(p => !priorityConsumedToday.has(p.char) && !pendingChars.has(p.char));
 }
 
+function requestAiSentences(items){
+  try{
+    const client = window.hanziAiSentenceClient;
+    if(client?.status().connected){
+      const missing = items.filter(item => item.word && !sentenceFor(item));
+      if(missing.length){
+        Promise.resolve(client.generate(missing)).catch(() => {});
+        return true;
+      }
+    }
+  }catch(_){ /* Optional generation cannot delay or undo a parent import. */ }
+  return false;
+}
+
 // Importing is a scheduling request, never a reset of the child's learning.
 function enqueueParentItems(items){
   const latest = new Map();
@@ -2675,6 +2698,7 @@ function enqueueParentItems(items){
   state.priorityQueue = [...latest.values(), ...state.priorityQueue.filter(p => !latest.has(p.char))];
   if(latest.size) parentQueueChanged = true;
   saveState();
+  if(latest.size) requestAiSentences([...latest.values()]);
   return latest.size;
 }
 
@@ -2763,7 +2787,7 @@ function setDoorOpen(){ doorpanel.classList.add('open'); }
 // never disagree — and it comes out as clean printed 楷体 rather than a brush face.
 // The data's y axis points up with the glyph box at y ∈ [-124, 900]; hence the flip.
 function glyphSvg(strokes){
-  const paths = strokes.map(d => `<path d="${d}"/>`).join('');
+  const paths = strokes.map(d => `<path d="${escapeText(d)}"/>`).join('');
   return `<svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">` +
          `<g transform="scale(1,-1) translate(0,-900)">${paths}</g></svg>`;
 }
@@ -2782,7 +2806,7 @@ async function renderGlyph(el, char){
     return data;
   }catch(e){
     if(el.dataset.want !== char || el.dataset.glyphRequest !== requestId) return;
-    el.innerHTML = `<div style="font-size:120px;line-height:1;">${char}</div>`;
+    el.innerHTML = `<div style="font-size:120px;line-height:1;">${escapeText(char)}</div>`;
   }
 }
 
@@ -2836,7 +2860,7 @@ function mountainCall(method, ...args){
   }catch(_){ /* Scenery never controls lesson flow or persistence. */ }
 }
 
-function sentenceFor(item){
+function localSentenceFor(item){
   let fallback = '';
   try{
     if(item && typeof item.sentence === 'string') fallback = item.sentence.trim();
@@ -2853,6 +2877,14 @@ function sentenceFor(item){
     }
   }catch(e){ /* Keep the parent's saved sentence if the optional module fails. */ }
   return fallback;
+}
+
+function sentenceFor(item){
+  const local = localSentenceFor(item);
+  if(local) return local;
+  try{
+    return window.hanziAiSentenceClient?.get(item) || '';
+  }catch(_){ return ''; }
 }
 
 let activeSpeech = null;
@@ -3506,7 +3538,9 @@ function renderQueueList(){
     const bankItem = state.bank.find(b => b.char === p.char);
     const status = p.completedDay === todayStr() ? '今天已完成' : isStuck(bankItem || {}) ? '先点下方“我讲过了”再复习' : '今天优先复习';
     const sentence = sentenceFor(p);
-    const sentenceStatus = sentence ? (p.sentence ? ' · 自定义例句' : ' · 自动例句') : (p.word ? ' · 暂无例句' : '');
+    const sentenceStatus = p.sentence ? ' · 自定义例句'
+      : sentence ? (localSentenceFor(p) ? ' · 自动例句' : ' · AI 例句')
+      : p.word ? ' · 暂无例句' : '';
     return `
     <div class="queue-item">
       <span>${escapeText(p.char)}（${py}）${p.word ? ' · '+escapeText(p.word) : ''}<small>${status}${sentenceStatus}</small></span>
@@ -3529,6 +3563,7 @@ function renderQueueList(){
       const bankItem = state.bank.find(b => b.char === it.char);
       if(bankItem) bankItem.pinyin = it.pinyin;
       saveState();
+      requestAiSentences([it]);
       renderQueueList();
     });
   });
@@ -3544,6 +3579,7 @@ function renderQueueList(){
         if(custom) bankItem.sentence = custom; else delete bankItem.sentence;
       }
       saveState();
+      if(!custom) requestAiSentences([it]);
       renderQueueList();
     });
   });
@@ -3556,8 +3592,8 @@ function renderStuckList(){
   const stuck = state.bank.filter(b => !b.retired && isStuck(b));
   stuckList.innerHTML = stuck.map(b => `
     <div class="stuck-item">
-      <span><span class="ch">${b.char}</span><span class="word">${b.word || ''}</span></span>
-      <button class="btn-taught" data-ch="${b.char}">我讲过了，放回去</button>
+      <span><span class="ch">${escapeText(b.char)}</span><span class="word">${escapeText(b.word)}</span></span>
+      <button class="btn-taught" data-ch="${escapeText(b.char)}">我讲过了，放回去</button>
     </div>`).join('') ||
     '<div style="font-size:12px;color:#8a8272;">今天没有卡住的字</div>';
 
@@ -3580,13 +3616,60 @@ function renderStuckList(){
   });
 }
 
+function renderAiSentenceStatus(){
+  const status = window.hanziAiSentenceClient?.status();
+  document.getElementById('aiSentenceStatus').textContent = status?.message || '这个浏览器暂时无法连接 AI 造句。';
+  const connect = document.getElementById('aiSentenceConnectBtn');
+  connect.hidden = !!status?.connected;
+  connect.disabled = !status || !!status.busy;
+  const fill = document.getElementById('aiSentenceFillBtn');
+  fill.hidden = !status?.connected;
+  fill.disabled = !!status?.busy;
+  document.getElementById('aiSentenceDisconnectBtn').hidden = !status?.connected;
+}
+
+function initAiSentences(){
+  try{
+    const client = window.HanziAiSentences.create(window, () => {
+      renderAiSentenceStatus();
+      if(currentItem && !parentValidation) sentenceBtn.hidden = !sentenceFor(currentItem);
+      if(panelOverlay.classList.contains('show')) renderQueueList();
+    });
+    window.hanziAiSentenceClient = client;
+    renderAiSentenceStatus();
+    Promise.resolve(client.complete()).then(connected => {
+      if(!connected) return;
+      panelOverlay.classList.add('show');
+      document.getElementById('aiSentenceSettings').open = true;
+    }).catch(() => {});
+  }catch(_){ renderAiSentenceStatus(); }
+}
+
+onTap(document.getElementById('aiSentenceConnectBtn'), () => {
+  if(progressSaveNotice){
+    document.getElementById('aiSentenceStatus').textContent = progressSaveNotice;
+    return;
+  }
+  if(isDrawing || strokesPoints.length || submitBtn.disabled || currentMode === 'teaching' || parentValidation){
+    document.getElementById('aiSentenceStatus').textContent = '请先写完当前这题，再连接 AI 造句。';
+    return;
+  }
+  Promise.resolve(window.hanziAiSentenceClient?.begin()).catch(() => {});
+});
+onTap(document.getElementById('aiSentenceFillBtn'), () => {
+  if(!requestAiSentences(parentPriorityEntries())){
+    document.getElementById('aiSentenceStatus').textContent = '今天没有待补例句的词。';
+  }
+});
+onTap(document.getElementById('aiSentenceDisconnectBtn'), () => window.hanziAiSentenceClient?.disconnect());
+
 // Shows what's retired and, just as usefully, what's part-way there — "写对过 2 天" tells the
 // parent a character is one good morning away from being done, which a bare list can't.
 function renderMasteredList(){
   const done = state.bank.filter(isMastered);
   const partial = state.bank.filter(b => !isMastered(b) && (b.passedDays || []).length > 0);
-  const chips = done.map(b => `<span class="mastered-chip">${b.char}<small>${b.passedDays.length}天</small></span>`)
-    .concat(partial.map(b => `<span class="progress-chip">${b.char}<small>${b.passedDays.length}/${MASTERED_DAYS}</small></span>`));
+  const chips = done.map(b => `<span class="mastered-chip">${escapeText(b.char)}<small>${b.passedDays.length}天</small></span>`)
+    .concat(partial.map(b => `<span class="progress-chip">${escapeText(b.char)}<small>${b.passedDays.length}/${MASTERED_DAYS}</small></span>`));
   masteredList.innerHTML = chips.join('') ||
     '<div style="font-size:12px;color:#8a8272;">还没有字通过 3 天考验</div>';
 }
@@ -3595,7 +3678,7 @@ function renderMasteredList(){
 function renderInkList(){
   inkList.innerHTML = inkLog.map((it, i) => `
     <div class="ink-item ${it.disputed ? 'marked' : ''}">
-      <span><span class="ch">${it.c}</span><span class="meta">${it.d} · 系统判<span class="${it.v === 'pass' ? 'v-pass' : 'v-fail'}">${it.v === 'pass' ? '对' : '错'}</span> · ${it.s.length}笔${it.playerReview ? ' · 孩子反馈：' + (it.playerReview.reportedExpected === 'pass' ? '写对判错' : '写错判对') : ''}</span></span>
+      <span><span class="ch">${escapeText(it.c)}</span><span class="meta">${escapeText(it.d)} · 系统判<span class="${it.v === 'pass' ? 'v-pass' : 'v-fail'}">${it.v === 'pass' ? '对' : '错'}</span> · ${it.s.length}笔${it.playerReview ? ' · 孩子反馈：' + (it.playerReview.reportedExpected === 'pass' ? '写对判错' : '写错判对') : ''}</span></span>
       <button class="ink-mark" data-i="${i}">${it.disputed ? '✓ 已标记' : '判得不对'}</button>
     </div>`).join('') ||
     '<div style="font-size:12px;color:#8a8272;">还没有笔迹记录，让孩子写几个字就有了</div>';
@@ -3867,6 +3950,7 @@ loadInkLog();
 loadParentTestInkLog();
 initMountainJourney();
 initProgressSync();
+initAiSentences();
 applyScene(state.scenesUnlocked);
 renderQueueList();
 renderMasteredList();

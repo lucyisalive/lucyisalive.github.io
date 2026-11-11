@@ -89,7 +89,7 @@ for (const item of curriculum.entries) {
   }
   assert.equal(bankItem.curriculumId, curriculum.id);
 }
-const loaderOrder = ['curriculum-data.js', 'practice-selector.js', 'sentence-hints.js', 'game-feedback.js', 'glyph-catalog.js', 'glyph-loader.js', 'learning-timing.js', 'parent-validation.js'];
+const loaderOrder = ['curriculum-data.js', 'practice-selector.js', 'sentence-hints.js', 'ai-sentences.js', 'game-feedback.js', 'glyph-catalog.js', 'glyph-loader.js', 'learning-timing.js', 'parent-validation.js'];
 const loaderPosition = file => {
   const escaped = file.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const pattern = new RegExp('<script\\b[^>]*\\b(?:src|data-source)=["\\\']' + escaped + '(?:\\?[^"\\\']*)?["\\\'][^>]*>', 'i');

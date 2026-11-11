@@ -13,7 +13,7 @@ const html = fromSource ? require('../tools/build-page.cjs').buildPage().html
 const scripts = [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script\s*>/gi)]
   .map(match => ({attributes: match[1], source: match[2]}));
 const mainIndex = scripts.findIndex(script => script.source.includes('function newBankItem(') && script.source.includes('function onTap('));
-const modules = ['curriculum-data.js', 'practice-selector.js', 'sentence-hints.js',
+const modules = ['curriculum-data.js', 'practice-selector.js', 'sentence-hints.js', 'ai-sentences.js',
   'game-feedback.js', 'glyph-catalog.js', 'glyph-loader.js', 'learning-timing.js', 'parent-validation.js', 'progress-sync.js',
   'mountain-journey.js'];
 const styles = ['game-feedback.css', 'mountain-journey.css'];

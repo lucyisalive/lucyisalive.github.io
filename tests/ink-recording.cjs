@@ -52,6 +52,7 @@ function environment({maxCount = 200, maxBytes = 2 * 1024 * 1024, failQuota = fa
     .replace(/const MAX_INK_BYTES = 2 \* 1024 \* 1024;/, 'const MAX_INK_BYTES = ' + maxBytes + ';');
   run(recordSource);
   run(section('function medianToCanvasPoints(', 'const progressPath ='));
+  run(section('function escapeText(value){', 'function renderQueueList(){'));
   run(section('function renderInkList(){', 'function inkPayloadText(only){'));
   run(section('function inkPayloadText(only){', '// ---------- batch paste ----------'));
   // Run the actual settings-opening handler; a hidden warning is useful only if

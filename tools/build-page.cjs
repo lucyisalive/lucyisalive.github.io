@@ -13,7 +13,7 @@ const ROOT = path.resolve(__dirname, '..');
 const SOURCE_FILE = 'game-source.html';
 const OUTPUT_FILES = ['index.html', '汉字魔法门_4.html'];
 const SCRIPT_FILES = [
-  'curriculum-data.js', 'practice-selector.js', 'sentence-hints.js',
+  'curriculum-data.js', 'practice-selector.js', 'sentence-hints.js', 'ai-sentences.js',
   'game-feedback.js', 'glyph-catalog.js', 'glyph-loader.js', 'learning-timing.js', 'parent-validation.js',
   'progress-sync.js', 'mountain-journey.js',
 ];
