@@ -3,7 +3,7 @@
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
-<meta name="game-version" content="2026.11.11.5">
+<meta name="game-version" content="2026.11.11.6">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>汉字魔法门</title>
 <style data-source="game-feedback.css">
@@ -931,7 +931,7 @@ body.journey-departing #mountainJourney .journey-background {
         </div>
       </div>
     </div>
-    <p class="hint-text" id="gameVersion">版本 2026.11.11.5</p>
+    <p class="hint-text" id="gameVersion">版本 2026.11.11.6</p>
   </div>
 </div>
 
@@ -4477,7 +4477,7 @@ function defaultBank(){
 // set — the change would reach nobody who actually uses the game.
 const BANK_VERSION = 5;
 const ROUND_GOAL = 10;
-const GAME_VERSION = '2026.11.11.5';
+const GAME_VERSION = '2026.11.11.6';
 
 let state = {
   bank: defaultBank(),
@@ -5884,6 +5884,257 @@ function rescueYanFaceFixedPair(baseline, official, user, charDiag){
   return {pass:true,diag,rows:next};
 }
 
+// A second assignment is justified by the spatial roles of these two glyphs.
+// It reuses the ordinary stroke scores and only examines complete, distinct ink.
+function rescueFixedStrokeRoles(char, baseline, official, user, charDiag){
+  const count=char==='建' ? 8 : 9;
+  const rows=baseline.rows;
+  if(official.length!==count || user.length!==count || rows.length!==count ||
+    rows.some(r=>r.c.veto || !/^\d+$/.test(r.o) || !/^u\d+$/.test(r.u)))return null;
+  const byRef=new Map(rows.map(r=>[Number(r.o),Number(r.u.slice(1))]));
+  if(byRef.size!==count || new Set(byRef.values()).size!==count ||
+    rows.some(r=>Number(r.o)>=count || Number(r.u.slice(1))>=count))return null;
+  const aligned=alignClusterUniform(user,bboxOf(official));
+  const independent=aligned.map((pts,index)=>({pts,id:'u'+index}));
+  if(dropOneRetrace(independent.slice(),charDiag,[]))return null;
+
+  const movable=char==='建' ? [1,2,3,4] : [0,1,2,4,5];
+  const fixed=rows.filter(r=>!movable.includes(Number(r.o)));
+  // A rescue may change the named roles only if the other strokes make
+  // good spatial anchors. A displaced fold or a rotated radical is not
+  // grounds to give the rest of the character a second pass.
+  const anchorQuality=char==='建' ? .5 : .62;
+  if(fixed.some(r=>r.c.q<anchorQuality || r.c.posDist>.17))return null;
+  const strokes=movable.map(role=>{
+    const id=byRef.get(role), points=aligned[id];
+    return {id,points,mid:centroidOf(resample(points,16))};
+  });
+  let reassigned;
+  if(char==='建'){
+    // In 聿, the bars cross the same vertical spine and form four distinct tiers.
+    const spine=aligned[byRef.get(5)];
+    const crossing=stroke=>{
+      for(let i=1;i<spine.length;i++){
+        const a=spine[i-1], b=spine[i];
+        if((a.y<stroke.mid.y)===(b.y<stroke.mid.y))continue;
+        const x=a.x+(b.x-a.x)*(stroke.mid.y-a.y)/(b.y-a.y);
+        const bounds=bboxOf([stroke.points]);
+        return x>bounds.minX && x<bounds.maxX;
+      }
+      return false;
+    };
+    strokes.sort((a,b)=>a.mid.y-b.mid.y);
+    if(strokes.some((s,index)=>!crossing(s)|| (index>0&&s.mid.y-strokes[index-1].mid.y<charDiag*.035)))return null;
+    if(strokes[0].id!==byRef.get(4) || strokes[3].id!==byRef.get(1) ||
+      strokes[1].id!==byRef.get(2) || strokes[2].id!==byRef.get(3))return null;
+    // The top fold of 聿 begins by crossing right and then descends; a rotated
+    // fold can still earn a shape score from the nearest-point comparison.
+    const fold=aligned[byRef.get(0)], b=bboxOf([fold]);
+    const ends=[fold[0],fold.at(-1)].sort((a,c)=>a.y-c.y);
+    if(ends[0].x>b.minX+b.w*.32 || ends[1].y<b.minY+b.h*.75 || b.maxX-ends[1].x<b.w*.10)return null;
+    const corner=fold.reduce((right,p)=>p.x>right.x?p:right,fold[0]);
+    if(Math.abs(corner.y-ends[0].y)>(corner.x-ends[0].x)*.55)return null;
+    const leftFold=aligned[byRef.get(6)], sweep=aligned[byRef.get(7)];
+    const meets=(a,c)=>resample(a,32).some(p=>resample(c,32).some(q=>ptDist(p,q)<charDiag*.023));
+    const spineBounds=bboxOf([spine]);
+    if(fixed.some(r=>r.o!=='0' && r.c.dirDiff>29) ||
+      spineBounds.minY+charDiag*.037>b.minY || spineBounds.maxY-charDiag*.05<strokes[3].mid.y ||
+      bboxOf([leftFold]).minY>strokes[0].mid.y ||
+      !meets(leftFold,sweep) || !meets(fold,strokes[0].points))return null;
+    reassigned=strokes;
+  } else {
+    // 冫 owns the two leftmost marks; 欠 owns the upper slash and lower fork.
+    // Keep its fold and the bottom 女 paired as before.
+    strokes.sort((a,b)=>a.mid.x-b.mid.x);
+    const left=strokes.slice(0,2).sort((a,b)=>a.mid.y-b.mid.y);
+    const right=strokes.slice(2).sort((a,b)=>a.mid.y-b.mid.y);
+    if(strokes[2].mid.x-strokes[1].mid.x<charDiag*.075 || left[1].mid.y-left[0].mid.y<charDiag*.095 ||
+      right[1].mid.y-right[0].mid.y<charDiag*.085)return null;
+    const fork=right.slice(1).sort((a,b)=>a.mid.x-b.mid.x);
+    if(fork[1].mid.x-fork[0].mid.x<charDiag*.036)return null;
+    const nearEnd=stroke=>[stroke.points[0],stroke.points.at(-1)].sort((a,b)=>a.y-b.y)[0];
+    if(ptDist(nearEnd(fork[0]),nearEnd(fork[1]))>charDiag*.13)return null;
+    // The last stroke of 欠 is a sweep, not a second turn-shaped hook.
+    if(strokeProfile(fork[1].points).midTurn>60 ||
+      fixed.some(r=>(r.o==='3' && r.c.lenRatio<.85) || (r.o==='6' && r.c.lenRatio<.70)))return null;
+    reassigned=[...left,right[0],...fork];
+  }
+  const revised=movable.map((role,index)=>({u:'u'+reassigned[index].id,o:String(role),
+    c:strokeQuality(reassigned[index].points,official[role],charDiag,false)}));
+  const rolePlausible=r=>{
+    if(r.c.veto || r.c.q<Q_FLOOR || r.c.posDist>.19)return false;
+    if(char==='建')return r.c.dirDiff<=28;
+    return (Number(r.o)>=2 || r.c.posDist<=.13) && (r.o!=='2' || r.c.dirDiff<=28);
+  };
+  if(!revised.every(rolePlausible))return null;
+  const next=revised.concat(fixed);
+  if(next.reduce((sum,r)=>sum+r.c.q,0)/count<Q_BAR)return null;
+  return {pass:true,rows:next,diag:[...baseline.diag,char+' spatial reassignment passed with original stroke scores']};
+}
+
+function rescueShortDistinctMark(char, baseline, official, user, charDiag){
+  const role=char==='瞧'?5:2;
+  const count=char==='瞧'?17:6;
+  const rows=baseline.rows;
+  if(user.length!==count||official.length!==count||rows.length!==count)return null;
+  const aligned=alignClusterUniform(user,bboxOf(official));
+  const byRole=Array(count);
+  for(const row of rows){
+    if(row.c.veto||!/^u[0-9]+$/.test(row.u)||!/^[0-9]+$/.test(row.o))return null;
+    const index=Number(row.o);
+    if(index!==role&&row.c.q<Q_FLOOR)return null;
+    byRole[index]=aligned[Number(row.u.slice(1))];
+  }
+  const independent=aligned.map((pts,index)=>({pts,id:'u'+index}));
+  if(dropOneRetrace(independent,charDiag,[]))return null;
+  const mids=byRole.map(s=>centroidOf(resample(s,16)));
+  const stroke=byRole[role];
+  const mark=mids[role];
+  const length=strokeLength(stroke);
+  const a=stroke[0],b=stroke.at(-1);
+  const top=a.y<b.y?a:b, bottom=top===a?b:a;
+  const dx=bottom.x-top.x,dy=bottom.y-top.y;
+  const ref=official[role];
+  const refMid=centroidOf(resample(ref,16));
+  const markDistance=points=>char==='瞧'?Math.min(...resample(points,16).map(p=>ptDist(mark,p))):ptDist(mark,centroidOf(resample(points,16)));
+  const ownDistance=markDistance(ref);
+  const distinct=official.every((other,index)=>index===role||ownDistance<markDistance(other));
+  if(!distinct||ptDist(top,bottom)<length*.72)return null;
+
+  const ordered=(roles,axis,gap)=>roles.every((index,i)=>i===0||mids[index][axis]-mids[roles[i-1]][axis]>gap*charDiag);
+  let quality;
+  if(char==='瞧'){
+    // The shortened 撇 must still travel down and left, and meet the upper
+    // end of 隹's left vertical. Keep all the other strokes and their roles.
+    if(dx>-.045*charDiag||dy<.045*charDiag||length>strokeLength(ref)*.55)return null;
+    const left=mids.map((p,i)=>({x:p.x,i})).sort((a,b)=>a.x-b.x).slice(0,5);
+    const bottomDots=mids.map((p,i)=>({y:p.y,i})).sort((a,b)=>b.y-a.y).slice(0,4);
+    if(left.some(p=>p.i>=5)||bottomDots.some(p=>p.i<13))return null;
+    // The original pairing can swap same-looking horizontal rows. Verify
+    // the group still has distinct rows, without changing their quality scores.
+    const spatialOrder=(roles,axis)=>roles.sort((a,b)=>mids[a][axis]-mids[b][axis]);
+    const eyeRows=spatialOrder([2,3,4],'y');
+    const birdRows=spatialOrder([8,9,10,12],'y');
+    const dots=spatialOrder([13,14,15,16],'x');
+    if(!ordered(eyeRows,'y',.035)||!ordered(birdRows,'y',.04)||!ordered(dots,'x',.04))return null;
+
+    // A short 撇 cannot recover a missing bar or a detached/mirrored frame.
+    const verticalEnds=points=>points[0].y<points.at(-1).y?[points[0],points.at(-1)]:[points.at(-1),points[0]];
+    const [eyeTopLeft,eyeBottomLeft]=verticalEnds(byRole[0]);
+    const [eyeTopFold,eyeBottomRight]=verticalEnds(byRole[1]);
+    if(Math.abs(eyeTopLeft.x-eyeTopFold.x)>.08*charDiag||Math.abs(eyeTopLeft.y-eyeTopFold.y)>.10*charDiag)return null;
+    if(eyeBottomRight.x-eyeBottomLeft.x<.05*charDiag)return null;
+    const eyeTop=Math.max(eyeTopLeft.y,eyeTopFold.y);
+    const innerBottom=Math.min(eyeBottomLeft.y,eyeBottomRight.y);
+    const [eyeUpperBar,eyeLowerBar,eyeBase]=eyeRows.map(index=>mids[index]);
+    if(eyeUpperBar.y<=eyeTop+.015*charDiag||eyeLowerBar.y>=innerBottom-.015*charDiag)return null;
+    if(Math.abs(eyeBase.y-(eyeBottomLeft.y+eyeBottomRight.y)/2)>.075*charDiag)return null;
+    if([eyeUpperBar,eyeLowerBar,eyeBase].some(mid=>mid.x<mids[0].x-.025*charDiag||mid.x>eyeBottomRight.x+.025*charDiag))return null;
+
+    // 隹's central vertical must span, and remain over, its separate rows.
+    const birdCenter=mids[11].x;
+    const [birdTop,birdBottom]=verticalEnds(byRole[11]);
+    const topBar=mids[birdRows[0]].y, bottomBar=mids[birdRows.at(-1)].y;
+    if(Math.abs(birdTop.y-topBar)>.10*charDiag||birdBottom.y<bottomBar-.10*charDiag||birdBottom.y>bottomBar+.06*charDiag)return null;
+    if(birdRows.some((index,i)=>i>0&&mids[index].y-mids[birdRows[i-1]].y>.185*charDiag))return null;
+    if(birdRows.some(index=>{
+      const box=bboxOf([byRole[index]]);
+      return box.minX<mids[6].x-.08*charDiag||birdCenter<box.minX-.025*charDiag||birdCenter>box.maxX+.025*charDiag;
+    }))return null;
+    if(mids[6].x+.08*charDiag>birdCenter)return null;
+    const topBarBounds=bboxOf([byRole[birdRows[0]]]);
+    if(topBar-mids[7].y<.035*charDiag||topBar-mids[7].y>.19*charDiag)return null;
+    if(mids[7].x<topBarBounds.minX-.04*charDiag||mids[7].x>topBarBounds.maxX+.04*charDiag)return null;
+    const dotHeights=dots.map(index=>mids[index].y);
+    if(Math.min(...dotHeights)<bottomBar+.055*charDiag||Math.max(...dotHeights)-Math.min(...dotHeights)>.14*charDiag)return null;
+    if(dots.some((index,i)=>i>0&&mids[index].x-mids[dots[i-1]].x>.225*charDiag))return null;
+    const vertical=byRole[6],v0=vertical[0],v1=vertical.at(-1);
+    const anchor=v0.y<v1.y?v0:v1;
+    if(ptDist(anchor,mark)>.15*charDiag||Math.min(...resample(stroke,16).map(p=>ptDist(p,anchor)))>.07*charDiag)return null;
+    const scale=strokeLength(ref)*.55/length;
+    const standardLength=stroke.map(p=>({x:mark.x+(p.x-mark.x)*scale,y:mark.y+(p.y-mark.y)*scale}));
+    quality=strokeQuality(standardLength,ref,charDiag,false);
+  }else{
+    // The right mark on 当's top may be a short, upright stroke. It must
+    // remain separate from the long centre stroke and the three lower rows.
+    if(dy<.08*charDiag||length>.2*charDiag||dx>dy*.18||dx<-.65*dy)return null;
+    if(ptDist(mark,refMid)>.1*charDiag||!ordered([1,0,2],'x',.12)||!ordered([3,4,5],'y',.065))return null;
+    if(Math.max(mids[0].y,mids[1].y,mids[2].y)>mids[3].y-.12*charDiag)return null;
+    const leftMark=byRole[1],leftStart=leftMark[0],leftEnd=leftMark.at(-1);
+    if(Math.abs(leftEnd.y-leftStart.y)<.045*charDiag||Math.abs(mids[1].y-mids[2].y)>.13*charDiag)return null;
+    const fold=bboxOf([byRole[3]]);
+    if([4,5].some(index=>{
+      const bar=bboxOf([byRole[index]]);
+      return bar.minX<fold.minX-.13*charDiag||bar.maxX>fold.maxX+.06*charDiag;
+    }))return null;
+    const center=byRole[0],c0=center[0],c1=center.at(-1);
+    const centerRise=Math.abs(c0.y-c1.y);
+    if(centerRise<.2*charDiag||Math.abs(c0.x-c1.x)>.5*centerRise)return null;
+    const shaftTop=Math.min(c0.y,c1.y),shaftBottom=Math.max(c0.y,c1.y);
+    if(top.y<shaftTop||bottom.y>shaftBottom)return null;
+    if(mids[1].y<shaftTop+.12*centerRise||mids[1].y>shaftBottom-.12*centerRise)return null;
+    if(length>strokeLength(center)*.5)return null;
+    const turn=-Math.PI/8,cos=Math.cos(turn),sin=Math.sin(turn);
+    const upright=ref.map(p=>({x:refMid.x+(p.x-refMid.x)*cos-(p.y-refMid.y)*sin,
+                             y:refMid.y+(p.x-refMid.x)*sin+(p.y-refMid.y)*cos}));
+    quality=strokeQuality(stroke,upright,charDiag,false);
+  }
+
+  const next=rows.map(row=>Number(row.o)===role?{...row,c:quality}:row);
+  const mean=next.reduce((sum,row)=>sum+row.c.q,0)/count;
+  if(quality.q<Q_FLOOR||mean<Q_BAR)return null;
+  return {pass:true,rows:next,diag:[...baseline.diag,
+    char+' distinct short stroke PASS role='+role+' q='+quality.q.toFixed(2)+' avgQ='+mean.toFixed(2)]};
+}
+
+// Look for a long, near-vertical run in a broad region. Adjacent fragments
+// can still witness a single stem when the writer briefly lifts the pen.
+function hasVerticalStem(strokes, box, region, span, bottom, split){
+  const segments=[];
+  for(const stroke of strokes){
+    const points=resample(stroke,48);
+    for(let i=1;i<points.length;i++){
+      const a=points[i-1],b=points[i];
+      if(Math.abs(b.y-a.y)<=Math.abs(b.x-a.x)*1.3)continue;
+      const x=((a.x+b.x)/2-box.minX)/box.w;
+      if(region==='left'?x>split:x<split)continue;
+      segments.push({x,from:(Math.min(a.y,b.y)-box.minY)/box.h,to:(Math.max(a.y,b.y)-box.minY)/box.h});
+    }
+  }
+  segments.sort((a,b)=>a.from-b.from);
+  for(let column=0;column<=20;column++){
+    let start=0,end=-1;
+    for(const segment of segments){
+      if(Math.abs(segment.x-column/20)>.11)continue;
+      if(segment.from>end+.055){
+        start=segment.from;
+        end=segment.to;
+      }else{
+        end=Math.max(end,segment.to);
+      }
+      if(end-start>=span && end>=bottom)return true;
+    }
+  }
+  return false;
+}
+
+function borrowedComponentStroke(char, rows, user){
+  const box=bboxOf(user);
+  if(box.w<=0 || box.h<=0)return false;
+  const matchedBounds=row=>bboxOf(row.u.split('+').map(id=>user[Number(id.slice(1))]));
+  if(char==='侧'){
+    // The second reference stroke is 亻's vertical. A clearly central
+    // match cannot replace it when there is no plausible vertical on the left.
+    const leftStem=rows.find(row=>row.o==='1');
+    return !!leftStem && matchedBounds(leftStem).minX>box.minX+box.w*.44
+      && !hasVerticalStem(user,box,'left',.26,.76,.42);
+  }
+  // 舒's four 予 strokes belong on the right. Allow small or shifted
+  // components: an absent long stem is decisive only with repeated borrowing.
+  const borrowed=rows.filter(row=>/^\d+$/.test(row.o) && Number(row.o)>=8 && matchedBounds(row).maxX<box.cx);
+  return borrowed.length>=2 && !hasVerticalStem(user,box,'right',.28,.67,.51);
+}
+
 async function gradeDrawing(char){
   const data = await getCharData(char);
   const officialAll = (data.medians || []).map(medianToCanvasPoints);
@@ -6056,6 +6307,22 @@ async function gradeDrawing(char){
     const covered=runWith(baseAssign,{yangCoverage:true});
     if(!covered.pass)result={...result,pass:false,diag:[...result.diag,...covered.diag,'仰 coverage confirmation failed']};
   }
+
+  if(!result.pass && (char==='建'||char==='姿')){
+    const rescue=rescueFixedStrokeRoles(char,result,officialAll,user,charDiag);
+    if(rescue)result=rescue;
+  }
+
+  if(!result.pass&&(char==='瞧'||char==='当')){
+    const rescued=rescueShortDistinctMark(char,result,officialAll,user,charDiag);
+    if(rescued)result=rescued;
+  }
+
+  if(result.pass && !parts && ((char==='侧' && officialAll.length===8) || (char==='舒' && officialAll.length===12))
+     && borrowedComponentStroke(char,result.rows,user)){
+    result={...result,pass:false,diag:[...result.diag,'component stem confirmation failed']};
+  }
+
 
   // TEMPORARY diagnostics — prints exactly why a drawing passed/failed, so grading can
   // be calibrated from real data. Safe to remove once stable.

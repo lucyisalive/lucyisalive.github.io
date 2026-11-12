@@ -8,7 +8,7 @@ const vm = require('node:vm');
 
 const root = path.resolve(__dirname, '..');
 
-function createGrader({ html = fs.readFileSync(path.join(root, 'index.html'), 'utf8') } = {}) {
+function createGrader({ html = fs.readFileSync(path.join(root, 'index.html'), 'utf8'), extraGlyphs = {} } = {}) {
   const start = html.indexOf('function medianToCanvasPoints(');
   const end = html.indexOf('const progressPath =', start);
   if (start < 0 || end < 0) throw new Error('Grading source boundaries were not found');
@@ -24,6 +24,9 @@ function createGrader({ html = fs.readFileSync(path.join(root, 'index.html'), 'u
   const curriculumGlyphs = path.join(root, 'curriculum-hanzi-data.js');
   if (fs.existsSync(curriculumGlyphs)) {
     vm.runInContext(fs.readFileSync(curriculumGlyphs, 'utf8'), context);
+  }
+  for (const [char, data] of Object.entries(extraGlyphs)) {
+    context.window.HANZI_LOCAL_DATA[char] ??= data;
   }
   const size = html.match(/const CANVAS_SIZE\s*=\s*(\d+)/)?.[1];
   const padding = html.match(/const CANVAS_PADDING\s*=\s*(\d+)/)?.[1];
