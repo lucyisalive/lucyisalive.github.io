@@ -81,6 +81,38 @@ function buildControls(grader) {
   add('当', 'horizontal-in-place-of-left-mark', false, replace(dangUpright, 1, line(mean(dang[1]), 25, 0)));
   add('当', 'inner-horizontal-outside-lower-fold', false,
     replace(dangUpright, 4, dang[4].map(([x, y]) => [x + 45, y])));
+  for (const angle of [120, 150]) {
+    add('当', 'rotated-lower-fold-with-short-right-stroke-' + angle, false,
+      replace(dangUpright, 3, warp(dang[3], 1, 0, 0, angle)));
+  }
+  add('当', 'valid-lower-fold-drawn-backward', true,
+    replace(dangUpright, 3, dang[3].slice().reverse()));
+
+  for (const [target, leftCount, splitIndex] of [
+    ['柱', 4, 4], ['注', 3, 3], ['理', 4, 4], ['救', 7, 7], ['振', 3, 4],
+  ]) {
+    const whole = grader.reference(target).map(stroke => stroke.map(p => [p.x, p.y]));
+    const right = whole.slice(leftCount);
+    const [xmin, xmax] = span(right, 0), [ymin, ymax] = span(right, 1);
+    const malformed = Array.from({ length: right.length + 2 }, (_, i) => {
+      const y = ymin + (ymax - ymin) * i / (right.length + 1);
+      return [[xmin + (xmax - xmin) * .35, y], [xmax, y]];
+    });
+    add(target, 'unmatchable-right-component', false, [...whole.slice(0, leftCount), ...malformed]);
+    add(target, 'both-components-match', true, whole);
+    const stroke = whole[splitIndex], cut = Math.floor(stroke.length / 2);
+    const parts = [stroke.slice(0, cut + 1), stroke.slice(cut)];
+    add(target, 'matching-component-with-pen-lift', true,
+      [...whole.slice(0, splitIndex), ...parts, ...whole.slice(splitIndex + 1)]);
+  }
+  for (const [target, splitIndex] of [['普', 9], ['剩', 7]]) {
+    const whole = grader.reference(target).map(stroke => stroke.map(p => [p.x, p.y]));
+    const stroke = whole[splitIndex], cut = Math.floor(stroke.length / 2);
+    add(target, 'matching-component-with-reversed-pen-lift', true, [
+      stroke.slice(cut).reverse(), ...whole.filter((_, i) => i !== splitIndex),
+      stroke.slice(0, cut + 1).reverse(),
+    ]);
+  }
 
   const ce = refs['侧'], [ceLeft, ceRight] = span(ce, 0);
   const ceWidth = ceRight - ceLeft;

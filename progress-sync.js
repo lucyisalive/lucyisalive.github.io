@@ -238,10 +238,13 @@
       return current;
     }
     function ensureEpoch(token) { if (token !== epoch) throw problem('同步操作已取消', 'cancelled'); }
-    function ensureUnchanged(token, localRevision) {
+    function ensureUnchanged(token, localRevision, retryLocal) {
       ensureEpoch(token);
       refreshLocal();
-      if (revision !== localRevision) throw problem('同步期间本机进度又有变化，两份进度都已保留，请选择保留哪份', 'conflict');
+      if (revision !== localRevision) {
+        if (retryLocal) throw problem('本机有新进度，等待下一次同步', 'retry-local');
+        throw problem('同步期间本机进度又有变化，两份进度都已保留，请选择保留哪份', 'conflict');
+      }
     }
     function ensureConnectionUnchanged(token, localRevision) {
       ensureEpoch(token);
@@ -461,10 +464,10 @@
       if (meta.dirty) return emit('pending', '进度已读取，但本机还有新的改动；请再次同步');
       return emit('synced', '两台设备的学习进度已同步');
     }
-    async function write(current, derived, remote, token, localRevision, candidateMeta) {
+    async function write(current, derived, remote, token, localRevision, candidateMeta, retryLocal) {
       var body = await encrypt(current, derived, token);
       if (candidateMeta) ensureConnectionUnchanged(token, localRevision);
-      else ensureUnchanged(token, localRevision);
+      else ensureUnchanged(token, localRevision, retryLocal);
       var precondition = remote ? 'currentDocument.updateTime=' + encodeURIComponent(remote.updateTime) : 'currentDocument.exists=false';
       var response;
       try {
@@ -502,6 +505,11 @@
     }
     function failure(error, token) {
       if (token !== epoch || error.syncKind === 'cancelled') return status();
+      if (error.syncKind === 'retry-local') {
+        var next = emit('pending', error.message);
+        schedule();
+        return next;
+      }
       if (error.syncKind === 'conflict') {
         if (meta) { meta.dirty = true; try { saveMeta(); } catch (storageError) { return emit('error', storageError.message); } }
         return emit('conflict', error.message);
@@ -587,20 +595,29 @@
         var localRevision = revision;
         var derived = await keys(meta, token);
         var fingerprint = await hash(local.json);
-        ensureUnchanged(token, localRevision);
+        ensureUnchanged(token, localRevision, true);
         if (!meta.baseHash || fingerprint !== meta.baseHash) meta.dirty = true;
         saveMeta();
         emit('syncing', '正在同步学习进度');
         var remote = await readRemote(derived, token);
+        ensureEpoch(token);
         conflictRemote = remote;
-        ensureUnchanged(token, localRevision);
+        // Local work during the network read is not a remote change. Compare
+        // the latest saved copy with the cloud version we actually received.
+        var latest = refreshLocal();
+        if (revision !== localRevision) {
+          local = latest;
+          localRevision = revision;
+          fingerprint = await hash(local.json);
+          ensureUnchanged(token, localRevision, true);
+        }
         if (!remote) {
           // A fresh create may be retried offline. A deleted established family
           // never gets recreated automatically using possibly outdated progress.
           if (meta.baseUpdateTime !== null) throw problem('云端进度已被移除，本机进度仍保留；请重新建立同步', 'conflict');
           meta.dirty = true;
           saveMeta();
-          return write(local, derived, null, token, localRevision);
+          return write(local, derived, null, token, localRevision, null, true);
         }
         // A PATCH can commit successfully even when its response times out.
         // Identical authenticated progress is already synchronized, regardless
@@ -625,7 +642,7 @@
           saveMeta();
           return emit('synced', '两台设备的学习进度已同步');
         }
-        return write(local, derived, remote, token, localRevision);
+        return write(local, derived, remote, token, localRevision, null, true);
       });
     }
     function createFamily() {

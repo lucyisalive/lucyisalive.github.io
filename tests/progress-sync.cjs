@@ -239,8 +239,72 @@ test('a local change during a delayed remote read cannot be overwritten',async()
   const{server,a,b}=await pair();changed(a,'remote ahead',2);await a.client.sync();
   const gate=server.holdNext(c=>c.client==='B'&&c.method==='GET'),operation=b.client.sync(),applied=b.applied.length;
   await bounded(gate.arrived,'delayed read');changed(b,'new local during read',3);gate.release();await bounded(operation,'delayed local-change read');
-  assert.equal(b.value.scenesUnlocked,3);assert.equal(b.applied.length,applied);assertNotSynced(b);
+  assert.equal(b.value.scenesUnlocked,3);assert.equal(b.applied.length,applied);assert.equal(kind(b),'conflict');
   assert.equal((await decrypt(server.current(),a.client.code())).scenesUnlocked,2);
+});
+
+test('learning during a slow read of unchanged cloud progress synchronizes the latest local copy',async()=>{
+  const {server,a}=await pair(),baseline=copy(server.current()),patches=patchCount(server);
+  const gate=server.holdNext(call=>call.client==='A'&&call.method==='GET');
+  const operation=a.client.sync();
+  await bounded(gate.arrived,'slow read of unchanged cloud progress');
+  changed(a,'continued learning during slow read',3);
+  a.timers.advance(801);
+  gate.release();
+  await bounded(operation,'sync of local progress made during slow read');
+  assert.equal(kind(a),'synced');
+  assert.equal(a.applied.length,0);
+  assert.equal(patchCount(server),patches+1);
+  assert.equal(server.calls.at(-1).url.searchParams.get('currentDocument.updateTime'),baseline.updateTime);
+  assert.equal((await decrypt(server.current(),a.client.code())).scenesUnlocked,3);
+});
+
+test('local progress added while encrypting is retried automatically without a stale write',async()=>{
+  const server=firestore(),arrived=deferred(),release=deferred();
+  let pauseEncryption=false;
+  const subtle=Object.create(webcrypto.subtle);
+  for(const method of ['digest','importKey','decrypt']){
+    Object.defineProperty(subtle,method,{value:webcrypto.subtle[method].bind(webcrypto.subtle)});
+  }
+  Object.defineProperty(subtle,'encrypt',{value:async(...args)=>{
+    if(pauseEncryption){pauseEncryption=false;arrived.resolve();await release.promise;}
+    return webcrypto.subtle.encrypt(...args);
+  }});
+  const a=device(server,'A',progress(),{overrides:{crypto:{subtle,getRandomValues:webcrypto.getRandomValues.bind(webcrypto)}}});
+  await a.client.createFamily();
+  const patches=patchCount(server);
+  changed(a,'first local edit',2);pauseEncryption=true;
+  const operation=a.client.sync();
+  await bounded(arrived.promise,'first edit being encrypted');
+  changed(a,'next local edit',3);a.timers.advance(801);
+  release.resolve();await bounded(operation,'skip the stale local snapshot');
+  assert.equal(kind(a),'pending');
+  assert.equal(patchCount(server),patches);
+  const retry=server.holdNext(call=>call.client==='A'&&call.method==='GET');
+  a.timers.advance(801);
+  await bounded(retry.arrived,'automatic retry starts');
+  retry.release();
+  await bounded(a.client.sync(),'automatic retry of newest local edit');
+  assert.equal(kind(a),'synced');
+  assert.equal(patchCount(server),patches+1);
+  assert.equal((await decrypt(server.current(),a.client.code())).scenesUnlocked,3);
+});
+
+test('an offline reload remembers unsent progress before allowing a family change',async()=>{
+  const {server,a}=await pair(),cloud=copy(server.current());
+  const latest=progress('saved locally before sync settings updated',3);
+  const reloaded=device(server,'reloaded offline',latest,{storage:a.storage});
+  server.offline.add(reloaded.name);
+  await reloaded.client.start();
+  assert.equal(kind(reloaded),'offline');
+  assert.equal(JSON.parse(a.storage.getItem(META)).dirty,true);
+  server.offline.delete(reloaded.name);
+  const calls=server.calls.length;
+  await reloaded.client.createPasswordFamily(PASSWORD);
+  assert.equal(kind(reloaded),'pending');
+  assert.equal(server.calls.length,calls);
+  assert.deepEqual(server.current(),cloud);
+  unchangedState(reloaded,latest);
 });
 
 test('becoming busy while a read is in flight also defers remote progress',async()=>{

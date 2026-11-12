@@ -55,11 +55,15 @@
     if (length < 8 || length > 36 || !sentence.includes(word) ||
         !/^[\p{Script=Han}〇0-9，、；：]+[。！？]$/u.test(sentence)) return null;
     if (/(这个(?:词|字)|词语本|读到了.{0,12}这个词|用.{1,12}造句|写进.{0,12}词语本|例句[：是]|拼音[：是]|笔画[：是])/.test(sentence)) return null;
-    const at = sentence.indexOf(word), before = sentence.slice(0, at), after = sentence.slice(at + word.length);
+    const clause = sentence.split(/[，、；：。！？]/u).find(part => part.includes(word));
+    const at = clause.indexOf(word), before = clause.slice(0, at), after = clause.slice(at + word.length);
     const bareMention = /(?:读到|读过|念出|读出|学到|学会|写下|查到|听到|听说|提到|认识|学习)(?:了|过)?(?:关于|有关)?$/;
-    const reference = /书[里上中]|课本|词语表|课文|字典|词典|黑板|笔记|卡片|作业|纸上/;
-    if ((bareMention.test(before) && /^[。！？]$/.test(after)) ||
-        (reference.test(before) && (bareMention.test(before) || /(?:看到|看见|写着|写了|有|出现)(?:了|过)?$/.test(before)))) return null;
+    const reference = /书[里上中]|课本|词语表|生字表|课文|字典|词典|黑板|笔记|卡片|作业|练习册|纸上/;
+    const lookup = /(?:看到|看见|发现|找到|翻到|写着|写了|记下|摘录|抄写|有|出现)(?:了|过)?(?:关于|有关)?$/;
+    const drill = /^(?:抄写?|默写|听写|写|读|念)(?:了|过)?[一二三四五六七八九十两几\d]+(?:遍|次)$/;
+    const endsAtWord = sentence.indexOf(word) + word.length === sentence.length - 1;
+    if ((bareMention.test(before) && endsAtWord) || (reference.test(before) && (bareMention.test(before) || lookup.test(before))) ||
+        (/(?:把|将)$/.test(before) && drill.test(after))) return null;
     return sentence;
   }
   function modelRows(body) {
@@ -267,13 +271,13 @@
         if (added) result = '已生成 ' + added + ' 条 AI 例句';
       } catch (error) {
         if (token !== epoch) return;
-        if (error && (error.status === 401 || error.status === 403)) {
+        if (error && error.status === 401) {
           cancelWork(); key = ''; remove('sessionStorage', AUTH_KEY);
           notify('AI 例句授权已失效，请从家长设置重新连接；本地例句仍可用'); return;
         }
-        result = error && error.kind === 'timeout'
-          ? 'AI 例句生成超时，本地提示仍可用'
-          : '免费 AI 例句服务暂不可用，本地提示仍可用';
+        if (error?.status === 403) result = 'AI 例句请求被服务拒绝，连接已保留；本地提示仍可用';
+        else if (error?.kind === 'timeout') result = 'AI 例句生成超时，本地提示仍可用';
+        else result = '免费 AI 例句服务暂不可用，本地提示仍可用';
       } finally {
         if (token === epoch) { queue.clear(); activeKeys.clear(); pump = null; notify(result); }
       }

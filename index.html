@@ -3,7 +3,7 @@
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
-<meta name="game-version" content="2026.11.11.6">
+<meta name="game-version" content="2026.11.11.7">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>汉字魔法门</title>
 <style data-source="game-feedback.css">
@@ -748,6 +748,7 @@ body.journey-departing #mountainJourney .journey-background {
     <div class="progress-path" id="progressPath"></div>
     <button class="icon-btn" id="settingsBtn" title="设置">⚙️</button>
   </div>
+  <p class="hint-text" id="localProgressNotice" role="status" hidden></p>
 
   <div class="scene" id="playzone">
     <div class="parent-validation" id="parentTestBar" hidden>
@@ -889,6 +890,11 @@ body.journey-departing #mountainJourney .journey-background {
         <button class="btn-save" id="saveProgressBtn">下载进度备份</button>
         <button class="btn-load" id="loadProgressBtn">从备份恢复</button>
       </div>
+      <div id="localRecoveryCopies" hidden>
+        <label for="localRecoverySelect">本机保留的进度副本</label>
+        <select id="localRecoverySelect"></select>
+        <button class="btn-save" id="localRecoveryDownload">下载所选副本</button>
+      </div>
       <input type="file" id="fileInput" accept="application/json">
     </details>
     <div class="cloud-sync">
@@ -931,7 +937,7 @@ body.journey-departing #mountainJourney .journey-background {
         </div>
       </div>
     </div>
-    <p class="hint-text" id="gameVersion">版本 2026.11.11.6</p>
+    <p class="hint-text" id="gameVersion">版本 2026.11.11.7</p>
   </div>
 </div>
 
@@ -2650,11 +2656,15 @@ window.HANZI_CURRICULUM = {
     if (length < 8 || length > 36 || !sentence.includes(word) ||
         !/^[\p{Script=Han}〇0-9，、；：]+[。！？]$/u.test(sentence)) return null;
     if (/(这个(?:词|字)|词语本|读到了.{0,12}这个词|用.{1,12}造句|写进.{0,12}词语本|例句[：是]|拼音[：是]|笔画[：是])/.test(sentence)) return null;
-    const at = sentence.indexOf(word), before = sentence.slice(0, at), after = sentence.slice(at + word.length);
+    const clause = sentence.split(/[，、；：。！？]/u).find(part => part.includes(word));
+    const at = clause.indexOf(word), before = clause.slice(0, at), after = clause.slice(at + word.length);
     const bareMention = /(?:读到|读过|念出|读出|学到|学会|写下|查到|听到|听说|提到|认识|学习)(?:了|过)?(?:关于|有关)?$/;
-    const reference = /书[里上中]|课本|词语表|课文|字典|词典|黑板|笔记|卡片|作业|纸上/;
-    if ((bareMention.test(before) && /^[。！？]$/.test(after)) ||
-        (reference.test(before) && (bareMention.test(before) || /(?:看到|看见|写着|写了|有|出现)(?:了|过)?$/.test(before)))) return null;
+    const reference = /书[里上中]|课本|词语表|生字表|课文|字典|词典|黑板|笔记|卡片|作业|练习册|纸上/;
+    const lookup = /(?:看到|看见|发现|找到|翻到|写着|写了|记下|摘录|抄写|有|出现)(?:了|过)?(?:关于|有关)?$/;
+    const drill = /^(?:抄写?|默写|听写|写|读|念)(?:了|过)?[一二三四五六七八九十两几\d]+(?:遍|次)$/;
+    const endsAtWord = sentence.indexOf(word) + word.length === sentence.length - 1;
+    if ((bareMention.test(before) && endsAtWord) || (reference.test(before) && (bareMention.test(before) || lookup.test(before))) ||
+        (/(?:把|将)$/.test(before) && drill.test(after))) return null;
     return sentence;
   }
   function modelRows(body) {
@@ -2862,13 +2872,13 @@ window.HANZI_CURRICULUM = {
         if (added) result = '已生成 ' + added + ' 条 AI 例句';
       } catch (error) {
         if (token !== epoch) return;
-        if (error && (error.status === 401 || error.status === 403)) {
+        if (error && error.status === 401) {
           cancelWork(); key = ''; remove('sessionStorage', AUTH_KEY);
           notify('AI 例句授权已失效，请从家长设置重新连接；本地例句仍可用'); return;
         }
-        result = error && error.kind === 'timeout'
-          ? 'AI 例句生成超时，本地提示仍可用'
-          : '免费 AI 例句服务暂不可用，本地提示仍可用';
+        if (error?.status === 403) result = 'AI 例句请求被服务拒绝，连接已保留；本地提示仍可用';
+        else if (error?.kind === 'timeout') result = 'AI 例句生成超时，本地提示仍可用';
+        else result = '免费 AI 例句服务暂不可用，本地提示仍可用';
       } finally {
         if (token === epoch) { queue.clear(); activeKeys.clear(); pump = null; notify(result); }
       }
@@ -3812,10 +3822,13 @@ window.HANZI_GLYPH_CATALOG={"version":"41b38d977b270e08ea493526a4ee0f8643a59bbf2
       return current;
     }
     function ensureEpoch(token) { if (token !== epoch) throw problem('同步操作已取消', 'cancelled'); }
-    function ensureUnchanged(token, localRevision) {
+    function ensureUnchanged(token, localRevision, retryLocal) {
       ensureEpoch(token);
       refreshLocal();
-      if (revision !== localRevision) throw problem('同步期间本机进度又有变化，两份进度都已保留，请选择保留哪份', 'conflict');
+      if (revision !== localRevision) {
+        if (retryLocal) throw problem('本机有新进度，等待下一次同步', 'retry-local');
+        throw problem('同步期间本机进度又有变化，两份进度都已保留，请选择保留哪份', 'conflict');
+      }
     }
     function ensureConnectionUnchanged(token, localRevision) {
       ensureEpoch(token);
@@ -4035,10 +4048,10 @@ window.HANZI_GLYPH_CATALOG={"version":"41b38d977b270e08ea493526a4ee0f8643a59bbf2
       if (meta.dirty) return emit('pending', '进度已读取，但本机还有新的改动；请再次同步');
       return emit('synced', '两台设备的学习进度已同步');
     }
-    async function write(current, derived, remote, token, localRevision, candidateMeta) {
+    async function write(current, derived, remote, token, localRevision, candidateMeta, retryLocal) {
       var body = await encrypt(current, derived, token);
       if (candidateMeta) ensureConnectionUnchanged(token, localRevision);
-      else ensureUnchanged(token, localRevision);
+      else ensureUnchanged(token, localRevision, retryLocal);
       var precondition = remote ? 'currentDocument.updateTime=' + encodeURIComponent(remote.updateTime) : 'currentDocument.exists=false';
       var response;
       try {
@@ -4076,6 +4089,11 @@ window.HANZI_GLYPH_CATALOG={"version":"41b38d977b270e08ea493526a4ee0f8643a59bbf2
     }
     function failure(error, token) {
       if (token !== epoch || error.syncKind === 'cancelled') return status();
+      if (error.syncKind === 'retry-local') {
+        var next = emit('pending', error.message);
+        schedule();
+        return next;
+      }
       if (error.syncKind === 'conflict') {
         if (meta) { meta.dirty = true; try { saveMeta(); } catch (storageError) { return emit('error', storageError.message); } }
         return emit('conflict', error.message);
@@ -4161,20 +4179,29 @@ window.HANZI_GLYPH_CATALOG={"version":"41b38d977b270e08ea493526a4ee0f8643a59bbf2
         var localRevision = revision;
         var derived = await keys(meta, token);
         var fingerprint = await hash(local.json);
-        ensureUnchanged(token, localRevision);
+        ensureUnchanged(token, localRevision, true);
         if (!meta.baseHash || fingerprint !== meta.baseHash) meta.dirty = true;
         saveMeta();
         emit('syncing', '正在同步学习进度');
         var remote = await readRemote(derived, token);
+        ensureEpoch(token);
         conflictRemote = remote;
-        ensureUnchanged(token, localRevision);
+        // Local work during the network read is not a remote change. Compare
+        // the latest saved copy with the cloud version we actually received.
+        var latest = refreshLocal();
+        if (revision !== localRevision) {
+          local = latest;
+          localRevision = revision;
+          fingerprint = await hash(local.json);
+          ensureUnchanged(token, localRevision, true);
+        }
         if (!remote) {
           // A fresh create may be retried offline. A deleted established family
           // never gets recreated automatically using possibly outdated progress.
           if (meta.baseUpdateTime !== null) throw problem('云端进度已被移除，本机进度仍保留；请重新建立同步', 'conflict');
           meta.dirty = true;
           saveMeta();
-          return write(local, derived, null, token, localRevision);
+          return write(local, derived, null, token, localRevision, null, true);
         }
         // A PATCH can commit successfully even when its response times out.
         // Identical authenticated progress is already synchronized, regardless
@@ -4199,7 +4226,7 @@ window.HANZI_GLYPH_CATALOG={"version":"41b38d977b270e08ea493526a4ee0f8643a59bbf2
           saveMeta();
           return emit('synced', '两台设备的学习进度已同步');
         }
-        return write(local, derived, remote, token, localRevision);
+        return write(local, derived, remote, token, localRevision, null, true);
       });
     }
     function createFamily() {
@@ -4477,7 +4504,7 @@ function defaultBank(){
 // set — the change would reach nobody who actually uses the game.
 const BANK_VERSION = 5;
 const ROUND_GOAL = 10;
-const GAME_VERSION = '2026.11.11.6';
+const GAME_VERSION = '2026.11.11.7';
 
 let state = {
   bank: defaultBank(),
@@ -4509,6 +4536,24 @@ function registerWrong(it){
 // 家长在设置面板里一键复制或下载。之前要拿这些数据得把 iPad 用数据线接上电脑、开 Safari
 // 的网页检查器、在满屏 [diag] 里翻——这道坎把"发现判错"和"能修判错"之间堵了很久。
 const INK_LOG_KEY = 'hanzi-magic-door-ink-v1';
+const PENDING_INK_PREFIX = 'hanzi-magic-door-pending-ink-v1-';
+let inkStorageBase = null;
+let inkWrites = 0;
+let inkWriteRevision = 0;
+let journaledInkRevision = 0;
+const pendingInkKeys = new Set();
+let localPageId;
+let inkSequence = 0;
+function storagePageId(){
+  return localPageId ||= window.crypto?.randomUUID?.() || Date.now().toString(36) + '-' + Math.random().toString(36).slice(2);
+}
+
+// Exclusive locks serialize saves across browser tabs. Environments without
+// Web Locks still compare the stored revision before replacing it.
+function withLocalWrite(key, write){
+  const locks = window.navigator?.locks;
+  return locks && typeof locks.request === 'function' ? locks.request(key, write) : write();
+}
 // The compact s field remains readable by old tools. New entries also preserve
 // every original input point in rawS, including marks removed by touch filtering.
 // Bound the full JSON size as well as the count; never thin an exact trace to fit.
@@ -4546,9 +4591,87 @@ function saveParentTestInkLog(){
 
 function loadInkLog(){
   try{
-    const saved = JSON.parse(localStorage.getItem(INK_LOG_KEY));
+    inkStorageBase = localStorage.getItem(INK_LOG_KEY);
+    const saved = JSON.parse(inkStorageBase);
     inkLog = Array.isArray(saved) ? saved : [];
   }catch(e){ inkLog = []; }
+}
+function inkIdentity(entry){
+  if(entry.id) return entry.id;
+  const {disputed, playerReview, ...original} = entry;
+  return JSON.stringify(original);
+}
+function inkReviewState(entry){
+  return entry && JSON.stringify([!!entry.disputed, entry.playerReview || null]);
+}
+function inkFromStorage(raw){
+  if(!raw) return [];
+  const parsed = JSON.parse(raw);
+  if(!Array.isArray(parsed)) throw new Error('Invalid ink log');
+  return parsed;
+}
+function mergeInkLog(stored){
+  const original = new Map(inkFromStorage(inkStorageBase).map(entry => [inkIdentity(entry), entry]));
+  const remote = new Map(inkFromStorage(stored).map(entry => [inkIdentity(entry), entry]));
+  const merged = [];
+  for(const local of inkLog){
+    const id = inkIdentity(local), before = original.get(id), other = remote.get(id);
+    remote.delete(id);
+    const localChanged = inkReviewState(local) !== inkReviewState(before);
+    if(!other && !localChanged) continue; // Do not revive records removed by the other page.
+    if(other && !localChanged){
+      local.disputed = other.disputed;
+      if(other.playerReview) local.playerReview = other.playerReview;
+      else delete local.playerReview;
+    } else if(other && inkReviewState(other) !== inkReviewState(before)){
+      local.disputed = !!(local.disputed || other.disputed);
+      if(other.playerReview && (!local.playerReview || other.playerReview.reportedAt > local.playerReview.reportedAt)){
+        local.playerReview = other.playerReview;
+      }
+    }
+    merged.push(local);
+  }
+  // A clear applies only to unchanged entries the page actually saw.
+  for(const [id, other] of remote){
+    if(inkReviewState(other) !== inkReviewState(original.get(id))) merged.push(other);
+  }
+  return merged.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0));
+}
+function preservePendingInk(){
+  if(!inkWrites || journaledInkRevision === inkWriteRevision) return;
+  try{
+    const original = new Set(inkFromStorage(inkStorageBase).map(inkIdentity));
+    const added = inkLog.filter(entry => !original.has(inkIdentity(entry)));
+    // Stage new traces only. Existing traces already have a durable copy.
+    if(added.length){
+      const key = PENDING_INK_PREFIX + storagePageId() + '-' + inkWriteRevision;
+      localStorage.setItem(key, JSON.stringify(added));
+      pendingInkKeys.add(key);
+    }
+    journaledInkRevision = inkWriteRevision;
+  }catch(_){}
+}
+function pendingInkCopies(){
+  const copies = [];
+  for(let i = 0; i < localStorage.length; i++){
+    const key = localStorage.key(i);
+    if(!key?.startsWith(PENDING_INK_PREFIX)) continue;
+    try{
+      const entries = JSON.parse(localStorage.getItem(key));
+      if(Array.isArray(entries) && entries.every(entry => entry?.c && Array.isArray(entry.s))){
+        copies.push([key, entries]);
+      }
+    }catch(_){}
+  }
+  return copies.sort((a,b) => Number(b[0].split('-').at(-1)) - Number(a[0].split('-').at(-1)));
+}
+function mergePendingInk(copies){
+  const current = new Set(inkLog.map(inkIdentity));
+  for(const [, entries] of copies) for(const entry of entries){
+    const id = inkIdentity(entry);
+    if(!current.has(id)){ inkLog.push(entry); current.add(id); }
+  }
+  inkLog.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0));
 }
 function trimInkLog(){
   // Serialize each entry once. Removing an old entry only subtracts its length;
@@ -4567,23 +4690,44 @@ function trimInkLog(){
   }
   return '[' + texts.join(',') + ']';
 }
-function saveInkLog(){
-  try{
-    localStorage.setItem(INK_LOG_KEY, trimInkLog());
-    inkSaveNotice = '';
-    try{
-      if(typeof inkMsg !== 'undefined' && inkMsg) inkMsg.textContent = inkSaveNotice;
-    }catch(_){}
-    return true;
-  }catch(e){
+function saveInkLog(recoverPending = false){
+  function updateNotice(saved){
     // Private mode or a shared-origin quota must not block grading. The current
     // memory copy still contains the exact trace and can be downloaded manually.
-    inkSaveNotice = '笔迹暂存未成功，请下载笔迹保存；游戏可以继续。';
+    inkSaveNotice = saved ? '' : '笔迹暂存未成功，请下载笔迹保存；游戏可以继续。';
     try{
       if(typeof inkMsg !== 'undefined' && inkMsg) inkMsg.textContent = inkSaveNotice;
     }catch(_){}
-    return false;
+    return saved;
   }
+  try{
+    const written = withLocalWrite(INK_LOG_KEY, () => {
+      const stored = localStorage.getItem(INK_LOG_KEY);
+      if(stored !== inkStorageBase) inkLog = mergeInkLog(stored);
+      const copies = recoverPending ? pendingInkCopies() : [];
+      if(copies.length) mergePendingInk(copies);
+      if(recoverPending && !copies.length) return true;
+      const next = trimInkLog();
+      localStorage.setItem(INK_LOG_KEY, next);
+      inkStorageBase = next;
+      for(const [key] of copies){
+        try{ localStorage.removeItem(key); }catch(_){}
+      }
+      return updateNotice(true);
+    });
+    if(!written?.then) return written;
+    inkWrites++;
+    inkWriteRevision++;
+    return written.catch(() => updateNotice(false)).then(saved => {
+      inkWrites--;
+      if(saved && !inkWrites){
+        for(const key of pendingInkKeys){
+          try{ localStorage.removeItem(key); pendingInkKeys.delete(key); }catch(_){}
+        }
+      }
+      return saved;
+    });
+  }catch(_){ return updateNotice(false); }
 }
 function recordInk(payload, verdict){
   const entry = { c: payload.c, s: payload.s, v: verdict ? 'pass' : 'fail', d: todayStr(), disputed: false,
@@ -4599,6 +4743,7 @@ function recordInk(payload, verdict){
     parentValidation.storageOk = saveParentTestInkLog();
     return;
   }
+  entry.id = storagePageId() + '-' + (++inkSequence);
   inkLog.unshift(entry);
   saveInkLog();
   if(typeof showPlayerDispute === 'function') showPlayerDispute(entry);
@@ -4610,6 +4755,12 @@ function recordInk(payload, verdict){
 // dates are gone, so every session starts the child from scratch. Manual export/import
 // remains available alongside optional encrypted progress synchronization.
 const SAVE_KEY = 'hanzi-magic-door-state-v1';
+const LOCAL_RECOVERY_PREFIX = 'hanzi-magic-door-local-recovery-v1-';
+const PRE_RESTORE_KEY = 'hanzi-magic-door-pre-restore-v1';
+let progressStorageBase = null;
+let progressWrites = 0;
+let pendingProgressText = null;
+let pendingProgressCopyKey = null;
 let cloudSyncController = null;
 let syncApplying = false;
 let syncExplicitAdopt = false;
@@ -4620,18 +4771,94 @@ let syncRoundCompleted = false;
 let syncSceneAwarded = false;
 let progressSaveNotice = '';
 
+function showProgressSaveNotice(message){
+  if(progressSaveNotice === message) return;
+  progressSaveNotice = message;
+  if(typeof document !== 'undefined'){
+    const notice = document.getElementById('localProgressNotice');
+    if(notice){ notice.textContent = message; notice.hidden = !message; }
+  }
+  if(typeof renderCloudSyncStatus === 'function') renderCloudSyncStatus();
+}
+function preservePendingProgress(){
+  if(!progressWrites || !pendingProgressText) return;
+  try{
+    if(localStorage.getItem(SAVE_KEY) === pendingProgressText) return;
+    const key = LOCAL_RECOVERY_PREFIX + storagePageId() + '-pending';
+    localStorage.setItem(key, JSON.stringify({at:Date.now(), progress:JSON.parse(pendingProgressText)}));
+    pendingProgressCopyKey = key;
+  }catch(_){}
+}
+function finishPendingProgress(saved){
+  progressWrites--;
+  if(progressWrites) return;
+  if(pendingProgressCopyKey){
+    try{
+      const separate = JSON.parse(localStorage.getItem(LOCAL_RECOVERY_PREFIX + storagePageId()));
+      if(saved || (separate && JSON.stringify(separate.progress) === pendingProgressText)){
+        localStorage.removeItem(pendingProgressCopyKey);
+        pendingProgressCopyKey = null;
+      }
+    }catch(_){}
+  }
+  pendingProgressText = null;
+}
+function writeLocalProgress(text, operation = 'save'){
+  const stored = localStorage.getItem(SAVE_KEY);
+  if(stored !== progressStorageBase){
+    if(operation !== 'save') throw new Error('另一个游戏页面已保存，请重新打开本页再恢复进度。');
+    if(text !== progressStorageBase && text !== stored){
+      localStorage.setItem(LOCAL_RECOVERY_PREFIX + storagePageId(), JSON.stringify({at:Date.now(), progress:JSON.parse(text)}));
+      showProgressSaveNotice('另一个游戏页面已有更新。本页进度已另存，可在设置的「手动备份」下载。请用一个游戏页面继续。');
+    } else {
+      showProgressSaveNotice('另一个游戏页面已有更新。请重新打开本页，或在刚才的页面继续。');
+    }
+    return false;
+  }
+  let previousBackup;
+  if(operation === 'restore'){
+    previousBackup = localStorage.getItem(PRE_RESTORE_KEY);
+    // Preserve the exact old bytes even if they could not be parsed at startup.
+    localStorage.setItem(PRE_RESTORE_KEY, JSON.stringify({at:Date.now(), raw:stored || JSON.stringify(state)}));
+  }
+  try{
+    localStorage.setItem(SAVE_KEY, text);
+  }catch(error){
+    if(operation === 'restore'){
+      try{
+        if(previousBackup === null) localStorage.removeItem(PRE_RESTORE_KEY);
+        else localStorage.setItem(PRE_RESTORE_KEY, previousBackup);
+      }catch(_){ /* The primary save is still intact. */ }
+    }
+    throw error;
+  }
+  progressStorageBase = text;
+  showProgressSaveNotice('');
+  return true;
+}
 function saveState(){
-  if(typeof parentValidation !== 'undefined' && parentValidation) return;
+  if(syncApplying || (typeof parentValidation !== 'undefined' && parentValidation)) return false;
   if(cloudSyncController && cloudSyncController.status().connected && !syncApplying){
     state.sessionProgress = syncSessionSnapshot();
   }
-  try{ localStorage.setItem(SAVE_KEY, JSON.stringify(state)); progressSaveNotice = ''; }
-  catch(e){
-    progressSaveNotice = '本机进度暂存未成功，当前页面仍保留；请先不要关闭。';
-    if(typeof renderCloudSyncStatus === 'function') renderCloudSyncStatus();
-    return;
+  function completed(saved){
+    if(saved && !progressWrites && cloudSyncController) cloudSyncController.changed();
+    return saved;
   }
-  if(cloudSyncController && !syncApplying) cloudSyncController.changed();
+  function failed(){
+    showProgressSaveNotice('本机进度暂存未成功，当前页面仍保留；请先不要关闭。');
+    return false;
+  }
+  try{
+    const text = JSON.stringify(state);
+    const written = withLocalWrite(SAVE_KEY, () => writeLocalProgress(text));
+    if(written?.then){
+      progressWrites++;
+      pendingProgressText = text;
+      return written.catch(failed).then(saved => { finishPendingProgress(saved); return completed(saved); });
+    }
+    return completed(written);
+  }catch(_){ return failed(); }
 }
 
 // Old saves counted days as integers and have no mastery record. Rather than invent dates
@@ -4703,6 +4930,7 @@ function migrateState(s){
 function loadSavedState(){
   let raw = null;
   try{ raw = localStorage.getItem(SAVE_KEY); }catch(e){ return; }
+  progressStorageBase = raw;
   if(!raw) return;
   try{
     const migrated = migrateState(JSON.parse(raw));
@@ -5511,9 +5739,9 @@ const HOOK_MIN = 25;
 const DOT_FRAC = 0.07;
 const DOT_LEN  = 1.7;
 
-// Only 历's spatial tree opts in. Recover a brief lift within one stroke only
-// when its endpoints, full curve, and original position agree with a reference.
-function referencePenLiftJoins(users,compDiag,official){
+// Recover a brief lift within one stroke only when its endpoints, full curve,
+// and original position agree with a reference.
+function referencePenLiftJoins(users,compDiag,official,allowBackward=false){
   const candidates=[];
   for(let i=0;i<users.length;i++)for(let j=i+1;j<users.length;j++){
     const A=users[i].pts,B=users[j].pts;
@@ -5524,14 +5752,17 @@ function referencePenLiftJoins(users,compDiag,official){
       // A short pause at a corner is allowed. This is not permission to bridge
       // neighbouring marks: endpoints and the full curve must already agree.
       if(gap>Math.max(1,compDiag*0.03))return;
-      const ink=resample(joined,32);
-      const valid=official.some(stroke=>{
-        const quality=strokeQuality(joined,stroke,compDiag,false);
-        if(quality.q<0.85)return false;
-        const reference=resample(stroke,32);
-        return Math.min(avgDist(ink,reference),avgDist([...ink].reverse(),reference))/compDiag<=0.06;
+      const paths=allowBackward?[joined,[...joined].reverse()]:[joined];
+      const valid=paths.find(path=>{
+        const ink=resample(path,32);
+        return official.some(stroke=>{
+          const quality=strokeQuality(path,stroke,compDiag,false);
+          if(quality.q<0.85)return false;
+          const reference=resample(stroke,32);
+          return Math.min(avgDist(ink,reference),avgDist([...ink].reverse(),reference))/compDiag<=0.06;
+        });
       });
-      if(valid)candidates.push({i,j,gap,make:()=>joined});
+      if(valid)candidates.push({i,j,gap,make:()=>valid});
     });
   }
   return candidates.sort((a,b)=>a.gap-b.gap);
@@ -5705,7 +5936,7 @@ function matchComponent(officialStrokes, userStrokesIn, label, charDiag, diag, s
     const preNotes = [...notes];
     if(dropOneRetrace(work, compDiag, preNotes)) return attempt(work, preNotes, depth + 1);
     const cands = joinCandidates(users, compDiag);
-    if(recoverPenLifts)cands.push(...referencePenLiftJoins(users,compDiag,officialStrokes));
+    if(recoverPenLifts)cands.push(...referencePenLiftJoins(users,compDiag,officialStrokes,options.componentPenLift));
     let firstFail = null;
     for(const cand of cands){
       const joined = users.slice();
@@ -6062,7 +6293,17 @@ function rescueShortDistinctMark(char, baseline, official, user, charDiag){
     if(Math.max(mids[0].y,mids[1].y,mids[2].y)>mids[3].y-.12*charDiag)return null;
     const leftMark=byRole[1],leftStart=leftMark[0],leftEnd=leftMark.at(-1);
     if(Math.abs(leftEnd.y-leftStart.y)<.045*charDiag||Math.abs(mids[1].y-mids[2].y)>.13*charDiag)return null;
-    const fold=bboxOf([byRole[3]]);
+    // The 横折 must cross the top before descending on the right. A rotated
+    // fold may fit the same box. Choose endpoints by position, not pen direction.
+    const foldStroke=byRole[3], first=foldStroke[0], last=foldStroke[foldStroke.length-1];
+    const fold=bboxOf([foldStroke]);
+    const [start,end]=first.x<last.x?[first,last]:[last,first];
+    const corner=resample(foldStroke,20).some(p=>{
+      const topRun=p.x-start.x, descent=end.y-p.y;
+      return topRun>=.55*fold.w && Math.abs(p.y-start.y)<=.75*topRun &&
+        descent>=.4*fold.h && Math.abs(end.x-p.x)<=.75*descent;
+    });
+    if(!corner || end.y<=start.y)return null;
     if([4,5].some(index=>{
       const bar=bboxOf([byRole[index]]);
       return bar.minX<fold.minX-.13*charDiag||bar.maxX>fold.maxX+.06*charDiag;
@@ -6251,8 +6492,24 @@ async function gradeDrawing(char){
         return;
       }
       const aligned = alignClusterUniform(cluster, bboxOf(c.strokes));
-      const r = matchComponent(c.strokes, aligned, c.label, charDiag, diag, STRICT_MERGE_CHARACTERS.has(char)||options.yangCoverage, false, options);
-      rows = rows.concat(r.rows || []);
+      const strictMerges = STRICT_MERGE_CHARACTERS.has(char)||options.yangCoverage;
+      let r = matchComponent(c.strokes, aligned, c.label, charDiag, diag, strictMerges, false, options);
+      // A brief lift can leave an otherwise valid component one mark over its
+      // stroke count. Retry with the reference curve only for that one split.
+      const unmatchedLift = !r.rows.length || r.rows.some(row=>row.u.includes('+') && row.c.q<Q_FLOOR);
+      if(unmatchedLift && comps.length > 1 && cluster.length === c.strokes.length + 1){
+        const penLiftDiag = [];
+        const penLift = matchComponent(c.strokes, aligned, c.label, charDiag, penLiftDiag, strictMerges, true,
+          {...options,componentPenLift:true});
+        if(penLift.rows.length && (!r.rows.length || penLift.pass)){
+          diag.push(...penLiftDiag);
+          r = penLift;
+        }
+      }
+      // An unmatchable component has no rows. It cannot be omitted from the
+      // pooled quality, even when every matched component has a high score.
+      if(r.rows.length === 0) pass = false;
+      rows = rows.concat(r.rows);
     });
     if(pass && rows.length){
       const vetoes = rows.filter(r => r.c.veto).length;
@@ -6489,15 +6746,20 @@ function syncSessionSnapshot(){
 }
 function getCloudProgressState(){
   if(progressSaveNotice) throw new Error(progressSaveNotice);
+  if(progressWrites) throw new Error('本机进度正在保存，请稍后同步。');
+  if(localStorage.getItem(SAVE_KEY) !== progressStorageBase){
+    throw new Error('另一个游戏页面已有更新，请重新打开本页再同步。');
+  }
   return {...state, sessionProgress:syncSessionSnapshot()};
 }
 function syncQuestionSafe(){
-  if(parentValidation || isDrawing || submitBtn.disabled || syncFileReading || parentQueueChanged || pendingRetests.length) return false;
+  if(parentValidation || isDrawing || submitBtn.disabled || syncFileReading || progressWrites || parentQueueChanged || pendingRetests.length) return false;
   if(finale.classList.contains('show') || continueBtn.classList.contains('show')) return true;
   return currentMode === 'free' && strokesPoints.length === 0;
 }
 function syncCanApplyProgress(){
-  return syncQuestionSafe() && (!panelOverlay.classList.contains('show') || syncExplicitAdopt);
+  return syncQuestionSafe() && !progressSaveNotice && localStorage.getItem(SAVE_KEY) === progressStorageBase &&
+    (!panelOverlay.classList.contains('show') || syncExplicitAdopt);
 }
 function restoreSyncedRound(){
   const saved = state.sessionProgress;
@@ -6528,11 +6790,7 @@ function presentSyncedProgress(){
   }
   loadNextDoor();
 }
-function applySyncedProgress(remote){
-  const next = migrateState(JSON.parse(JSON.stringify(remote)));
-  if(!next || !syncCanApplyProgress()) throw new Error('请先完成当前练习，再接上云端进度。');
-  // Persist before replacing live objects. A quota failure leaves this question intact.
-  localStorage.setItem(SAVE_KEY, JSON.stringify(next));
+function applyProgressToPage(next, connected){
   syncApplying = true;
   try{
     cancelTeachingRound(); stopPromptSpeech(); feedbackCall('reset');
@@ -6541,10 +6799,25 @@ function applySyncedProgress(remote){
     priorityConsumedToday = new Set(); selectionSession = window.HanziPracticeSelector.createSession();
     parentQueueChanged = false; continueBtn.classList.remove('show');
     finale.classList.remove('show'); playzone.classList.remove('hide'); clearCanvas();
-    restoreSyncedRound(); applyScene(state.scenesUnlocked);
+    if(connected) restoreSyncedRound();
+    else{
+      passedCount = 0; syncRoundId = ''; syncRoundDay = todayStr();
+      syncRoundCompleted = syncSceneAwarded = false;
+    }
+    applyScene(state.scenesUnlocked);
     renderQueueList(); renderMasteredList(); renderStuckList();
-    presentSyncedProgress();
+    if(connected) presentSyncedProgress(); else loadNextDoor();
   } finally { syncApplying = false; }
+}
+function applySyncedProgress(remote){
+  const next = migrateState(JSON.parse(JSON.stringify(remote)));
+  if(!next || !syncCanApplyProgress()) throw new Error('请先完成当前练习，再接上云端进度。');
+  return withLocalWrite(SAVE_KEY, () => {
+    if(!syncCanApplyProgress()) throw new Error('请先完成当前练习，再接上云端进度。');
+    // Persist before replacing live objects. A quota failure leaves this question intact.
+    writeLocalProgress(JSON.stringify(next), 'sync');
+    applyProgressToPage(next, true);
+  });
 }
 let syncUiBusy = false;
 function renderCloudSyncStatus(){
@@ -6559,10 +6832,15 @@ function renderCloudSyncStatus(){
   document.getElementById('cloudSyncCode').value = legacyCode || '';
   const disabled = !cloudSyncController || syncUiBusy || status.kind === 'syncing' || status.kind === 'unsupported';
   for(const id of ['cloudSyncCreateBtn','cloudSyncJoinBtn','cloudSyncLegacyJoinBtn','cloudSyncNowBtn','cloudKeepLocalBtn','cloudUseRemoteBtn']) document.getElementById(id).disabled = disabled;
+  if(panelOverlay.classList.contains('show')) renderLocalRecoveryCopies();
 }
 function syncTick(){
   if(!cloudSyncController || syncUiBusy || !cloudSyncController.status().connected || parentValidation) return;
-  if(progressSaveNotice){ saveState(); if(progressSaveNotice) return; }
+  if(progressWrites) return;
+  if(progressSaveNotice){
+    Promise.resolve(saveState()).then(saved => { if(saved) return cloudSyncController.sync(); }).catch(() => {});
+    return;
+  }
   Promise.resolve(cloudSyncController.sync()).catch(() => {});
 }
 async function cloudSyncAction(action, adopt){
@@ -7032,13 +7310,13 @@ function recordResult(item, outcome){
   const schedule = [1, 2, 4, 7, 14, 21, 30]; // days, indexed by box 0..6
   item.interval = outcome === 'abandoned' ? 1 : schedule[Math.min(item.box, schedule.length - 1)];
   item.history.push({ day: today, outcome });
-  state.priorityQueue.forEach(p => {
-    if(p.requestId === currentParentRequestId && (!p.addedDay || p.addedDay === today)) p.completedDay = today;
-  });
 
   // Mastery counts DISTINCT days, not passes: writing it correctly five times this afternoon
   // is one day's evidence, and the thing being tested is whether it survives a night's sleep.
   if(outcome === 'first-try' || outcome === 'retest-pass'){
+    const request = state.priorityQueue.find(p => p.requestId === currentParentRequestId &&
+      (!p.addedDay || p.addedDay === today));
+    if(request) request.completedDay = today;
     if(!item.passedDays) item.passedDays = [];
     if(!item.passedDays.includes(today)) item.passedDays.push(today);
   }
@@ -7472,8 +7750,9 @@ onTap(closePanelBtn, () => {
     finale.classList.remove('show');
     playzone.classList.remove('hide');
     loadNextDoor();
-  } else if(currentMode === 'free' && !strokesPoints.length && !isDrawing && !submitBtn.disabled && nextParentPriority()){
-    // Replace only an untouched free question. It already counted as a filler,
+  } else if(currentMode === 'free' && !currentParentRequestId && !strokesPoints.length &&
+      !isDrawing && !submitBtn.disabled && !continueBtn.classList.contains('show') && nextParentPriority()){
+    // Replace only an untouched ordinary question. It already counted as a filler,
     // so this must not increment the delayed-retest gap a second time.
     presentDoor(pickNextChar(), 'free', 1);
   }
@@ -7519,7 +7798,8 @@ function renderQueueList(){
       ? `<span class="py-alt" data-i="${i}" title="多音字，点一下换读音">${escapeText(p.pinyin)}</span>`
       : escapeText(p.pinyin);
     const bankItem = state.bank.find(b => b.char === p.char);
-    const status = p.completedDay === todayStr() ? '今天已完成' : isStuck(bankItem || {}) ? '先点下方“我讲过了”再复习' : '今天优先复习';
+    const status = isStuck(bankItem || {}) ? '先点下方“我讲过了”再复习'
+      : p.completedDay === todayStr() ? '今天已完成' : '今天优先复习';
     const sentence = sentenceFor(p);
     const sentenceStatus = p.sentence ? ' · 自定义例句'
       : sentence ? (localSentenceFor(p) ? ' · 自动例句' : ' · AI 例句')
@@ -7583,11 +7863,21 @@ function renderStuckList(){
   stuckList.querySelectorAll('.btn-taught').forEach(el => {
     onTap(el, () => {
       const it = state.bank.find(b => b.char === el.dataset.ch);
-      if(!it) return;
+      if(!it || !isStuck(it)) return;
+      const today = todayStr();
+      const request = state.priorityQueue.find(p => p.char === it.char && (!p.addedDay || p.addedDay === today));
+      if(request){
+        // Older versions marked the request complete when the word was parked.
+        // Reopen that request without removing any of the child's pass history.
+        request.completedDay = null;
+        priorityConsumedToday.delete(it.char);
+        parentQueueChanged = true;
+      }
       it.stuck = false;
       it.wrongToday = 0;      // a fresh three tries, now that it's been explained
       saveState();
       renderStuckList();
+      renderQueueList();
       // A level stopped early for lack of work can resume; a full level stays complete.
       if(finale.classList.contains('show') && passedCount < ROUND_GOAL){
         syncRoundCompleted = false;
@@ -7768,7 +8058,13 @@ onTap(inkClearBtn, () => {
   if(submitBtn.disabled){ inkMsg.textContent = '正在批改，请等这次完成后再清空。'; return; }
   inkLog = []; const saved = saveInkLog(); renderInkList();
   playerDisputeEntry = playerDisputePressedEntry = null; renderPlayerDispute();
-  inkOut.value = ''; inkMsg.textContent = saved ? '已清空' : '暂存失败，清空尚未保存。';
+  inkOut.value = '';
+  const report = ok => {
+    renderInkList();
+    inkMsg.textContent = ok ? (inkLog.length ? '本页显示过的笔迹已清空，其他页面的新笔迹已保留。' : '已清空')
+      : '暂存失败，清空尚未保存。';
+  };
+  if(saved?.then) saved.then(report); else report(saved);
 });
 
 onTap(batchAddBtn, () => {
@@ -7786,22 +8082,78 @@ onTap(batchAddBtn, () => {
   renderQueueList();
 });
 
-onTap(saveProgressBtn, () => {
-  const dataStr = JSON.stringify(state, null, 2);
-  const blob = new Blob([dataStr], {type:'application/json'});
+function downloadProgress(text, label){
+  const blob = new Blob([text], {type:'application/json'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  const dateStr = new Date().toISOString().slice(0,10);
   a.href = url;
-  a.download = `汉字魔法门_存档_${dateStr}.json`;
+  a.download = `汉字魔法门_${label}_${todayStr()}.json`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
+}
+onTap(saveProgressBtn, () => downloadProgress(JSON.stringify(state, null, 2), '存档'));
+
+function renderLocalRecoveryCopies(){
+  const section = document.getElementById('localRecoveryCopies');
+  const select = document.getElementById('localRecoverySelect');
+  if(!section || !select) return;
+  const copies = [];
+  try{
+    const keys = new Set([PRE_RESTORE_KEY]);
+    if(localPageId) keys.add(LOCAL_RECOVERY_PREFIX + localPageId);
+    for(let i = 0; i < localStorage.length; i++){
+      const key = localStorage.key(i);
+      if(key?.startsWith(LOCAL_RECOVERY_PREFIX)) keys.add(key);
+    }
+    for(const key of keys){
+      const copy = JSON.parse(localStorage.getItem(key));
+      if(copy && Number.isFinite(copy.at) && (copy.progress || typeof copy.raw === 'string')) copies.push({key, at:copy.at});
+    }
+  }catch(_){}
+  const selected = select.value;
+  while(select.firstChild) select.removeChild(select.firstChild);
+  copies.sort((a,b) => b.at - a.at).forEach(({key, at}) => {
+    const option = document.createElement('option');
+    option.value = key;
+    option.textContent = `${key === PRE_RESTORE_KEY ? '恢复前的进度' : '另一个页面的练习'} · ${new Date(at).toLocaleString()}`;
+    select.appendChild(option);
+  });
+  if(copies.some(copy => copy.key === selected)) select.value = selected;
+  section.hidden = !copies.length;
+}
+onTap(document.getElementById('localRecoveryDownload'), () => {
+  try{
+    const key = document.getElementById('localRecoverySelect').value;
+    if(key !== PRE_RESTORE_KEY && !key.startsWith(LOCAL_RECOVERY_PREFIX)) return;
+    const copy = JSON.parse(localStorage.getItem(key));
+    if(copy) downloadProgress(copy.raw || JSON.stringify(copy.progress, null, 2), '恢复副本');
+  }catch(_){ alert('未能下载本机副本，请稍后再试。'); }
 });
 
+function validateProgressBackup(value){
+  if(!value || !Array.isArray(value.bank) || !value.bank.length) return null;
+  const countedDays = Number.isSafeInteger(value.daysElapsed) && value.daysElapsed >= 0;
+  function validItems(items, unique){
+    if(!Array.isArray(items)) return false;
+    const seen = new Set();
+    return items.every(item => {
+      if(!item || typeof item.char !== 'string' || !/^[\p{Script=Han}]$/u.test(item.char) || (unique && seen.has(item.char))) return false;
+      seen.add(item.char);
+      if(['pinyin','word','sentence'].some(key => item[key] != null && typeof item[key] !== 'string')) return false;
+      if(item.history != null && (!Array.isArray(item.history) || item.history.some(entry => !entry ||
+          (typeof entry.day !== 'string' && !(countedDays && Number.isSafeInteger(entry.day) && entry.day >= 0))))) return false;
+      return item.passedDays == null || (Array.isArray(item.passedDays) && item.passedDays.every(day => typeof day === 'string'));
+    });
+  }
+  if(!validItems(value.bank, true) || (value.priorityQueue != null && !validItems(value.priorityQueue, false))) return null;
+  if(value.scenesUnlocked != null && (!Number.isSafeInteger(value.scenesUnlocked) || value.scenesUnlocked < 0)) return null;
+  return migrateState(value);
+}
+
 onTap(loadProgressBtn, () => {
-  if(submitBtn.disabled){ alert('正在批改，请等这次完成后再读取存档。'); return; }
+  if(!syncQuestionSafe()){ alert('请先完成正在进行的练习，再从备份恢复。'); return; }
   fileInput.click();
 });
 fileInput.addEventListener('change', (e) => {
@@ -7818,39 +8170,41 @@ fileInput.addEventListener('change', (e) => {
       alert('正在进行家长验收，本次没有读取存档。退出验收后可重新选择存档。');
       return;
     }
-    if(submitBtn.disabled){
+    if(!syncQuestionSafe()){
       fileInput.value = '';
-      alert('正在批改，本次没有读取存档。请等这次完成后重新选择存档。');
+      alert('请先完成正在进行的练习，再从备份恢复。');
       return;
     }
+    fileInput.value = '';
+    let next;
     try{
-      const loaded = JSON.parse(ev.target.result);
-      if(loaded && loaded.bank){
-        state = migrateState(loaded) || state;
-        renderQueueList();
-        renderMasteredList();
-        renderStuckList();
-        passedCount = 0;
-        syncRoundId = ''; syncRoundDay = todayStr(); syncRoundCompleted = syncSceneAwarded = false;
-        if(cloudSyncController && cloudSyncController.status().connected) restoreSyncedRound();
-        pendingRetests = [];
-        priorityConsumedToday = new Set();
-        selectionSession = window.HanziPracticeSelector.createSession();
-        applyScene(state.scenesUnlocked);
-        finale.classList.remove('show');
-        playzone.classList.remove('hide');
-        if(cloudSyncController && cloudSyncController.status().connected) presentSyncedProgress();
-        else loadNextDoor();
-        saveState();
-        alert('存档读取成功！');
-      } else {
-        alert('这个文件看起来不是有效的存档。');
-      }
-    }catch(err){
-      alert('读取失败，文件可能损坏。');
-    }
+      next = validateProgressBackup(JSON.parse(ev.target.result));
+    }catch(_){}
+    if(!next){ alert('这个文件不是有效的进度备份。本机进度已保留。'); return; }
+    const connected = cloudSyncController?.status().connected;
+    if(connected && !confirm('恢复的进度会同步到同一家庭的其他设备。本机将保留恢复前的副本。继续恢复吗？')) return;
+    syncFileReading = true;
+    const failed = error => {
+      syncFileReading = false;
+      alert(error?.message === 'another-tab' ? '另一个页面有新进度。请重新打开游戏，再从备份恢复。'
+        : error?.message === 'busy' ? '请先完成正在进行的练习，再从备份恢复。'
+        : '恢复的进度未能保存，请检查浏览器存储空间。');
+    };
+    try{
+      const result = withLocalWrite(SAVE_KEY, () => {
+        syncFileReading = false;
+        if(!syncQuestionSafe()) throw new Error('busy');
+        if(localStorage.getItem(SAVE_KEY) !== progressStorageBase) throw new Error('another-tab');
+        writeLocalProgress(JSON.stringify(next), 'restore');
+        applyProgressToPage(next, connected);
+        if(cloudSyncController) cloudSyncController.changed();
+        renderLocalRecoveryCopies();
+        alert('存档已恢复，并已保存在本机。');
+      });
+      if(result?.catch) result.catch(failed);
+    }catch(error){ failed(error); }
   };
-  reader.onerror = reader.onabort = () => { syncFileReading = false; alert('这次没有读到存档，本机进度已保留。'); };
+  reader.onerror = reader.onabort = () => { syncFileReading = false; fileInput.value = ''; alert('这次没有读到存档，本机进度已保留。'); };
   reader.readAsText(file);
 });
 
@@ -7912,8 +8266,34 @@ function showFinale(bankEmpty){
 // ---------- init ----------
 // Restore before anything reads state: the scene, the queue list and the first door all
 // depend on what was saved, so loading afterwards would show one round of the wrong thing.
+function preservePendingLocalWrites(){
+  preservePendingProgress();
+  preservePendingInk();
+}
+function recoverPendingInkCopies(){
+  try{
+    // Read only matching keys here; read and merge under the normal ink lock.
+    for(let i = 0; i < localStorage.length; i++){
+      if(!localStorage.key(i)?.startsWith(PENDING_INK_PREFIX)) continue;
+      Promise.resolve(saveInkLog(true)).then(saved => {
+        if(!saved) return;
+        if(!playerDisputeEntry) showPlayerDispute(inkLog.find(entry => entry && (entry.v === 'pass' || entry.v === 'fail')) || null);
+        if(panelOverlay.classList.contains('show')) renderInkList();
+      }).catch(() => {});
+      break;
+    }
+  }catch(_){}
+}
+window.addEventListener('pagehide', preservePendingLocalWrites);
+document.addEventListener('visibilitychange', () => {
+  if(document.hidden) preservePendingLocalWrites();
+});
+window.addEventListener('storage', event => {
+  if(event.newValue && event.key?.startsWith(PENDING_INK_PREFIX)) recoverPendingInkCopies();
+});
 loadSavedState();
 loadInkLog();
+recoverPendingInkCopies();
 loadParentTestInkLog();
 initMountainJourney();
 initProgressSync();

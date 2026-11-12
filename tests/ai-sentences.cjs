@@ -317,6 +317,9 @@ test('reject cross-word, wrong-reading, contradictory and filler completions', a
     { ...WOOD, sentence: '老师让我用“木栏杆”造句。' },
     { ...WOOD, sentence: '我在书上读到了木栏杆。' },
     { ...WOOD, sentence: '我在词语表上读到了木栏杆。' },
+    { ...WOOD, sentence: '我在词语表里找到了木栏杆。' },
+    { ...WOOD, sentence: '我翻开书，在生字表里发现了木栏杆。' },
+    { ...WOOD, sentence: '今天老师让大家把木栏杆抄三遍。' },
     { ...WOOD, sentence: '课本里写着木栏杆。' },
     { ...WOOD, sentence: '木栏杆。' },
     { ...WOOD, sentence: '我扶着木栏杆看鱼。姐姐也走过来了。' },
@@ -333,6 +336,15 @@ test('reject cross-word, wrong-reading, contradictory and filler completions', a
     assert.equal(d.client.get(STONE), null, 'Never write to an unrequested identity');
     assertStatus(d.client, true, false);
   }
+});
+
+test('a preceding reference to a book does not block an unrelated real context', async () => {
+  const remote = server();
+  const sentence = '我们合上课本，到操场边扶着木栏杆看小鱼。';
+  remote.chat = () => completion([{ ...WOOD, sentence }]);
+  const d = await connected(remote);
+  await d.client.generate([WOOD]);
+  assert.equal(d.client.get(WOOD), sentence);
 });
 
 test('a dated response for the selected free model can provide a valid hint', async () => {
@@ -399,18 +411,33 @@ test('ambiguous duplicates and corrupted stored rows cannot enter the usable cac
 });
 
 test('revoked provider authorization does not retry, expose errors, or erase good hints', async () => {
-  for (const code of [401, 403]) {
-    const d = await connected();
-    await d.client.generate([WOOD]);
-    d.remote.chat = () => response(code, { error: { message: TEST_KEY } });
-    await d.client.generate([STONE]);
-    assertStatus(d.client, false, false);
-    assert.equal(d.session.getItem(SESSION), null);
-    assert.equal(d.client.get(STONE), null);
-    assert.equal(d.client.get(WOOD), EXAMPLES.木栏杆);
-    await d.client.generate([BAMBOO]);
-    assert.equal(d.remote.chats().length, 2, 'No further request until consent is renewed');
-  }
+  const d = await connected();
+  await d.client.generate([WOOD]);
+  d.remote.chat = () => response(401, { error: { message: TEST_KEY } });
+  await d.client.generate([STONE]);
+  assertStatus(d.client, false, false);
+  assert.equal(d.session.getItem(SESSION), null);
+  assert.equal(d.client.get(STONE), null);
+  assert.equal(d.client.get(WOOD), EXAMPLES.木栏杆);
+  await d.client.generate([BAMBOO]);
+  assert.equal(d.remote.chats().length, 2, 'No further request until consent is renewed');
+});
+
+test('forbidden generation retains authorization and the next explicit request can succeed', async () => {
+  const d = await connected();
+  await d.client.generate([WOOD]);
+  d.remote.chat = () => response(403, { error: { message: TEST_KEY } });
+  await d.client.generate([STONE]);
+  assertStatus(d.client, true, false);
+  assert.equal(d.session.getItem(SESSION), TEST_KEY);
+  assert.equal(d.client.get(STONE), null);
+  assert.equal(d.client.get(WOOD), EXAMPLES.木栏杆);
+  assert.match(d.client.status().message, /请求被服务拒绝/);
+  assert.ok(!d.client.status().message.includes(TEST_KEY));
+  d.remote.chat = () => completion([{ ...STONE, sentence: EXAMPLES.石栏杆 }]);
+  await d.client.generate([STONE]);
+  assert.equal(d.client.get(STONE), EXAMPLES.石栏杆);
+  assert.equal(d.remote.chats().length, 3);
 });
 
 test('cache keys distinguish full spelling, target character and selected reading', async () => {

@@ -232,7 +232,31 @@ run('Object.assign(state.bank[0],{wrongToday:2,wrongDay:todayStr()});');
 enqueue([request(stuckChar)]); next(); answer(false);
 assert.equal(bankItem(stuckChar).wrongToday, 3); assert.equal(bankItem(stuckChar).stuck, true);
 assert.equal(bankItem(stuckChar).history.at(-1).outcome, 'abandoned');
-assert.equal(queue()[0].completedDay, TODAY); assert.equal(run('passedCount'), 0);
+assert.equal(queue()[0].completedDay, null); assert.equal(run('passedCount'), 0);
+assert.equal(priority(), null, 'Parked practice must wait for the parent');
+
+// A completed flag from an older version must not strand an explicitly
+// requeued mastered character after the parent explains the mistake.
+const taught = { id: 'parent-taught', dataset: { ch: stuckChar } };
+context.stuckList = { innerHTML: '', querySelectorAll(selector) {
+  return selector === '.btn-taught' && this.innerHTML.includes('我讲过了') ? [taught] : [];
+} };
+context.queueList = { innerHTML: '', querySelectorAll() { return []; } };
+run(section('function escapeText(value){', 'function renderAiSentenceStatus(){'));
+run(`Object.assign(state.bank.find(item=>item.char===testChar),{
+  passedDays:['2026-09-01','2026-09-08','2026-09-15']});
+  state.priorityQueue[0].completedDay=todayStr(); renderQueueList(); renderStuckList();`);
+assert.match(context.queueList.innerHTML, /我讲过了/);
+assert.doesNotMatch(context.queueList.innerHTML, /今天已完成/);
+const parkedRequest = queue()[0].requestId;
+const originalPassDays = bankItem(stuckChar).passedDays;
+handlers.get(taught.id)();
+assert.equal(priority().requestId, parkedRequest);
+assert.equal(queue()[0].completedDay, null);
+assert.deepEqual(bankItem(stuckChar).passedDays, originalPassDays);
+assert.equal(bankItem(stuckChar).wrongToday, 0);
+next(); assert.equal(current().char, stuckChar);
+answer(true); assert.equal(queue()[0].completedDay, TODAY);
 
 // Ordinary work already on screen cannot complete a newer request for that char.
 reset(); run("presentDoor(state.bank[0],'free',1);");
@@ -319,6 +343,12 @@ assert.ok(JSON.stringify(plain('migrateState(legacy)')) === JSON.stringify(adopt
 reset(); run("presentDoor(state.bank[0],'free',1);pendingRetests=[{item:state.bank[1],fillersSeen:1,round:1}];");
 enqueueChars('龙'); close();
 assert.equal(current().char, '龙'); assert.equal(plain('pendingRetests')[0].fillersSeen, 1);
+const firstBatchRequest = run('currentParentRequestId');
+enqueueChars('石'); close();
+assert.equal(current().char, '龙', 'Keep the untouched current parent request available');
+assert.equal(run('currentParentRequestId'), firstBatchRequest);
+answer(true); next(); assert.equal(current().char, '石', 'New batch is next');
+assert.equal(queue().find(item => item.requestId === firstBatchRequest).completedDay, TODAY);
 reset(); run("presentDoor(state.bank[0],'free',1);strokesPoints=[[{x:1,y:1},{x:2,y:2}]];");
 const writingChar = current().char; enqueueChars('龙'); close(); assert.equal(current().char, writingChar);
 reset(); run("presentDoor(state.bank[0],'free',1);currentMode='teaching';");
