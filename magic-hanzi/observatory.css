@@ -1,0 +1,236 @@
+.has-herbalist[data-herb-stage="stars"] {
+  --herb-paper: #f4f0e9;
+  --herb-gold: #f6d6a1;
+  --herb-line: #9dadcf66;
+  background: #0a1121;
+}
+.has-herbalist[data-herb-stage="stars"] #herbalistBackdrop { display: none; }
+#observatoryBackdrop {
+  --observatory-image: url("assets/observatory/observatory.webp");
+  --observatory-night: radial-gradient(ellipse at 48% 15%, #293b60 0%, #152541 47%, #090f1f 100%);
+  position: fixed;
+  inset: 0;
+  display: none;
+  overflow: hidden;
+  pointer-events: none;
+}
+body[data-herb-stage="stars"] #observatoryBackdrop { display: block; }
+.observatory-art {
+  position: absolute;
+  inset: 0;
+  width: min(100%, 1160px);
+  margin-inline: auto;
+  background: var(--observatory-image) center 61% / cover no-repeat, var(--observatory-night);
+  box-shadow: 0 0 130px 40px #080e1f;
+}
+.observatory-art::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(#0912229c 0%, transparent 25% 70%, #090f1fba 100%);
+}
+.observatory-scene {
+  position: absolute;
+  top: max(147px, 23dvh);
+  left: 50%;
+  width: min(calc(100vw - 28px), 620px, 83dvh);
+  height: min(40dvh, 370px);
+  transform: translateX(-50%);
+}
+.observatory-scene::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(ellipse at center, #07102191, transparent 70%);
+}
+.observatory-sky {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(100%, calc(min(40dvh, 370px) * 420 / 236));
+  aspect-ratio: 420 / 236;
+  transform: translate(-50%, -50%);
+}
+.observatory-sky > *, .observatory-bird canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.observatory-halo {
+  opacity: 0;
+  background: radial-gradient(ellipse at 50% 56%, #6dbfff49, #6268e42e 33%, transparent 63%);
+}
+.observatory-lines {
+  opacity: 0;
+  filter: drop-shadow(0 0 4px #a1baffc8);
+}
+.observatory-star {
+  position: absolute;
+  top: var(--star-y);
+  left: var(--star-x);
+  width: 7px;
+  height: 7px;
+  border: 1px solid #a0b6dca8;
+  border-radius: 50%;
+  background: #1b2c4d;
+  box-shadow: 0 0 0 2px #101a318a;
+  transform: translate(-50%, -50%);
+}
+.observatory-star.is-lit {
+  border-color: #fdfbff;
+  background: #fff6d7;
+  box-shadow: 0 0 6px 2px #f8dc978c, 0 0 17px 5px #7595f563;
+}
+.observatory-star.is-lit::before {
+  content: '';
+  position: absolute;
+  inset: -5px;
+  background: #fff8da;
+  clip-path: polygon(50% 0, 58% 43%, 100% 50%, 58% 57%, 50% 100%, 42% 57%, 0 50%, 42% 43%);
+}
+.observatory-star.is-lighting { animation: observatory-light .62s ease-out both; }
+.observatory-bird {
+  opacity: 0;
+  transform: translate(3%, -7%) scale(.96);
+  filter: drop-shadow(0 0 7px #9be0ffb7) drop-shadow(0 0 19px #697deeb3);
+}
+.observatory-wing-left { transform-origin: 46% 64%; }
+.observatory-wing-right { transform-origin: 53% 60%; }
+.observatory-complete .observatory-halo { opacity: .75; }
+.observatory-complete .observatory-lines { opacity: .42; }
+.observatory-complete .observatory-points { opacity: .48; }
+.observatory-complete .observatory-bird { opacity: 1; }
+.observatory-transforming .observatory-lines { animation: observatory-connect 1.65s ease-out .24s both; }
+.observatory-transforming .observatory-points { animation: observatory-points 1.7s ease both; }
+.observatory-transforming .observatory-halo { animation: observatory-halo 1.4s ease-out .65s both; }
+.observatory-transforming .observatory-bird { animation: observatory-flight 1.32s cubic-bezier(.16,.62,.35,1) .93s both; }
+.observatory-transforming .observatory-wing-right { animation: observatory-far-wing 1.32s ease-in-out .93s both; }
+.observatory-transforming .observatory-wing-left { animation: observatory-near-wing 1.32s ease-in-out .93s both; }
+
+@keyframes observatory-light {
+  0% { transform: translate(-50%, -50%) scale(.5); opacity: .4; }
+  35% { transform: translate(-50%, -50%) scale(1.8); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+}
+@keyframes observatory-connect {
+  0% { clip-path: inset(0 100% 0 0); opacity: 1; }
+  46% { clip-path: inset(0); opacity: 1; }
+  61% { opacity: 1; }
+  100% { clip-path: inset(0); opacity: .42; }
+}
+@keyframes observatory-points {
+  0%, 58% { opacity: 1; }
+  100% { opacity: .48; }
+}
+@keyframes observatory-halo {
+  0% { opacity: 0; transform: scale(.68); }
+  45% { opacity: 1; }
+  100% { opacity: .75; transform: scale(1.18); }
+}
+@keyframes observatory-flight {
+  0% { opacity: 0; transform: translate(-1%, 2%) scale(.8) rotate(-3deg); }
+  33% { opacity: 1; transform: translate(0%, 2%) scale(.91) rotate(-2deg); }
+  67% { opacity: 1; transform: translate(4%, -11%) scale(1) rotate(2deg); }
+  100% { opacity: 1; transform: translate(3%, -7%) scale(.96); }
+}
+@keyframes observatory-far-wing {
+  0% { transform: scaleY(.67) rotate(11deg); }
+  43% { transform: scaleY(1) rotate(-4deg); }
+  67% { transform: scaleY(.76) rotate(7deg); }
+  100% { transform: none; }
+}
+@keyframes observatory-near-wing {
+  0% { transform: scaleY(.61) rotate(-9deg); }
+  43% { transform: scaleY(1) rotate(7deg); }
+  67% { transform: scaleY(.73) rotate(-8deg); }
+  100% { transform: none; }
+}
+
+.has-herbalist[data-herb-stage="stars"] :is(.herb-pill, .icon-btn) {
+  background: #15203aef;
+  box-shadow: 0 4px 15px #060d1f82;
+}
+.has-herbalist[data-herb-stage="stars"] .herb-caption {
+  text-shadow: 0 2px 7px #071021, 0 0 22px #151d38;
+}
+.has-herbalist[data-herb-stage="stars"] .herb-meter {
+  background: #1b2b4bee;
+  color: #f6ecda;
+}
+.has-herbalist[data-herb-stage="stars"] .herb-meter-gem {
+  width: 12px;
+  height: 12px;
+  background: #ffe3a9;
+  transform: none;
+  clip-path: polygon(50% 0, 63% 38%, 100% 50%, 63% 62%, 50% 100%, 37% 62%, 0 50%, 37% 38%);
+}
+.has-herbalist[data-herb-stage="stars"] :is(.herb-card, #playzone:not(.writing), #finale) {
+  background: linear-gradient(145deg, #202f4aee, #111c33fa);
+}
+.has-herbalist[data-herb-stage="stars"] :is(.herb-card p, #finale p) { color: #f0e9de; }
+.has-herbalist[data-herb-stage="stars"] .herb-secondary { background: #2a3959; }
+.has-herbalist[data-herb-stage="stars"] #playzone.writing {
+  border-color: #9dadcf59;
+  background: #19253eea;
+  box-shadow: 0 10px 36px #060d1fbf;
+}
+
+@media (max-width: 739px) and (orientation: portrait), (max-width: 659px) {
+  .has-herbalist[data-herb-stage="stars"][data-herb-mode="playing"].herb-writing .observatory-art {
+    filter: saturate(.8) brightness(.58);
+  }
+  .has-herbalist[data-herb-stage="stars"][data-herb-mode="playing"].herb-writing .observatory-scene {
+    top: var(--herb-compact-top);
+    width: var(--herb-bench-width);
+    height: var(--herb-compact-height);
+    border: 1px solid var(--herb-line);
+    border-radius: 12px;
+    background:
+      linear-gradient(90deg, #101a32a8, #192c4d75),
+      var(--observatory-image) center 29% / cover no-repeat,
+      var(--observatory-night);
+    box-shadow: 0 5px 18px #060d1fa6;
+  }
+  .has-herbalist[data-herb-stage="stars"][data-herb-mode="playing"].herb-writing .observatory-sky {
+    left: 35%;
+    width: min(67%, calc(var(--herb-compact-height) * 420 / 236));
+  }
+  .has-herbalist[data-herb-stage="stars"][data-herb-mode="playing"].herb-writing .observatory-star {
+    width: 5px;
+    height: 5px;
+  }
+  .has-herbalist[data-herb-stage="stars"][data-herb-mode="playing"].herb-writing .observatory-star.is-lit::before {
+    inset: -3px;
+  }
+}
+@media (min-width: 740px), (min-width: 660px) and (orientation: landscape) {
+  .has-herbalist[data-herb-stage="stars"][data-herb-mode="playing"] .observatory-art {
+    filter: brightness(.41) saturate(.76) blur(8px);
+    opacity: .64;
+  }
+  .has-herbalist[data-herb-stage="stars"][data-herb-mode="playing"] .observatory-scene {
+    top: var(--herb-bench-top);
+    left: calc(50% - (var(--herb-canvas-column) + var(--herb-lane-gap)) / 2);
+    width: var(--herb-bench-width);
+    height: var(--herb-bench-height);
+    border: 1px solid var(--herb-line);
+    border-radius: 18px;
+    background:
+      linear-gradient(180deg, #0b132a19, transparent 68%, #090f1f2e),
+      var(--observatory-image) center 61% / cover no-repeat,
+      var(--observatory-night);
+    box-shadow: 0 15px 46px #070d1bc9;
+  }
+  .has-herbalist[data-herb-stage="stars"][data-herb-mode="playing"] .observatory-sky {
+    top: 37%;
+    left: 46%;
+    width: min(88%, calc(var(--herb-bench-height) * 420 / 236 * .75));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  #observatoryBackdrop :is(.observatory-star, .observatory-lines, .observatory-points, .observatory-halo, .observatory-bird, .observatory-bird canvas) {
+    animation: none;
+  }
+}

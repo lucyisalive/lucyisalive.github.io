@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="320" viewBox="0 0 128 128" role="img" aria-label="血袍">
+  <title>血袍</title>
+  <defs>
+    <clipPath id="blood-silhouette"><path d="M62 7 C66 7 70 11 75 17 C80 23 84 29 85 36 C91 40 94 47 96 57 C98 74 94 89 106 113 L111 120 C96 123 88 116 77 120 C65 124 52 122 44 121 C32 119 23 126 16 120 C27 107 31 95 34 80 C36 68 34 59 39 49 C42 42 48 38 49 32 C49 22 54 12 62 7Z"/></clipPath>
+    <linearGradient id="blood-body" x1="0" y1="0" x2=".88" y2=".94">
+      <stop stop-color="#404044"/>
+      <stop offset=".32" stop-color="#29292d"/>
+      <stop offset=".65" stop-color="#14151a"/>
+      <stop offset="1" stop-color="#0c0d12"/>
+    </linearGradient>
+    <linearGradient id="blood-hood" x1="0" y1="0" x2="1" y2=".65">
+      <stop stop-color="#464649"/>
+      <stop offset=".43" stop-color="#25262a"/>
+      <stop offset="1" stop-color="#131419"/>
+    </linearGradient>
+    <linearGradient id="blood-fold" x1="0" y1="0" x2="1" y2=".34">
+      <stop stop-color="#13141a"/>
+      <stop offset=".23" stop-color="#3c3c41"/>
+      <stop offset=".55" stop-color="#29292e"/>
+      <stop offset="1" stop-color="#111117"/>
+    </linearGradient>
+    <linearGradient id="blood-thread" gradientUnits="userSpaceOnUse" x1="25" y1="26" x2="98" y2="108">
+      <stop stop-color="#975057"/>
+      <stop offset=".38" stop-color="#6c242c"/>
+      <stop offset=".72" stop-color="#975057"/>
+      <stop offset="1" stop-color="#3c151c"/>
+    </linearGradient>
+  </defs>
+  <path d="M62 7 C66 7 70 11 75 17 C80 23 84 29 85 36 C91 40 94 47 96 57 C98 74 94 89 106 113 L111 120 C96 123 88 116 77 120 C65 124 52 122 44 121 C32 119 23 126 16 120 C27 107 31 95 34 80 C36 68 34 59 39 49 C42 42 48 38 49 32 C49 22 54 12 62 7Z" fill="url(#blood-body)" stroke="#696970" stroke-width="1.8" stroke-linejoin="round"/>
+  <g clip-path="url(#blood-silhouette)">
+    <path d="M48 37 C34 55 45 76 31 101 L18 121 L35 120 C48 106 53 65 53 47Z" fill="url(#blood-fold)"/>
+    <path d="M57 44 C49 67 51 107 38 126 L54 124 C62 96 57 82 64 54Z" fill="#333238" opacity=".76"/>
+    <path d="M73 46 C61 74 76 92 63 124 L80 123 C80 101 78 84 82 64Z" fill="url(#blood-fold)" opacity=".83"/>
+    <path d="M87 44 C97 57 89 92 106 116 L97 121 C88 110 84 77 86 61Z" fill="#36353a" opacity=".6"/>
+    <path d="M45 53 C44 74 45 98 32 117 M60 63 C56 81 60 104 53 120 M88 64 C89 80 90 107 98 116" fill="none" stroke="#7e7978" stroke-width=".9" opacity=".27"/>
+    <path d="M18 121 C42 113 50 124 76 119 C84 114 98 120 114 121" fill="none" stroke="#040407" stroke-width="5" opacity=".7"/>
+  </g>
+  <path d="M62 7 C66 7 70 11 75 17 C80 23 84 29 85 36 L78 48 C65 51 53 43 49 34 C48 22 54 12 62 7Z" fill="url(#blood-hood)"/>
+  <path d="M62 7 C57 12 52 19 50 27" fill="none" stroke="#989393" stroke-width="1.05" stroke-linecap="round" opacity=".7"/>
+  <path d="M66 14 C72 18 79 28 78 35 C75 41 70 43 67 46 C60 42 55 37 55 31 C56 25 60 19 66 14Z" fill="#08090c"/>
+  <path d="M66 17 C62 22 58 27 58 33 C60 37 63 40 66 42 C61 36 62 32 66 27 C69 23 69 20 66 17Z" fill="#17161a"/>
+  <g fill="none" stroke="url(#blood-thread)" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M55 31 C56 25 60 19 66 14 C72 18 79 28 78 35" stroke-width="2.25"/>
+    <path d="M55 32 C55 38 61 43 67 47 C70 44 76 41 78 35 M67 47 C65 61 63 77 65 93 C67 105 64 115 62 120" stroke-width="3.35"/>
+    <path d="M19 119 C27 122 32 116 44 118 C58 120 65 121 77 117 C88 113 96 120 107 118" stroke-width="2.45" opacity=".9"/>
+    <path d="M35 87 L40 88 M92 85 L97 84" stroke-width="1.9" opacity=".75"/>
+    <path d="M25 115 C32 117 37 114 45 115 C58 117 65 118 77 114 C88 110 97 117 103 115" stroke="#975057" stroke-width=".9" opacity=".8"/>
+  </g>
+  <path d="M67 47 L70 51 L66 56 L63 51Z" fill="#3c151c" stroke="#975057" stroke-width=".85"/>
+  <path d="M64 50 L67 47 L69 50" fill="none" stroke="#975057" stroke-width=".55"/>
+</svg>

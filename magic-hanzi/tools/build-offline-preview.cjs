@@ -1,0 +1,38 @@
+'use strict';
+
+const fs = require('node:fs');
+const path = require('node:path');
+const { buildPage } = require('./build-page.cjs');
+
+const root = path.resolve(__dirname, '..');
+const read = file => fs.readFileSync(path.join(root, file));
+const assets = [
+  'assets/herbalist/apothecary.webp',
+  'assets/herbalist/cottage.webp',
+  'assets/herbalist/stone-wall.webp',
+  'assets/observatory/observatory.webp',
+  'assets/mountain-journey/forest-trail.webp',
+  'assets/mountain-journey/gate-frame.webp',
+  'assets/mountain-journey/gate-doors.webp',
+  'assets/robes/black.svg',
+  'assets/robes/purple.svg',
+  'assets/robes/green.svg',
+  'assets/robes/blue.svg',
+  'assets/robes/silver.svg',
+  'assets/robes/blood.svg',
+];
+const glyphs = ['hanzi-data.js', 'curriculum-hanzi-data.js', 'pinyin-data.js'];
+const destination = process.argv[2];
+if (!destination) throw new Error('Usage: node tools/build-offline-preview.cjs <output.html>');
+
+let { html } = buildPage(root);
+for (const file of assets) {
+  const mimeType = file.endsWith('.svg') ? 'image/svg+xml' : 'image/webp';
+  html = html.replaceAll(file, 'data:' + mimeType + ';base64,' + read(file).toString('base64'));
+}
+const inlineGlyphs = glyphs.map(file => {
+  const code = read(file).toString('utf8').replace(/<\/script/gi, '<\\/script');
+  return '<script data-source="' + file + '">\n' + code + '\n</script>';
+}).join('\n');
+html = html.replace('<script data-source="herbalist-room.js">', inlineGlyphs + '\n<script data-source="herbalist-room.js">');
+fs.writeFileSync(destination, html);

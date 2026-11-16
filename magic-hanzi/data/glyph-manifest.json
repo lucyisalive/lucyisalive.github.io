@@ -1,0 +1,1393 @@
+{
+  "schemaVersion": 1,
+  "description": "Exact JSON split of the existing frozen local glyph objects; no geometry changes",
+  "version": "41b38d977b270e08ea493526a4ee0f8643a59bbf271283116b40be7a85b3d173",
+  "glyphCount": 167,
+  "sources": [
+    {
+      "file": "hanzi-data.js",
+      "sha256": "7a093c5273f13d1a6142d1c81444fcbb355435a13ea1938f7d22ff63609d6424"
+    },
+    {
+      "file": "curriculum-hanzi-data.js",
+      "sha256": "77211011ac88386dc9cdbf08cfbbe5bf357c329fa05107d5b0c00996fdd80010"
+    },
+    {
+      "file": "pinyin-data.js",
+      "sha256": "61ee9e4f6136d8dd3e37ef73bb59e9ed5e57ae12eeac3318b6ab334beddaf5ae"
+    }
+  ],
+  "componentSource": "game-source.html:COMPONENT_DECOMP",
+  "excludedComponents": {},
+  "glyphs": {
+    "且": {
+      "file": "glyphs/且.json",
+      "sha256": "4dfa582125d1954166aa8819c14e79d9b129687a77d7ee1f0037cdee2b29c366",
+      "bytes": 1480,
+      "gzipBytes": 715,
+      "strokeCount": 5,
+      "deps": []
+    },
+    "东": {
+      "file": "glyphs/东.json",
+      "sha256": "0e54c03d797e6fec425188c33c9c48e79d0d87b0cddb9e284561789864a7bd37",
+      "bytes": 1454,
+      "gzipBytes": 730,
+      "strokeCount": 5,
+      "deps": []
+    },
+    "並": {
+      "file": "glyphs/並.json",
+      "sha256": "154762f7afe9ada2ac5362f381922c05a3a730af18d8bb75ff55c4cae26297c4",
+      "bytes": 1880,
+      "gzipBytes": 905,
+      "strokeCount": 8,
+      "deps": []
+    },
+    "主": {
+      "file": "glyphs/主.json",
+      "sha256": "57497916321782cd23b20f04cc7251dd689c7a66f7d29735826ca1e019c56a55",
+      "bytes": 1264,
+      "gzipBytes": 636,
+      "strokeCount": 5,
+      "deps": []
+    },
+    "乘": {
+      "file": "glyphs/乘.json",
+      "sha256": "f741efe87ae9395dee375b130ae03d0e31a837d399e54a066632bf6b969a9665",
+      "bytes": 2653,
+      "gzipBytes": 1250,
+      "strokeCount": 10,
+      "deps": []
+    },
+    "乙": {
+      "file": "glyphs/乙.json",
+      "sha256": "eb0a6c1fa2a852618aacd4203ee812eed7e9ffc0241154f28c751e7403f57bfa",
+      "bytes": 825,
+      "gzipBytes": 446,
+      "strokeCount": 1,
+      "deps": []
+    },
+    "互": {
+      "file": "glyphs/互.json",
+      "sha256": "5bfa93b4bb8f8d52f15cf9f2ed20e30b7f8af7f667a29cc557107ea0763099c0",
+      "bytes": 1378,
+      "gzipBytes": 692,
+      "strokeCount": 4,
+      "deps": []
+    },
+    "亦": {
+      "file": "glyphs/亦.json",
+      "sha256": "655e597fe3c1cb5ffc0daf225d4d3256e921410d082d3954820268aa667ca953",
+      "bytes": 1498,
+      "gzipBytes": 745,
+      "strokeCount": 6,
+      "deps": []
+    },
+    "仰": {
+      "file": "glyphs/仰.json",
+      "sha256": "f61e2eab37451d3051c93115cc249d8a72c28a37b4507e14bab083eef43a7736",
+      "bytes": 2024,
+      "gzipBytes": 973,
+      "strokeCount": 6,
+      "deps": []
+    },
+    "价": {
+      "file": "glyphs/价.json",
+      "sha256": "07f9e99bd361316352587e21135fa3073dc17f7fcb26bff42f6da011f6feda7d",
+      "bytes": 1710,
+      "gzipBytes": 842,
+      "strokeCount": 6,
+      "deps": []
+    },
+    "便": {
+      "file": "glyphs/便.json",
+      "sha256": "aa6e95c16a3540460b3fd4097f4a39d777f46003036303aedc0ae012323ffd56",
+      "bytes": 2849,
+      "gzipBytes": 1327,
+      "strokeCount": 9,
+      "deps": []
+    },
+    "刀": {
+      "file": "glyphs/刀.json",
+      "sha256": "00045ef51c35a21ec4353f9afa18ef5b6b2f6438cf7e81a086d9b9c8e8f88579",
+      "bytes": 852,
+      "gzipBytes": 465,
+      "strokeCount": 2,
+      "deps": []
+    },
+    "刂": {
+      "file": "glyphs/刂.json",
+      "sha256": "3dbae077887dc520bf8c2e2a24c4ff0b6e4746fcd30a511f6635956dd70ab4c0",
+      "bytes": 635,
+      "gzipBytes": 355,
+      "strokeCount": 2,
+      "deps": []
+    },
+    "列": {
+      "file": "glyphs/列.json",
+      "sha256": "02036c88545ff32e2d985d43dc46a69c9efb109252e63687b33be3b2e8eb6ee6",
+      "bytes": 1797,
+      "gzipBytes": 898,
+      "strokeCount": 6,
+      "deps": []
+    },
+    "前": {
+      "file": "glyphs/前.json",
+      "sha256": "3c40002fcff4fac58d15751bb61820b6e701e676feb38142634f8a32514ede61",
+      "bytes": 2343,
+      "gzipBytes": 1111,
+      "strokeCount": 9,
+      "deps": []
+    },
+    "剩": {
+      "file": "glyphs/剩.json",
+      "sha256": "08f40f091b6d8183cfc2a99156324171460e7369e9dae69384a689b4846b8951",
+      "bytes": 3213,
+      "gzipBytes": 1496,
+      "strokeCount": 12,
+      "deps": [
+        "乘",
+        "刂"
+      ]
+    },
+    "匕": {
+      "file": "glyphs/匕.json",
+      "sha256": "e031773f7f9091934932ba415be40ab7caca19ccefa8271d639b5a8921cb0590",
+      "bytes": 822,
+      "gzipBytes": 445,
+      "strokeCount": 2,
+      "deps": []
+    },
+    "卧": {
+      "file": "glyphs/卧.json",
+      "sha256": "e73d5a81c617686b032730e2aabb8f6a8b3008ec7255d9999d26421798c695ae",
+      "bytes": 2304,
+      "gzipBytes": 1070,
+      "strokeCount": 8,
+      "deps": []
+    },
+    "历": {
+      "file": "glyphs/历.json",
+      "sha256": "b98729c9e794734bedcb962f57a739260be86e7e69902b9bf3edab7483c18cba",
+      "bytes": 1453,
+      "gzipBytes": 723,
+      "strokeCount": 4,
+      "deps": []
+    },
+    "口": {
+      "file": "glyphs/口.json",
+      "sha256": "1d05b9c71b281a9eff6ab0d6111c0af924dcbe22a0a4235afc3c5c66a5c04459",
+      "bytes": 846,
+      "gzipBytes": 441,
+      "strokeCount": 3,
+      "deps": []
+    },
+    "右": {
+      "file": "glyphs/右.json",
+      "sha256": "5504e04615e1e0f9f00d633053b2d9b8b6b77c928a59613da60b5d7fefd6403b",
+      "bytes": 1371,
+      "gzipBytes": 689,
+      "strokeCount": 5,
+      "deps": []
+    },
+    "吸": {
+      "file": "glyphs/吸.json",
+      "sha256": "df9c8a1fd449821431dca8f9af13e433282d78b6337824811e87a7ed8109d8db",
+      "bytes": 2254,
+      "gzipBytes": 1075,
+      "strokeCount": 6,
+      "deps": []
+    },
+    "咳": {
+      "file": "glyphs/咳.json",
+      "sha256": "834608f0adca9be75e0f218cf0e6190783ab004389ce058f88c0dacc2ed9fb1a",
+      "bytes": 2305,
+      "gzipBytes": 1099,
+      "strokeCount": 9,
+      "deps": []
+    },
+    "善": {
+      "file": "glyphs/善.json",
+      "sha256": "ca720bdb8e5abf9d48c0241dd4a416c9642921c3c4ee8636aa70f8bf0c142317",
+      "bytes": 2858,
+      "gzipBytes": 1302,
+      "strokeCount": 12,
+      "deps": []
+    },
+    "喿": {
+      "file": "glyphs/喿.json",
+      "sha256": "42833bcabc0b9486824ddfb3be07387108d335ca8752f66745d22e1f6305a17c",
+      "bytes": 3304,
+      "gzipBytes": 1498,
+      "strokeCount": 13,
+      "deps": []
+    },
+    "嘴": {
+      "file": "glyphs/嘴.json",
+      "sha256": "f5c57c1a0226c5f03e196d8d33a1f50b1436f58d11a793b74181c6ba9fff5a2c",
+      "bytes": 4310,
+      "gzipBytes": 1960,
+      "strokeCount": 16,
+      "deps": []
+    },
+    "器": {
+      "file": "glyphs/器.json",
+      "sha256": "7e9906c29788990cda7d472f7a12d6f74c4ddad410b047b2f41a79b5fd49b3f1",
+      "bytes": 3973,
+      "gzipBytes": 1795,
+      "strokeCount": 16,
+      "deps": []
+    },
+    "园": {
+      "file": "glyphs/园.json",
+      "sha256": "ff948d5b7171f5043529e22014ac36c04125f76c31ec36ce9be2a9b3fcb20b89",
+      "bytes": 2205,
+      "gzipBytes": 1067,
+      "strokeCount": 7,
+      "deps": []
+    },
+    "固": {
+      "file": "glyphs/固.json",
+      "sha256": "a81ec148c4e98026cc512a965736abb14addf4f8527cd9b6290a80adeb80c2cd",
+      "bytes": 2385,
+      "gzipBytes": 1110,
+      "strokeCount": 8,
+      "deps": []
+    },
+    "圆": {
+      "file": "glyphs/圆.json",
+      "sha256": "ed35b49c64bd34ad257a54b7f054520d97bd001dbd950bd1e4f5a5af28136ab4",
+      "bytes": 2900,
+      "gzipBytes": 1347,
+      "strokeCount": 10,
+      "deps": []
+    },
+    "土": {
+      "file": "glyphs/土.json",
+      "sha256": "7c08797fded371157cd48b286d3989097d79c30fbdca35951cb841c07c9e1b7f",
+      "bytes": 819,
+      "gzipBytes": 433,
+      "strokeCount": 3,
+      "deps": []
+    },
+    "声": {
+      "file": "glyphs/声.json",
+      "sha256": "9488a1cf49ad09355050d81fd1fdb3ef63ee4a3f5dbfa66f0017c694e599e9ad",
+      "bytes": 1901,
+      "gzipBytes": 890,
+      "strokeCount": 7,
+      "deps": []
+    },
+    "夕": {
+      "file": "glyphs/夕.json",
+      "sha256": "b651c24826f15ea859d505dd2b569cec8b50dc466d6a46ec5da05dc1e75dd817",
+      "bytes": 999,
+      "gzipBytes": 526,
+      "strokeCount": 3,
+      "deps": []
+    },
+    "大": {
+      "file": "glyphs/大.json",
+      "sha256": "31aad076be0e7dfefaf037bfc7eac41d676c144173496e9c8e0792226205bf72",
+      "bytes": 983,
+      "gzipBytes": 514,
+      "strokeCount": 3,
+      "deps": []
+    },
+    "头": {
+      "file": "glyphs/头.json",
+      "sha256": "7db26883da1c07dc9be064286113a0aa8bf7f22b326474c173b6801a454f078a",
+      "bytes": 1277,
+      "gzipBytes": 641,
+      "strokeCount": 5,
+      "deps": []
+    },
+    "奇": {
+      "file": "glyphs/奇.json",
+      "sha256": "44d26368d2c89c41b5f13d57ee6be9f866dc41f8471f99e8fe089658a8fb48c6",
+      "bytes": 2118,
+      "gzipBytes": 1004,
+      "strokeCount": 8,
+      "deps": []
+    },
+    "奖": {
+      "file": "glyphs/奖.json",
+      "sha256": "1f64e371c9fa1857650ab65884fd1de0f028550418294daef5e19eabbf3559c7",
+      "bytes": 2458,
+      "gzipBytes": 1159,
+      "strokeCount": 9,
+      "deps": []
+    },
+    "姿": {
+      "file": "glyphs/姿.json",
+      "sha256": "2dfe5333b8c3e4b5ee39198e860aa0585febb8f4973a1a7633dfa743b8a8790e",
+      "bytes": 2742,
+      "gzipBytes": 1290,
+      "strokeCount": 9,
+      "deps": []
+    },
+    "威": {
+      "file": "glyphs/威.json",
+      "sha256": "2f863c1b699707fb6283f432c5de23a8b9ab6a1b59a506347257dde14f4892e5",
+      "bytes": 3013,
+      "gzipBytes": 1421,
+      "strokeCount": 9,
+      "deps": []
+    },
+    "子": {
+      "file": "glyphs/子.json",
+      "sha256": "c3f2d174b466ff69458093828532fe968e0c34c46ec3a1c1dd907b5728be6c70",
+      "bytes": 1305,
+      "gzipBytes": 657,
+      "strokeCount": 3,
+      "deps": []
+    },
+    "学": {
+      "file": "glyphs/学.json",
+      "sha256": "94c9d571372e7fa5d1de9d712f17f16094e3f6667b5d80297d6ac6107abe2c4b",
+      "bytes": 2275,
+      "gzipBytes": 1086,
+      "strokeCount": 8,
+      "deps": []
+    },
+    "孰": {
+      "file": "glyphs/孰.json",
+      "sha256": "839c5f888f534f8515988a68ab0ce0d8c513d753280e3f9218805ff1e6c5e68d",
+      "bytes": 3403,
+      "gzipBytes": 1568,
+      "strokeCount": 11,
+      "deps": []
+    },
+    "害": {
+      "file": "glyphs/害.json",
+      "sha256": "a0ee3aa225bd15772482e119d5ef6f51cd72cb94afbe68880547c4d54c92e565",
+      "bytes": 2686,
+      "gzipBytes": 1262,
+      "strokeCount": 10,
+      "deps": []
+    },
+    "宽": {
+      "file": "glyphs/宽.json",
+      "sha256": "a5b0f464baf89782f27a104d884160fda25032b2508c57b40afdb844a7d62c08",
+      "bytes": 2912,
+      "gzipBytes": 1371,
+      "strokeCount": 10,
+      "deps": []
+    },
+    "密": {
+      "file": "glyphs/密.json",
+      "sha256": "58dd548204d0b01e5debda5f3c97fccabd76fb3984f925cac336f1541dee041f",
+      "bytes": 2990,
+      "gzipBytes": 1408,
+      "strokeCount": 11,
+      "deps": []
+    },
+    "尘": {
+      "file": "glyphs/尘.json",
+      "sha256": "dd371ded6145cb228f8f6d589ff272391b48245c0d4b02ae8d8558585857eb7d",
+      "bytes": 1378,
+      "gzipBytes": 686,
+      "strokeCount": 6,
+      "deps": []
+    },
+    "巡": {
+      "file": "glyphs/巡.json",
+      "sha256": "97252fa60a651ae8654fe7637d06294c99e89d39a606654735f7bb854668f631",
+      "bytes": 2197,
+      "gzipBytes": 1071,
+      "strokeCount": 6,
+      "deps": []
+    },
+    "师": {
+      "file": "glyphs/师.json",
+      "sha256": "48746aa882f8027487d39bc1b830aacf28556e552b9cd3e6b3e9872e525a4618",
+      "bytes": 1916,
+      "gzipBytes": 921,
+      "strokeCount": 6,
+      "deps": []
+    },
+    "幻": {
+      "file": "glyphs/幻.json",
+      "sha256": "d8404c59e52ff4d05718b0d750caa099ad5692a05f832ec6036ffa0838d83604",
+      "bytes": 1465,
+      "gzipBytes": 742,
+      "strokeCount": 4,
+      "deps": []
+    },
+    "建": {
+      "file": "glyphs/建.json",
+      "sha256": "fcc62f36725311faf5ac36bc0b03957e78489cfd141581d8c1d103bfad2c0140",
+      "bytes": 3152,
+      "gzipBytes": 1440,
+      "strokeCount": 8,
+      "deps": []
+    },
+    "弟": {
+      "file": "glyphs/弟.json",
+      "sha256": "6d8914a4a77dd4d35d50690db5381aa60b4b85a9893d4db0ea0b35fb6002bffa",
+      "bytes": 2363,
+      "gzipBytes": 1139,
+      "strokeCount": 7,
+      "deps": []
+    },
+    "彗": {
+      "file": "glyphs/彗.json",
+      "sha256": "e483ece768ad9c912ff58beecb66794201ea150897ca5191c9e5bb175672f8a5",
+      "bytes": 2964,
+      "gzipBytes": 1341,
+      "strokeCount": 11,
+      "deps": []
+    },
+    "形": {
+      "file": "glyphs/形.json",
+      "sha256": "01d6a649babdfeb19195431f834547249125ba685464e0ca234eef2720c6d833",
+      "bytes": 2065,
+      "gzipBytes": 996,
+      "strokeCount": 7,
+      "deps": []
+    },
+    "微": {
+      "file": "glyphs/微.json",
+      "sha256": "2b0235e53ae2a766dd7ef5f9fbdd578ed93125e159f3e795f4b6388ed53e3250",
+      "bytes": 3804,
+      "gzipBytes": 1745,
+      "strokeCount": 13,
+      "deps": []
+    },
+    "心": {
+      "file": "glyphs/心.json",
+      "sha256": "b3b630a387f32b159a3e01fae7df3551f05b2d47360bf4d8fe0f9666ef171e85",
+      "bytes": 1057,
+      "gzipBytes": 551,
+      "strokeCount": 4,
+      "deps": []
+    },
+    "忠": {
+      "file": "glyphs/忠.json",
+      "sha256": "7578eb9032ba0ae663c9cf0a83476104f7f536f077579cf0e032a80cebad9b35",
+      "bytes": 2244,
+      "gzipBytes": 1054,
+      "strokeCount": 8,
+      "deps": []
+    },
+    "念": {
+      "file": "glyphs/念.json",
+      "sha256": "5a8c704108e88762da4b7d8a6759879381946e138986156718ebdf382a6704a3",
+      "bytes": 2040,
+      "gzipBytes": 991,
+      "strokeCount": 8,
+      "deps": []
+    },
+    "性": {
+      "file": "glyphs/性.json",
+      "sha256": "1aa3f68dfa3be65fb7061b3dc9c66191e397fcf90194b96942e6a88e24478f38",
+      "bytes": 2018,
+      "gzipBytes": 970,
+      "strokeCount": 8,
+      "deps": []
+    },
+    "惜": {
+      "file": "glyphs/惜.json",
+      "sha256": "526c62de91e884a90849c3f740d2ba7c12ee281bcc76698a43d21c53c06fd61a",
+      "bytes": 2890,
+      "gzipBytes": 1342,
+      "strokeCount": 11,
+      "deps": []
+    },
+    "愁": {
+      "file": "glyphs/愁.json",
+      "sha256": "776153b479a0e89d7e5f6c58d442bbc74c57cc49b762e8a83fe3158273b018b2",
+      "bytes": 3062,
+      "gzipBytes": 1444,
+      "strokeCount": 13,
+      "deps": []
+    },
+    "意": {
+      "file": "glyphs/意.json",
+      "sha256": "710423023217e245eb5c07a13a4fd5f12eaa56bddeb6d2eb350ba533fd9fa60b",
+      "bytes": 3034,
+      "gzipBytes": 1413,
+      "strokeCount": 13,
+      "deps": []
+    },
+    "慧": {
+      "file": "glyphs/慧.json",
+      "sha256": "ce7255cce20ef0cc211f5139da16b65cdf3f2f2957190da85c849197aeeb6644",
+      "bytes": 3792,
+      "gzipBytes": 1708,
+      "strokeCount": 15,
+      "deps": []
+    },
+    "扌": {
+      "file": "glyphs/扌.json",
+      "sha256": "272357657abd581548cd4b819266b6a76b6970798b83c6dfa3fca830a82d3a96",
+      "bytes": 1005,
+      "gzipBytes": 514,
+      "strokeCount": 3,
+      "deps": []
+    },
+    "才": {
+      "file": "glyphs/才.json",
+      "sha256": "ab7e9a1854ed71bcf857bef030a26d7f1d86864778c1efe4085e62bc281514ba",
+      "bytes": 937,
+      "gzipBytes": 490,
+      "strokeCount": 3,
+      "deps": []
+    },
+    "担": {
+      "file": "glyphs/担.json",
+      "sha256": "b38eabcc85aa79476430f2a2cdae46d9868180daec10b6981556c530c8be7e5e",
+      "bytes": 2232,
+      "gzipBytes": 1047,
+      "strokeCount": 8,
+      "deps": []
+    },
+    "振": {
+      "file": "glyphs/振.json",
+      "sha256": "02cb421342c71a93ad610b4f6fe4e6ac5411949a66f17ab9ceb288cd0b422cde",
+      "bytes": 2915,
+      "gzipBytes": 1350,
+      "strokeCount": 10,
+      "deps": [
+        "扌",
+        "辰"
+      ]
+    },
+    "据": {
+      "file": "glyphs/据.json",
+      "sha256": "fa6fab9800610c7f9953b92218da1bdad883318c9d908b5c47ee52b8c7856666",
+      "bytes": 3157,
+      "gzipBytes": 1463,
+      "strokeCount": 11,
+      "deps": []
+    },
+    "摔": {
+      "file": "glyphs/摔.json",
+      "sha256": "249d28f48521534d35e125be226360d6a65546d076e607201a3a2a03eb27accb",
+      "bytes": 3663,
+      "gzipBytes": 1690,
+      "strokeCount": 14,
+      "deps": []
+    },
+    "攵": {
+      "file": "glyphs/攵.json",
+      "sha256": "aaa47983a95bdf2a61af7402d5b2186987f509feedf47eb02fbea4eec2c9cd0f",
+      "bytes": 1274,
+      "gzipBytes": 643,
+      "strokeCount": 4,
+      "deps": []
+    },
+    "收": {
+      "file": "glyphs/收.json",
+      "sha256": "ad24bde20046eb669cccf6dfa5476f37a7a8e3b64c09e99c9d8b579b2f8d5773",
+      "bytes": 1950,
+      "gzipBytes": 950,
+      "strokeCount": 6,
+      "deps": []
+    },
+    "救": {
+      "file": "glyphs/救.json",
+      "sha256": "38ee3bc75a8eb1ddab395fc0634ff9b2e1b7f70141589a4caad25cbe9b73ce50",
+      "bytes": 2836,
+      "gzipBytes": 1338,
+      "strokeCount": 11,
+      "deps": [
+        "求",
+        "攵"
+      ]
+    },
+    "敬": {
+      "file": "glyphs/敬.json",
+      "sha256": "925dab55a30bf8424c80cdf0e601b3bd1850774dbbd45baa5da105bdea999378",
+      "bytes": 3432,
+      "gzipBytes": 1588,
+      "strokeCount": 12,
+      "deps": []
+    },
+    "日": {
+      "file": "glyphs/日.json",
+      "sha256": "ede8d9bc887756da695708f4c042d3e99123181bc2bdab9b3f5558191438414e",
+      "bytes": 1242,
+      "gzipBytes": 618,
+      "strokeCount": 4,
+      "deps": []
+    },
+    "昂": {
+      "file": "glyphs/昂.json",
+      "sha256": "af5f36588b6242d02fefdbb39f826a6f47892233a29462b4ad73da5cccb0aa02",
+      "bytes": 2433,
+      "gzipBytes": 1138,
+      "strokeCount": 8,
+      "deps": []
+    },
+    "明": {
+      "file": "glyphs/明.json",
+      "sha256": "b8e22769cb0bdf2d0809e667c5a3c1d34081636accae4e708770e2251de437eb",
+      "bytes": 2355,
+      "gzipBytes": 1098,
+      "strokeCount": 8,
+      "deps": []
+    },
+    "普": {
+      "file": "glyphs/普.json",
+      "sha256": "b427fb2a793692ebc7350c9c5dae9147b5b99cf1664f86578f6d114a0b699573",
+      "bytes": 2785,
+      "gzipBytes": 1298,
+      "strokeCount": 12,
+      "deps": [
+        "並",
+        "日"
+      ]
+    },
+    "景": {
+      "file": "glyphs/景.json",
+      "sha256": "d3d2a7f80b0164ab31bb91c48c35b304b299e2279e177066f5595fc5a2843f1c",
+      "bytes": 2936,
+      "gzipBytes": 1341,
+      "strokeCount": 12,
+      "deps": []
+    },
+    "木": {
+      "file": "glyphs/木.json",
+      "sha256": "707946736ceec63acd6bac1d6958fe8ea6f5093650462bb444a1df88ae1ababc",
+      "bytes": 1081,
+      "gzipBytes": 555,
+      "strokeCount": 4,
+      "deps": []
+    },
+    "本": {
+      "file": "glyphs/本.json",
+      "sha256": "7762daf0eb201b425f7ab252828e910fcf26788b9aa331055b7da05e96fcc06d",
+      "bytes": 1431,
+      "gzipBytes": 715,
+      "strokeCount": 5,
+      "deps": []
+    },
+    "机": {
+      "file": "glyphs/机.json",
+      "sha256": "984c4aa92b74821517a5f6e769d5665fe1aa98f8c12f11b7daa9e182d5bc8f0b",
+      "bytes": 1843,
+      "gzipBytes": 888,
+      "strokeCount": 6,
+      "deps": []
+    },
+    "材": {
+      "file": "glyphs/材.json",
+      "sha256": "d9bc654b841d4bfb2bf1f8e9e0e1eec2077b0047da2f7bc67d7bc7f6695ac39f",
+      "bytes": 1841,
+      "gzipBytes": 891,
+      "strokeCount": 7,
+      "deps": []
+    },
+    "柱": {
+      "file": "glyphs/柱.json",
+      "sha256": "1373391d18a912211353459518b305fad85d5ea90926a58104347c7b7fed81ab",
+      "bytes": 2116,
+      "gzipBytes": 1003,
+      "strokeCount": 9,
+      "deps": [
+        "木",
+        "主"
+      ]
+    },
+    "横": {
+      "file": "glyphs/横.json",
+      "sha256": "8282d57b255216b7f0feafff87f12d8ac2efd4ead05573fba14fa93121e83583",
+      "bytes": 3847,
+      "gzipBytes": 1735,
+      "strokeCount": 15,
+      "deps": []
+    },
+    "止": {
+      "file": "glyphs/止.json",
+      "sha256": "d76238d2633a643279d0b87bfc7287ddd3bf6e27c984ce95f94a46e9d62758bf",
+      "bytes": 997,
+      "gzipBytes": 521,
+      "strokeCount": 4,
+      "deps": []
+    },
+    "氵": {
+      "file": "glyphs/氵.json",
+      "sha256": "165d1f5549c050e7386cebe3b1f97b8c4a618284dba26895ab3a072a9ac1b632",
+      "bytes": 625,
+      "gzipBytes": 348,
+      "strokeCount": 3,
+      "deps": []
+    },
+    "求": {
+      "file": "glyphs/求.json",
+      "sha256": "f5836cf13869821ceb14f52391d5d713cfb530d20688b5f64054fc4c69c55de3",
+      "bytes": 1825,
+      "gzipBytes": 896,
+      "strokeCount": 7,
+      "deps": []
+    },
+    "注": {
+      "file": "glyphs/注.json",
+      "sha256": "ddb7c4ec3366c99131a2b17fe71d54dad1cf6071e3d09920b2bd543d0b557b87",
+      "bytes": 1792,
+      "gzipBytes": 864,
+      "strokeCount": 8,
+      "deps": [
+        "氵",
+        "主"
+      ]
+    },
+    "渐": {
+      "file": "glyphs/渐.json",
+      "sha256": "b69e61d305b96062c88a39fb1a8948f0b5877e5dde1b33184ddba148972290e3",
+      "bytes": 3040,
+      "gzipBytes": 1408,
+      "strokeCount": 11,
+      "deps": []
+    },
+    "溥": {
+      "file": "glyphs/溥.json",
+      "sha256": "6f248bb2e7d4e5a43583687b1c25e0c06b2c12a2330716d1aeb0a28c91a0523c",
+      "bytes": 3327,
+      "gzipBytes": 1529,
+      "strokeCount": 13,
+      "deps": []
+    },
+    "澡": {
+      "file": "glyphs/澡.json",
+      "sha256": "1063551f819d0ecb224cbae872715d7c635b83723d52bea833557476a1bce887",
+      "bytes": 3862,
+      "gzipBytes": 1755,
+      "strokeCount": 16,
+      "deps": []
+    },
+    "火": {
+      "file": "glyphs/火.json",
+      "sha256": "edb6a3840d34968ce31f7cbb773994a7451ccd96221f966822e8497b7f1f93d4",
+      "bytes": 1081,
+      "gzipBytes": 568,
+      "strokeCount": 4,
+      "deps": []
+    },
+    "灬": {
+      "file": "glyphs/灬.json",
+      "sha256": "d99070971160565c761c9439b7f2e963b15a760cf6a71f7caf23ba64ef8ef19d",
+      "bytes": 770,
+      "gzipBytes": 412,
+      "strokeCount": 4,
+      "deps": []
+    },
+    "然": {
+      "file": "glyphs/然.json",
+      "sha256": "f8288c577d771c128914fa5d10fc67575769b093a3afe078fa19fb8c6e17bcc2",
+      "bytes": 2793,
+      "gzipBytes": 1317,
+      "strokeCount": 12,
+      "deps": []
+    },
+    "熟": {
+      "file": "glyphs/熟.json",
+      "sha256": "965adc4a8c2e7f7bc22616b2b1d2a37fbfafcde06a1d195dc0cbbbaf2c37b7cd",
+      "bytes": 4021,
+      "gzipBytes": 1833,
+      "strokeCount": 15,
+      "deps": []
+    },
+    "燃": {
+      "file": "glyphs/燃.json",
+      "sha256": "2b19cd44d36e608c0c4a4ab285dfef20e4562f1255ccac41caa77f1b635e2364",
+      "bytes": 3645,
+      "gzipBytes": 1680,
+      "strokeCount": 16,
+      "deps": []
+    },
+    "燕": {
+      "file": "glyphs/燕.json",
+      "sha256": "5d98ca6b5bbddb92b230982bb57ccea0a05c48deaf9376ec178c39a1408c0707",
+      "bytes": 3857,
+      "gzipBytes": 1784,
+      "strokeCount": 16,
+      "deps": []
+    },
+    "爱": {
+      "file": "glyphs/爱.json",
+      "sha256": "d2f5d586e2259666c716c007a2fe31f0c79a0b97147a6f19badb38504f8c2064",
+      "bytes": 2917,
+      "gzipBytes": 1369,
+      "strokeCount": 10,
+      "deps": []
+    },
+    "牛": {
+      "file": "glyphs/牛.json",
+      "sha256": "403eacf445c49bedadd6325c45c97cdbec2d9f8162cc14a23a2fe78c399ff7ff",
+      "bytes": 1219,
+      "gzipBytes": 610,
+      "strokeCount": 4,
+      "deps": []
+    },
+    "犬": {
+      "file": "glyphs/犬.json",
+      "sha256": "6bd9afad6cbc40dafe42fc928f339ec00d33316f2882737ddcb25ebc52b0ad54",
+      "bytes": 1177,
+      "gzipBytes": 600,
+      "strokeCount": 4,
+      "deps": []
+    },
+    "率": {
+      "file": "glyphs/率.json",
+      "sha256": "2d853abc9c7eec1f5760752be174e7088ea5c2c3d2ec761d231129ad0d70523e",
+      "bytes": 2773,
+      "gzipBytes": 1290,
+      "strokeCount": 11,
+      "deps": []
+    },
+    "王": {
+      "file": "glyphs/王.json",
+      "sha256": "a1c5e5bb30f5da48850ab9413438839e1e8746e270462f072553329e494dfd01",
+      "bytes": 1143,
+      "gzipBytes": 582,
+      "strokeCount": 4,
+      "deps": []
+    },
+    "理": {
+      "file": "glyphs/理.json",
+      "sha256": "c8ce039c2feda81baf00c5f3f45a0019bd8e286affd07b4873b1db4e171be4fe",
+      "bytes": 2924,
+      "gzipBytes": 1356,
+      "strokeCount": 11,
+      "deps": [
+        "王",
+        "里"
+      ]
+    },
+    "甘": {
+      "file": "glyphs/甘.json",
+      "sha256": "8f391d2653de3554744837a30ebdad482935c30dd69aad33e7a9154d63d32c84",
+      "bytes": 1606,
+      "gzipBytes": 788,
+      "strokeCount": 5,
+      "deps": []
+    },
+    "生": {
+      "file": "glyphs/生.json",
+      "sha256": "8c1eb72e8d2f3094c24d64dce8d81b6da5c7bfc9be98090d558c1abd96d82463",
+      "bytes": 1366,
+      "gzipBytes": 678,
+      "strokeCount": 5,
+      "deps": []
+    },
+    "甬": {
+      "file": "glyphs/甬.json",
+      "sha256": "976fd7e26b370ac62958dbbc32345cb4cea9c57f7a64278d930e2dc5f4c0b428",
+      "bytes": 2112,
+      "gzipBytes": 1000,
+      "strokeCount": 7,
+      "deps": []
+    },
+    "病": {
+      "file": "glyphs/病.json",
+      "sha256": "c7f841fd119c2d0e9923f202009b94c9fcff48fb54a4772ff8656233aed9401d",
+      "bytes": 2657,
+      "gzipBytes": 1256,
+      "strokeCount": 10,
+      "deps": []
+    },
+    "目": {
+      "file": "glyphs/目.json",
+      "sha256": "b14ee50e029d6675bad51fb3a5e53dab1065af202909ed137823551752d284c0",
+      "bytes": 1489,
+      "gzipBytes": 719,
+      "strokeCount": 5,
+      "deps": []
+    },
+    "瞭": {
+      "file": "glyphs/瞭.json",
+      "sha256": "ceaf2cd9b161066188fd1a77dd855dd603457b354bf20329729e5e3adb199553",
+      "bytes": 4355,
+      "gzipBytes": 1973,
+      "strokeCount": 17,
+      "deps": []
+    },
+    "确": {
+      "file": "glyphs/确.json",
+      "sha256": "71c586f8abc5f45c7237a6e0f447fe5cf683e672ecc05d84616b669a36a3f403",
+      "bytes": 3505,
+      "gzipBytes": 1590,
+      "strokeCount": 12,
+      "deps": []
+    },
+    "秘": {
+      "file": "glyphs/秘.json",
+      "sha256": "8919080390cdf23e1f512484e7ec191f45f2aadc8cd5392794278c3ce49e39df",
+      "bytes": 2668,
+      "gzipBytes": 1246,
+      "strokeCount": 10,
+      "deps": []
+    },
+    "积": {
+      "file": "glyphs/积.json",
+      "sha256": "94b526e2f6ba55b2662ad6e659e5e015b06ead4bc94adeaa1141dfe6f34bbe13",
+      "bytes": 2336,
+      "gzipBytes": 1101,
+      "strokeCount": 10,
+      "deps": []
+    },
+    "称": {
+      "file": "glyphs/称.json",
+      "sha256": "0a9e95565416eb6e94b08e5645797f3374f61a7f9127b100c71aa20a032be50d",
+      "bytes": 2551,
+      "gzipBytes": 1201,
+      "strokeCount": 10,
+      "deps": []
+    },
+    "笑": {
+      "file": "glyphs/笑.json",
+      "sha256": "583532f815551ba6777d4aaaae027cc1fc68def6155f6d2d53164521645dee04",
+      "bytes": 2311,
+      "gzipBytes": 1118,
+      "strokeCount": 10,
+      "deps": []
+    },
+    "类": {
+      "file": "glyphs/类.json",
+      "sha256": "133d162b02c884a582dfdeef8805f1ff8e99a39191d629a9238233441852baf3",
+      "bytes": 2221,
+      "gzipBytes": 1067,
+      "strokeCount": 9,
+      "deps": []
+    },
+    "粉": {
+      "file": "glyphs/粉.json",
+      "sha256": "368211030d12778f7a7260030fa82f83ffb237abaf6c310083a550ed648c7045",
+      "bytes": 2723,
+      "gzipBytes": 1291,
+      "strokeCount": 10,
+      "deps": []
+    },
+    "精": {
+      "file": "glyphs/精.json",
+      "sha256": "763987acac976b721d268fb28f21f902447db91c520344cbf566af70ca37863d",
+      "bytes": 3547,
+      "gzipBytes": 1633,
+      "strokeCount": 14,
+      "deps": []
+    },
+    "纤": {
+      "file": "glyphs/纤.json",
+      "sha256": "6f9acf30a47345371fdb073851aa8bb6599aa443459e3c84bc2f5a4731bb7955",
+      "bytes": 1903,
+      "gzipBytes": 929,
+      "strokeCount": 6,
+      "deps": []
+    },
+    "经": {
+      "file": "glyphs/经.json",
+      "sha256": "eb60b7523846282a3c706bf5243c09143fdcabcf9978a053903859d7404fdfc2",
+      "bytes": 2207,
+      "gzipBytes": 1060,
+      "strokeCount": 8,
+      "deps": []
+    },
+    "网": {
+      "file": "glyphs/网.json",
+      "sha256": "62bef02b41ca055874bade9c84453bfb379b6054e7f5c386284dab9253de3fe1",
+      "bytes": 1962,
+      "gzipBytes": 938,
+      "strokeCount": 6,
+      "deps": []
+    },
+    "胡": {
+      "file": "glyphs/胡.json",
+      "sha256": "450e2fadfc261a61dbce656ca9d8a9e1a2ab608792cf3f6d80193078e3798485",
+      "bytes": 2616,
+      "gzipBytes": 1228,
+      "strokeCount": 9,
+      "deps": []
+    },
+    "臧": {
+      "file": "glyphs/臧.json",
+      "sha256": "d076324f652260ee3c08da11921fb88e00c5f00890bc2dcb6becc55321ac6a79",
+      "bytes": 4150,
+      "gzipBytes": 1862,
+      "strokeCount": 14,
+      "deps": []
+    },
+    "艹": {
+      "file": "glyphs/艹.json",
+      "sha256": "88cac254d84efdb28b3928355d82dafd0d7e8ed76d86510ff844f7c4b08ab7c0",
+      "bytes": 836,
+      "gzipBytes": 439,
+      "strokeCount": 3,
+      "deps": []
+    },
+    "芒": {
+      "file": "glyphs/芒.json",
+      "sha256": "239fa10bd993c26cf374be409b673e7e856d2cc3e3f5351c3c5bd85a5d4a42d2",
+      "bytes": 1602,
+      "gzipBytes": 787,
+      "strokeCount": 6,
+      "deps": []
+    },
+    "花": {
+      "file": "glyphs/花.json",
+      "sha256": "3ae5e244b79c3eb177d58983f35c7228f45dd6e30067caaa82ddb264280b7f46",
+      "bytes": 2125,
+      "gzipBytes": 1028,
+      "strokeCount": 7,
+      "deps": []
+    },
+    "若": {
+      "file": "glyphs/若.json",
+      "sha256": "82bab109fa97fa83f554d8808c616c4bb7b9c8ea2ccbbfc784f6e7cb3393260e",
+      "bytes": 2162,
+      "gzipBytes": 1025,
+      "strokeCount": 8,
+      "deps": [
+        "艹",
+        "右"
+      ]
+    },
+    "薄": {
+      "file": "glyphs/薄.json",
+      "sha256": "3c038bc80a5518e03f11f69a2ab15552f0c9a5d26965d1252e3dec81ec841e2f",
+      "bytes": 4074,
+      "gzipBytes": 1852,
+      "strokeCount": 16,
+      "deps": []
+    },
+    "藏": {
+      "file": "glyphs/藏.json",
+      "sha256": "dee45ede405da9e68c450b7a4bade3984d984cb89bc3d2ad9ac5d6c3fa19ea47",
+      "bytes": 4923,
+      "gzipBytes": 2202,
+      "strokeCount": 17,
+      "deps": []
+    },
+    "虫": {
+      "file": "glyphs/虫.json",
+      "sha256": "0bf48142cd99df4acf08f57e33a13aa5a0a1813540e7494415b8b448d282e648",
+      "bytes": 1673,
+      "gzipBytes": 809,
+      "strokeCount": 6,
+      "deps": []
+    },
+    "蝴": {
+      "file": "glyphs/蝴.json",
+      "sha256": "42764cd61d6ffb05b6e73c8ca3144dc1a48b7d37b8b3369a495e41d4dfe18c1e",
+      "bytes": 3977,
+      "gzipBytes": 1795,
+      "strokeCount": 15,
+      "deps": []
+    },
+    "融": {
+      "file": "glyphs/融.json",
+      "sha256": "ab6bf22627fb024383b817359b77b310eeeb0b90ba4761c9a17d49bec6754421",
+      "bytes": 4009,
+      "gzipBytes": 1816,
+      "strokeCount": 16,
+      "deps": []
+    },
+    "衣": {
+      "file": "glyphs/衣.json",
+      "sha256": "9d1d31daefb62e707a91f57c0ae9f16bf6d339cfb1c726a685ca87ac1f2d9f62",
+      "bytes": 1673,
+      "gzipBytes": 820,
+      "strokeCount": 6,
+      "deps": []
+    },
+    "衬": {
+      "file": "glyphs/衬.json",
+      "sha256": "91b7480e0ec40d28935e49a321b584600e3d13f4d71cb1fd72b99c49fafd3037",
+      "bytes": 2099,
+      "gzipBytes": 1019,
+      "strokeCount": 8,
+      "deps": []
+    },
+    "袖": {
+      "file": "glyphs/袖.json",
+      "sha256": "99fc751b192c0ec0e8b9d238538d7d024a3423f6d9a4536158a86152803ab571",
+      "bytes": 2822,
+      "gzipBytes": 1329,
+      "strokeCount": 10,
+      "deps": []
+    },
+    "裂": {
+      "file": "glyphs/裂.json",
+      "sha256": "282ebc06fcfbef990ef13df2217f20e0fae736b2115259c61ee46c0e38631b27",
+      "bytes": 3209,
+      "gzipBytes": 1494,
+      "strokeCount": 12,
+      "deps": [
+        "列",
+        "衣"
+      ]
+    },
+    "觜": {
+      "file": "glyphs/觜.json",
+      "sha256": "ff167b54c2b2b7700d68d9c9caaed9d5ab018a50e27ebe5b8dcb666f8f27759e",
+      "bytes": 3737,
+      "gzipBytes": 1715,
+      "strokeCount": 13,
+      "deps": []
+    },
+    "言": {
+      "file": "glyphs/言.json",
+      "sha256": "5212d1b6fe85a9345702253781ff50882218b67387c99040879b44d6abad0d6f",
+      "bytes": 1583,
+      "gzipBytes": 783,
+      "strokeCount": 7,
+      "deps": []
+    },
+    "警": {
+      "file": "glyphs/警.json",
+      "sha256": "bfef842c54c1f4b3293bf687b623f6fb913fefa5afa2bca4311ef5ec3542879c",
+      "bytes": 5007,
+      "gzipBytes": 2242,
+      "strokeCount": 19,
+      "deps": []
+    },
+    "认": {
+      "file": "glyphs/认.json",
+      "sha256": "46ad6c19e6bd7bf8923b325045817dcd2cc1ae1081e836ada01b233f90762f69",
+      "bytes": 1285,
+      "gzipBytes": 649,
+      "strokeCount": 4,
+      "deps": []
+    },
+    "记": {
+      "file": "glyphs/记.json",
+      "sha256": "56d56d189eee29965b63d6f23ff8c4c3c247df42efa09f28c307a6ff9cdc4785",
+      "bytes": 1768,
+      "gzipBytes": 875,
+      "strokeCount": 5,
+      "deps": []
+    },
+    "讽": {
+      "file": "glyphs/讽.json",
+      "sha256": "769391918c91ded2fa55affab50bfc37dc0645a01f1aef9c31d2dcd522917bf7",
+      "bytes": 2165,
+      "gzipBytes": 1054,
+      "strokeCount": 6,
+      "deps": []
+    },
+    "诉": {
+      "file": "glyphs/诉.json",
+      "sha256": "a06c9512fabc191ec1c8efa74c35dafcf44b4ff050dfa52f01ef6ffe935fca7e",
+      "bytes": 2131,
+      "gzipBytes": 1014,
+      "strokeCount": 7,
+      "deps": []
+    },
+    "贵": {
+      "file": "glyphs/贵.json",
+      "sha256": "e8be2c8b421d56eec82b07b362d14de9328361fd8d4f35a84f7f552effb8afc9",
+      "bytes": 2568,
+      "gzipBytes": 1211,
+      "strokeCount": 9,
+      "deps": []
+    },
+    "辩": {
+      "file": "glyphs/辩.json",
+      "sha256": "0337489bf317d57fe468f5ad1c54a0f66c75a4c303bdc910cc784e852beac3de",
+      "bytes": 3934,
+      "gzipBytes": 1803,
+      "strokeCount": 16,
+      "deps": []
+    },
+    "辰": {
+      "file": "glyphs/辰.json",
+      "sha256": "56f7547e23875836897af7eed4f5b4c2848fc2a36be46312b2fb2a8e66baec67",
+      "bytes": 1951,
+      "gzipBytes": 947,
+      "strokeCount": 7,
+      "deps": []
+    },
+    "辶": {
+      "file": "glyphs/辶.json",
+      "sha256": "7d48314079e9517c10f64bef8f61098188b6846d5bca27d6f464602f062344a5",
+      "bytes": 1063,
+      "gzipBytes": 549,
+      "strokeCount": 3,
+      "deps": []
+    },
+    "迷": {
+      "file": "glyphs/迷.json",
+      "sha256": "fd3777732e924c6e127943c5b489d39166c8969c264ba0cd8b589cc9819856c1",
+      "bytes": 2416,
+      "gzipBytes": 1147,
+      "strokeCount": 9,
+      "deps": []
+    },
+    "迹": {
+      "file": "glyphs/迹.json",
+      "sha256": "7880c2e3e528d9f47cee382bd5239fef6a7360cdbb2fc6b3e16b59e33fe169e5",
+      "bytes": 2463,
+      "gzipBytes": 1160,
+      "strokeCount": 9,
+      "deps": [
+        "亦",
+        "辶"
+      ]
+    },
+    "退": {
+      "file": "glyphs/退.json",
+      "sha256": "a9c5acbfcb485c4138ccd99482a9b03e4a2f29d1368d511b4505cf9f62c60491",
+      "bytes": 2538,
+      "gzipBytes": 1188,
+      "strokeCount": 9,
+      "deps": []
+    },
+    "逃": {
+      "file": "glyphs/逃.json",
+      "sha256": "80cd10aa938de3f105951650248a32c27dcdb0ed34832f64445a8480966c54d8",
+      "bytes": 2696,
+      "gzipBytes": 1270,
+      "strokeCount": 9,
+      "deps": []
+    },
+    "逆": {
+      "file": "glyphs/逆.json",
+      "sha256": "c6e5a47dc1fe6e631591cbbf39968cd49b4b24e6a985082be32a9d61d6e5f757",
+      "bytes": 2651,
+      "gzipBytes": 1252,
+      "strokeCount": 9,
+      "deps": []
+    },
+    "通": {
+      "file": "glyphs/通.json",
+      "sha256": "125fbc825b94c941c9f380e9f0a180dea068f81797b9aaa1f48a6a3aa01fd894",
+      "bytes": 3110,
+      "gzipBytes": 1426,
+      "strokeCount": 10,
+      "deps": [
+        "甬",
+        "辶"
+      ]
+    },
+    "里": {
+      "file": "glyphs/里.json",
+      "sha256": "9f1515c4f029484f0db54c59415ee969f61eda0cf2e67878906976a210545d57",
+      "bytes": 2000,
+      "gzipBytes": 947,
+      "strokeCount": 7,
+      "deps": []
+    },
+    "锋": {
+      "file": "glyphs/锋.json",
+      "sha256": "c3ed83e8509a111b37c0bf4285cb261e1fdb35519a505059869a8529c51dbe01",
+      "bytes": 3628,
+      "gzipBytes": 1666,
+      "strokeCount": 12,
+      "deps": []
+    },
+    "锚": {
+      "file": "glyphs/锚.json",
+      "sha256": "48736772e50a3fccf65d2fc3cd00153137468c3be97a34c7aac8633019fbd403",
+      "bytes": 3619,
+      "gzipBytes": 1649,
+      "strokeCount": 13,
+      "deps": []
+    },
+    "长": {
+      "file": "glyphs/长.json",
+      "sha256": "f9f6e21452934dd57ba15b727692e934d127e41fd042611990abc5f6dfa1c62f",
+      "bytes": 1416,
+      "gzipBytes": 709,
+      "strokeCount": 4,
+      "deps": []
+    },
+    "闲": {
+      "file": "glyphs/闲.json",
+      "sha256": "3a4875ddd95c629075aefca08b5e270e083e0e59a3dca0fc3ecdc90b0f8ccf7e",
+      "bytes": 1852,
+      "gzipBytes": 898,
+      "strokeCount": 7,
+      "deps": []
+    },
+    "闷": {
+      "file": "glyphs/闷.json",
+      "sha256": "f6d6d4adc7b65f549c4fed14c2692e781075c9fe6cdc9e1eac45619957e8209f",
+      "bytes": 1896,
+      "gzipBytes": 919,
+      "strokeCount": 7,
+      "deps": []
+    },
+    "阔": {
+      "file": "glyphs/阔.json",
+      "sha256": "fcc5325a2f3745b7b76bf82b97d1d2e55a87ce31588adff20af4be9214bc1f3d",
+      "bytes": 3029,
+      "gzipBytes": 1381,
+      "strokeCount": 12,
+      "deps": []
+    },
+    "随": {
+      "file": "glyphs/随.json",
+      "sha256": "afc23f8c580a7895c64c4fad7132760ed4843aa8cd69e4481400be3638738e2c",
+      "bytes": 3355,
+      "gzipBytes": 1544,
+      "strokeCount": 11,
+      "deps": []
+    },
+    "隐": {
+      "file": "glyphs/隐.json",
+      "sha256": "ccad806a5c036bc2fdce45aa77ef982d303fd59daa0c28858f13fbd66ebb241f",
+      "bytes": 3121,
+      "gzipBytes": 1469,
+      "strokeCount": 11,
+      "deps": []
+    },
+    "霎": {
+      "file": "glyphs/霎.json",
+      "sha256": "708aa49fbb98d6b2a4ae83d3490333589e1ccf8c8fc64d3cd948f298033685f7",
+      "bytes": 3903,
+      "gzipBytes": 1778,
+      "strokeCount": 16,
+      "deps": []
+    },
+    "静": {
+      "file": "glyphs/静.json",
+      "sha256": "985eb25c78cf85e6b4a830546724579c69c87e1462b9d751ed62095c1f88e3dc",
+      "bytes": 4156,
+      "gzipBytes": 1884,
+      "strokeCount": 14,
+      "deps": []
+    },
+    "顾": {
+      "file": "glyphs/顾.json",
+      "sha256": "fd88f1c79a873e272e0442608b8654f56a542bf5e4a4270c7feeca5a539d9ad6",
+      "bytes": 3047,
+      "gzipBytes": 1422,
+      "strokeCount": 10,
+      "deps": []
+    },
+    "颜": {
+      "file": "glyphs/颜.json",
+      "sha256": "324916941bf3db613c23fbb91d46aef8b50801788045a1b6ff0e1114f90904e6",
+      "bytes": 3659,
+      "gzipBytes": 1678,
+      "strokeCount": 15,
+      "deps": []
+    },
+    "验": {
+      "file": "glyphs/验.json",
+      "sha256": "68f832a14ce718c3e90d733b2960cfde74b2fd09c265da695aeac5513e163a9e",
+      "bytes": 2858,
+      "gzipBytes": 1354,
+      "strokeCount": 10,
+      "deps": []
+    },
+    "鬲": {
+      "file": "glyphs/鬲.json",
+      "sha256": "cf77b1cb6c09042e4451a2a58ec8f5af452eca33e348e34ca144d16f31d83ae9",
+      "bytes": 2484,
+      "gzipBytes": 1173,
+      "strokeCount": 10,
+      "deps": []
+    },
+    "鼎": {
+      "file": "glyphs/鼎.json",
+      "sha256": "20392ddeaa4dab6f1767929f2a87df128375cd7b6d7b7534ceff0fbdaf281b3d",
+      "bytes": 3395,
+      "gzipBytes": 1544,
+      "strokeCount": 12,
+      "deps": []
+    }
+  }
+}

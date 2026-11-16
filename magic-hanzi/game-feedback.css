@@ -1,0 +1,141 @@
+/* 独立的汉字练习反馈。星光层永不拦截笔尖或按钮。 */
+.hg-feedback,
+.hg-feedback * {
+  pointer-events: none !important;
+  box-sizing: border-box;
+}
+.hg-feedback {
+  position: fixed;
+  inset: 0;
+  z-index: 9;
+  overflow: visible;
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+}
+.hg-feedback-stage {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+}
+.hg-feedback-ring {
+  position: fixed;
+  display: block;
+  border: 2px solid rgba(255, 225, 137, .92);
+  border-radius: 18px;
+  box-shadow: 0 0 20px rgba(241, 203, 104, .45), inset 0 0 13px rgba(255, 229, 150, .22);
+  opacity: 0;
+  animation: hg-feedback-ring 540ms ease-out both;
+}
+.hg-feedback-ring-victory {
+  border-color: #fff3b1;
+  box-shadow: 0 0 28px rgba(244, 208, 112, .65), inset 0 0 18px rgba(255, 240, 180, .28);
+  animation-duration: 960ms;
+}
+.hg-feedback-star {
+  position: fixed;
+  display: block;
+  width: 28px;
+  height: 28px;
+  margin: -14px 0 0 -14px;
+  font-size: 27px;
+  line-height: 28px;
+  text-align: center;
+  text-shadow: 0 0 9px currentColor;
+  opacity: 0;
+  animation: hg-feedback-star var(--hg-life, 440ms) cubic-bezier(.13, .58, .3, 1) both;
+}
+.hg-feedback-star-small {
+  font-size: 15px;
+}
+.hg-feedback-banner {
+  position: fixed;
+  left: 50%;
+  width: calc(100% - 28px);
+  max-width: 402px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 18px;
+  border: 1px solid rgba(244, 212, 141, .85);
+  border-radius: 18px;
+  background: #fff7df;
+  color: #49351f;
+  box-shadow: 0 10px 35px rgba(26, 14, 44, .24), 0 0 22px rgba(242, 208, 122, .20);
+  opacity: 0;
+  transform: translateX(-50%);
+}
+.hg-feedback-banner[hidden] {
+  display: none !important;
+}
+.hg-feedback-banner-visible {
+  animation: hg-feedback-banner-in 200ms ease-out both;
+}
+.hg-feedback-banner-leaving {
+  animation: hg-feedback-banner-out 180ms ease-in both;
+}
+.hg-feedback-character {
+  display: flex;
+  flex: 0 0 47px;
+  width: 47px;
+  height: 47px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #dbbd72;
+  border-radius: 13px;
+  background: #f3e3b4;
+  color: #62431b;
+  font-size: 31px;
+  font-weight: 600;
+  line-height: 1;
+}
+.hg-feedback-message {
+  display: block;
+  max-width: 292px;
+  font-size: 19px;
+  font-weight: 700;
+  line-height: 1.65;
+  letter-spacing: .02em;
+  text-wrap: pretty;
+}
+.hg-feedback-announcer {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+@keyframes hg-feedback-star {
+  0% { opacity: 0; transform: translate(0, 0) scale(.3); }
+  15% { opacity: 1; }
+  65% { opacity: .9; }
+  100% { opacity: 0; transform: translate(var(--hg-dx, 0px), var(--hg-dy, -40px)) rotate(var(--hg-spin, 45deg)) scale(.15); }
+}
+@keyframes hg-feedback-ring {
+  0% { opacity: 0; transform: scale(.99); }
+  22% { opacity: .95; }
+  100% { opacity: 0; transform: scale(1.08); }
+}
+@keyframes hg-feedback-banner-in {
+  from { opacity: 0; transform: translate(-50%, 8px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+@keyframes hg-feedback-banner-out {
+  from { opacity: 1; transform: translate(-50%, 0); }
+  to { opacity: 0; transform: translate(-50%, -4px); }
+}
+@media (max-width: 370px) {
+  .hg-feedback-banner { gap: 10px; padding: 13px; }
+  .hg-feedback-character { flex-basis: 40px; width: 40px; height: 40px; font-size: 27px; }
+  .hg-feedback-message { font-size: 17px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hg-feedback-star { display: none; }
+  .hg-feedback-ring,
+  .hg-feedback-ring-victory { animation: none; opacity: .75; transform: none; box-shadow: none; }
+  .hg-feedback-banner-visible { animation: none; opacity: 1; transform: translateX(-50%); }
+  .hg-feedback-banner-leaving { animation: none; opacity: 0; }
+}

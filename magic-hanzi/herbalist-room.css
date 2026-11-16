@@ -1,0 +1,731 @@
+.has-herbalist {
+  --herb-ink: #171f19;
+  --herb-paper: #faebc9;
+  --herb-gold: #f1ca80;
+  --herb-line: #d9ba815e;
+  --herb-bench-width: min(calc(100vw - 26px), 493px, 64dvh);
+  --herb-bench-height: min(43dvh, 310px);
+  --herb-compact-top: max(62px, calc(env(safe-area-inset-top) + 49px));
+  --herb-compact-height: 84px;
+  --herb-writing-tile: min(300px, calc(100vw - 48px));
+  --herb-serif: 'Noto Serif CJK SC', 'Songti SC', 'STSong', serif;
+  color: var(--herb-paper);
+  background: radial-gradient(ellipse at 50% 10%, #28382d 0%, #121e18 54%, #0b110e 100%);
+}
+.has-herbalist #mountainJourney,
+.has-herbalist .stars-bg,
+.has-herbalist .approach-path,
+.has-herbalist .doorway,
+.has-herbalist .progress-path,
+.herbalist-local-preview .cloud-sync,
+.herbalist-local-preview #aiSentenceSettings { display: none; }
+.has-herbalist :is(.herb-card, .herb-actions button)[hidden] { display: none; }
+
+#herbalistBackdrop {
+  position: fixed;
+  inset: 0;
+  width: min(100vw, 86dvh);
+  margin-inline: auto;
+  overflow: hidden;
+  pointer-events: none;
+  background: #223027;
+  box-shadow: 0 0 120px 35px #0c120ed9;
+}
+#herbalistBackdrop::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(180deg, #0d1711ad 0%, transparent 24%, transparent 73%, #101711 100%);
+  transition: background .24s ease;
+}
+.herb-set {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: max(100%, 75dvh);
+  aspect-ratio: 3 / 4;
+  transform: translate(-50%, -50%);
+  transform-origin: 50% 72%;
+  background: #344835 url("assets/herbalist/apothecary.webp") center / 100% 100% no-repeat;
+  transition: transform .8s cubic-bezier(.18,.75,.25,1), filter .3s ease;
+}
+.herb-light {
+  position: absolute;
+  inset: 41% 8% 15%;
+  background: radial-gradient(ellipse at 50% 70%, #e6ff9cc9 0%, #b8eb5e63 32%, #c8f17f17 52%, transparent 70%);
+  mix-blend-mode: screen;
+  opacity: 0;
+  transition: opacity .6s ease .28s;
+}
+.herb-bench {
+  --herb-shelf-x: 8%;
+  --herb-shelf-step: 9%;
+  --herb-row-top: 12%;
+  --herb-row-step: 28%;
+  --herb-bottle-height: clamp(29px, 6.5dvh, 51px);
+  --herb-bottle-width: calc(var(--herb-bottle-height) * .61);
+  --herb-vessel-x: 74%;
+  --herb-vessel-width: min(29%, 150px);
+  --herb-vessel-height: min(calc(var(--herb-bench-width) * .29), 150px);
+  --herb-footroom: max(18px, calc(var(--herb-vessel-height) * .29));
+  --herb-drop-lift: calc(var(--herb-bottle-height) * .52 + 9px);
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  top: calc(60% - var(--herb-bench-height) / 2);
+  width: var(--herb-bench-width);
+  height: var(--herb-bench-height);
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+.herb-shelf {
+  position: absolute;
+  inset: 0;
+}
+.herb-shelf::before,
+.herb-shelf::after {
+  content: '';
+  position: absolute;
+  left: calc(var(--herb-shelf-x) - var(--herb-shelf-step) / 2);
+  width: calc(var(--herb-shelf-step) * 5);
+  top: calc(var(--herb-row-top) + var(--herb-bottle-height) - 2px);
+  height: clamp(4px, 1.2dvh, 10px);
+  border-top: 1px solid #c89559;
+  border-radius: 2px;
+  background: linear-gradient(#926037, #684021 52%, #3a2416);
+  box-shadow: 0 4px 10px #0e110bcc;
+}
+.herb-shelf::after {
+  top: calc(var(--herb-row-top) + var(--herb-row-step) + var(--herb-bottle-height) - 2px);
+}
+.herb-bottle {
+  --herb-slot-column: var(--herb-index);
+  --herb-slot-row: 0;
+  --herb-start-x: calc(var(--herb-shelf-x) + var(--herb-slot-column) * var(--herb-shelf-step));
+  --herb-start-y: calc(var(--herb-row-top) + var(--herb-slot-row) * var(--herb-row-step));
+  --herb-tip-x: calc(var(--herb-vessel-x) - .34 * var(--herb-bottle-height));
+  --herb-tip-y: calc(100% - var(--herb-footroom) - var(--herb-vessel-height) - var(--herb-drop-lift) - .69 * var(--herb-bottle-height));
+  position: absolute;
+  z-index: 2;
+  left: var(--herb-start-x);
+  top: var(--herb-start-y);
+  width: var(--herb-bottle-width);
+  height: var(--herb-bottle-height);
+  margin-left: calc(var(--herb-bottle-width) / -2);
+  filter: drop-shadow(0 3px 4px #12140ecd);
+}
+.herb-bottle:nth-child(n + 6) {
+  --herb-slot-column: calc(var(--herb-index) - 5);
+  --herb-slot-row: 1;
+}
+.herb-bottle::before {
+  content: '';
+  position: absolute;
+  inset: 11% 31% auto;
+  height: 32%;
+  border: 1px solid #efe6c69c;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #dbe2b564, #25312595 55%, #a4ac8b5e);
+}
+.herb-bottle::after {
+  content: '';
+  position: absolute;
+  inset: 1% 27% auto;
+  height: 17%;
+  border: 1px solid #dca674;
+  border-bottom-color: #68472e;
+  border-radius: 2px;
+  background: repeating-linear-gradient(120deg, #ad754d 0 2px, #895934 2px 3px);
+}
+.herb-bottle-body {
+  position: absolute;
+  inset: 29% 0 0;
+  border: 1px solid #f5ead7a8;
+  border-bottom: 2px solid #e0dcb377;
+  border-radius: var(--herb-shape, 40% 40% 25% 25%);
+  background:
+    linear-gradient(104deg, #fff0ca8c 5%, transparent 35%, #18211762 70%, #faf7d060 92%),
+    linear-gradient(transparent 25%, #fff5c69c 27%, var(--herb-color, #9edd94) 33%, var(--herb-color, #9edd94) 94%);
+  box-shadow: inset 1px 0 3px #fff1ce71, inset -1px -1px 4px #201b11a0;
+}
+.herb-bottle-body::after {
+  content: '';
+  position: absolute;
+  inset: 41% 23% 10%;
+  border-radius: 63% 38% 65% 35%;
+  background: radial-gradient(ellipse at 35% 47%, #fef2cbba 0 12%, transparent 20%),
+    radial-gradient(ellipse at 67% 70%, #29503994 0 20%, transparent 30%),
+    radial-gradient(ellipse at 57% 25%, #fcf5cc96 0 19%, transparent 26%);
+}
+.herb-bottle.is-used {
+  opacity: .49;
+  filter: saturate(.35) drop-shadow(0 2px 3px #14180cc0);
+}
+.herb-bottle.is-pouring {
+  z-index: 4;
+  animation: herb-bottle-flight 1s linear both;
+}
+.herb-bottle.is-pouring::after { animation: herb-bottle-cork 1s both; }
+@keyframes herb-bottle-cork {
+  0%, 34%, 89%, 100% { opacity: 1; }
+  43%, 76% { opacity: 0; }
+}
+@keyframes herb-bottle-flight {
+  0% { left: var(--herb-start-x); top: var(--herb-start-y); transform: none; opacity: 1; }
+  19% { top: calc(var(--herb-start-y) - var(--herb-bottle-height) * .55); transform: rotate(-14deg); opacity: 1; }
+  43%, 59% { left: var(--herb-tip-x); top: var(--herb-tip-y); transform: rotate(119deg); opacity: 1; }
+  73% { top: calc(var(--herb-tip-y) - var(--herb-bottle-height) * .1); transform: rotate(42deg); opacity: 1; }
+  100% { left: var(--herb-start-x); top: var(--herb-start-y); transform: none; opacity: .49; }
+}
+.herb-apparatus {
+  position: absolute;
+  z-index: 3;
+  left: var(--herb-vessel-x);
+  bottom: var(--herb-footroom);
+  width: var(--herb-vessel-width);
+  height: var(--herb-vessel-height);
+  transform: translateX(-50%);
+}
+.herb-shadow {
+  position: absolute;
+  inset: auto -20% -28%;
+  height: 50%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at 50% 58%, #1d160ee8, #4b2a1db3 34%, transparent 70%);
+}
+.herb-flame {
+  position: absolute;
+  bottom: -26%;
+  left: 24%;
+  width: 52%;
+  height: 30%;
+  isolation: isolate;
+}
+.herb-flame::before {
+  content: '';
+  position: absolute;
+  inset: -34% -42% -16%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, #ffa44459, #da61163d 40%, transparent 68%);
+  z-index: -1;
+}
+.herb-flame::after {
+  content: '';
+  position: absolute;
+  inset: auto 2% -2% 2%;
+  height: 21%;
+  border-radius: 50%;
+  background: linear-gradient(#62422e, #342722);
+  box-shadow: 0 2px 0 #1b1912, inset 0 1px 1px #e38c4ea0;
+}
+.herb-flame i {
+  position: absolute;
+  bottom: 9%;
+  left: 22%;
+  width: 56%;
+  height: 91%;
+  border-radius: 68% 43% 55% 55% / 76% 64% 39% 42%;
+  background: radial-gradient(ellipse at 51% 78%, #fff8c6 0 14%, #ffdb75 32%, #ff9a41 58%, #d7512b 86%);
+  box-shadow: 0 0 7px #ff9c4b85;
+  transform: rotate(7deg);
+  transform-origin: 50% 82%;
+  animation: herb-fire 1.24s ease-in-out infinite alternate;
+}
+.herb-flame i:nth-child(2) { left: 8%; width: 44%; height: 68%; rotate: -20deg; animation-delay: -.46s; }
+.herb-flame i:nth-child(3) { left: 48%; width: 42%; height: 69%; rotate: 19deg; animation-delay: -.86s; }
+@keyframes herb-fire {
+  from { transform: rotate(7deg) scale(.94, .90); opacity: .79; }
+  to { transform: rotate(-6deg) scale(1, 1.07); opacity: 1; }
+}
+.herb-glass {
+  position: absolute;
+  inset: 8% 5% 0;
+  border: 2px solid #e6f7e2b0;
+  border-top: 0;
+  border-bottom-width: 4px;
+  border-radius: 9% 10% 21% 21% / 5% 5% 12% 12%;
+  overflow: hidden;
+  background: linear-gradient(113deg, #e6f4d64a 6%, #b4dccc24 31%, #192c2d20 58%, #daffe839 91%);
+  box-shadow: inset 3px 0 7px #e0f8f046, inset -5px 0 10px #17251fcf, 0 5px 10px #151b15b5;
+}
+.herb-glass::after {
+  content: '';
+  position: absolute;
+  inset: 6% 74% 8% 7%;
+  border-radius: 28% 12% 45% 14%;
+  background: linear-gradient(90deg, #fff5ca7d, transparent);
+  transform: skewY(4deg);
+}
+.herb-rim {
+  position: absolute;
+  inset: 0 4% auto;
+  height: 14%;
+  border-radius: 50%;
+  border: 2px solid #e7f2dace;
+  background: linear-gradient(180deg, #3e504751, #0d201d8c);
+  box-shadow: inset 0 -5px 4px #eafbdb30, 0 3px 3px #253b31be;
+}
+.herb-rim::after {
+  position: absolute;
+  content: '';
+  inset: 19% 0 auto auto;
+  width: 15%;
+  aspect-ratio: 1.3;
+  border-top: 2px solid #f1f6dfda;
+  border-right: 2px solid #f1f6dfda;
+  border-radius: 20% 55% 50% 20%;
+  transform: translateX(37%) rotate(-14deg);
+  background: #aed4ca60;
+}
+.herb-liquid {
+  position: absolute;
+  inset: auto 0 0;
+  height: calc(var(--herb-liquid, 0) * 100%);
+  overflow: hidden;
+  border-radius: 50% 50% 0 0 / 7px 7px 0 0;
+  background:
+    linear-gradient(180deg, #cbfdb9 0%, #99e0a6 13%, transparent 18px),
+    radial-gradient(ellipse at top center, #96eeb7, #4fa182 68%, #2d7664);
+  box-shadow: inset 0 9px 16px #cff8b675, 0 -2px 16px #82eeb9b0;
+  transition: height .26s cubic-bezier(.18,.81,.32,1) .72s, filter .20s ease .72s;
+}
+.herb-liquid i {
+  position: absolute;
+  left: 22%;
+  bottom: 17%;
+  width: 8px;
+  height: 8px;
+  border: 1px solid #ecffe4cd;
+  border-radius: 50%;
+  background: #d9ffb692;
+  box-shadow: 0 0 8px #e9ffa8;
+}
+.herb-liquid i:nth-child(2) { left: 57%; bottom: 53%; width: 5px; height: 5px; opacity: .85; }
+.herb-liquid i:nth-child(3) { left: 72%; bottom: 33%; width: 7px; height: 7px; opacity: .7; }
+.herb-ticks {
+  position: absolute;
+  inset: 14% 13% 13% auto;
+  width: 14%;
+  opacity: .77;
+  background: repeating-linear-gradient(to top, #ecffe3cf 0 1px, transparent 1px 10%);
+}
+.herb-drop {
+  position: absolute;
+  left: 50%;
+  top: calc(-1 * var(--herb-drop-lift));
+  width: clamp(5px, 9%, 11px);
+  height: auto;
+  aspect-ratio: .73;
+  border-radius: 63% 27% 63% 58%;
+  transform: translateX(-50%) rotate(40deg);
+  background: radial-gradient(circle at 31% 25%, #fff6da, var(--herb-drop-color, #aff6a9) 47%, #527d50 90%);
+  box-shadow: 0 0 12px var(--herb-drop-color, #aff6a9);
+  opacity: 0;
+}
+.herb-splash {
+  position: absolute;
+  left: calc(50% - 4px);
+  bottom: calc(var(--herb-liquid, 0) * 92%);
+  width: 8px;
+  height: 5px;
+  border: 1px solid var(--herb-drop-color, #d8ffd2);
+  border-radius: 50%;
+  opacity: 0;
+}
+.herb-pouring .herb-drop { animation: herb-fall .24s ease-in .48s both; }
+.herb-pouring .herb-splash { animation: herb-splash .28s ease-out .72s both; }
+.herb-instant .herb-liquid { transition: none; }
+.herb-complete .herb-light { opacity: 1; }
+.herb-complete.herb-pouring .herb-light { transition-delay: .72s; }
+.herb-complete .herb-liquid { filter: brightness(1.3) saturate(1.25) hue-rotate(-21deg); }
+.herb-complete .herb-liquid i { animation: herb-bubble 1.9s ease-in infinite; }
+.herb-complete .herb-liquid i:nth-child(2) { animation-delay: .4s; }
+.herb-complete .herb-liquid i:nth-child(3) { animation-delay: .8s; }
+@keyframes herb-fall {
+  0% { opacity: 0; top: calc(-1 * var(--herb-drop-lift)); }
+  12%, 92% { opacity: 1; }
+  100% { opacity: 0; top: calc(100% - 92% * var(--herb-liquid, 0)); }
+}
+@keyframes herb-splash {
+  from { opacity: 1; transform: scale(.65); }
+  to { opacity: 0; transform: scale(7, 2); }
+}
+@keyframes herb-bubble {
+  0%, 100% { transform: translateY(5px); opacity: .2; }
+  45% { opacity: .93; }
+  85% { transform: translateY(-21px); opacity: .3; }
+}
+
+.has-herbalist .stage { width: min(100%, 520px); max-width: none; z-index: 5; }
+.has-herbalist .topbar {
+  position: fixed;
+  top: max(13px, env(safe-area-inset-top));
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(calc(100% - 26px), 668px);
+  margin: 0;
+  padding: 0;
+  gap: 7px;
+  z-index: 12;
+}
+.herb-hud { display: flex; flex: 1; align-items: center; gap: 7px; }
+.herb-hud-spacer { flex: 1; }
+.herb-pill, .has-herbalist .icon-btn {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 7px;
+  min-height: 42px;
+  margin: 0;
+  padding: 0 12px;
+  color: var(--herb-paper);
+  background: #19251efa;
+  border: 1px solid var(--herb-line);
+  border-radius: 99px;
+  white-space: nowrap;
+  box-shadow: 0 4px 15px #11181088;
+  font-family: inherit;
+  font-weight: 650;
+  font-size: 13px;
+  cursor: pointer;
+}
+.has-herbalist .icon-btn { min-width: 42px; padding: 0; }
+.herb-pill > span[aria-hidden] { color: var(--herb-gold); }
+.herb-rank-icon { flex: none; }
+.herb-home-icon {
+  width: 13px;
+  height: 12px;
+  background: currentColor;
+  clip-path: polygon(50% 0, 100% 45%, 88% 45%, 88% 100%, 64% 100%, 64% 62%, 38% 62%, 38% 100%, 12% 100%, 12% 45%, 0 45%);
+}
+.herb-coin-icon {
+  width: 19px;
+  height: 19px;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid #efefd4;
+  border-radius: 50%;
+  background: #c8d2c1;
+  box-shadow: inset 0 0 0 2px #637e70, 0 0 8px #d9ebc65e;
+  color: #3a5649 !important;
+  font-weight: 900;
+}
+.herb-controls { position: fixed; inset: 0; z-index: 4; pointer-events: none; }
+.herb-caption {
+  position: absolute;
+  top: max(70px, calc(env(safe-area-inset-top) + 54px));
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  white-space: nowrap;
+  text-shadow: 0 2px 7px #21190e, 0 0 22px #171b12;
+}
+.herb-caption span { font-weight: 600; color: var(--herb-gold); font-size: 12px; letter-spacing: .23em; }
+.herb-caption h1 {
+  margin: 3px 0 0;
+  font: 700 clamp(32px, 6vmin, 59px) / 1.15 var(--herb-serif);
+  letter-spacing: .10em;
+}
+.herb-meter {
+  position: absolute;
+  top: max(164px, calc(env(safe-area-inset-top) + 149px));
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 12px;
+  border: 1px solid var(--herb-line);
+  border-radius: 999px;
+  background: #283b2ce8;
+  color: #ecf6d8;
+  font-size: 13px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.herb-meter-gem { width: 8px; height: 8px; background: #a6efac; border-radius: 7px 0 7px 7px; transform: rotate(-16deg); }
+.herb-card {
+  position: absolute;
+  inset: auto 0 max(14px, env(safe-area-inset-bottom));
+  width: min(calc(100% - 26px), 518px);
+  margin-inline: auto;
+  padding: 12px 14px 14px;
+  border: 1px solid var(--herb-line);
+  border-radius: 15px;
+  background: linear-gradient(145deg, #28382ff5, #152019fb);
+  box-shadow: 0 14px 38px #0b140ead;
+  text-align: center;
+  pointer-events: auto;
+}
+.herb-card p, .herb-cottage p, .herb-info p { margin: 0 0 11px; font-size: 14px; color: #f3dfb9; line-height: 1.45; }
+.herb-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 7px; }
+.herb-primary, .herb-secondary {
+  min-height: 42px;
+  padding: 8px 14px;
+  border: 1px solid #f1d3a0;
+  border-radius: 9px;
+  color: #252318;
+  background: linear-gradient(#f9dfac, #e2b873);
+  box-shadow: 0 3px 9px #090d0850;
+  line-height: 1.2;
+  font-family: inherit;
+  font-weight: 650;
+  font-size: 14px;
+  cursor: pointer;
+}
+.herb-primary span[aria-hidden] { margin-inline-start: 5px; }
+.herb-secondary { color: #f4e1b6; background: #394637; border-color: #c9b08077; }
+.herb-primary:disabled, .herb-secondary:disabled { opacity: .53; cursor: default; }
+.herb-primary:focus-visible, .herb-secondary:focus-visible, .herb-pill:focus-visible { outline: 2px solid #ffefb0; outline-offset: 3px; }
+
+.has-herbalist:not([data-herb-mode="playing"]) :is(#playzone, #finale, #playerDisputeCard) { visibility: hidden; }
+.has-herbalist[data-herb-mode="playing"].herb-writing .herb-set {
+  filter: brightness(.60) saturate(.84);
+}
+.has-herbalist .write-canvas-wrap {
+  width: var(--herb-writing-tile);
+  height: var(--herb-writing-tile);
+}
+.has-herbalist #drawSvg { width: 100%; height: 100%; }
+.has-herbalist #playzone.hide,
+.has-herbalist[data-herb-mode="playing"]:not(.herb-writing) :is(.hg-feedback-ring, .hg-feedback-star) {
+  display: none;
+}
+.has-herbalist #playzone.writing {
+  background: #202e25f5;
+  border: 1px solid #e0c08b3b;
+  box-shadow: 0 10px 36px #0b130cbf;
+}
+.has-herbalist #playzone:not(.writing),
+.has-herbalist #finale {
+  text-align: center;
+  background: linear-gradient(145deg, #26392ff3, #17251bf8);
+  color: #f7e7c2;
+  border: 1px solid var(--herb-line);
+  box-shadow: 0 10px 34px #101912ad;
+  padding: 10px 12px;
+}
+.has-herbalist[data-herb-mode="playing"]:not(.herb-writing) .stage {
+  position: fixed;
+  bottom: max(17px, env(safe-area-inset-bottom));
+}
+.has-herbalist .scene:not(.writing) .result-banner { margin: 3px 0; }
+.has-herbalist .scene:not(.writing) .status-line:empty { display: none; }
+.has-herbalist .scene .controls-row { margin-top: 4px; }
+.has-herbalist .scene:not(.writing) .game-btn.btn-continue,
+.has-herbalist #restartBtn { color: #231f12; background: linear-gradient(#f8dfac, #d8b371); }
+.has-herbalist #finale .big { color: #ffdfa0; }
+.has-herbalist #finale p { color: #f0e5c6; margin-block: 6px; }
+.has-herbalist[data-herb-mode="travel"] :is(.herb-caption, .herb-meter) { visibility: hidden; }
+.herb-curtain {
+  position: fixed;
+  inset: 0;
+  z-index: 27;
+  background: #080b09;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.herb-passage {
+  position: absolute;
+  inset: 0;
+  margin-inline: auto;
+  width: min(100%, 1160px);
+  opacity: 0;
+  background: radial-gradient(ellipse at center, transparent 27%, #080b09c9 91%),
+    url("assets/herbalist/stone-wall.webp") center / cover no-repeat;
+}
+.herb-fade { animation: herb-cross .52s ease both; }
+.herb-crossing { animation: herb-cross-wall 1.11s ease both; }
+.herb-crossing .herb-passage { animation: herb-approach-wall 1.11s ease-in both; }
+@keyframes herb-cross {
+  0%, 100% { opacity: 0; }
+  45%, 57% { opacity: 1; }
+}
+@keyframes herb-cross-wall {
+  0%, 100% { opacity: 0; }
+  19%, 68% { opacity: 1; }
+}
+@keyframes herb-approach-wall {
+  0% { opacity: .35; transform: scale(1); }
+  19%, 36% { opacity: 1; }
+  59%, 100% { opacity: 0; transform: scale(2.1); }
+}
+
+.herb-cottage, .herb-info {
+  border: 1px solid #cfa976a6;
+  border-radius: 15px;
+  color: var(--herb-paper);
+  text-align: center;
+  box-shadow: 0 16px 48px #0b120fbc;
+}
+.herb-cottage::backdrop, .herb-info::backdrop { background: #080e0bdd; }
+.herb-cottage {
+  width: min(calc(100vw - 22px), 74dvh);
+  max-height: calc(100dvh - 22px);
+  height: calc(100dvh - 22px);
+  padding: 0;
+  overflow: hidden;
+}
+.herb-cottage[open] {
+  display: grid;
+  align-items: end;
+  background: #4a3a2a url("assets/herbalist/cottage.webp") center center / cover no-repeat;
+}
+.herb-cottage-card { padding: 32px 15px 18px; background: linear-gradient(transparent, #171e15ef 45%, #151a12); }
+.herb-cottage h2, .herb-info h2 {
+  margin: 0 0 8px;
+  font: 700 27px / 1.2 var(--herb-serif);
+}
+.herb-info { max-width: min(430px, 90vw); padding: 23px; background: #233229; }
+
+@media (max-width: 739px) and (orientation: portrait), (max-width: 659px) {
+  .has-herbalist {
+    --herb-bench-height: min(37dvh, 290px);
+  }
+  .has-herbalist .herb-bench { top: calc(55% - var(--herb-bench-height) / 2); }
+  .has-herbalist[data-herb-mode="playing"]:not(.herb-writing) .herb-bench {
+    top: calc(50% - var(--herb-bench-height) / 2);
+  }
+  .has-herbalist[data-herb-mode="playing"]:not(.herb-writing) .stage {
+    width: min(calc(100% - 26px), 520px);
+  }
+  .has-herbalist[data-herb-mode="playing"].herb-writing {
+    --herb-bench-width: min(calc(100vw - 26px), 520px);
+    --herb-writing-tile: min(300px, calc(100vw - 48px), max(112px, calc(100dvh - 354px)));
+  }
+  .has-herbalist[data-herb-mode="playing"].herb-writing #herbalistBackdrop { width: 100%; }
+  .has-herbalist[data-herb-mode="playing"].herb-writing .herb-bench {
+    --herb-shelf-x: 10%;
+    --herb-shelf-step: 11%;
+    --herb-row-top: 14%;
+    --herb-row-step: 42%;
+    --herb-bottle-height: 22px;
+    --herb-bottle-width: 15px;
+    --herb-vessel-x: 82%;
+    --herb-vessel-width: 44px;
+    --herb-vessel-height: 30px;
+    --herb-footroom: 10px;
+    --herb-drop-lift: 9px;
+    top: var(--herb-compact-top);
+    height: var(--herb-compact-height);
+    border: 1px solid var(--herb-line);
+    border-radius: 12px;
+    background: linear-gradient(154deg, #26372ce9, #17241bea);
+    box-shadow: 0 5px 18px #111a11a6;
+  }
+  .has-herbalist[data-herb-mode="playing"].herb-writing .herb-shelf::before,
+  .has-herbalist[data-herb-mode="playing"].herb-writing .herb-shelf::after { height: 4px; }
+  .has-herbalist[data-herb-mode="playing"].herb-writing .herb-caption { visibility: hidden; }
+  .has-herbalist[data-herb-mode="playing"].herb-writing .herb-meter {
+    left: calc(50% + var(--herb-bench-width) * .32);
+    top: calc(var(--herb-compact-top) + 6px);
+    padding: 3px 7px;
+    font-size: 11px;
+  }
+  .has-herbalist[data-herb-mode="playing"].herb-writing .stage {
+    position: fixed;
+    top: calc(var(--herb-compact-top) + var(--herb-compact-height) + 5px);
+    bottom: max(7px, env(safe-area-inset-bottom));
+    width: var(--herb-bench-width);
+    height: max-content;
+    margin-block: auto;
+  }
+}
+
+@media (min-width: 740px), (min-width: 660px) and (orientation: landscape) {
+  .has-herbalist[data-herb-mode="playing"] {
+    --herb-bench-width: clamp(266px, 42vw, 474px);
+    --herb-bench-height: min(55dvh, 340px);
+    --herb-bench-top: max(136px, calc(50% - var(--herb-bench-height) * .45));
+    --herb-canvas-column: clamp(320px, 43vw, 490px);
+    --herb-lane-gap: clamp(20px, 3.4vw, 46px);
+  }
+  .has-herbalist[data-herb-mode="playing"] #herbalistBackdrop {
+    width: min(100%, 1160px);
+  }
+  .has-herbalist[data-herb-mode="playing"] .herb-set {
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center 61%;
+    filter: brightness(.55) saturate(.88);
+  }
+  .has-herbalist[data-herb-mode="playing"] .herb-bench {
+    left: calc(50% - (var(--herb-canvas-column) + var(--herb-lane-gap)) / 2);
+    top: var(--herb-bench-top);
+    border: 1px solid var(--herb-line);
+    border-radius: 18px;
+    background:
+      linear-gradient(180deg, #182b20e8 0 72%, #a56b3de6 73%, #513023ef 81%, #2c2318eb 100%);
+    box-shadow: 0 15px 46px #0b130cc9, inset 0 1px 0 #dcbd8f25;
+  }
+  .has-herbalist[data-herb-mode="playing"] .herb-caption,
+  .has-herbalist[data-herb-mode="playing"] .herb-meter {
+    left: calc(50% - (var(--herb-canvas-column) + var(--herb-lane-gap)) / 2);
+  }
+  .has-herbalist[data-herb-mode="playing"] .herb-caption {
+    top: calc(var(--herb-bench-top) - 73px);
+  }
+  .has-herbalist[data-herb-mode="playing"] .herb-caption h1 { font-size: 33px; }
+  .has-herbalist[data-herb-mode="playing"] .herb-meter {
+    top: calc(var(--herb-bench-top) + var(--herb-bench-height) + 12px);
+  }
+  .has-herbalist[data-herb-mode="playing"]:not(.herb-writing) .hg-feedback-banner {
+    left: calc(50% + (var(--herb-bench-width) + var(--herb-lane-gap)) / 2);
+    max-width: min(402px, var(--herb-canvas-column));
+  }
+  .has-herbalist[data-herb-mode="playing"] .stage {
+    position: fixed;
+    left: calc(50% + (var(--herb-bench-width) + var(--herb-lane-gap) - var(--herb-canvas-column)) / 2);
+    top: max(62px, calc(env(safe-area-inset-top) + 49px));
+    bottom: max(10px, env(safe-area-inset-bottom));
+    width: var(--herb-canvas-column);
+    height: max-content;
+    margin-block: auto;
+  }
+}
+@media (max-width: 380px) {
+  .herb-pill { gap: 4px; padding-inline: 9px; font-size: 12px; }
+  .herb-hud, .has-herbalist .topbar { gap: 5px; }
+}
+@media (max-height: 690px) {
+  .herb-caption { top: max(58px, calc(env(safe-area-inset-top) + 47px)); }
+  .herb-caption h1 { font-size: 32px; }
+  .herb-meter { top: max(123px, calc(env(safe-area-inset-top) + 112px)); }
+  .herb-card { padding: 8px; }
+  .herb-card p { margin-bottom: 6px; font-size: 13px; }
+  .has-herbalist #playzone.writing { padding: 9px; }
+  .has-herbalist .write-slot { gap: 6px; margin-bottom: 4px; }
+  .has-herbalist .status-line { font-size: 13px; min-height: 18px; margin: 4px 0; }
+  .has-herbalist .timer-ring { width: 27px; height: 27px; margin-bottom: 3px; }
+  .has-herbalist .result-banner:empty { display: none; }
+  .has-herbalist .result-banner { margin-block: 4px 0; min-height: 0; }
+  .has-herbalist #playerDisputeCard { margin-top: 5px; padding: 5px; }
+}
+@media (min-width: 660px) and (orientation: landscape) and (max-height: 575px) {
+  .has-herbalist[data-herb-mode="playing"] {
+    --herb-bench-top: 106px;
+    --herb-writing-tile: min(300px, max(112px, calc(100dvh - 260px)));
+  }
+  .has-herbalist[data-herb-mode="playing"] .herb-caption { top: 58px; }
+  .has-herbalist[data-herb-mode="playing"] .herb-caption span { display: none; }
+  .has-herbalist[data-herb-mode="playing"] .herb-caption h1 { font-size: 26px; }
+  .has-herbalist[data-herb-mode="playing"] .herb-bench { --herb-vessel-height: min(26dvh, 110px); }
+  .has-herbalist[data-herb-mode="playing"] .herb-meter { top: calc(var(--herb-bench-top) + var(--herb-bench-height) + 4px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .herb-fade,
+  .herb-crossing,
+  .herb-crossing .herb-passage,
+  .herb-bottle.is-pouring,
+  .herb-bottle.is-pouring::after,
+  .herb-flame i,
+  .herb-pouring .herb-drop,
+  .herb-pouring .herb-splash,
+  .herb-complete .herb-liquid i { animation: none; }
+  .herb-set, .herb-light, .herb-liquid { transition: none; }
+}
