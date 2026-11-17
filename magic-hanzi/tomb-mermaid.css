@@ -1,0 +1,448 @@
+.story-tomb,
+.story-sea {
+  overflow: hidden;
+  isolation: isolate;
+  pointer-events: none;
+}
+body[data-herb-stage="tomb"] .story-tomb,
+body[data-herb-stage="sea"] .story-sea { display: block; }
+
+.story-tomb {
+  --deep-tomb-image: url("assets/story/tomb.webp");
+  background: #14110e;
+}
+.story-sea { background: #021b22; }
+.deep-frame {
+  position: absolute;
+  inset: 0;
+  width: min(100%, 88dvh, 860px);
+  margin-inline: auto;
+  overflow: hidden;
+  box-shadow: 0 0 100px 35px #020e11a0;
+}
+.deep-frame::after {
+  content: '';
+  position: absolute;
+  z-index: 5;
+  inset: 0;
+  background: linear-gradient(#081017a2, transparent 24% 72%, #061318a8);
+}
+.deep-tomb-frame::after {
+  background: linear-gradient(#110f14a2, transparent 23% 70%, #17130de0);
+}
+.deep-tomb-frame {
+  --guard-frame-height: 100dvh;
+  --guard-spacing: 1;
+}
+.deep-tomb-world,
+.deep-sea-world,
+.deep-tomb-art,
+.deep-sea-art,
+.deep-guards,
+.deep-caustics,
+.deep-notes,
+.deep-sea-bubbles {
+  position: absolute;
+  inset: 0;
+}
+.deep-tomb-world { transform-origin: 50% 38%; }
+.deep-tomb-set {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: max(100%, 75dvh);
+  aspect-ratio: 3 / 4;
+  transform: translate(-50%, -50%);
+}
+.deep-tomb-art {
+  background: var(--deep-tomb-image) center center / 100% 100% no-repeat,
+    radial-gradient(ellipse at 50% 36%, #4f3f27, #211b19 52%, #101013 85%);
+}
+.deep-guard {
+  --guard-stone: grayscale(1) brightness(1.03) contrast(.68)
+    drop-shadow(0 0 1.4px #d8e2edaa) drop-shadow(0 4px 3px #050607e0);
+  position: absolute;
+  z-index: var(--guard-depth);
+  top: var(--guard-y);
+  left: var(--guard-x);
+  width: min(var(--guard-size),
+    calc(var(--guard-frame-height) * var(--guard-clearance) * var(--guard-spacing) * var(--sprite-aspect)));
+  aspect-ratio: var(--sprite-ratio);
+  transform: translate(-50%, -99%);
+}
+.deep-guard > i {
+  position: absolute;
+  inset: 79% 3% -4%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, #070505ea 17%, #1c0d08cf 45%, transparent 72%);
+  filter: blur(6px);
+}
+.deep-guard:not(.is-stone) > i {
+  animation: deep-guard-shadow var(--guard-pace) ease-in-out var(--guard-phase) infinite;
+}
+.deep-guard-shape,
+.deep-guard-shape > * {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.deep-guard-shape {
+  transform-origin: 50% 92%;
+  filter: drop-shadow(0 0 2px #ffb35e91) drop-shadow(0 4px 3px #070601e2);
+  animation: deep-guard-threat var(--guard-pace) ease-in-out var(--guard-phase) infinite;
+}
+.deep-guard[data-species="crocodile"]:not(.is-stone) .deep-guard-shape {
+  animation-name: deep-crocodile-creep;
+}
+.deep-guard[data-species="eagle"]:not(.is-stone) .deep-guard-shape {
+  animation-name: deep-eagle-rise;
+}
+.deep-guard-shape > span { display: none; }
+.has-guardian-art-0 [data-atlas="0"] { --guard-atlas: var(--deep-guardian-sprite-0); }
+.has-guardian-art-1 [data-atlas="1"] { --guard-atlas: var(--deep-guardian-sprite-1); }
+:is(.has-guardian-art-0 [data-atlas="0"], .has-guardian-art-1 [data-atlas="1"]) .deep-guard-shape > canvas {
+  display: none;
+}
+:is(.has-guardian-art-0 [data-atlas="0"], .has-guardian-art-1 [data-atlas="1"]) .deep-guard-shape > span {
+  display: block;
+  top: auto;
+  height: auto;
+  aspect-ratio: var(--sprite-ratio);
+  transform: scaleX(var(--sprite-facing));
+  background: var(--guard-atlas) var(--sprite-x) var(--sprite-y) / var(--sprite-size) no-repeat;
+}
+.deep-guard:not(.is-stone) .deep-guard-shape > span::after {
+  content: '';
+  position: absolute;
+  top: var(--sprite-eye-y);
+  left: var(--sprite-eye-x);
+  width: clamp(2px, .5vw, 5px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: #ffd58f;
+  box-shadow: 0 0 4px 1px #ffb647, 0 0 10px 4px #ea5b2171;
+  opacity: .66;
+  animation: deep-guard-eye var(--guard-pace) ease-in-out var(--guard-phase) infinite;
+}
+.deep-guard.is-stone .deep-guard-shape {
+  animation: none;
+  filter: var(--guard-stone);
+}
+.deep-guard.is-stone.is-changing .deep-guard-shape { animation: deep-turn-to-stone .73s ease-out both; }
+.deep-guard > b {
+  position: absolute;
+  inset: 2% -12% 0;
+  border-radius: 46%;
+  opacity: 0;
+  background: radial-gradient(ellipse at center, #f5dfbd00 35%, #e0cba284 44%, #f4e9d376 48%, transparent 63%);
+  transform: scale(.64);
+}
+.deep-guard.is-changing > b { animation: deep-guard-dust .88s ease-out both; }
+
+.deep-door {
+  position: absolute;
+  top: 15%;
+  left: 50%;
+  width: 31%;
+  height: 40%;
+  transform: translateX(-50%);
+  overflow: hidden;
+  clip-path: polygon(50% 0, 70% 9%, 87% 19%, 98% 32%, 100% 47%, 100% 100%, 0 100%, 0 47%, 3% 32%, 13% 19%, 31% 9%);
+  opacity: 0;
+  perspective: 450px;
+  background: #061a21;
+  box-shadow: 0 0 12px #1f736bba;
+}
+.deep-flooded-stair {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 29%, #6ee3cb92, transparent 42%),
+    linear-gradient(113deg, #051315, transparent 40%),
+    linear-gradient(247deg, #061316, transparent 40%),
+    repeating-linear-gradient(180deg, #526359 0 7%, #0c3238 7% 14%);
+  opacity: .8;
+}
+.deep-door-leaf {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 50%;
+  left: 0;
+  transform-origin: left center;
+  background: #34382c var(--deep-tomb-image) 40.8% 25% / 645.16% 250% no-repeat;
+}
+.deep-door-leaf:last-child { left: 50%; transform-origin: right center; background-position-x: 59.17%; }
+.deep-tomb-dive {
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  opacity: 0;
+  background:
+    radial-gradient(ellipse at 50% 15%, #82dfc536, transparent 45%),
+    linear-gradient(#115c60, #042128 55%, #04161d);
+}
+.story-tomb.is-leaving .deep-tomb-world { animation: deep-approach 3.04s cubic-bezier(.31,.5,.6,1) both; }
+.story-tomb.is-leaving .deep-door { animation: deep-reveal-door 3.04s ease both; }
+.story-tomb.is-leaving .deep-door-leaf { animation: deep-open-left 3.04s ease-in-out both; }
+.story-tomb.is-leaving .deep-door-leaf:last-child { animation-name: deep-open-right; }
+.story-tomb.is-leaving .deep-tomb-dive { animation: deep-tomb-dive 3.04s ease-in both; }
+
+.deep-sea-art {
+  background: url("assets/story/underwater.webp") center center / cover no-repeat,
+    radial-gradient(ellipse at 50% 9%, #379d9c, #104754 33%, #08242d 69%, #040f17);
+}
+.deep-sea-world { transform-origin: 54% 18%; }
+.deep-caustics {
+  opacity: .43;
+  background: repeating-conic-gradient(from 153deg at 53% -6%, #abf8df3a 0deg 8deg, transparent 15deg 32deg);
+  mask-image: linear-gradient(#000 4%, #0009 34%, transparent 79%);
+  mix-blend-mode: screen;
+  animation: deep-caustic-light 8s ease infinite alternate;
+}
+.deep-sea-bubbles { overflow: hidden; opacity: .48; }
+.deep-sea-bubbles i {
+  position: absolute;
+  top: 100%;
+  left: var(--bubble-x);
+  width: var(--bubble-size);
+  aspect-ratio: 1;
+  border: 1px solid #a9f5e3a6;
+  border-radius: 50%;
+  background: radial-gradient(circle at 32% 25%, #e2ffe4eb 8%, transparent 24% 70%, #98f2ff57 80%);
+  animation: deep-bubble 8s linear var(--bubble-delay) infinite;
+}
+.deep-note {
+  position: absolute;
+  top: var(--note-y);
+  left: var(--note-x);
+  display: none;
+  width: clamp(24px, 5.6vmin, 49px);
+  aspect-ratio: 1;
+  place-items: center;
+  transform: translate(-50%, -50%);
+  border: 1px solid;
+  border-radius: 50%;
+  font: 400 clamp(15px, 3.9vmin, 33px)/1 Georgia, "Times New Roman", serif;
+}
+.deep-note.is-lit:not([hidden]) {
+  display: grid;
+  color: #fff8ce;
+  border-color: #aaffdfd4;
+  background: radial-gradient(circle at 36% 29%, #f6eac87d, #389b9e 57%, #0e5d67);
+  text-shadow: 0 0 8px #ffeeb8;
+  box-shadow: inset 0 0 7px #d9fff6a1, 0 0 12px #99f6db95, 0 0 24px #63b8b15c;
+}
+.deep-note.is-changing { animation: deep-note-appear .61s cubic-bezier(.18,.65,.33,1) both; }
+.story-sea.is-arriving .deep-note.is-lit:not(:last-child) { animation: deep-note-light .49s ease-out var(--note-delay) both; }
+.deep-mermaid {
+  position: absolute;
+  top: 49%;
+  left: 50%;
+  width: min(81%, 55dvh);
+  height: 42%;
+  transform: translate(-37%, -36%) rotate(-5deg);
+  transform-origin: 64% 32%;
+  opacity: 0;
+}
+.deep-mermaid img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 0 16px #91f1d266) drop-shadow(0 4px 11px #03405085);
+}
+.story-sea.is-found .deep-mermaid { opacity: 1; }
+.story-sea.is-found .deep-mermaid img { animation: deep-mermaid-float 4s ease-in-out infinite alternate; }
+.story-sea.is-arriving .deep-mermaid { animation: deep-mermaid-arrive 1.65s cubic-bezier(.2,.7,.26,1) .34s both; }
+
+.deep-surface {
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  opacity: 0;
+  background:
+    url("assets/story/sea-surface.webp") center center / cover no-repeat,
+    radial-gradient(ellipse at 59% 49%, #f7d59fce, transparent 21%),
+    linear-gradient(180deg, #223346, #527686 29%, #a1abb0 40%, #dfc0a2 48%, #476d76 49%, #144150 75%, #071f2e);
+}
+.deep-surface::before {
+  content: '';
+  position: absolute;
+  inset: 5% -20% 50%;
+  opacity: .14;
+  background:
+    radial-gradient(ellipse at 28% 68%, #ced8e04a, transparent 24%),
+    radial-gradient(ellipse at 75% 44%, #d8d9db5c, transparent 26%),
+    radial-gradient(ellipse at 54% 72%, #f1d2b845, transparent 31%);
+  transform: skewX(-11deg) scaleY(.65);
+}
+.deep-surface-reflection {
+  position: absolute;
+  inset: 48% -7% -27%;
+  opacity: .17;
+  background:
+    radial-gradient(ellipse at 59% 5%, #e8b990bc, transparent 40%),
+    repeating-linear-gradient(178deg, #102b3c2b 0 3px, #a0c8d149 4px 6px, #0825314f 7px 13px);
+  mask-image: linear-gradient(#000 4%, #000a 51%, #0003 77%);
+  transform: perspective(340px) rotateX(18deg) scaleX(1.2);
+}
+.deep-waterline {
+  position: absolute;
+  z-index: 4;
+  inset: 0;
+  opacity: 0;
+  transform: translateY(-100%);
+  background: linear-gradient(180deg, transparent 37%, #c8fff24c 46%, #f0ffede8 49%, #aaffec6b 51%, #438b8e16 57%, transparent 67%);
+}
+.story-sea.is-leaving .deep-sea-world { animation: deep-ascent 3.16s ease-in-out both; }
+.story-sea.is-leaving .deep-mermaid { animation: deep-mermaid-lead 2.5s ease-in-out both; }
+.story-sea.is-leaving .deep-surface { animation: deep-surface-reveal 3.16s ease-in-out both; }
+.story-sea.is-leaving .deep-waterline { animation: deep-waterline 3.16s ease-in-out both; }
+
+@keyframes deep-guard-threat {
+  0%, 100% { transform: none; }
+  38% { transform: translateY(-1.5%) scale(1.025, 1.04); }
+  48% { transform: translate(var(--guard-lurch), -2.5%) scale(1.045, 1.05); }
+  61% { transform: translateX(calc(var(--guard-lurch) * .37)) scale(1.06, .97); }
+  78% { transform: scaleY(1.025); }
+}
+@keyframes deep-crocodile-creep {
+  0%, 100% { transform: none; }
+  35% { transform: scale(1.035, .98); }
+  57% { transform: translateX(var(--guard-lurch)) scale(1.055, .96); }
+  73% { transform: translateX(calc(var(--guard-lurch) * .63)); }
+}
+@keyframes deep-eagle-rise {
+  0%, 100% { transform: none; }
+  41% { transform: translateY(3%) scaleY(.95); }
+  52% { transform: translate(var(--guard-lurch), -5%) scale(1.05, 1.075); }
+  67% { transform: translateY(-3%) scale(1.04, 1.05); }
+}
+@keyframes deep-guard-shadow {
+  0%, 100% { transform: scale(1); opacity: .76; }
+  49% { transform: translateX(calc(var(--guard-lurch) * .7)) scale(1.18, .92); opacity: 1; }
+}
+@keyframes deep-guard-eye {
+  0%, 100% { opacity: .59; }
+  43% { opacity: .45; }
+  51% { opacity: 1; }
+  59% { opacity: .78; }
+}
+@keyframes deep-turn-to-stone {
+  0% { transform: scaleY(1.05); filter: grayscale(0) brightness(1) drop-shadow(0 4px 3px #070601); }
+  29% { transform: scaleY(1.01); filter: grayscale(.65) brightness(1.63) drop-shadow(0 0 8px #d6eac0); }
+  67% { filter: grayscale(1) brightness(.96) drop-shadow(0 3px 4px #070601); }
+  100% { transform: scaleY(1); filter: var(--guard-stone); }
+}
+@keyframes deep-guard-dust {
+  0% { transform: scale(.59); opacity: 0; }
+  31% { opacity: .9; }
+  100% { transform: scale(1.27); opacity: 0; }
+}
+@keyframes deep-approach {
+  0% { transform: scale(1); }
+  18% { transform: scale(1.17) translate(-.75%, 1%); }
+  34% { transform: scale(1.37) translate(.7%, 0); }
+  49% { transform: scale(1.76); }
+  71% { transform: scale(1.86); }
+  100% { transform: scale(4.8) translateY(-6%); }
+}
+@keyframes deep-reveal-door {
+  0%, 36% { opacity: 0; }
+  50%, 100% { opacity: 1; }
+}
+@keyframes deep-open-left {
+  0%, 47% { transform: rotateY(0); }
+  72%, 100% { transform: rotateY(-76deg); }
+}
+@keyframes deep-open-right {
+  0%, 47% { transform: rotateY(0); }
+  72%, 100% { transform: rotateY(76deg); }
+}
+@keyframes deep-tomb-dive {
+  0%, 64% { clip-path: inset(100% 0 0); opacity: 0; }
+  77% { clip-path: inset(72% 0 0); opacity: .65; }
+  100% { clip-path: inset(0); opacity: 1; }
+}
+@keyframes deep-caustic-light {
+  from { opacity: .26; transform: scaleX(1) skewX(-4deg); }
+  to { opacity: .51; transform: scaleX(1.13) skewX(4deg); }
+}
+@keyframes deep-bubble {
+  0% { transform: translate(0, 0); opacity: 0; }
+  15%, 72% { opacity: .8; }
+  100% { transform: translate(18px, -95dvh); opacity: 0; }
+}
+@keyframes deep-note-light {
+  0% { transform: translate(-50%, -50%) scale(1); filter: brightness(1); }
+  36% { transform: translate(-50%, -50%) scale(1.35); filter: brightness(1.75); }
+  100% { transform: translate(-50%, -50%) scale(1); filter: brightness(1); }
+}
+@keyframes deep-note-appear {
+  0% { transform: translate(-50%, -42%) scale(.32); opacity: 0; }
+  36% { transform: translate(-50%, -52%) scale(1.34); opacity: 1; filter: brightness(1.75); }
+  100% { transform: translate(-50%, -50%) scale(1); opacity: 1; filter: brightness(1); }
+}
+@keyframes deep-mermaid-arrive {
+  from { opacity: 0; transform: translate(38%, 10%) rotate(-17deg) scale(.42); }
+  32% { opacity: .84; }
+  74% { transform: translate(-40%, -40%) rotate(-7deg) scale(1.02); }
+  to { opacity: 1; transform: translate(-37%, -36%) rotate(-5deg); }
+}
+@keyframes deep-mermaid-float {
+  from { transform: translateY(-3%) rotate(-2deg); }
+  to { transform: translateY(4%) rotate(3deg); }
+}
+@keyframes deep-mermaid-lead {
+  0% { opacity: 1; transform: translate(-37%, -36%) rotate(-5deg); }
+  28% { transform: translate(-35%, -66%) rotate(10deg) scale(.86); }
+  72% { opacity: 1; }
+  100% { opacity: 0; transform: translate(-30%, -174%) rotate(19deg) scale(.5); }
+}
+@keyframes deep-ascent {
+  0% { opacity: 1; transform: scale(1); }
+  44% { transform: scale(1.16) translateY(10%); }
+  81%, 100% { opacity: 0; transform: scale(1.5) translateY(38%); }
+}
+@keyframes deep-surface-reveal {
+  0%, 48% { opacity: 0; clip-path: inset(0 0 100%); }
+  60% { opacity: .82; }
+  77%, 100% { opacity: 1; clip-path: inset(0); }
+}
+@keyframes deep-waterline {
+  0%, 43% { opacity: 0; transform: translateY(-61%); }
+  53% { opacity: 1; }
+  78%, 100% { opacity: 0; transform: translateY(65%); }
+}
+
+@media (max-width: 739px) and (orientation: portrait), (max-width: 659px) {
+  body[data-herb-mode="playing"].herb-writing .deep-note {
+    top: calc(12% + var(--note-y) * .43);
+    width: clamp(19px, 5.5vmin, 33px);
+  }
+  body[data-herb-mode="playing"].herb-writing .deep-guard {
+    --guard-spacing: .65;
+    top: calc(7% + var(--guard-y) * .65);
+  }
+}
+@media (min-width: 740px), (min-width: 660px) and (orientation: landscape) {
+  body[data-herb-mode="playing"] :is(.story-tomb, .story-sea):not(.is-leaving) .deep-frame {
+    inset: var(--herb-bench-top) auto auto
+      max(0px, calc(50% - (var(--herb-canvas-column) + var(--herb-lane-gap) + var(--herb-bench-width)) / 2));
+    width: var(--herb-bench-width);
+    height: var(--herb-bench-height);
+    border: 1px solid var(--herb-line);
+    border-radius: 18px;
+    box-shadow: 0 15px 46px #080d0ec9;
+  }
+  body[data-herb-mode="playing"] .deep-tomb-set { width: max(100%, calc(var(--herb-bench-height) * .75)); }
+  body[data-herb-mode="playing"] .deep-tomb-frame { --guard-frame-height: var(--herb-bench-height); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .story-scene.story-tomb *,
+  .story-scene.story-sea * { animation: none !important; }
+  .story-sea.is-leaving .deep-surface { opacity: 1; }
+  .story-sea.is-leaving .deep-sea-world { opacity: 0; }
+}

@@ -9,7 +9,8 @@ const { inlinePage, buildPage, verifyGlyphGeometry, assertNoStartupLinks,
 
 const assets = Object.fromEntries(SCRIPT_FILES.map(file => [file, 'window.loaded.push(' + JSON.stringify(file) + ');']));
 assert.equal(CSS_FILE, 'game-feedback.css', 'Keep the existing singular CSS export compatible');
-assert.deepEqual(CSS_FILES, [CSS_FILE, 'mountain-journey.css', 'herbalist-room.css', 'observatory.css']);
+assert.deepEqual(CSS_FILES, [CSS_FILE, 'mountain-journey.css', 'herbalist-room.css', 'observatory.css',
+  'giant-kitchen.css', 'bridge-train.css', 'tomb-mermaid.css']);
 for (const file of CSS_FILES) assets[file] = '.sample { color: red; }';
 // Include closing tags inside JS and CSS strings, where packaging must escape
 // the HTML terminator without changing the string value used by the program.
@@ -134,7 +135,8 @@ if (!process.argv.includes('--unit')) {
     'assets/herbalist/cottage.webp', 'assets/herbalist/stone-wall.webp']));
   const observatoryImages = cssImageUrls(fs.readFileSync(path.join(root, 'observatory.css'), 'utf8'));
   assert.deepEqual(new Set(observatoryImages), new Set(['assets/observatory/observatory.webp']));
-  for (const image of new Set([...mountainImages, ...roomImages, ...observatoryImages])) {
+  const storyImages = CSS_FILES.slice(4).flatMap(file => cssImageUrls(fs.readFileSync(path.join(root, file), 'utf8')));
+  for (const image of new Set([...mountainImages, ...roomImages, ...observatoryImages, ...storyImages])) {
     const url = new URL(image, 'https://lucyisalive.github.io/');
     assert.equal(url.origin, 'https://lucyisalive.github.io', 'Scenery must stay on the game origin');
     const file = fs.readFileSync(path.join(root, image));

@@ -26,7 +26,8 @@
       start: '开始配药', step: '滴一滴', auto: '播放到调成', retry: '重新调配',
       demoHint: '点「滴一滴」，看草药瓶从架上飞起来。',
       demoFinished: '十种草药都加进去了。穿墙药水调好啦！',
-      next: '喝下药水，去星象台', interval: 1110,
+      reward: '加入一种草药。', completion: '十种草药都加齐了，穿墙药水调好啦！喝下它，穿过石墙去星象台。',
+      next: '喝下药水，去星象台', nextStage: 'stars', interval: 1110,
     },
     stars: {
       number: '第二关', title: '星象台', unit: '颗星星',
@@ -35,7 +36,58 @@
       start: '开始观星', step: '点亮一颗星', auto: '播放到十颗星', retry: '重新点星',
       demoHint: '点「点亮一颗星」，看看夜空会变成什么样。',
       demoFinished: '十颗星连成一只鸟。瞧，它展开翅膀飞起来了！',
-      next: '回草药房', interval: 520,
+      reward: '天上亮起了一颗星。', completion: '十颗星连成了星座，变成一只会飞的鸟！跟着它去山脚下。',
+      next: '跟上星鸟', nextStage: 'giant', interval: 520,
+    },
+    giant: {
+      number: '第三关', title: '巨人厨房', unit: '样食材',
+      intro: '星鸟飞到山脚下。屋里有一位巨人，正在守着一口大锅。',
+      task: '每通过一个字，巨人就把一样食材扔进锅里。',
+      start: '帮巨人煮汤', step: '扔一样食材', auto: '播放到汤煮好', retry: '重新煮汤',
+      demoHint: '看看巨人的手，再看看旁边那扇门。',
+      demoFinished: '巨人汤煮好了。喝一口，看看窗台会变到哪里。',
+      reward: '巨人往锅里扔了一样食材。', completion: '十样食材煮成了巨人汤。喝下它，就有力气打碎挡路的山。',
+      next: '喝汤，打碎大山', nextStage: 'bridge', interval: 1150,
+    },
+    bridge: {
+      number: '第四关', title: '深渊断桥', unit: '块桥板',
+      intro: '山尘散开。你变回了原来的大小，脚下是一道深渊。',
+      task: '每通过一个字，就有一块木板飞回来，扣在绳索上。',
+      start: '修好断桥', step: '接回一块桥板', auto: '播放到桥修好', retry: '重新铺桥',
+      demoHint: '桥对面有一盏灯。先把木板一块块接回来。',
+      demoFinished: '十块木板都扣牢了。可以走到对岸了。',
+      reward: '一块桥板扣上了绳索。', completion: '桥接起来了。对岸的灯，原来是一座小车站。',
+      next: '走过断桥', nextStage: 'train', interval: 780,
+    },
+    train: {
+      number: '第五关', title: '气球火车', unit: '个气球',
+      intro: '一辆铜皮火车停在月台旁。车顶挂着十个瘪气球，铁轨到崖边就断了。',
+      task: '每通过一个字，车顶就鼓起一个气球。',
+      start: '给火车吹气球', step: '鼓起一个气球', auto: '播放到气球充满', retry: '重新吹气球',
+      demoHint: '先从月台看车顶，等十个气球都鼓起来。',
+      demoFinished: '十个气球充满了。上车，我们从车窗看它飞过云层。',
+      reward: '车顶鼓起了一个气球。', completion: '十个气球都鼓起来了。火车已经能离开铁轨。',
+      next: '上火车，飞过云层', nextStage: 'tomb', interval: 740,
+    },
+    tomb: {
+      number: '第六关', title: '墓穴大厅', unit: '只石化守卫',
+      intro: '火车停在山壁的石门前。墓穴深处，动物守卫围着另一扇门。',
+      task: '每通过一个字，一只守卫就会变成石像。',
+      start: '穿过墓穴大厅', step: '石化一只守卫', auto: '播放到守卫全石化', retry: '重新演示石化',
+      demoHint: '看看动物从眨眼、呼吸，到变成一尊石像。',
+      demoFinished: '守卫都变成了石像。现在可以从它们中间走过去。',
+      reward: '一只动物守卫变成了石像。', completion: '十只守卫都石化了。走到尽头，推开那扇石门。',
+      next: '推开石门', nextStage: 'sea', interval: 800,
+    },
+    sea: {
+      number: '第七关', title: '水底人鱼', unit: '个音符',
+      intro: '门后的石阶没入水中。水底飘着十个音符。',
+      task: '每通过一个字，就点亮并奏响一个音。把十个音连起来，人鱼会循声而来。',
+      start: '奏响水底音符', step: '奏响一个音符', auto: '播放到十音成曲', retry: '重新奏响',
+      demoHint: '点亮第一个音符，听它在水底响起来。',
+      demoFinished: '人鱼游来了。跟上她，一起浮出海面。',
+      reward: '一个水底音符亮了起来。', completion: '十个音符连成了曲子。人鱼循着歌声游来了。',
+      next: '跟人鱼浮出海面', nextStage: 'herbs', interval: 590,
     },
   };
 
@@ -67,9 +119,15 @@
         </div>
       </div>`;
     body.insertBefore(backdrop, body.firstChild);
-    let observatory;
-    try { observatory = doc.defaultView?.HanziObservatory?.create({ document: doc }); }
-    catch (_) { /* An optional scene must leave the lesson playable. */ }
+    function createVisual(module) {
+      try { return module?.create({ document: doc }); }
+      catch (_) { return undefined; }
+    }
+    const observatory = createVisual(doc.defaultView?.HanziObservatory);
+    const giant = createVisual(doc.defaultView?.HanziGiantKitchen);
+    const sky = createVisual(doc.defaultView?.HanziBridgeTrain);
+    const deep = createVisual(doc.defaultView?.HanziTombMermaid);
+    const visuals = { giant, bridge: sky, train: sky, tomb: deep, sea: deep };
 
     const hud = doc.createElement('div');
     hud.className = 'herb-hud';
@@ -90,10 +148,14 @@
         <p id="herbIntroTask"></p>
         <div class="herb-actions">
           <button class="herb-primary" id="herbStart" type="button"><span id="herbStartText"></span><span aria-hidden="true">→</span></button>
-          <button class="herb-secondary" id="herbShowDemo" type="button">观看两关演示</button>
+          <button class="herb-secondary" id="herbShowDemo" type="button">观看关卡演示</button>
         </div>
       </section>
       <section class="herb-card" id="herbDemo" hidden>
+        <label class="herb-demo-select">选择关卡
+          <select id="herbDemoStage">${Object.entries(STAGES).map(([key, story]) =>
+            `<option value="${key}">${story.number} · ${story.title}</option>`).join('')}</select>
+        </label>
         <p id="herbDemoStatus" aria-live="polite">点「滴一滴」，看草药瓶从架上飞起来。</p>
         <div class="herb-actions">
           <button class="herb-primary" id="herbDemoNext" type="button" hidden></button>
@@ -139,6 +201,7 @@
     const demoDrop = get('herbDemoDrop');
     const demoPlay = get('herbDemoPlay');
     const demoNext = get('herbDemoNext');
+    const demoStage = get('herbDemoStage');
     const hudWallet = get('herbWallet');
     const rankIcon = get('herbRankIcon');
     const rankLabel = get('herbRankLabel');
@@ -156,6 +219,8 @@
     let pouringBottle;
     let demoTimer;
     let fadeTimer;
+    let activeExit;
+    let seaSurfaced = false;
     let autoPlaying = false;
     let writing = true;
     let storage;
@@ -221,7 +286,10 @@
       meter.textContent = count + ' / ' + ROOM_SIZE + ' ' + STAGES[displayStage].unit;
       if (displayStage === 'herbs') renderFill(count, animate);
       else {
-        try { observatory?.render(count, animate); }
+        try {
+          if (displayStage === 'stars') observatory?.render(count, animate);
+          else visuals[displayStage]?.render(displayStage, count, animate);
+        }
         catch (_) { /* The progress display is independent of the animation. */ }
       }
     }
@@ -229,6 +297,7 @@
     function display(next) {
       displayStage = next;
       body.dataset.herbStage = next;
+      demoStage.value = next;
       const story = STAGES[next];
       get('herbChapter').textContent = story.number;
       get('herbTitle').textContent = story.title;
@@ -255,8 +324,9 @@
       demoDrop.classList.toggle('herb-primary', !finished);
       demoDrop.classList.toggle('herb-secondary', finished);
       demoNext.hidden = !finished;
-      demoNext.textContent = displayStage === 'herbs' ? story.next : '再看一次两关演示';
-      demoStatus.textContent = finished ? story.demoFinished : story.demoHint;
+      demoNext.textContent = displayStage === 'sea' && seaSurfaced ? '从草药房再看一遍' : story.next;
+      demoStatus.textContent = seaSurfaced ? '你和人鱼一起浮出了海面。'
+        : finished ? story.demoFinished : story.demoHint;
     }
 
     function stopDemo() {
@@ -276,29 +346,79 @@
       if (!info.open) info.showModal();
     }
 
-    function resetCurtain() {
+    function resetCurtain(keepExit = false) {
       clearTimeout(fadeTimer);
       curtain.classList.remove('herb-fade', 'herb-crossing');
+      if (!keepExit) resetExit();
     }
 
-    function transition(nextStage, nextMode) {
-      resetCurtain();
+    function resetExit() {
+      activeExit?.resetExit?.();
+      activeExit = undefined;
+    }
+
+    function playExit() {
+      activeExit = displayStage === 'stars' ? observatory : visuals[displayStage];
+      try { return activeExit?.playExit(displayStage) || 0; }
+      catch (_) { return 0; }
+    }
+
+    function reducedMotion() {
+      return doc.defaultView?.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+    }
+
+    function transition(nextStage, nextMode, animateExit = true) {
+      const surfaced = seaSurfaced;
+      resetCurtain(surfaced);
+      seaSurfaced = false;
       function reveal() {
         display(nextStage);
+        resetExit();
         setMode(nextMode);
         renderProgress(nextMode === 'demo' ? demoFill : actualFill);
         if (nextMode === 'demo') updateDemoControls();
         (nextMode === 'demo' ? demoDrop : get('herbStart')).focus({ preventScroll: true });
       }
-      if (doc.defaultView?.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches) {
+      if (reducedMotion()) {
         reveal();
         return;
       }
-      curtain.getBoundingClientRect();
       const crossingWall = displayStage === 'herbs' && nextStage === 'stars';
-      curtain.classList.add(crossingWall ? 'herb-crossing' : 'herb-fade');
       setMode('travel');
-      fadeTimer = setTimeout(reveal, crossingWall ? 704 : 245);
+      function beginFade() {
+        curtain.getBoundingClientRect();
+        curtain.classList.add(crossingWall && animateExit ? 'herb-crossing' : 'herb-fade');
+        fadeTimer = setTimeout(reveal, crossingWall && animateExit ? 704 : 245);
+      }
+      const duration = animateExit && !surfaced ? playExit() : 0;
+      if (duration) fadeTimer = setTimeout(beginFade, duration);
+      else beginFade();
+    }
+
+    function surface() {
+      if (displayStage !== 'sea') return false;
+      if (mode === 'travel') return true;
+      if (seaSurfaced) return false;
+      seaSurfaced = true;
+      const previousMode = mode;
+      setMode('travel');
+      const duration = playExit();
+      function finish() {
+        setMode(previousMode);
+        if (previousMode === 'demo') {
+          updateDemoControls();
+          demoNext.focus({ preventScroll: true });
+        } else {
+          const restart = get('restartBtn');
+          const detail = get('finaleDetail');
+          detail.textContent = ['你和人鱼一起浮出了海面。', ...detail.textContent.split('\n').slice(1)].join('\n');
+          restart.textContent = '回草药房';
+          restart.focus({ preventScroll: true });
+        }
+      }
+      if (duration && !reducedMotion()) fadeTimer = setTimeout(finish, duration);
+      else finish();
+      return true;
     }
 
     setupButton('herbStart', () => {
@@ -308,6 +428,8 @@
     });
     setupButton('herbShowDemo', () => {
       stopDemo();
+      resetCurtain();
+      seaSurfaced = false;
       demoFill = 0;
       display('herbs');
       setMode('demo');
@@ -318,6 +440,8 @@
     setupButton('herbDemoDrop', () => {
       if (autoPlaying) return;
       if (demoFill === ROOM_SIZE) {
+        resetCurtain();
+        seaSurfaced = false;
         demoFill = 0;
         renderProgress(0);
         updateDemoControls();
@@ -339,6 +463,8 @@
     setupButton('herbDemoExit', () => {
       stopDemo();
       display(stage);
+      resetCurtain();
+      seaSurfaced = false;
       setMode('intro');
       renderProgress(actualFill);
       get('herbShowDemo').focus({ preventScroll: true });
@@ -346,8 +472,15 @@
     setupButton('herbDemoNext', () => {
       if (mode !== 'demo' || demoFill !== ROOM_SIZE) return;
       stopDemo();
+      if (surface()) return;
       demoFill = 0;
-      transition(displayStage === 'herbs' ? 'stars' : 'herbs', 'demo');
+      transition(STAGES[displayStage].nextStage, 'demo');
+    });
+    demoStage.addEventListener('change', () => {
+      if (mode !== 'demo' || !Object.hasOwn(STAGES, demoStage.value)) return;
+      stopDemo();
+      demoFill = 0;
+      transition(demoStage.value, 'demo', false);
     });
     setupButton('herbHome', () => {
       if (!cottage.open) cottage.showModal();
@@ -398,6 +531,7 @@
     function restoreStage(savedStage, count, resume) {
       stopDemo();
       resetCurtain();
+      seaSurfaced = false;
       stage = savedStage;
       actualFill = count;
       display(stage);
@@ -408,8 +542,9 @@
     updateCoins(0);
     restoreStage('herbs', 0, false);
     body.classList.add('has-herbalist');
-    return { showWriting, arrive, pass, finale, nextLevel, restoreStage, updateMastered };
+    return { showWriting, arrive, pass, finale, nextLevel, restoreStage, updateMastered, surface };
   }
 
+  window.HanziStoryStages = STAGES;
   window.HanziHerbalist = { create };
 }());

@@ -9,7 +9,7 @@
   // and every unknown field are deliberately never read or copied into a payload.
   var META_KEY = 'hanzi-magic-herbalist-sync-v1';
   var BACKUP_KEY = 'hanzi-magic-herbalist-sync-backups-v1';
-  var APP = 'hanzi-magic-herbalist';
+  var APP = 'hanzi-magic-door';
   var PASSWORD_ROUNDS = 600000;
   var MAX_BYTES = 600 * 1024;
   var DEBOUNCE_MS = 800;
@@ -437,7 +437,7 @@
       meta = stagedMeta;
       applying = true;
       var result;
-      try { result = options.applyState(remote.state); }
+      try { result = options.applyState(remote.state, reason); }
       catch (error) {
         ensureEpoch(token);
         throw problem('恢复进度未完成；两份进度已在本机备份，请重新选择保留哪份', 'conflict');
@@ -461,7 +461,13 @@
       persist(nextMeta);
       meta = nextMeta;
       conflictRemote = null;
-      if (meta.dirty) return emit('pending', '进度已读取，但本机还有新的改动；请再次同步');
+      if (meta.dirty) {
+        if (reason === 'join-family' || reason === 'join-password-family') {
+          schedule();
+          return emit('pending', '已合并本机和家庭进度，正等待同步');
+        }
+        return emit('pending', '进度已读取，但本机还有新的改动；请再次同步');
+      }
       return emit('synced', '两台设备的学习进度已同步');
     }
     async function write(current, derived, remote, token, localRevision, candidateMeta, retryLocal) {

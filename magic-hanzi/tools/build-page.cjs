@@ -15,11 +15,13 @@ const OUTPUT_FILES = ['index.html', '汉字魔法门_4.html'];
 const SCRIPT_FILES = [
   'curriculum-data.js', 'practice-selector.js', 'sentence-hints.js', 'ai-sentences.js',
   'game-feedback.js', 'glyph-catalog.js', 'glyph-loader.js', 'learning-timing.js', 'parent-validation.js',
-  'progress-sync.js', 'mountain-journey.js', 'observatory.js', 'herbalist-room.js',
+  'progress-sync.js', 'shared-learning.js', 'mountain-journey.js', 'observatory.js',
+  'giant-kitchen.js', 'bridge-train.js', 'tomb-mermaid.js', 'herbalist-room.js',
 ];
 // Keep the original singular export for callers that only need feedback CSS.
 const CSS_FILE = 'game-feedback.css';
-const CSS_FILES = [CSS_FILE, 'mountain-journey.css', 'herbalist-room.css', 'observatory.css'];
+const CSS_FILES = [CSS_FILE, 'mountain-journey.css', 'herbalist-room.css', 'observatory.css',
+  'giant-kitchen.css', 'bridge-train.css', 'tomb-mermaid.css'];
 const GLYPH_FILES = ['hanzi-data.js', 'curriculum-hanzi-data.js'];
 const NOTICE = '<!-- 由 tools/build-page.cjs 生成。游戏逻辑请改 game-source.html；模块请改各 JS/CSS 原文件，再重新构建。 -->';
 const SCRIPT_TAG = /<script\b((?:"[^"]*"|'[^']*'|[^'">])*)>([\s\S]*?)<\/script\s*>/gi;

@@ -139,7 +139,12 @@
       previous = next;
     }
 
-    return { render };
+    function playExit() {
+      backdrop.classList.add('observatory-following');
+      return 1060;
+    }
+
+    return { render, playExit, resetExit: () => backdrop.classList.remove('observatory-following') };
   }
 
   window.HanziObservatory = { create };

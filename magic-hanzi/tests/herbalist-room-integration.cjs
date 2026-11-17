@@ -23,10 +23,18 @@ const rewardMethods = ['pass', 'finale'];
 async function run() {
   const calls = [];
   const methods = ['showWriting', 'arrive', 'pass', 'finale', 'nextLevel', 'restoreStage'];
+  let surfaced = false;
   const room = { create({document, onTap}) {
     assert.ok(document.body);
     assert.equal(typeof onTap, 'function');
-    return Object.fromEntries(methods.map(method => [method, (...args) => calls.push([method, ...args])]));
+    return {
+      ...Object.fromEntries(methods.map(method => [method, (...args) => calls.push([method, ...args])])),
+      surface() {
+        if (surfaced) return false;
+        surfaced = true;
+        return true;
+      },
+    };
   } };
   const {environment, flush, inkFor} = setup(require, __dirname, process, room);
   const game = environment();
@@ -90,9 +98,36 @@ async function run() {
   game.run('passedCount=ROUND_GOAL;syncRoundCompleted=true;presentSyncedProgress();');
   assert.deepEqual(rewards().at(-1), ['finale', false, 10, 0, false], 'Restoring a completed level has no bonus');
   game.tap('restartBtn');
-  assert.deepEqual(calls.filter(([method]) => method === 'nextLevel').at(-1), ['nextLevel', 'herbs']);
+  assert.deepEqual(calls.filter(([method]) => method === 'nextLevel').at(-1), ['nextLevel', 'giant']);
+
+  const remainingStages = [
+    ['giant', 'bridge', /食材/, /巨人汤/],
+    ['bridge', 'train', /桥板/, /小车站/],
+    ['train', 'tomb', /气球/, /火车/],
+    ['tomb', 'sea', /石像/, /石门/],
+    ['sea', 'herbs', /音符/, /人鱼/],
+  ];
+  for (const [stage, next, passMessage, finishedMessage] of remainingStages) {
+    assert.equal(game.run('state.herbalistStage'), stage);
+    const saved = JSON.parse(game.storage.get('hanzi-magic-herbalist-state-v1'));
+    assert.equal(environment({initialSave: saved}).run('state.herbalistStage'), stage, 'Reload restores ' + stage);
+    game.run('passedCount=ROUND_GOAL-1;');
+    await submitReference();
+    assert.match(game.run('resultBanner.textContent'), passMessage);
+    const before = game.run('state.scenesUnlocked');
+    game.tap('continueBtn');
+    assert.equal(game.run('state.scenesUnlocked'), before + 1);
+    assert.match(game.run('finaleDetail.textContent'), finishedMessage);
+    game.tap('restartBtn');
+    if (stage === 'sea') {
+      assert.equal(game.run('state.herbalistStage'), 'sea', 'Surfacing does not start a new lesson');
+      assert.equal(game.run('state.scenesUnlocked'), before + 1, 'Ending animation gives no extra reward');
+      game.tap('restartBtn');
+    }
+    assert.deepEqual(calls.filter(([method]) => method === 'nextLevel').at(-1), ['nextLevel', next]);
+  }
   assert.ok(game.network.every(call => call.kind !== 'unexpected'));
-  console.log('Story rooms: formal passes and retests, no teaching reward, partial retry, both transitions, and one-time settlement passed.');
+  console.log('Story rooms: seven-stage route, saved-stage restoration, partial retry, surfacing, and once-only rewards passed.');
 }
 
 run().catch(error => { console.error(error); process.exitCode = 1; });

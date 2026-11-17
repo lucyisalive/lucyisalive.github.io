@@ -14,9 +14,10 @@ const scripts = [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script\s*>/gi)]
   .map(match => ({attributes: match[1], source: match[2]}));
 const mainIndex = scripts.findIndex(script => script.source.includes('function newBankItem(') && script.source.includes('function onTap('));
 const modules = ['curriculum-data.js', 'practice-selector.js', 'sentence-hints.js', 'ai-sentences.js',
-  'game-feedback.js', 'glyph-catalog.js', 'glyph-loader.js', 'learning-timing.js', 'parent-validation.js', 'progress-sync.js',
-  'mountain-journey.js', 'observatory.js', 'herbalist-room.js'];
-const styles = ['game-feedback.css', 'mountain-journey.css', 'herbalist-room.css', 'observatory.css'];
+  'game-feedback.js', 'glyph-catalog.js', 'glyph-loader.js', 'learning-timing.js', 'parent-validation.js', 'progress-sync.js', 'shared-learning.js',
+  'mountain-journey.js', 'observatory.js', 'giant-kitchen.js', 'bridge-train.js', 'tomb-mermaid.js', 'herbalist-room.js'];
+const styles = ['game-feedback.css', 'mountain-journey.css', 'herbalist-room.css', 'observatory.css',
+  'giant-kitchen.css', 'bridge-train.css', 'tomb-mermaid.css'];
 assert.ok(scripts.every(script => !/\bsrc\s*=/i.test(script.attributes)), 'Critical scripts must be embedded');
 for(const file of modules) assert.equal(scripts.filter(script => script.attributes.includes('data-source="'+file+'"')).length,1,'Embed exactly one '+file);
 assert.deepEqual(scripts.filter(script => /\bdata-source=/.test(script.attributes))
@@ -93,7 +94,7 @@ class Element {
   closest(selector) { return selector.split(',').some(part => part.trim().startsWith('.') && this.classList.contains(part.trim().slice(1))) ? this : null; }
 }
 
-function environment({initialSave=null,initialStorage=null,mode='online',omitMountain=false}={}) {
+function environment({initialSave=null,initialStorage=null,mode='online',omitMountain=false,location}={}) {
   // The builder must package the decorative module. At runtime it remains an
   // optional enhancement: an absent API must leave every learning control usable.
   const scripts = omitMountain ? startupScripts.map(script => script.attributes.includes('data-source="mountain-journey.js"')
@@ -129,7 +130,7 @@ function environment({initialSave=null,initialStorage=null,mode='online',omitMou
     return Promise.resolve({ok:true,json:()=>Promise.resolve(glyph)});
   }
   const math=Object.create(Math);math.random=seeded(19);
-  const window={document,innerWidth:400,innerHeight:800,addEventListener(){},matchMedia:()=>({matches:true}),
+  const window={document,location,innerWidth:400,innerHeight:800,addEventListener(){},matchMedia:()=>({matches:true}),
     setTimeout:schedule,clearTimeout:id=>timers.delete(id),fetch:fixtureFetch,
     speechSynthesis:{cancel(){},getVoices:()=>[],speak:u=>spoken.push(u.text)}};
   const context=vm.createContext({window,document,Date:ClockDate,Math:math,console:{log(){},warn(){},error(){}},

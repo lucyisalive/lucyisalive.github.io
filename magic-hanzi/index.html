@@ -758,8 +758,19 @@ body.journey-departing #mountainJourney .journey-background {
 .has-herbalist .doorway,
 .has-herbalist .progress-path,
 .herbalist-local-preview .cloud-sync,
-.herbalist-local-preview #aiSentenceSettings { display: none; }
+.herbalist-no-ai #aiSentenceSettings { display: none; }
 .has-herbalist :is(.herb-card, .herb-actions button)[hidden] { display: none; }
+.has-herbalist:not([data-herb-stage="herbs"]) #herbalistBackdrop { display: none; }
+
+.story-scene {
+  display: none;
+  position: fixed;
+  inset: 0;
+  width: min(100%, 106dvh, 1080px);
+  margin-inline: auto;
+  overflow: hidden;
+  pointer-events: none;
+}
 
 #herbalistBackdrop {
   position: fixed;
@@ -1202,6 +1213,22 @@ body.journey-departing #mountainJourney .journey-background {
 }
 .herb-card p, .herb-cottage p, .herb-info p { margin: 0 0 11px; font-size: 14px; color: #f3dfb9; line-height: 1.45; }
 .herb-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 7px; }
+.herb-demo-select {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 9px;
+  font-size: 13px;
+}
+.herb-demo-select select {
+  min-height: 34px;
+  padding: 4px 8px;
+  color: var(--herb-paper);
+  border: 1px solid var(--herb-line);
+  border-radius: 7px;
+  background: #18261e;
+  font: inherit;
+}
 .herb-primary, .herb-secondary {
   min-height: 42px;
   padding: 8px 14px;
@@ -1582,6 +1609,19 @@ body[data-herb-stage="stars"] #observatoryBackdrop { display: block; }
 .observatory-transforming .observatory-bird { animation: observatory-flight 1.32s cubic-bezier(.16,.62,.35,1) .93s both; }
 .observatory-transforming .observatory-wing-right { animation: observatory-far-wing 1.32s ease-in-out .93s both; }
 .observatory-transforming .observatory-wing-left { animation: observatory-near-wing 1.32s ease-in-out .93s both; }
+.observatory-following .observatory-art { animation: observatory-look-up 1.06s ease-in both; }
+.observatory-following .observatory-bird { animation: observatory-depart 1.06s ease-in both; }
+.observatory-following .observatory-bird canvas { animation: observatory-far-wing .5s ease-in-out infinite; }
+
+@keyframes observatory-look-up {
+  from { transform: scale(1); }
+  to { transform: scale(1.17) translateY(6%); filter: blur(2px) brightness(.69); }
+}
+@keyframes observatory-depart {
+  0% { opacity: 1; transform: translate(3%, -7%) scale(.96); }
+  35% { opacity: 1; transform: translate(14%, -34%) scale(.78); }
+  100% { opacity: 0; transform: translate(29%, -84%) scale(.35); }
+}
 
 @keyframes observatory-light {
   0% { transform: translate(-50%, -50%) scale(.5); opacity: .4; }
@@ -1707,6 +1747,1333 @@ body[data-herb-stage="stars"] #observatoryBackdrop { display: block; }
   #observatoryBackdrop :is(.observatory-star, .observatory-lines, .observatory-points, .observatory-halo, .observatory-bird, .observatory-bird canvas) {
     animation: none;
   }
+}
+
+</style>
+<style data-source="giant-kitchen.css">
+.has-herbalist[data-herb-stage="giant"] {
+  --herb-paper: #ffefcf;
+  --herb-gold: #f4bc73;
+  --herb-line: #b3764c96;
+  background: #1f1511;
+}
+
+body[data-herb-stage="giant"] .story-giant { display: block; }
+
+.story-giant {
+  --story-giant-pot-x: 51.5%;
+  --story-giant-pot-y: 49.5%;
+  --story-giant-fill: 0;
+  background: radial-gradient(ellipse at 62% 30%, #543626, #21150e 67%, #130e0b);
+}
+
+.story-giant-viewport {
+  position: absolute;
+  inset: 0;
+  width: min(100%, 86dvh);
+  margin-inline: auto;
+  overflow: hidden;
+  background: radial-gradient(ellipse at 55% 45%, #5d3d29, #291a14 58%, #1a100e 98%);
+  box-shadow: 0 0 120px 35px #150d09e6;
+}
+
+.story-giant-viewport::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  pointer-events: none;
+  background: linear-gradient(180deg, #180e10bb 0%, transparent 22% 64%, #170e0ccc 100%);
+}
+
+.story-giant-room {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(100%, 76dvh);
+  aspect-ratio: 3 / 4;
+  transform: translate(-50%, -50%);
+  transform-origin: 42% 44%;
+  background: #38251b url("assets/story/giant-kitchen.webp") center / 100% 100% no-repeat;
+  box-shadow: 0 0 62px 23px #271812;
+}
+
+.story-giant-pot-glow {
+  position: absolute;
+  left: var(--story-giant-pot-x);
+  top: var(--story-giant-pot-y);
+  width: 44%;
+  height: 9%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, #ffe885a1 0%, #fda64380 42%, transparent 72%);
+  opacity: calc(.14 + .55 * var(--story-giant-fill));
+  transform: translate(-50%, -34%);
+  mix-blend-mode: screen;
+  transition: opacity .35s ease;
+}
+
+.story-giant-steam {
+  position: absolute;
+  left: var(--story-giant-pot-x);
+  top: var(--story-giant-pot-y);
+  width: 33%;
+  height: 13%;
+  transform: translate(-50%, -93%);
+  opacity: calc(.22 + .58 * var(--story-giant-fill));
+  transition: opacity .35s ease;
+}
+.story-giant-steam i {
+  position: absolute;
+  bottom: 0;
+  left: 24%;
+  width: 29%;
+  height: 92%;
+  border-radius: 47% 65% 50% 50%;
+  background: radial-gradient(ellipse at 50% 70%, #ffe8c17a, #d5b49c44 48%, transparent 72%);
+  filter: blur(8px);
+  animation: story-giant-steam 3s ease-in-out infinite;
+}
+.story-giant-steam i:nth-child(2) { left: 42%; animation-delay: -1.2s; }
+.story-giant-steam i:nth-child(3) { left: 61%; animation-delay: -2.1s; }
+@keyframes story-giant-steam {
+  0% { opacity: 0; transform: translate(5%, 12%) scale(.72, .6); }
+  30% { opacity: .7; }
+  100% { opacity: 0; transform: translate(-29%, -50%) scale(1.3); }
+}
+
+.story-giant-food {
+  --ingredient-light: #ffc16c;
+  --ingredient-main: #bd581e;
+  --ingredient-shadow: #622d1d;
+  position: absolute;
+  z-index: 3;
+  top: var(--story-giant-pot-y);
+  left: var(--story-giant-pot-x);
+  width: 18%;
+  aspect-ratio: 1;
+  opacity: 0;
+  filter: drop-shadow(1px 4px 4px #2c150f86);
+}
+
+.story-giant-food i {
+  position: absolute;
+  inset: 14% 5% 7%;
+  border-radius: 48% 54% 43% 47%;
+  background: radial-gradient(ellipse at 32% 23%, var(--ingredient-light), var(--ingredient-main) 50%, var(--ingredient-shadow) 91%);
+  box-shadow: inset 1px 2px 2px #fff1d055, inset -3px -4px 8px #1b0c1252;
+}
+.story-giant-food i::before {
+  content: '';
+  position: absolute;
+  top: -13%;
+  left: 45%;
+  width: 13%;
+  height: 26%;
+  border-radius: 40% 40% 22% 10%;
+  background: linear-gradient(90deg, #8d9560, #485937 67%, #211f15);
+  transform: rotate(18deg);
+}
+.story-giant[data-ingredient="pumpkin"] .story-giant-food i {
+  background: repeating-linear-gradient(90deg, #63310b26 0 4%, transparent 8% 19%, #fff6b637 25%, transparent 30% 35%),
+    radial-gradient(ellipse at 32% 23%, #ffc16c, #c46a26 49%, #70351a 91%);
+}
+.story-giant[data-ingredient="onion"] .story-giant-food {
+  --ingredient-light: #f8e6bd;
+  --ingredient-main: #c1a16f;
+  --ingredient-shadow: #75543a;
+}
+.story-giant[data-ingredient="onion"] .story-giant-food i {
+  inset: 13% 12% 6%;
+  border-radius: 60% 61% 47% 51%;
+  transform: rotate(13deg);
+}
+.story-giant[data-ingredient="onion"] .story-giant-food i::before {
+  background: #a38e64;
+  clip-path: polygon(3% 0, 100% 12%, 70% 100%, 28% 100%);
+}
+.story-giant[data-ingredient="carrot"] .story-giant-food i {
+  inset: -9% 32% -4%;
+  border-radius: 28% 30% 30% 28%;
+  clip-path: polygon(0 18%, 100% 12%, 64% 98%, 43% 100%);
+  transform: rotate(46deg);
+  background: repeating-linear-gradient(175deg, #ac4725 0 2%, transparent 3% 17%, #fff1b43b 20% 21%, transparent 22% 25%),
+    linear-gradient(90deg, #96411e, #ef943d 45%, #bc531f 100%);
+}
+.story-giant[data-ingredient="carrot"] .story-giant-food::before {
+  content: '';
+  position: absolute;
+  left: 59%;
+  top: 2%;
+  width: 38%;
+  height: 26%;
+  background: linear-gradient(65deg, #304627, #749155, #405b3c);
+  clip-path: polygon(0 61%, 72% 0, 52% 46%, 100% 24%, 60% 80%, 71% 100%, 18% 95%);
+  transform: rotate(-13deg);
+}
+.story-giant[data-ingredient="mushroom"] .story-giant-food i {
+  inset: 8% 4% 32%;
+  border-radius: 60% 67% 37% 39% / 74% 76% 34% 39%;
+  background: radial-gradient(ellipse at 40% 26%, #d5a36f, #925a42 60%, #633e30 96%);
+}
+.story-giant[data-ingredient="mushroom"] .story-giant-food i::before {
+  top: 87%;
+  left: 34%;
+  width: 32%;
+  height: 75%;
+  border-radius: 22% 26% 40% 40%;
+  background: linear-gradient(90deg, #a5805d, #e0c59c 50%, #af906f);
+  box-shadow: inset 0 4px 5px #41292081;
+  transform: rotate(1deg);
+}
+.story-giant[data-ingredient="turnip"] .story-giant-food {
+  --ingredient-light: #d3afc7;
+  --ingredient-main: #8d516e;
+  --ingredient-shadow: #512d50;
+}
+.story-giant[data-ingredient="turnip"] .story-giant-food i {
+  inset: 22% 11% 14%;
+  border-radius: 57% 42% 57% 40%;
+  transform: rotate(16deg);
+}
+.story-giant[data-ingredient="turnip"] .story-giant-food i::before,
+.story-giant[data-ingredient="tomato"] .story-giant-food i::before {
+  left: 29%;
+  top: -9%;
+  width: 46%;
+  height: 27%;
+  clip-path: polygon(54% 0, 62% 31%, 97% 34%, 75% 57%, 97% 98%, 52% 72%, 13% 100%, 22% 63%, 0 39%, 43% 40%);
+}
+.story-giant[data-ingredient="leek"] .story-giant-food i {
+  inset: -5% 31% 0%;
+  border-radius: 19% 23% 26% 25%;
+  transform: rotate(43deg);
+  background: repeating-linear-gradient(90deg, #4b533820 0 15%, transparent 26% 42%, #d1df9f55 50%, transparent 61%),
+    linear-gradient(180deg, #4b603c 0%, #608055 31%, #b0bf86 59%, #e7d8ae 88%);
+  clip-path: polygon(0 0, 47% 14%, 65% 2%, 100% 0, 90% 88%, 66% 100%, 27% 96%, 6% 85%);
+}
+.story-giant[data-ingredient="corn"] .story-giant-food i {
+  inset: -3% 23% 3%;
+  border-radius: 48% 50% 34% 42%;
+  transform: rotate(30deg);
+  background: repeating-linear-gradient(90deg, #66371888 0 2%, transparent 5% 17%, #fff5af5e 20% 22%),
+    repeating-linear-gradient(0deg, #5e3e1c60 0 3%, transparent 7% 10%, #fff1a02e 14% 15%), #dfab4e;
+}
+.story-giant[data-ingredient="corn"] .story-giant-food i::before {
+  inset: 36% 0 -2% -14%;
+  width: 109%;
+  height: 66%;
+  transform: none;
+  clip-path: polygon(0 0, 35% 36%, 57% 78%, 92% 10%, 100% 70%, 67% 100%, 23% 93%);
+}
+.story-giant[data-ingredient="potato"] .story-giant-food i {
+  inset: 17% 7% 6%;
+  border-radius: 52% 42% 53% 40%;
+  transform: rotate(-16deg);
+  background: radial-gradient(ellipse at 22% 33%, #5e3b29 0 2%, transparent 5%),
+    radial-gradient(ellipse at 58% 67%, #62412a 0 2%, transparent 5%),
+    radial-gradient(ellipse at 51% 38%, #744323 0 2%, transparent 6%),
+    radial-gradient(ellipse at 32% 21%, #d5ab73, #a57544 58%, #62492c);
+}
+.story-giant[data-ingredient="potato"] .story-giant-food i::before { content: none; }
+.story-giant[data-ingredient="tomato"] .story-giant-food {
+  --ingredient-light: #e2a075;
+  --ingredient-main: #b84b3e;
+  --ingredient-shadow: #751e1e;
+}
+.story-giant[data-ingredient="cabbage"] .story-giant-food i {
+  inset: 9% 9% 8%;
+  background: radial-gradient(ellipse at 26% 33%, #b7bc83 0%, #78895b 35%, transparent 45%),
+    radial-gradient(ellipse at 76% 57%, #6e905f 0%, #4b6945 45%, transparent 54%),
+    radial-gradient(ellipse at 52% 48%, #a2a877, #405c41 88%);
+}
+.story-giant[data-ingredient="cabbage"] .story-giant-food i::before {
+  top: 16%;
+  left: 15%;
+  width: 65%;
+  height: 65%;
+  border: 1px solid #d7df9b77;
+  border-radius: 41% 52% 25% 50%;
+  background: repeating-linear-gradient(30deg, transparent 0 14%, #dde5ac38 16% 18%, transparent 20% 29%),
+    linear-gradient(125deg, #b0bb80aa, #52764b91);
+  transform: rotate(-14deg);
+}
+
+.story-giant-tossing .story-giant-food { animation: story-giant-toss-food 790ms cubic-bezier(.24,.47,.4,.94) both; }
+
+@keyframes story-giant-toss-food {
+  0% { opacity: 0; transform: translate(-130%, -292%) rotate(-18deg) scale(.68); }
+  15% { opacity: 1; }
+  29% { transform: translate(-112%, -276%) rotate(3deg) scale(.91); }
+  49% { transform: translate(-83%, -221%) rotate(35deg) scale(.96); }
+  78% { opacity: 1; transform: translate(-52%, -119%) rotate(78deg); }
+  100% { opacity: 0; transform: translate(-48%, -49%) rotate(113deg) scale(.39); }
+}
+
+.story-giant-splash {
+  position: absolute;
+  left: var(--story-giant-pot-x);
+  top: var(--story-giant-pot-y);
+  z-index: 4;
+}
+.story-giant-splash i {
+  position: absolute;
+  width: clamp(3px, 1dvh, 8px);
+  aspect-ratio: 1;
+  border-radius: 60% 47% 52% 60%;
+  opacity: 0;
+  background: #f5bd75;
+  box-shadow: 0 0 5px #f5aa605c;
+}
+.story-giant-tossing .story-giant-splash i {
+  animation: story-giant-splash 470ms ease-out calc(620ms + var(--splash-delay)) both;
+}
+@keyframes story-giant-splash {
+  0% { opacity: 0; transform: none; }
+  24% { opacity: .9; }
+  62% { transform: translate(var(--splash-x), var(--splash-y)) scale(.83); }
+  100% { opacity: 0; transform: translate(var(--splash-x), 9px) scale(.35); }
+}
+
+.story-giant-bowl {
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  bottom: 15%;
+  width: min(53%, 318px);
+  aspect-ratio: 2.1;
+  border-radius: 19% 18% 49% 48% / 20% 19% 80% 83%;
+  opacity: 0;
+  background: repeating-linear-gradient(105deg, transparent 0 9%, #f9c77d29 10%, transparent 12% 15%),
+    linear-gradient(#f6c98d, #99603a 44%, #4c2a19 77%, #311e15);
+  box-shadow: inset -13px -12px 17px #270e0879, 0 16px 24px #2a110ac2;
+  transform: translate(-50%, 130%) scale(.66);
+}
+.story-giant-bowl i {
+  position: absolute;
+  left: 2%;
+  top: -12%;
+  width: 96%;
+  height: 46%;
+  border: 2px solid #d8a976;
+  border-radius: 50%;
+  background: repeating-radial-gradient(ellipse at 54% 53%, #ffe9a5a0 0 1%, transparent 4% 13%), #b76a3e;
+  box-shadow: inset 0 4px 8px #672e1c82;
+}
+.story-giant-bowl::after {
+  content: '';
+  position: absolute;
+  inset: -73% 6% 51%;
+  background: radial-gradient(ellipse, #ffd7a68f, transparent 69%);
+  filter: blur(14px);
+}
+.story-giant-exiting .story-giant-bowl { animation: story-giant-drink 1170ms ease-in-out both; }
+.story-giant-exiting .story-giant-room { animation: story-giant-rise 1650ms cubic-bezier(.18,.55,.4,1) both; }
+@keyframes story-giant-drink {
+  0% { opacity: 0; transform: translate(-50%, 142%) scale(.65); }
+  19% { opacity: 1; }
+  52% { opacity: 1; transform: translate(-50%, -78%) scale(1.48) rotate(4deg); }
+  68% { opacity: 1; transform: translate(-50%, -91%) scale(1.57) rotate(7deg); }
+  100% { opacity: 0; transform: translate(-50%, 118%) scale(.97); }
+}
+@keyframes story-giant-rise {
+  0%, 34% { transform: translate(-50%, -50%); }
+  100% { transform: translate(-50%, -34%) scale(1.21) rotate(-1.4deg); }
+}
+
+.story-giant-mountain {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: none;
+  overflow: hidden;
+  background: #282c27;
+  opacity: 0;
+}
+.story-giant-ravine,
+.story-giant-rock-face {
+  position: absolute;
+  inset: 0;
+}
+.story-giant-ravine {
+  background: radial-gradient(ellipse at 50% 35%, #49505b, #171d25 76%);
+}
+.story-giant-ravine::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(100%, 76dvh);
+  aspect-ratio: 3 / 4;
+  transform: translate(-50%, -50%);
+  background: url("assets/story/bridge.webp") center / 100% 100% no-repeat;
+  box-shadow: 0 0 55px 30px #171d25;
+}
+.story-giant-rock-face {
+  background: url("assets/story/mountain-face.webp") center / cover no-repeat,
+    linear-gradient(121deg, #75716a, #3d4540 56%, #222724);
+}
+.story-giant-rock-left {
+  clip-path: polygon(0 0, 49.8% 0, 47.4% 19%, 52.2% 36%, 47.9% 54%, 53% 75%, 49.5% 100%, 0 100%);
+}
+.story-giant-rock-right {
+  clip-path: polygon(49.7% 0, 100% 0, 100% 100%, 49.3% 100%, 52.8% 75%, 47.7% 54%, 52% 36%, 47.2% 19%);
+}
+.story-giant-crack {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  opacity: 0;
+  transform-origin: 50% 43%;
+  background: #1c1815a9;
+  clip-path: polygon(48% 0, 50% 0, 48% 19%, 53% 36%, 58% 30%, 78% 24%, 58% 35%, 52% 39%,
+    49% 54%, 55% 72%, 69% 66%, 83% 55%, 69% 69%, 55% 77%, 50% 100%, 48% 100%, 52% 75%,
+    47% 56%, 34% 51%, 26% 38%, 34% 47%, 47% 52%, 51% 36%, 46% 19%);
+}
+.story-giant-rubble {
+  position: absolute;
+  z-index: 2;
+  left: 53%;
+  top: 43%;
+}
+.story-giant-rubble i {
+  position: absolute;
+  width: var(--rock-size);
+  aspect-ratio: .85;
+  opacity: 0;
+  background: linear-gradient(141deg, #a69a86, #696355 47%, #4c4237 48%, #3a3630);
+  clip-path: polygon(16% 18%, 53% 0, 94% 28%, 100% 75%, 69% 100%, 25% 89%, 0 66%);
+  box-shadow: inset 3px 3px 2px #e3cfab82;
+}
+.story-giant-dust {
+  position: absolute;
+  z-index: 4;
+  inset: -15%;
+  opacity: 0;
+  background: radial-gradient(ellipse at 28% 58%, #b4a692 0%, transparent 58%),
+    radial-gradient(ellipse at 71% 63%, #a79b8d 0%, transparent 64%),
+    radial-gradient(ellipse at 53% 39%, #d8cbbb 0%, #aa9d8d 32%, transparent 61%);
+  filter: blur(12px);
+}
+
+.story-giant-fist {
+  position: absolute;
+  left: 45%;
+  top: 40%;
+  z-index: 3;
+  width: 56%;
+  height: 18%;
+  transform-origin: 26% 45%;
+  opacity: 0;
+  filter: drop-shadow(4px 10px 8px #1b1617ac);
+}
+.story-giant-fist i {
+  position: absolute;
+  inset: 3% 54% 6% 0;
+  z-index: 1;
+  border-radius: 46% 20% 31% 47% / 42% 25% 51% 52%;
+  background: radial-gradient(ellipse at 23% 34%, #d2a785 0%, #a67155 45%, #633e31 96%);
+  box-shadow: inset 2px 5px 3px #e3c39b77, inset -3px -5px 8px #382525b2;
+}
+.story-giant-fist i::before {
+  content: '';
+  position: absolute;
+  top: 38%;
+  left: 38%;
+  width: 64%;
+  height: 62%;
+  border-radius: 43% 33% 40% 50%;
+  transform: rotate(-13deg);
+  background: linear-gradient(169deg, #ca9b79, #8a533c 73%);
+  box-shadow: -3px 5px 5px #56332278, inset 2px 2px 2px #ebc6a572;
+}
+.story-giant-fist i::after {
+  content: '';
+  position: absolute;
+  inset: 12% 56% 7% 2%;
+  border-radius: 50%;
+  background: repeating-linear-gradient(180deg, #d5b0947a 0 17%, #68473773 22%, transparent 25%, transparent 32%);
+}
+.story-giant-fist b {
+  position: absolute;
+  inset: 18% -56% -31% 34%;
+  border-radius: 20% 3% 18% 36%;
+  background: repeating-linear-gradient(96deg, #ada1ad18 0 5px, #1f1a2844 9px, #1f1a2800 20px),
+    linear-gradient(155deg, #554c4b, #28282e 61%, #181a20);
+  box-shadow: inset 7px 6px 6px #ae9c8262;
+}
+
+.story-giant-exiting .story-giant-mountain {
+  display: block;
+  animation: story-giant-mountain-in 410ms ease 1160ms both;
+}
+.story-giant-exiting .story-giant-fist { animation: story-giant-punch 650ms cubic-bezier(.3,.04,.78,.56) 1490ms both; }
+.story-giant-exiting .story-giant-crack { animation: story-giant-crack 470ms ease-out 1770ms both; }
+.story-giant-exiting .story-giant-rock-left { animation: story-giant-rock-left 1140ms cubic-bezier(.4,.05,.7,.8) 1900ms both; }
+.story-giant-exiting .story-giant-rock-right { animation: story-giant-rock-right 1140ms cubic-bezier(.4,.05,.7,.8) 1900ms both; }
+.story-giant-exiting .story-giant-rubble i {
+  animation: story-giant-fragment 860ms ease-in calc(1830ms + var(--rock-delay)) both;
+}
+.story-giant-exiting .story-giant-dust { animation: story-giant-dust 1530ms ease-in-out 1870ms both; }
+.story-giant-exiting .story-giant-ravine { animation: story-giant-descend 820ms ease-out 2540ms both; }
+
+@keyframes story-giant-mountain-in {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+@keyframes story-giant-punch {
+  0% { opacity: .1; transform: translate(44%, 214%) rotate(22deg) scale(1.27); }
+  30% { opacity: 1; transform: translate(18%, 129%) rotate(13deg) scale(1.05); }
+  48% { opacity: 1; transform: translate(-9%, -6%) rotate(0deg) scale(.63); }
+  59% { opacity: .93; transform: translate(-6%, 3%) rotate(3deg) scale(.68); }
+  100% { opacity: 0; transform: translate(51%, 193%) rotate(10deg) scale(1.19); }
+}
+@keyframes story-giant-crack {
+  0% { opacity: 0; transform: scale(.02); }
+  29% { opacity: 1; transform: scale(1); }
+  78% { opacity: .75; }
+  100% { opacity: 0; }
+}
+@keyframes story-giant-rock-left {
+  0% { transform: none; }
+  100% { transform: translate(-42%, 34%) rotate(-11deg); }
+}
+@keyframes story-giant-rock-right {
+  0% { transform: none; }
+  100% { transform: translate(40%, 32%) rotate(12deg); }
+}
+@keyframes story-giant-fragment {
+  0% { opacity: 1; transform: translate(-12px, -21px) rotate(7deg) scale(.2); }
+  25% { opacity: 1; transform: translate(calc(var(--rock-x) * .48), -65px) rotate(calc(var(--rock-angle) * .35)) scale(.67); }
+  70% { opacity: .66; }
+  100% { opacity: 0; transform: translate(var(--rock-x), var(--rock-y)) rotate(var(--rock-angle)) scale(1.08); }
+}
+@keyframes story-giant-dust {
+  0% { opacity: 0; transform: scale(.45) translateY(16%); }
+  52% { opacity: .94; transform: scale(1.08); }
+  72% { opacity: .84; }
+  100% { opacity: 0; transform: scale(1.26) translateY(-11%); }
+}
+@keyframes story-giant-descend {
+  0% { transform: translateY(8%) scale(1.21); }
+  100% { transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .story-giant-steam i,
+  .story-giant-tossing :is(.story-giant-food, .story-giant-splash i) { animation: none; }
+  .story-giant-pot-glow, .story-giant-steam { transition: none; }
+}
+
+</style>
+<style data-source="bridge-train.css">
+body[data-herb-stage="bridge"] .sky-bridge,
+body[data-herb-stage="train"] .sky-train { display: block; }
+
+.sky-bridge { --sky-image: url("assets/story/bridge.webp"); --sky-base: #171d25; }
+.sky-train { --sky-image: url("assets/story/train.webp"); --sky-base: #232331; }
+.sky-scene {
+  background: radial-gradient(ellipse at 50% 35%, #49505b, var(--sky-base) 76%);
+}
+.sky-frame {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(100%, 76dvh);
+  aspect-ratio: 3 / 4;
+  transform: translate(-50%, -50%);
+  isolation: isolate;
+  overflow: hidden;
+  box-shadow: 0 0 55px 30px var(--sky-base);
+}
+.sky-frame::after {
+  content: '';
+  position: absolute;
+  z-index: 5;
+  inset: 0;
+  background: linear-gradient(180deg, #0e161f99 0%, transparent 23% 74%, #0d1317b0), radial-gradient(ellipse at center, transparent 58%, #0d111654 100%);
+  pointer-events: none;
+}
+.sky-camera, .sky-art, .sky-bridge-deck, .sky-bridge-mist, .sky-balloon-ropes, .sky-balloon-cluster {
+  position: absolute;
+  inset: 0;
+}
+.sky-art {
+  background: var(--sky-image) center / 100% 100% no-repeat, radial-gradient(ellipse at 50% 28%, #555764, var(--sky-base));
+}
+.sky-compact { display: none; }
+
+.sky-bridge .sky-camera { transform-origin: 51% 19.5%; }
+.sky-bridge-deck {
+  --bridge-x: 49.6%;
+  z-index: 1;
+}
+.sky-plank {
+  position: absolute;
+  top: var(--board-y);
+  left: var(--bridge-x);
+  width: var(--board-width);
+  height: var(--board-depth);
+  opacity: 0;
+  transform: translate(-50%, -50%);
+  filter: hue-rotate(var(--board-tone)) drop-shadow(0 3px 2px #120e11d6);
+}
+.sky-plank::before, .sky-plank::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+.sky-plank::before {
+  clip-path: polygon(var(--board-taper) 1%, 25% 2%, 32% 0, 57% 1%, 65% 3%, calc(100% - var(--board-taper)) 0, 100% 88%, 97% 98%, 64% 99%, 50% 96%, 26% 98%, 16% 96%, 2% 99%, 0 88%);
+  background:
+    radial-gradient(ellipse at 68% 31%, #151012b8 0 1%, #1a131049 2% 4%, transparent 6% 11%),
+    radial-gradient(ellipse at 28% 62%, #1b151381 0 2%, #231e1b5e 3% 5%, transparent 6%),
+    repeating-linear-gradient(177deg, transparent 0 8%, #f6d1a51c 9% 11%, #1b111f5f 12% 15%, transparent 17% 22%),
+    linear-gradient(180deg, #bc936a 0%, #8c654d 8%, #74574a 55%, #624134 81%, #2a1c21 85% 95%, #4b3027);
+}
+.sky-plank::after {
+  inset: 5% max(3%, calc(var(--board-taper) * .5)) 14%;
+  background: radial-gradient(circle at 49% 47%, #8f8272 0 10%, #4c3c33 16% 28%, #2b2222b3 32% 41%, transparent 45%) 2.8% 56% / 5% 27% no-repeat,
+    radial-gradient(circle at 49% 47%, #8f8272 0 10%, #4c3c33 16% 28%, #2b2222b3 32% 41%, transparent 45%) 97.2% 53% / 5% 26% no-repeat;
+}
+.sky-plank.is-placed { opacity: 1; }
+.sky-plank.is-arriving {
+  z-index: 2;
+  animation: sky-plank-arrival .78s cubic-bezier(.2,.58,.18,1) both;
+}
+.sky-bridge-mist {
+  z-index: 2;
+  opacity: .78;
+  background:
+    radial-gradient(ellipse 24% 8% at 22% 87%, #c3c6db37, transparent 84%),
+    radial-gradient(ellipse 27% 12% at 88% 65%, #aca8cb4d, transparent 78%),
+    radial-gradient(ellipse 38% 7% at 3% 56%, #acb1cb5e, transparent 84%),
+    radial-gradient(ellipse 30% 5% at 75% 46%, #aea7bb2d, transparent 90%);
+  mix-blend-mode: screen;
+}
+.sky-bridge.is-travelling .sky-camera { animation: sky-cross-bridge 2.35s cubic-bezier(.37,.12,.59,.92) both; }
+.sky-bridge.is-travelling .sky-bridge-mist { animation: sky-bridge-move-mist 2.35s ease-out both; }
+
+@keyframes sky-plank-arrival {
+  0% { opacity: 0; transform: translate(calc(-50% + var(--board-drift)), 250%) rotate(-55deg) scale(.40); }
+  26% { opacity: .82; transform: translate(calc(-50% + var(--board-drift)), 25%) rotate(21deg) scale(.86); }
+  64% { opacity: 1; transform: translate(-50%, -76%) rotate(-7deg) scale(1.05); }
+  87% { transform: translate(-50%, -43%) rotate(.9deg); }
+  100% { opacity: 1; transform: translate(-50%, -50%); }
+}
+@keyframes sky-cross-bridge {
+  0% { transform: scale(1); }
+  24% { transform: translate(-.7%, .2%) scale(1.23) rotate(-.38deg); }
+  47% { transform: translate(.5%, -.8%) scale(1.58) rotate(.35deg); }
+  72% { transform: translate(-.3%, -.4%) scale(2.32) rotate(-.28deg); }
+  100% { transform: translate(0, -1%) scale(3.8); }
+}
+@keyframes sky-bridge-move-mist {
+  0% { opacity: .78; transform: translate(0); }
+  52% { opacity: .45; }
+  100% { opacity: .92; transform: translate(-6%, 15%) scale(1.25); }
+}
+
+.sky-train .sky-camera { transform-origin: 81% 54%; }
+.sky-balloon-ropes, .sky-balloon-cluster { z-index: 1; }
+.sky-cord {
+  position: absolute;
+  left: var(--cord-x);
+  top: var(--cord-y);
+  width: max(1px, .21%);
+  height: var(--cord-length);
+  opacity: 0;
+  transform: rotate(var(--cord-angle));
+  transform-origin: 50% 0%;
+  background: linear-gradient(90deg, #49352b, #c5a381 50%, #40322a);
+  box-shadow: 0 0 2px #191725;
+}
+.sky-cord.is-taut { opacity: .8; }
+.sky-balloon {
+  position: absolute;
+  left: var(--balloon-x);
+  top: var(--balloon-y);
+  width: var(--balloon-width);
+  aspect-ratio: .82;
+  opacity: 0;
+  transform: translate(-50%, -100%);
+  transform-origin: 50% 100%;
+}
+.sky-balloon.is-placed { opacity: 1; }
+.sky-balloon.is-arriving {
+  z-index: 2;
+  animation: sky-balloon-rise .78s cubic-bezier(.21,.61,.26,1) both;
+}
+.sky-balloon-fabric, .sky-compact-balloon {
+  background:
+    radial-gradient(ellipse at 30% 20%, #f6e1ac55 0%, transparent 46%),
+    radial-gradient(ellipse at 32% 26%, var(--balloon-light), var(--balloon-shade) 81%);
+  border-radius: 51% 50% 43% 44% / 47% 46% 56% 55%;
+  box-shadow: inset .5px .6px #e9bb8c72, inset -2px -3px 7px #100f178c, 0 3px 12px #12121a92;
+}
+.sky-balloon-fabric {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 100%;
+}
+.sky-balloon.is-placed .sky-balloon-fabric { animation: sky-balloon-sway 5.2s var(--balloon-delay) ease-in-out infinite; }
+.sky-balloon-fabric::after {
+  content: '';
+  position: absolute;
+  width: 13%;
+  height: 8%;
+  left: 43.5%;
+  bottom: -5%;
+  clip-path: polygon(45% 4%, 100% 100%, 0 100%);
+  background: linear-gradient(90deg, var(--balloon-shade), var(--balloon-light), var(--balloon-shade));
+}
+.sky-balloon-seam {
+  position: absolute;
+  inset: 1% 19% 1%;
+  border-radius: 50%;
+  border-inline: 1px solid #fce4b92a;
+  box-shadow: 3px 0 9px #1b152744, inset 1px 0 4px #55515b45;
+}
+.sky-train.is-complete:not(.is-travelling) .sky-camera { animation: sky-train-ready 4s ease-in-out infinite; }
+.sky-train.is-travelling .sky-camera { animation: sky-enter-train 3.55s ease-in both; }
+
+.sky-train-cab {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  visibility: hidden;
+  opacity: 0;
+  background:
+    repeating-linear-gradient(96deg, #120e1175 0 15px, #26191660 17px 28px, #33211b42 30px 52px),
+    radial-gradient(ellipse at 50% 51%, #583928, #120f15 80%);
+}
+.sky-train-window {
+  position: absolute;
+  inset: 13% 8% 26%;
+  overflow: hidden;
+  border: solid min(1.5vw, 11px) #3f271d;
+  border-radius: 32% 32% 14% 14% / 26% 26% 12% 12%;
+  box-shadow: 0 0 0 1px #9b704269, 0 0 0 3px #170f12, inset 0 0 0 1px #d3965771;
+  isolation: isolate;
+  background: linear-gradient(#42475f, #85839a 51%, #b19281 100%);
+}
+.sky-train-window::after {
+  content: '';
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  background: linear-gradient(112deg, transparent 20%, #e3c7b315 31%, transparent 43% 82%, #f6e6cd15 95%);
+  box-shadow: inset 0 0 21px #2a1d29ac;
+}
+.sky-train-highland {
+  position: absolute;
+  inset: -6% -12% -6%;
+  background:
+    linear-gradient(145deg, #31273735, transparent 65%),
+    url("assets/story/cloud-flight.webp") center 58% / cover no-repeat,
+    linear-gradient(18deg, #25283a, #777487);
+  mask-image: linear-gradient(transparent, #000 18%);
+}
+.sky-train-clouds, .sky-train-cloud-front {
+  position: absolute;
+  z-index: 1;
+  inset: -9% -22%;
+  background:
+    radial-gradient(ellipse 38% 10% at 34% 49%, #ebd8cbad, transparent 84%),
+    radial-gradient(ellipse 31% 11% at 88% 55%, #cbc7d5a0, transparent 85%),
+    radial-gradient(ellipse 42% 13% at 12% 64%, #aeabbea8, transparent 82%),
+    radial-gradient(ellipse 40% 8% at 63% 67%, #dcced1a8, transparent 84%),
+    radial-gradient(ellipse 40% 7% at 89% 72%, #b1a9c0bd, transparent 88%);
+}
+.sky-train-cloud-front {
+  z-index: 2;
+  opacity: 0;
+  background: radial-gradient(ellipse at 56% 53%, #d9cad2 10%, #9b96ad90 43%, transparent 65%),
+    radial-gradient(ellipse at 12% 67%, #d5c7d4 7%, transparent 59%);
+}
+.sky-train-dashboard {
+  position: absolute;
+  inset: 75% -4% -6%;
+  transform: perspective(400px) rotateX(21deg);
+  transform-origin: center top;
+  background:
+    radial-gradient(ellipse at 13% 18%, #efbe7a54, transparent 27%),
+    radial-gradient(ellipse at 78% 14%, #cb8e4831, transparent 28%),
+    repeating-linear-gradient(95deg, #261a1b 0 11px, #321f1a 13px 24px, #3b281c 26px 35px);
+  border-top: 5px solid #734d31;
+  box-shadow: 0 -4px 0 1px #1a1113, inset 0 12px 24px #120c12a6;
+}
+.sky-train-dashboard::after {
+  content: '';
+  position: absolute;
+  width: 12%;
+  aspect-ratio: 1;
+  left: 62%;
+  top: 6%;
+  border-radius: 50%;
+  background:
+    radial-gradient(ellipse at center, #8f5d37 0 4%, transparent 5%),
+    conic-gradient(from 235deg, transparent 0 15deg, #4c2f2f 16deg 19deg, transparent 20deg 360deg),
+    radial-gradient(circle at 48% 45%, #c7ab82 0 55%, #8b5f3a 58%, #301c20 67%, #d19c62 74%, #1e1213 78%);
+  filter: drop-shadow(3px 5px 6px #130e14);
+}
+.sky-train.is-travelling .sky-train-cab { visibility: visible; animation: sky-cab-view 3.55s ease-in-out both; }
+.sky-train.is-travelling .sky-train-highland { animation: sky-highland-recede 3.55s ease-out both; }
+.sky-train.is-travelling .sky-train-clouds { animation: sky-cloud-drift 3.55s ease-out both; }
+.sky-train.is-travelling .sky-train-cloud-front { animation: sky-cloud-fly-through 3.55s ease-in both; }
+
+@keyframes sky-balloon-rise {
+  0% { opacity: 0; transform: translate(-50%, 5%) scale(.12, .06) rotate(-12deg); }
+  31% { opacity: .89; transform: translate(-50%, -26%) scale(.55, .48) rotate(-7deg); }
+  73% { opacity: 1; transform: translate(-50%, -105%) scale(1.06, 1.08) rotate(3deg); }
+  100% { opacity: 1; transform: translate(-50%, -100%); }
+}
+@keyframes sky-balloon-sway {
+  0%, 100% { transform: rotate(-2.3deg) scale(.99, 1); }
+  53% { transform: rotate(2.8deg) scale(1.02, 1.015); }
+}
+@keyframes sky-train-ready {
+  0%, 100% { transform: translateY(0) rotate(-.10deg); }
+  53% { transform: translateY(-.55%) rotate(.13deg); }
+}
+@keyframes sky-enter-train {
+  0% { transform: scale(1); }
+  27% { transform: translate(-2%, 1%) scale(1.68); }
+  49%, 100% { transform: translate(-2%, 6%) scale(2.3); }
+}
+@keyframes sky-cab-view {
+  0%, 13% { opacity: 0; transform: translateY(6%) scale(1.08); }
+  36% { opacity: 1; transform: translateY(1%) scale(1.02); }
+  61% { opacity: 1; transform: translateY(-.5%) scale(1.015) rotate(-.32deg); }
+  83%, 100% { opacity: 1; transform: none; }
+}
+@keyframes sky-highland-recede {
+  0%, 34% { transform: translateY(-6%) scale(1.18); opacity: 1; }
+  73% { transform: translateY(49%) scale(1.02); opacity: .9; }
+  100% { transform: translateY(108%) scale(.57); opacity: .25; }
+}
+@keyframes sky-cloud-drift {
+  0%, 32% { opacity: .2; transform: translate(12%, -22%) scale(.69); }
+  72% { opacity: .9; transform: translate(-1%, 14%) scale(1.04); }
+  100% { opacity: .78; transform: translate(-10%, 33%) scale(1.34); }
+}
+@keyframes sky-cloud-fly-through {
+  0%, 44% { opacity: 0; transform: translateY(-42%) scale(.62); }
+  69% { opacity: .72; transform: translateY(-7%) scale(1); }
+  82% { opacity: .8; transform: translateY(11%) scale(1.3); }
+  100% { opacity: .18; transform: translateY(55%) scale(1.68); }
+}
+
+@media (max-width: 739px) and (orientation: portrait), (max-width: 659px) {
+  .has-herbalist[data-herb-mode="playing"].herb-writing .sky-frame {
+    filter: brightness(.54) saturate(.78);
+  }
+  .has-herbalist[data-herb-mode="playing"].herb-writing .sky-compact {
+    position: absolute;
+    top: var(--herb-compact-top);
+    left: 50%;
+    width: var(--herb-bench-width);
+    height: var(--herb-compact-height);
+    transform: translateX(-50%);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: clamp(3px, 1.6vw, 10px);
+    padding: 0 13% 15px;
+    border: 1px solid var(--herb-line);
+    border-radius: 12px;
+    background: linear-gradient(90deg, #111820bb, #1d23306e), var(--sky-image) center 46% / cover;
+    box-shadow: 0 5px 18px #10131891;
+  }
+  .sky-compact-plank {
+    flex: 1 1 0;
+    min-width: 0;
+    max-width: 25px;
+    height: 13px;
+    border: 1px solid #cba07847;
+    border-radius: 2px;
+    background: #211e26;
+  }
+  .sky-compact-plank.is-placed {
+    background: repeating-linear-gradient(174deg, #af8666 0 1px, #644638 3px 5px);
+    border-color: #e6ba817b;
+    box-shadow: 0 2px 4px #0a0b0fcc;
+  }
+  .sky-compact-balloon {
+    flex: 1 1 0;
+    min-width: 0;
+    max-width: 24px;
+    aspect-ratio: .78;
+    filter: brightness(.44);
+    opacity: .68;
+  }
+  .sky-compact-balloon.is-placed { filter: none; opacity: 1; }
+}
+
+@media (min-width: 740px), (min-width: 660px) and (orientation: landscape) {
+  .sky-frame { transition: top .22s ease-out, left .22s ease-out, width .22s ease-out; }
+  .has-herbalist[data-herb-mode="playing"] .sky-frame {
+    top: calc(var(--herb-bench-top) + var(--herb-bench-height) / 2);
+    left: calc(50% - (var(--herb-canvas-column) + var(--herb-lane-gap)) / 2);
+    width: min(calc(var(--herb-bench-height) * .81), var(--herb-bench-width));
+    box-shadow: 0 0 46px 15px #151723;
+    border: 1px solid var(--herb-line);
+    border-radius: 14px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sky-scene :is(.sky-piece, .sky-balloon-fabric, .sky-camera) { animation: none !important; }
+  .sky-frame { transition: none; }
+}
+
+</style>
+<style data-source="tomb-mermaid.css">
+.story-tomb,
+.story-sea {
+  overflow: hidden;
+  isolation: isolate;
+  pointer-events: none;
+}
+body[data-herb-stage="tomb"] .story-tomb,
+body[data-herb-stage="sea"] .story-sea { display: block; }
+
+.story-tomb {
+  --deep-tomb-image: url("assets/story/tomb.webp");
+  background: #14110e;
+}
+.story-sea { background: #021b22; }
+.deep-frame {
+  position: absolute;
+  inset: 0;
+  width: min(100%, 88dvh, 860px);
+  margin-inline: auto;
+  overflow: hidden;
+  box-shadow: 0 0 100px 35px #020e11a0;
+}
+.deep-frame::after {
+  content: '';
+  position: absolute;
+  z-index: 5;
+  inset: 0;
+  background: linear-gradient(#081017a2, transparent 24% 72%, #061318a8);
+}
+.deep-tomb-frame::after {
+  background: linear-gradient(#110f14a2, transparent 23% 70%, #17130de0);
+}
+.deep-tomb-frame {
+  --guard-frame-height: 100dvh;
+  --guard-spacing: 1;
+}
+.deep-tomb-world,
+.deep-sea-world,
+.deep-tomb-art,
+.deep-sea-art,
+.deep-guards,
+.deep-caustics,
+.deep-notes,
+.deep-sea-bubbles {
+  position: absolute;
+  inset: 0;
+}
+.deep-tomb-world { transform-origin: 50% 38%; }
+.deep-tomb-set {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: max(100%, 75dvh);
+  aspect-ratio: 3 / 4;
+  transform: translate(-50%, -50%);
+}
+.deep-tomb-art {
+  background: var(--deep-tomb-image) center center / 100% 100% no-repeat,
+    radial-gradient(ellipse at 50% 36%, #4f3f27, #211b19 52%, #101013 85%);
+}
+.deep-guard {
+  --guard-stone: grayscale(1) brightness(1.03) contrast(.68)
+    drop-shadow(0 0 1.4px #d8e2edaa) drop-shadow(0 4px 3px #050607e0);
+  position: absolute;
+  z-index: var(--guard-depth);
+  top: var(--guard-y);
+  left: var(--guard-x);
+  width: min(var(--guard-size),
+    calc(var(--guard-frame-height) * var(--guard-clearance) * var(--guard-spacing) * var(--sprite-aspect)));
+  aspect-ratio: var(--sprite-ratio);
+  transform: translate(-50%, -99%);
+}
+.deep-guard > i {
+  position: absolute;
+  inset: 79% 3% -4%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, #070505ea 17%, #1c0d08cf 45%, transparent 72%);
+  filter: blur(6px);
+}
+.deep-guard:not(.is-stone) > i {
+  animation: deep-guard-shadow var(--guard-pace) ease-in-out var(--guard-phase) infinite;
+}
+.deep-guard-shape,
+.deep-guard-shape > * {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.deep-guard-shape {
+  transform-origin: 50% 92%;
+  filter: drop-shadow(0 0 2px #ffb35e91) drop-shadow(0 4px 3px #070601e2);
+  animation: deep-guard-threat var(--guard-pace) ease-in-out var(--guard-phase) infinite;
+}
+.deep-guard[data-species="crocodile"]:not(.is-stone) .deep-guard-shape {
+  animation-name: deep-crocodile-creep;
+}
+.deep-guard[data-species="eagle"]:not(.is-stone) .deep-guard-shape {
+  animation-name: deep-eagle-rise;
+}
+.deep-guard-shape > span { display: none; }
+.has-guardian-art-0 [data-atlas="0"] { --guard-atlas: var(--deep-guardian-sprite-0); }
+.has-guardian-art-1 [data-atlas="1"] { --guard-atlas: var(--deep-guardian-sprite-1); }
+:is(.has-guardian-art-0 [data-atlas="0"], .has-guardian-art-1 [data-atlas="1"]) .deep-guard-shape > canvas {
+  display: none;
+}
+:is(.has-guardian-art-0 [data-atlas="0"], .has-guardian-art-1 [data-atlas="1"]) .deep-guard-shape > span {
+  display: block;
+  top: auto;
+  height: auto;
+  aspect-ratio: var(--sprite-ratio);
+  transform: scaleX(var(--sprite-facing));
+  background: var(--guard-atlas) var(--sprite-x) var(--sprite-y) / var(--sprite-size) no-repeat;
+}
+.deep-guard:not(.is-stone) .deep-guard-shape > span::after {
+  content: '';
+  position: absolute;
+  top: var(--sprite-eye-y);
+  left: var(--sprite-eye-x);
+  width: clamp(2px, .5vw, 5px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: #ffd58f;
+  box-shadow: 0 0 4px 1px #ffb647, 0 0 10px 4px #ea5b2171;
+  opacity: .66;
+  animation: deep-guard-eye var(--guard-pace) ease-in-out var(--guard-phase) infinite;
+}
+.deep-guard.is-stone .deep-guard-shape {
+  animation: none;
+  filter: var(--guard-stone);
+}
+.deep-guard.is-stone.is-changing .deep-guard-shape { animation: deep-turn-to-stone .73s ease-out both; }
+.deep-guard > b {
+  position: absolute;
+  inset: 2% -12% 0;
+  border-radius: 46%;
+  opacity: 0;
+  background: radial-gradient(ellipse at center, #f5dfbd00 35%, #e0cba284 44%, #f4e9d376 48%, transparent 63%);
+  transform: scale(.64);
+}
+.deep-guard.is-changing > b { animation: deep-guard-dust .88s ease-out both; }
+
+.deep-door {
+  position: absolute;
+  top: 15%;
+  left: 50%;
+  width: 31%;
+  height: 40%;
+  transform: translateX(-50%);
+  overflow: hidden;
+  clip-path: polygon(50% 0, 70% 9%, 87% 19%, 98% 32%, 100% 47%, 100% 100%, 0 100%, 0 47%, 3% 32%, 13% 19%, 31% 9%);
+  opacity: 0;
+  perspective: 450px;
+  background: #061a21;
+  box-shadow: 0 0 12px #1f736bba;
+}
+.deep-flooded-stair {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 29%, #6ee3cb92, transparent 42%),
+    linear-gradient(113deg, #051315, transparent 40%),
+    linear-gradient(247deg, #061316, transparent 40%),
+    repeating-linear-gradient(180deg, #526359 0 7%, #0c3238 7% 14%);
+  opacity: .8;
+}
+.deep-door-leaf {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 50%;
+  left: 0;
+  transform-origin: left center;
+  background: #34382c var(--deep-tomb-image) 40.8% 25% / 645.16% 250% no-repeat;
+}
+.deep-door-leaf:last-child { left: 50%; transform-origin: right center; background-position-x: 59.17%; }
+.deep-tomb-dive {
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  opacity: 0;
+  background:
+    radial-gradient(ellipse at 50% 15%, #82dfc536, transparent 45%),
+    linear-gradient(#115c60, #042128 55%, #04161d);
+}
+.story-tomb.is-leaving .deep-tomb-world { animation: deep-approach 3.04s cubic-bezier(.31,.5,.6,1) both; }
+.story-tomb.is-leaving .deep-door { animation: deep-reveal-door 3.04s ease both; }
+.story-tomb.is-leaving .deep-door-leaf { animation: deep-open-left 3.04s ease-in-out both; }
+.story-tomb.is-leaving .deep-door-leaf:last-child { animation-name: deep-open-right; }
+.story-tomb.is-leaving .deep-tomb-dive { animation: deep-tomb-dive 3.04s ease-in both; }
+
+.deep-sea-art {
+  background: url("assets/story/underwater.webp") center center / cover no-repeat,
+    radial-gradient(ellipse at 50% 9%, #379d9c, #104754 33%, #08242d 69%, #040f17);
+}
+.deep-sea-world { transform-origin: 54% 18%; }
+.deep-caustics {
+  opacity: .43;
+  background: repeating-conic-gradient(from 153deg at 53% -6%, #abf8df3a 0deg 8deg, transparent 15deg 32deg);
+  mask-image: linear-gradient(#000 4%, #0009 34%, transparent 79%);
+  mix-blend-mode: screen;
+  animation: deep-caustic-light 8s ease infinite alternate;
+}
+.deep-sea-bubbles { overflow: hidden; opacity: .48; }
+.deep-sea-bubbles i {
+  position: absolute;
+  top: 100%;
+  left: var(--bubble-x);
+  width: var(--bubble-size);
+  aspect-ratio: 1;
+  border: 1px solid #a9f5e3a6;
+  border-radius: 50%;
+  background: radial-gradient(circle at 32% 25%, #e2ffe4eb 8%, transparent 24% 70%, #98f2ff57 80%);
+  animation: deep-bubble 8s linear var(--bubble-delay) infinite;
+}
+.deep-note {
+  position: absolute;
+  top: var(--note-y);
+  left: var(--note-x);
+  display: none;
+  width: clamp(24px, 5.6vmin, 49px);
+  aspect-ratio: 1;
+  place-items: center;
+  transform: translate(-50%, -50%);
+  border: 1px solid;
+  border-radius: 50%;
+  font: 400 clamp(15px, 3.9vmin, 33px)/1 Georgia, "Times New Roman", serif;
+}
+.deep-note.is-lit:not([hidden]) {
+  display: grid;
+  color: #fff8ce;
+  border-color: #aaffdfd4;
+  background: radial-gradient(circle at 36% 29%, #f6eac87d, #389b9e 57%, #0e5d67);
+  text-shadow: 0 0 8px #ffeeb8;
+  box-shadow: inset 0 0 7px #d9fff6a1, 0 0 12px #99f6db95, 0 0 24px #63b8b15c;
+}
+.deep-note.is-changing { animation: deep-note-appear .61s cubic-bezier(.18,.65,.33,1) both; }
+.story-sea.is-arriving .deep-note.is-lit:not(:last-child) { animation: deep-note-light .49s ease-out var(--note-delay) both; }
+.deep-mermaid {
+  position: absolute;
+  top: 49%;
+  left: 50%;
+  width: min(81%, 55dvh);
+  height: 42%;
+  transform: translate(-37%, -36%) rotate(-5deg);
+  transform-origin: 64% 32%;
+  opacity: 0;
+}
+.deep-mermaid img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 0 16px #91f1d266) drop-shadow(0 4px 11px #03405085);
+}
+.story-sea.is-found .deep-mermaid { opacity: 1; }
+.story-sea.is-found .deep-mermaid img { animation: deep-mermaid-float 4s ease-in-out infinite alternate; }
+.story-sea.is-arriving .deep-mermaid { animation: deep-mermaid-arrive 1.65s cubic-bezier(.2,.7,.26,1) .34s both; }
+
+.deep-surface {
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  opacity: 0;
+  background:
+    url("assets/story/sea-surface.webp") center center / cover no-repeat,
+    radial-gradient(ellipse at 59% 49%, #f7d59fce, transparent 21%),
+    linear-gradient(180deg, #223346, #527686 29%, #a1abb0 40%, #dfc0a2 48%, #476d76 49%, #144150 75%, #071f2e);
+}
+.deep-surface::before {
+  content: '';
+  position: absolute;
+  inset: 5% -20% 50%;
+  opacity: .14;
+  background:
+    radial-gradient(ellipse at 28% 68%, #ced8e04a, transparent 24%),
+    radial-gradient(ellipse at 75% 44%, #d8d9db5c, transparent 26%),
+    radial-gradient(ellipse at 54% 72%, #f1d2b845, transparent 31%);
+  transform: skewX(-11deg) scaleY(.65);
+}
+.deep-surface-reflection {
+  position: absolute;
+  inset: 48% -7% -27%;
+  opacity: .17;
+  background:
+    radial-gradient(ellipse at 59% 5%, #e8b990bc, transparent 40%),
+    repeating-linear-gradient(178deg, #102b3c2b 0 3px, #a0c8d149 4px 6px, #0825314f 7px 13px);
+  mask-image: linear-gradient(#000 4%, #000a 51%, #0003 77%);
+  transform: perspective(340px) rotateX(18deg) scaleX(1.2);
+}
+.deep-waterline {
+  position: absolute;
+  z-index: 4;
+  inset: 0;
+  opacity: 0;
+  transform: translateY(-100%);
+  background: linear-gradient(180deg, transparent 37%, #c8fff24c 46%, #f0ffede8 49%, #aaffec6b 51%, #438b8e16 57%, transparent 67%);
+}
+.story-sea.is-leaving .deep-sea-world { animation: deep-ascent 3.16s ease-in-out both; }
+.story-sea.is-leaving .deep-mermaid { animation: deep-mermaid-lead 2.5s ease-in-out both; }
+.story-sea.is-leaving .deep-surface { animation: deep-surface-reveal 3.16s ease-in-out both; }
+.story-sea.is-leaving .deep-waterline { animation: deep-waterline 3.16s ease-in-out both; }
+
+@keyframes deep-guard-threat {
+  0%, 100% { transform: none; }
+  38% { transform: translateY(-1.5%) scale(1.025, 1.04); }
+  48% { transform: translate(var(--guard-lurch), -2.5%) scale(1.045, 1.05); }
+  61% { transform: translateX(calc(var(--guard-lurch) * .37)) scale(1.06, .97); }
+  78% { transform: scaleY(1.025); }
+}
+@keyframes deep-crocodile-creep {
+  0%, 100% { transform: none; }
+  35% { transform: scale(1.035, .98); }
+  57% { transform: translateX(var(--guard-lurch)) scale(1.055, .96); }
+  73% { transform: translateX(calc(var(--guard-lurch) * .63)); }
+}
+@keyframes deep-eagle-rise {
+  0%, 100% { transform: none; }
+  41% { transform: translateY(3%) scaleY(.95); }
+  52% { transform: translate(var(--guard-lurch), -5%) scale(1.05, 1.075); }
+  67% { transform: translateY(-3%) scale(1.04, 1.05); }
+}
+@keyframes deep-guard-shadow {
+  0%, 100% { transform: scale(1); opacity: .76; }
+  49% { transform: translateX(calc(var(--guard-lurch) * .7)) scale(1.18, .92); opacity: 1; }
+}
+@keyframes deep-guard-eye {
+  0%, 100% { opacity: .59; }
+  43% { opacity: .45; }
+  51% { opacity: 1; }
+  59% { opacity: .78; }
+}
+@keyframes deep-turn-to-stone {
+  0% { transform: scaleY(1.05); filter: grayscale(0) brightness(1) drop-shadow(0 4px 3px #070601); }
+  29% { transform: scaleY(1.01); filter: grayscale(.65) brightness(1.63) drop-shadow(0 0 8px #d6eac0); }
+  67% { filter: grayscale(1) brightness(.96) drop-shadow(0 3px 4px #070601); }
+  100% { transform: scaleY(1); filter: var(--guard-stone); }
+}
+@keyframes deep-guard-dust {
+  0% { transform: scale(.59); opacity: 0; }
+  31% { opacity: .9; }
+  100% { transform: scale(1.27); opacity: 0; }
+}
+@keyframes deep-approach {
+  0% { transform: scale(1); }
+  18% { transform: scale(1.17) translate(-.75%, 1%); }
+  34% { transform: scale(1.37) translate(.7%, 0); }
+  49% { transform: scale(1.76); }
+  71% { transform: scale(1.86); }
+  100% { transform: scale(4.8) translateY(-6%); }
+}
+@keyframes deep-reveal-door {
+  0%, 36% { opacity: 0; }
+  50%, 100% { opacity: 1; }
+}
+@keyframes deep-open-left {
+  0%, 47% { transform: rotateY(0); }
+  72%, 100% { transform: rotateY(-76deg); }
+}
+@keyframes deep-open-right {
+  0%, 47% { transform: rotateY(0); }
+  72%, 100% { transform: rotateY(76deg); }
+}
+@keyframes deep-tomb-dive {
+  0%, 64% { clip-path: inset(100% 0 0); opacity: 0; }
+  77% { clip-path: inset(72% 0 0); opacity: .65; }
+  100% { clip-path: inset(0); opacity: 1; }
+}
+@keyframes deep-caustic-light {
+  from { opacity: .26; transform: scaleX(1) skewX(-4deg); }
+  to { opacity: .51; transform: scaleX(1.13) skewX(4deg); }
+}
+@keyframes deep-bubble {
+  0% { transform: translate(0, 0); opacity: 0; }
+  15%, 72% { opacity: .8; }
+  100% { transform: translate(18px, -95dvh); opacity: 0; }
+}
+@keyframes deep-note-light {
+  0% { transform: translate(-50%, -50%) scale(1); filter: brightness(1); }
+  36% { transform: translate(-50%, -50%) scale(1.35); filter: brightness(1.75); }
+  100% { transform: translate(-50%, -50%) scale(1); filter: brightness(1); }
+}
+@keyframes deep-note-appear {
+  0% { transform: translate(-50%, -42%) scale(.32); opacity: 0; }
+  36% { transform: translate(-50%, -52%) scale(1.34); opacity: 1; filter: brightness(1.75); }
+  100% { transform: translate(-50%, -50%) scale(1); opacity: 1; filter: brightness(1); }
+}
+@keyframes deep-mermaid-arrive {
+  from { opacity: 0; transform: translate(38%, 10%) rotate(-17deg) scale(.42); }
+  32% { opacity: .84; }
+  74% { transform: translate(-40%, -40%) rotate(-7deg) scale(1.02); }
+  to { opacity: 1; transform: translate(-37%, -36%) rotate(-5deg); }
+}
+@keyframes deep-mermaid-float {
+  from { transform: translateY(-3%) rotate(-2deg); }
+  to { transform: translateY(4%) rotate(3deg); }
+}
+@keyframes deep-mermaid-lead {
+  0% { opacity: 1; transform: translate(-37%, -36%) rotate(-5deg); }
+  28% { transform: translate(-35%, -66%) rotate(10deg) scale(.86); }
+  72% { opacity: 1; }
+  100% { opacity: 0; transform: translate(-30%, -174%) rotate(19deg) scale(.5); }
+}
+@keyframes deep-ascent {
+  0% { opacity: 1; transform: scale(1); }
+  44% { transform: scale(1.16) translateY(10%); }
+  81%, 100% { opacity: 0; transform: scale(1.5) translateY(38%); }
+}
+@keyframes deep-surface-reveal {
+  0%, 48% { opacity: 0; clip-path: inset(0 0 100%); }
+  60% { opacity: .82; }
+  77%, 100% { opacity: 1; clip-path: inset(0); }
+}
+@keyframes deep-waterline {
+  0%, 43% { opacity: 0; transform: translateY(-61%); }
+  53% { opacity: 1; }
+  78%, 100% { opacity: 0; transform: translateY(65%); }
+}
+
+@media (max-width: 739px) and (orientation: portrait), (max-width: 659px) {
+  body[data-herb-mode="playing"].herb-writing .deep-note {
+    top: calc(12% + var(--note-y) * .43);
+    width: clamp(19px, 5.5vmin, 33px);
+  }
+  body[data-herb-mode="playing"].herb-writing .deep-guard {
+    --guard-spacing: .65;
+    top: calc(7% + var(--guard-y) * .65);
+  }
+}
+@media (min-width: 740px), (min-width: 660px) and (orientation: landscape) {
+  body[data-herb-mode="playing"] :is(.story-tomb, .story-sea):not(.is-leaving) .deep-frame {
+    inset: var(--herb-bench-top) auto auto
+      max(0px, calc(50% - (var(--herb-canvas-column) + var(--herb-lane-gap) + var(--herb-bench-width)) / 2));
+    width: var(--herb-bench-width);
+    height: var(--herb-bench-height);
+    border: 1px solid var(--herb-line);
+    border-radius: 18px;
+    box-shadow: 0 15px 46px #080d0ec9;
+  }
+  body[data-herb-mode="playing"] .deep-tomb-set { width: max(100%, calc(var(--herb-bench-height) * .75)); }
+  body[data-herb-mode="playing"] .deep-tomb-frame { --guard-frame-height: var(--herb-bench-height); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .story-scene.story-tomb *,
+  .story-scene.story-sea * { animation: none !important; }
+  .story-sea.is-leaving .deep-surface { opacity: 1; }
+  .story-sea.is-leaving .deep-sea-world { opacity: 0; }
 }
 
 </style>
@@ -1873,7 +3240,7 @@ body[data-herb-stage="stars"] #observatoryBackdrop { display: block; }
     <div class="cloud-sync">
       <b>跨设备同步</b>
       <p id="cloudSyncStatus" role="status">尚未开启，学习记录保存在这台设备。</p>
-      <p>进度会自动保存在当前浏览器。要跨设备接着练，先在有学习记录的浏览器开启同步，再在另一台设备或另一个浏览器用同一个家庭密码接入。接入后，联网时会自动同步。</p>
+      <p>新旧版在同一个浏览器中共用学习进度。要换设备接着练，可以在这里用已有的家庭密码或同步码接入。</p>
       <div id="cloudSyncPasswordSetup">
         <label for="cloudSyncPassword">家庭密码（至少 12 个字符，可用中文）</label>
         <input type="password" id="cloudSyncPassword" placeholder="输入你自己设定的家庭密码" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="cloudSyncPasswordHint">
@@ -4566,7 +5933,7 @@ window.HANZI_GLYPH_CATALOG={"version":"41b38d977b270e08ea493526a4ee0f8643a59bbf2
   // and every unknown field are deliberately never read or copied into a payload.
   var META_KEY = 'hanzi-magic-herbalist-sync-v1';
   var BACKUP_KEY = 'hanzi-magic-herbalist-sync-backups-v1';
-  var APP = 'hanzi-magic-herbalist';
+  var APP = 'hanzi-magic-door';
   var PASSWORD_ROUNDS = 600000;
   var MAX_BYTES = 600 * 1024;
   var DEBOUNCE_MS = 800;
@@ -4994,7 +6361,7 @@ window.HANZI_GLYPH_CATALOG={"version":"41b38d977b270e08ea493526a4ee0f8643a59bbf2
       meta = stagedMeta;
       applying = true;
       var result;
-      try { result = options.applyState(remote.state); }
+      try { result = options.applyState(remote.state, reason); }
       catch (error) {
         ensureEpoch(token);
         throw problem('恢复进度未完成；两份进度已在本机备份，请重新选择保留哪份', 'conflict');
@@ -5018,7 +6385,13 @@ window.HANZI_GLYPH_CATALOG={"version":"41b38d977b270e08ea493526a4ee0f8643a59bbf2
       persist(nextMeta);
       meta = nextMeta;
       conflictRemote = null;
-      if (meta.dirty) return emit('pending', '进度已读取，但本机还有新的改动；请再次同步');
+      if (meta.dirty) {
+        if (reason === 'join-family' || reason === 'join-password-family') {
+          schedule();
+          return emit('pending', '已合并本机和家庭进度，正等待同步');
+        }
+        return emit('pending', '进度已读取，但本机还有新的改动；请再次同步');
+      }
       return emit('synced', '两台设备的学习进度已同步');
     }
     async function write(current, derived, remote, token, localRevision, candidateMeta, retryLocal) {
@@ -5341,6 +6714,138 @@ window.HANZI_GLYPH_CATALOG={"version":"41b38d977b270e08ea493526a4ee0f8643a59bbf2
 }));
 
 </script>
+<script data-source="shared-learning.js">
+(function (root, factory) {
+  if (typeof module === 'object' && module.exports) module.exports = factory();
+  else root.HanziSharedLearning = factory();
+})(typeof window !== 'undefined' ? window : globalThis, function () {
+  'use strict';
+
+  const SCHEDULE_FIELDS = ['lastSeen', 'box', 'interval'];
+  const RETRY_FIELDS = ['wrongDay', 'wrongToday', 'stuck', 'stuckDay'];
+  const PARENT_FIELDS = ['fromParent', 'pinyin', 'word', 'sentence', 'retired'];
+  const BANK_FIELDS = ['char', ...SCHEDULE_FIELDS, ...RETRY_FIELDS, ...PARENT_FIELDS,
+    'structure', 'strokeCount', 'curriculumId', 'unit', 'lesson'];
+  const REQUEST_FIELDS = ['char', 'pinyin', 'word', 'sentence', 'requestId', 'addedDay', 'completedDay'];
+  const SESSION_FIELDS = ['version', 'day', 'roundId', 'passedCount', 'completed', 'sceneAwarded'];
+
+  function pick(record, fields) {
+    return Object.fromEntries(fields.filter(field => Object.hasOwn(record, field))
+      .map(field => [field, record[field]]));
+  }
+
+  function projectBankItem(item) {
+    return {
+      ...pick(item, BANK_FIELDS),
+      history: (item.history || []).map(entry => pick(entry, ['day', 'outcome'])),
+      passedDays: [...(item.passedDays || [])],
+    };
+  }
+
+  function projectRequest(request) {
+    const projected = pick(request, REQUEST_FIELDS);
+    if (Array.isArray(request.alts)) projected.alts = [...request.alts];
+    return projected;
+  }
+
+  function learningRecord(state, legacy) {
+    const record = {
+      bank: state.bank.map(projectBankItem),
+      bankVersion: state.bankVersion,
+      priorityQueue: (state.priorityQueue || []).map(projectRequest),
+      dailyCount: state.dailyCount,
+      scenesUnlocked: legacy?.scenesUnlocked ?? 0,
+    };
+    if (legacy?.sessionProgress) record.sessionProgress = pick(legacy.sessionProgress, SESSION_FIELDS);
+    return record;
+  }
+
+  function storyRecord(state) {
+    const record = { herbalistStage: state.herbalistStage, scenesUnlocked: state.scenesUnlocked ?? 0 };
+    if (state.sessionProgress) record.sessionProgress = pick(state.sessionProgress, SESSION_FIELDS);
+    return record;
+  }
+
+  function assemble(learning, story) {
+    return { ...learningRecord(learning), ...storyRecord(story || {}) };
+  }
+
+  function mergeHistory(oldHistory, newHistory) {
+    // Identical day/outcome pairs have no event ID. Keep the greater count of
+    // each pair to carry evidence without replaying entries present in both saves.
+    const remaining = new Map();
+    const keyFor = ({ day, outcome }) => JSON.stringify({ day, outcome });
+    for (const entry of oldHistory) {
+      const key = keyFor(entry);
+      remaining.set(key, (remaining.get(key) || 0) + 1);
+    }
+    const additional = newHistory.filter(entry => {
+      const key = keyFor(entry);
+      const count = remaining.get(key) || 0;
+      if (!count) return true;
+      remaining.set(key, count - 1);
+      return false;
+    });
+    return [...oldHistory, ...additional].sort((a, b) => a.day.localeCompare(b.day));
+  }
+
+  function retryDate(item) {
+    const wrongDay = item.wrongDay || '';
+    const stuckDay = item.stuckDay || '';
+    return stuckDay > wrongDay ? stuckDay : wrongDay;
+  }
+
+  function mergeBankItem(oldItem, newItem, oldRequest, newRequest) {
+    const schedule = (newItem.lastSeen || '') > (oldItem.lastSeen || '') ? newItem : oldItem;
+    const retries = retryDate(newItem) > retryDate(oldItem) ? newItem : oldItem;
+    const newerRequest = (newRequest?.addedDay || '') > (oldRequest?.addedDay || '');
+    const parent = newItem.fromParent && (!oldItem.fromParent || newerRequest) ? newItem : oldItem;
+    return {
+      ...pick({ ...newItem, ...oldItem }, ['char', 'structure', 'strokeCount', 'curriculumId', 'unit', 'lesson']),
+      ...pick(schedule, SCHEDULE_FIELDS),
+      ...pick(retries, RETRY_FIELDS),
+      ...pick(parent, PARENT_FIELDS),
+      history: mergeHistory(oldItem.history || [], newItem.history || []),
+      passedDays: [...new Set([...(oldItem.passedDays || []), ...(newItem.passedDays || [])])].sort(),
+    };
+  }
+
+  function mergeRequests(oldQueue, newQueue) {
+    const byChar = new Map();
+    // Stable sorting gives the old queue priority on the same date, retaining
+    // each source's order within its batch.
+    const ordered = [...oldQueue, ...newQueue].sort((a, b) => (b.addedDay || '').localeCompare(a.addedDay || ''));
+    for (const request of ordered) {
+      const selected = byChar.get(request.char);
+      if (!selected) byChar.set(request.char, request);
+      else if (request.requestId && request.requestId === selected.requestId &&
+          (request.completedDay || '') > (selected.completedDay || '')) {
+        byChar.set(request.char, { ...selected, completedDay: request.completedDay });
+      }
+    }
+    return [...byChar.values()];
+  }
+
+  function mergeLearning(oldState, independentNewState) {
+    const oldQueue = oldState.priorityQueue || [];
+    const newQueue = independentNewState.priorityQueue || [];
+    const oldRequests = new Map(oldQueue.map(request => [request.char, request]));
+    const newRequests = new Map(newQueue.map(request => [request.char, request]));
+    const remaining = new Map(independentNewState.bank.map(item => [item.char, item]));
+    const bank = oldState.bank.map(item => {
+      const other = remaining.get(item.char);
+      if (!other) return item;
+      remaining.delete(item.char);
+      return mergeBankItem(item, other, oldRequests.get(item.char), newRequests.get(item.char));
+    });
+    bank.push(...remaining.values());
+    return learningRecord({ ...oldState, bank, priorityQueue: mergeRequests(oldQueue, newQueue) }, oldState);
+  }
+
+  return { mergeLearning, learningRecord, storyRecord, assemble };
+});
+
+</script>
 <script data-source="mountain-journey.js">
 (function (root, factory) {
   'use strict';
@@ -5562,11 +7067,624 @@ window.HANZI_GLYPH_CATALOG={"version":"41b38d977b270e08ea493526a4ee0f8643a59bbf2
       previous = next;
     }
 
-    return { render };
+    function playExit() {
+      backdrop.classList.add('observatory-following');
+      return 1060;
+    }
+
+    return { render, playExit, resetExit: () => backdrop.classList.remove('observatory-following') };
   }
 
   window.HanziObservatory = { create };
 }());
+
+</script>
+<script data-source="giant-kitchen.js">
+(function () {
+  'use strict';
+
+  const INGREDIENTS = [
+    'pumpkin', 'onion', 'carrot', 'mushroom', 'turnip',
+    'leek', 'corn', 'potato', 'tomato', 'cabbage',
+  ];
+  const EXIT_TIME = 3450;
+  const SPLASH = [[-43, -38], [-24, -52], [-8, -67], [18, -65], [31, -46], [48, -34]];
+  const RUBBLE = [
+    [-230, 165, -135, 128], [-166, 194, -93, 78], [-131, 103, 80, 61], [-90, 238, -74, 38],
+    [114, 180, 134, 106], [169, 219, 90, 72], [217, 139, -80, 46], [74, 243, 112, 51],
+  ];
+
+  function create({ document: doc }) {
+    const scene = doc.createElement('div');
+    scene.className = 'story-scene story-giant';
+    scene.setAttribute('aria-hidden', 'true');
+    scene.innerHTML = `
+      <div class="story-giant-viewport">
+        <div class="story-giant-room">
+          <div class="story-giant-pot-glow"></div>
+          <div class="story-giant-steam"><i></i><i></i><i></i></div>
+          <div class="story-giant-food"><i></i></div>
+          <div class="story-giant-splash">${SPLASH.map(([x, y], index) =>
+            `<i style="--splash-x:${x}px;--splash-y:${y}px;--splash-delay:${index * 18}ms"></i>`).join('')}</div>
+        </div>
+        <div class="story-giant-bowl"><i></i></div>
+        <div class="story-giant-mountain">
+          <div class="story-giant-ravine"></div>
+          <div class="story-giant-rock-face story-giant-rock-left"></div>
+          <div class="story-giant-rock-face story-giant-rock-right"></div>
+          <div class="story-giant-crack"></div>
+          <div class="story-giant-rubble">${RUBBLE.map(([x, y, angle, size], index) =>
+            `<i style="--rock-x:${x}px;--rock-y:${y}px;--rock-angle:${angle}deg;--rock-size:${size}px;--rock-delay:${index * 27}ms"></i>`).join('')}</div>
+          <div class="story-giant-fist"><i></i><b></b></div>
+          <div class="story-giant-dust"></div>
+        </div>
+      </div>`;
+    doc.body.insertBefore(scene, doc.body.firstChild);
+    const food = scene.querySelector('.story-giant-food');
+    let shownCount = 0;
+
+    function render(stage, count, animate = false) {
+      if (stage !== 'giant') return;
+      const nextCount = Math.max(0, Math.min(INGREDIENTS.length, count));
+      const toss = animate && nextCount > shownCount;
+      shownCount = nextCount;
+      scene.dataset.count = String(nextCount);
+      scene.style.setProperty('--story-giant-fill', String(nextCount / INGREDIENTS.length));
+      scene.classList.remove('story-giant-tossing');
+      if (toss) {
+        scene.dataset.ingredient = INGREDIENTS[nextCount - 1];
+        food.getBoundingClientRect();
+        scene.classList.add('story-giant-tossing');
+      }
+    }
+
+    function resetExit() {
+      scene.classList.remove('story-giant-exiting');
+    }
+
+    function playExit(stage) {
+      if (stage !== 'giant') return 0;
+      resetExit();
+      scene.classList.remove('story-giant-tossing');
+      scene.getBoundingClientRect();
+      scene.classList.add('story-giant-exiting');
+      return EXIT_TIME;
+    }
+
+    return { render, playExit, resetExit };
+  }
+
+  window.HanziGiantKitchen = { create };
+})();
+
+</script>
+<script data-source="bridge-train.js">
+(function () {
+  'use strict';
+
+  // Near-to-far joints read from the two ropes in the portrait artwork.
+  const JOINTS = [87.5, 74.7, 65.2, 56.8, 49.3, 42.7, 36.9, 31.8, 27.4, 23.7, 20.7];
+  const ropeWidth = y => Math.min(82, 3.4 + (y - 20.7) * 1.29);
+  // x and y locate each balloon's knot. Cords run from the knot to the roof.
+  const BALLOONS = [
+    [22, 40, 12.2, '#b77941', '#52351f'], [36, 42, 13.3, '#8e4849', '#482431'],
+    [51, 41, 13.3, '#6d8782', '#2a4950'], [65, 39, 11.8, '#a4864e', '#5d4226'],
+    [77, 36, 11.4, '#79658e', '#3b2b53'], [15, 30, 11.6, '#806895', '#453150'],
+    [29, 28, 12.0, '#708d74', '#324c3c'], [43, 26, 13.0, '#bb9556', '#654827'],
+    [57, 26, 12.7, '#9b5655', '#512f3c'], [70, 25, 10.7, '#678897', '#2f465f'],
+  ];
+
+  function create({ document: doc }) {
+    function add(parent, className) {
+      const el = doc.createElement('div');
+      el.className = className;
+      parent.appendChild(el);
+      return el;
+    }
+
+    function scene(stage) {
+      const root = doc.createElement('div');
+      root.id = 'story-' + stage;
+      root.className = 'story-scene sky-scene sky-' + stage;
+      root.setAttribute('aria-hidden', 'true');
+      const frame = add(root, 'sky-frame');
+      const camera = add(frame, 'sky-camera');
+      add(camera, 'sky-art');
+      const progress = add(root, 'sky-compact');
+      doc.body.insertBefore(root, doc.body.firstChild);
+      return { root, frame, camera, progress, marks: [], compact: [], count: 0 };
+    }
+
+    const bridge = scene('bridge');
+    const bridgeDeck = add(bridge.camera, 'sky-bridge-deck');
+    JOINTS.slice(0, -1).forEach((bottom, index) => {
+      const top = JOINTS[index + 1];
+      const width = ropeWidth(bottom);
+      const plank = add(bridgeDeck, 'sky-piece sky-plank');
+      plank.style.setProperty('--board-y', (top + bottom) / 2 + '%');
+      plank.style.setProperty('--board-width', width + '%');
+      plank.style.setProperty('--board-depth', (bottom - top - .14) + '%');
+      plank.style.setProperty('--board-taper', (1 - ropeWidth(top) / width) * 50 + '%');
+      plank.style.setProperty('--board-tone', String((index * 17) % 23 - 9) + 'deg');
+      plank.style.setProperty('--board-drift', (index % 2 ? 1 : -1) * (27 + index * 4) + '%');
+      bridge.marks.push(plank);
+      bridge.compact.push(add(bridge.progress, 'sky-compact-plank'));
+    });
+    add(bridge.camera, 'sky-bridge-mist');
+
+    const train = scene('train');
+    const ropes = add(train.camera, 'sky-balloon-ropes');
+    const balloons = add(train.camera, 'sky-balloon-cluster');
+    BALLOONS.forEach(([x, y, width, highlight, shade], index) => {
+      const cord = add(ropes, 'sky-cord');
+      const roofX = 70 + index * 2.1;
+      const roofY = 45.2 + Math.abs(index - 5) * .46;
+      const dx = (roofX - x) * .75;
+      const dy = roofY - y;
+      cord.style.setProperty('--cord-x', x + '%');
+      cord.style.setProperty('--cord-y', y + '%');
+      cord.style.setProperty('--cord-length', Math.hypot(dx, dy) + '%');
+      cord.style.setProperty('--cord-angle', -Math.atan2(dx, dy) * 180 / Math.PI + 'deg');
+
+      const balloon = add(balloons, 'sky-piece sky-balloon');
+      balloon.style.setProperty('--balloon-x', x + '%');
+      balloon.style.setProperty('--balloon-y', y + '%');
+      balloon.style.setProperty('--balloon-width', width + '%');
+      balloon.style.setProperty('--balloon-light', highlight);
+      balloon.style.setProperty('--balloon-shade', shade);
+      balloon.style.setProperty('--balloon-delay', (index * -.31) + 's');
+      const fabric = add(balloon, 'sky-balloon-fabric');
+      add(fabric, 'sky-balloon-seam');
+      const compact = add(train.progress, 'sky-compact-balloon');
+      compact.style.setProperty('--balloon-light', highlight);
+      compact.style.setProperty('--balloon-shade', shade);
+      train.marks.push(balloon);
+      train.compact.push(compact);
+    });
+
+    const cab = add(train.frame, 'sky-train-cab');
+    const windshield = add(cab, 'sky-train-window');
+    add(windshield, 'sky-train-highland');
+    add(windshield, 'sky-train-clouds');
+    add(windshield, 'sky-train-cloud-front');
+    add(cab, 'sky-train-dashboard');
+
+    const stages = { bridge, train };
+    const exitDurations = { bridge: 2350, train: 3550 };
+
+    function render(stage, count, animate = false) {
+      const current = stages[stage];
+      if (!current) return;
+      const total = current.marks.length;
+      const next = Math.min(total, Math.max(0, Math.floor(Number(count) || 0)));
+      const newIndex = animate && next === current.count + 1 ? next - 1 : -1;
+      current.count = next;
+      current.root.dataset.count = String(next);
+      current.root.classList.toggle('is-complete', next === total);
+      current.marks.forEach((mark, index) => {
+        mark.classList.remove('is-arriving');
+        mark.classList.toggle('is-placed', index < next);
+        current.compact[index].classList.toggle('is-placed', index < next);
+        if (index === newIndex) {
+          // Reusing the same demo item after a restore should replay its arrival.
+          mark.getBoundingClientRect();
+          mark.classList.add('is-arriving');
+        }
+      });
+      if (stage === 'train') {
+        for (let index = 0; index < ropes.children.length; index++) {
+          ropes.children[index].classList.toggle('is-taut', index < next);
+        }
+      }
+    }
+
+    function resetExit() {
+      for (const { root } of Object.values(stages)) root.classList.remove('is-travelling');
+    }
+
+    function playExit(stage) {
+      const current = stages[stage];
+      if (!current) return 0;
+      if (doc.defaultView?.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches) return 0;
+      resetExit();
+      current.root.getBoundingClientRect();
+      current.root.classList.add('is-travelling');
+      return exitDurations[stage];
+    }
+
+    return { render, playExit, resetExit };
+  }
+
+  window.HanziBridgeTrain = { create };
+}());
+
+</script>
+<script data-source="tomb-mermaid.js">
+/* Tomb Hall and Underwater Mermaid are independent visual scenes. */
+(function (window) {
+  'use strict';
+
+  const GUARDIANS = [
+    {
+      name: 'lion', colors: ['#d4b16d', '#a26d37', '#48301c'],
+      body: 'M13 59Q3 48 9 32Q11 27 16 26L21 31 17 38 13 36Q8 48 20 52Q28 38 55 41L60 32 60 20 66 18 70 15 78 18 82 25 90 26 94 33 92 39 82 41 77 48 70 50 67 71 75 77 59 77 55 56 33 55 29 69 36 76 20 76 19 62Z',
+      detail: 'M63 27Q58 41 70 48 M68 24Q68 34 77 38 M28 46Q42 41 57 48 M81 39 89 35',
+      eye: [81, 29]
+    },
+    {
+      name: 'tiger', colors: ['#efaf60', '#98501e', '#35241d'],
+      body: 'M6 41Q6 56 19 52Q26 34 57 39L67 37 69 25 76 23 82 27 89 25 90 31 98 36 95 43 82 47 74 53 69 71 77 77 62 77 55 56 36 55 26 70 32 77 17 77 19 61Q3 61 3 47Z',
+      detail: 'M29 43 33 51 M39 40 41 52 M49 41 50 53 M60 42 60 54 M70 38 75 43 M83 36 87 39',
+      eye: [87, 33]
+    },
+    {
+      name: 'wolf', colors: ['#c8cfcd', '#656b6e', '#313132'],
+      body: 'M13 63Q4 54 5 41Q11 47 19 49C26 38 44 37 59 38L66 26 72 15 79 22 87 20 87 27 96 32 92 39 81 42 73 50 71 72 77 77 59 77 56 56 36 54 29 69 34 77 19 77 18 63Z',
+      detail: 'M22 51Q44 42 62 45L70 49 M63 39 71 32 77 34 M21 62 30 55 M81 41 89 37',
+      eye: [83, 29]
+    },
+    {
+      name: 'bear', colors: ['#ba8d63', '#634735', '#33271f'],
+      body: 'M13 74 13 61Q7 54 12 42 17 25 39 25 50 25 63 35L68 28 69 22 74 19 79 24 86 24 91 31 98 35 97 44 85 49 77 53 73 71 80 76 61 77 57 59 39 56 33 66 37 76 17 76Z',
+      detail: 'M24 31Q40 25 57 39 M63 42 66 54 M85 46 95 42 M33 53 25 62',
+      eye: [85, 32]
+    },
+    {
+      name: 'panther', colors: ['#a1b3bf', '#536679', '#212834'],
+      body: 'M5 57Q3 45 9 37L14 37Q8 48 15 51L22 49Q28 36 50 36L66 40Q73 29 76 29L77 23 84 25 86 29 93 31 96 38 90 44 83 45 75 52 72 67 79 76 63 76 59 55 39 56 30 70 37 77 22 77 21 58 13 61Z',
+      detail: 'M27 46Q41 40 57 42 M79 34 88 35 M76 46 65 49 M24 59 34 53',
+      eye: [86, 34]
+    },
+    {
+      name: 'hyena', colors: ['#ddb384', '#875739', '#432c22'],
+      body: 'M9 57 16 54Q24 49 35 44L46 32 61 30 66 21 73 18 77 27 82 24 86 25 87 34 98 39 94 47 78 49 68 55 66 71 74 77 57 77 53 56 34 60 28 71 33 76 16 76 18 62Z',
+      detail: 'M31 53 32 55 M36 46 38 48 M42 45 44 47 M49 38 51 40 M52 47 55 49 M58 39 60 41 M60 51 62 53',
+      eye: [87, 35]
+    },
+    {
+      name: 'crocodile', colors: ['#b4a973', '#6a6d43', '#2b322b'],
+      body: 'M3 63Q15 67 26 60L32 53 39 50 43 45 48 49 54 45 60 50 68 48 75 44 83 50 98 50 100 55 91 58 98 60 94 65 77 67 65 64 62 74 67 77 53 77 50 67 40 66 34 76 20 76 27 68Q11 73 2 67Z',
+      detail: 'M40 56 46 53 51 56 56 52 62 56 68 55 M77 58 84 60 89 57 92 59 96 57',
+      eye: [77, 51]
+    },
+    {
+      name: 'boar', colors: ['#bc8f7a', '#735145', '#332422'],
+      body: 'M13 62Q7 56 9 47L12 44 16 50 21 48 25 38 34 29 40 29 45 24 54 26 58 24 69 33 74 26 80 30 81 39 88 42 98 44 98 53 91 57 82 57 74 61 72 75 61 77 60 62 41 61 33 74 23 76 26 61Z M84 52Q94 56 96 47Q98 58 88 61Z',
+      detail: 'M30 40Q47 31 65 40 M69 43 77 47 M82 54 91 52',
+      eye: [81, 43]
+    },
+    {
+      name: 'rhinoceros', colors: ['#bcb9aa', '#78776d', '#383b34'],
+      body: 'M12 65Q9 51 15 40Q22 28 43 30 56 27 67 39L74 37 80 45 85 46 95 24 97 25 95 48 99 54 95 62 77 66 74 77 60 77 57 61 39 61 35 76 22 76 23 62 17 57 15 66Z',
+      detail: 'M30 36 27 46 33 57 M57 36 62 47 58 57 M72 45 79 48 81 56 M87 60 96 56',
+      eye: [80, 49]
+    },
+    {
+      name: 'eagle', colors: ['#d3a46b', '#81623f', '#3a2d24'],
+      body: 'M32 75 43 63Q33 45 40 33L25 20 16 2 43 13 57 27 62 28Q66 16 78 19L86 25 96 27 93 33 84 34 76 44 70 59 61 67 74 73 70 77 58 75 51 78 43 75Z',
+      detail: 'M29 14 40 26 49 30 M40 39Q47 33 58 40L62 46 53 61 M43 46 52 50 M41 53 49 58 M78 28 88 31',
+      eye: [82, 26]
+    }
+  ];
+
+  const NOTE_POSITIONS = [
+    [12, 59], [20, 47], [29, 56], [38, 42], [46, 49],
+    [54, 36], [62, 43], [71, 30], [80, 36], [88, 25]
+  ];
+  // Left rank centers and floor positions, from the entrance toward the door.
+  // The right rank mirrors these coordinates. Each row has its own depth clearance.
+  const GUARD_ROWS = [
+    [13, 79.2, 13.5, .065], [19.5, 71.7, 11.6, .053],
+    [24.8, 65.6, 10.1, .042], [29, 60.7, 8.8, .034],
+    [32.4, 56.7, 7.7, .033]
+  ];
+  const GUARD_SPREAD = [9, 5, 7, 8, 5, 7, 10, 7, 4, 8];
+  const GUARD_ATLASES = [
+    { url: 'assets/story/fierce-guards-a.webp', width: 1536, height: 1024 },
+    { url: 'assets/story/fierce-guards-b.webp', width: 1536, height: 1024 }
+  ];
+  // Each entry is the bounds of one animal and the position of its eye in the crop.
+  const GUARD_SPRITES = [
+    [0, 26, 505, 454, 86.3, 23.4], [513, 129, 504, 332, 85.5, 44.6],
+    [1045, 27, 491, 436, 86.6, 20], [4, 549, 500, 459, 83.6, 25.3],
+    [512, 582, 518, 400, 85.7, 41.8],
+    [25, 75, 483, 372, 87.8, 25.5], [510, 162, 514, 248, 78.2, 13.3],
+    [1038, 66, 492, 368, 77.6, 37.8], [3, 579, 510, 380, 76.1, 45.8],
+    [517, 552, 506, 429, 88.1, 28.2]
+  ];
+  const NOTES = [293.66, 349.23, 392, 440, 523.25, 587.33, 523.25, 440, 392, 440];
+  const TOMB_EXIT_MS = 3040;
+  const SEA_EXIT_MS = 3160;
+
+  function drawGuardian(canvas, guardian, facingRight) {
+    if (!window.Path2D) return;
+    const ctx = canvas?.getContext?.('2d');
+    if (!ctx) return;
+    ctx.scale(2, 2);
+    if (!facingRight) {
+      ctx.translate(108, 0);
+      ctx.scale(-1, 1);
+    }
+    ctx.translate(4, 9);
+    const [light, middle, dark] = guardian.colors;
+    const color = ctx.createLinearGradient(18, 8, 66, 74);
+    color.addColorStop(0, light);
+    color.addColorStop(0.48, middle);
+    color.addColorStop(1, dark);
+    const shape = new window.Path2D(guardian.body);
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+    ctx.fillStyle = color;
+    ctx.fill(shape);
+    ctx.strokeStyle = light;
+    ctx.globalAlpha = 0.82;
+    ctx.lineWidth = 1;
+    ctx.stroke(shape);
+    ctx.globalAlpha = 0.72;
+    ctx.lineWidth = 1.3;
+    ctx.stroke(new window.Path2D(guardian.detail));
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = '#fff0b1';
+    ctx.shadowColor = light;
+    ctx.shadowBlur = 4;
+    ctx.beginPath();
+    ctx.arc(guardian.eye[0], guardian.eye[1], 1.45, 0, 2 * Math.PI);
+    ctx.fill();
+  }
+
+  function guardianMarkup(guardian, index) {
+    const row = Math.floor(index / 2);
+    const [x, y, size, clearance] = GUARD_ROWS[row];
+    const [spriteX, spriteY, spriteWidth, spriteHeight, eyeX, eyeY] = GUARD_SPRITES[index];
+    const atlas = GUARD_ATLASES[Math.floor(index / 5)];
+    const onRight = index % 2 === 1;
+    const style = `
+      --guard-x:${onRight ? 100 - x : x}%;
+      --guard-y:${y}%;
+      --guard-size:${size}%;
+      --guard-clearance:${clearance};
+      --guard-depth:${GUARD_ROWS.length - row};
+      --guard-phase:${(index * -.71).toFixed(2)}s;
+      --guard-pace:${(4.1 + index * .17).toFixed(2)}s;
+      --guard-lurch:${GUARD_SPREAD[index] * (onRight ? -1 : 1)}%;
+      --sprite-x:${spriteX / (atlas.width - spriteWidth) * 100}%;
+      --sprite-y:${spriteY / (atlas.height - spriteHeight) * 100}%;
+      --sprite-size:${atlas.width / spriteWidth * 100}% ${atlas.height / spriteHeight * 100}%;
+      --sprite-ratio:${spriteWidth} / ${spriteHeight};
+      --sprite-aspect:${(spriteWidth / spriteHeight).toFixed(4)};
+      --sprite-facing:${onRight ? -1 : 1};
+      --sprite-eye-x:${eyeX}%;
+      --sprite-eye-y:${eyeY}%`;
+    return `<div class="deep-guard" data-species="${guardian.name}" data-atlas="${Math.floor(index / 5)}" style="${style}"><i></i><div class="deep-guard-shape"><canvas width="216" height="176"></canvas><span></span></div><b></b></div>`;
+  }
+
+  function create({ document: doc }) {
+    const tomb = doc.createElement('div');
+    tomb.className = 'story-scene story-tomb';
+    tomb.setAttribute('aria-hidden', 'true');
+    tomb.innerHTML = `
+      <div class="deep-frame deep-tomb-frame">
+        <div class="deep-tomb-world">
+          <div class="deep-tomb-set">
+            <div class="deep-tomb-art"></div>
+            <div class="deep-door">
+              <div class="deep-flooded-stair"></div>
+              <i class="deep-door-leaf"></i><i class="deep-door-leaf"></i>
+            </div>
+          </div>
+          <div class="deep-guards">${GUARDIANS.map(guardianMarkup).join('')}</div>
+        </div>
+        <div class="deep-tomb-dive"></div>
+      </div>`;
+    doc.body.insertBefore(tomb, doc.body.firstChild);
+    const guards = Array.from(tomb.querySelectorAll('.deep-guard'));
+    guards.forEach((guard, index) => drawGuardian(guard.querySelector('canvas'), GUARDIANS[index], index % 2 === 0));
+    if (typeof window.Image === 'function') {
+      GUARD_ATLASES.forEach(({ url }, index) => {
+        const sprite = new window.Image();
+        sprite.onload = () => {
+          tomb.style.setProperty('--deep-guardian-sprite-' + index, 'url("' + url + '")');
+          tomb.classList.add('has-guardian-art-' + index);
+        };
+        sprite.src = url;
+      });
+    }
+
+    const sea = doc.createElement('div');
+    sea.className = 'story-scene story-sea';
+    sea.setAttribute('aria-hidden', 'true');
+    sea.innerHTML = `
+      <div class="deep-frame deep-sea-frame">
+        <div class="deep-sea-world">
+          <div class="deep-sea-art"></div>
+          <div class="deep-caustics"></div>
+          <div class="deep-sea-bubbles">${Array.from({ length: 9 }, (_, i) =>
+            `<i style="--bubble-x:${9 + i * 10}%;--bubble-size:${4 + i % 4 * 2}px;--bubble-delay:${i * -.73}s"></i>`
+          ).join('')}</div>
+          <div class="deep-notes">${NOTE_POSITIONS.map(([x, y], index) =>
+            `<i class="deep-note" hidden style="--note-x:${x}%;--note-y:${y}%;--note-delay:${(index * .18 + .4).toFixed(2)}s">♪</i>`
+          ).join('')}</div>
+          <div class="deep-mermaid"><img src="assets/story/mermaid.webp" alt="" draggable="false"></div>
+        </div>
+        <div class="deep-surface"><div class="deep-surface-reflection"></div></div>
+        <div class="deep-waterline"></div>
+      </div>`;
+    doc.body.insertBefore(sea, doc.body.firstChild);
+    const notes = Array.from(sea.querySelectorAll('.deep-note'));
+    const counts = { tomb: 0, sea: 0 };
+    let audio;
+    let master;
+    const voices = new Set();
+
+    function unlock() {
+      if (!['tomb', 'sea'].includes(doc.body.dataset.herbStage)) return;
+      try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return;
+        if (!audio || audio.state === 'closed') {
+          audio = new AudioContext();
+          master = audio.createGain();
+          master.gain.value = 0.24;
+          master.connect(audio.destination);
+        }
+        if (audio.state !== 'running') {
+          const silent = audio.createBufferSource();
+          silent.buffer = audio.createBuffer(1, 1, audio.sampleRate);
+          silent.connect(master);
+          silent.onended = () => silent.disconnect();
+          silent.start(0);
+          Promise.resolve(audio.resume()).catch(() => {});
+        }
+      } catch (_) { /* Audio is optional. */ }
+    }
+    doc.addEventListener('pointerdown', unlock, { capture: true, passive: true });
+    doc.addEventListener('touchend', unlock, { capture: true, passive: true });
+    doc.addEventListener('keydown', unlock, { capture: true });
+
+    function voice(frequency, start, duration, sung) {
+      const oscillator = audio.createOscillator();
+      const gain = audio.createGain();
+      oscillator.type = sung ? 'triangle' : 'sine';
+      oscillator.frequency.setValueAtTime(frequency, start);
+      gain.gain.setValueAtTime(0.001, start);
+      gain.gain.exponentialRampToValueAtTime(sung ? 0.36 : 0.31, start + (sung ? .10 : .025));
+      gain.gain.exponentialRampToValueAtTime(0.001, start + duration);
+      let vowel;
+      let vibrato;
+      let depth;
+      if (sung) {
+        // A filtered, gently vibrating voice for the mermaid's wordless call.
+        vowel = audio.createBiquadFilter();
+        vowel.type = 'lowpass';
+        vowel.frequency.value = 1050;
+        vowel.Q.value = 1.9;
+        oscillator.connect(vowel);
+        vowel.connect(gain);
+        vibrato = audio.createOscillator();
+        depth = audio.createGain();
+        vibrato.frequency.value = 5.3;
+        depth.gain.value = 3.4;
+        vibrato.connect(depth);
+        depth.connect(oscillator.frequency);
+        vibrato.start(start);
+        vibrato.stop(start + duration);
+      } else oscillator.connect(gain);
+      gain.connect(master);
+      voices.add(oscillator);
+      oscillator.onended = () => {
+        voices.delete(oscillator);
+        [oscillator, gain, vowel, vibrato, depth].forEach(node => node?.disconnect());
+      };
+      oscillator.start(start);
+      oscillator.stop(start + duration);
+    }
+
+    function playNote(index) {
+      if (!audio || audio.state !== 'running' || doc.hidden) return;
+      try {
+        const now = audio.currentTime + .02;
+        voice(NOTES[index], now, .38, false);
+        voice(NOTES[index] * 2, now + .05, .19, false);
+        if (index === NOTES.length - 1) {
+          const melody = [392, 440, 523.25, 587.33, 523.25, 440, 392, 349.23, 392, 293.66];
+          melody.forEach((frequency, note) => voice(frequency, now + .40 + note * .18, note === 9 ? .95 : .32, true));
+        }
+      } catch (_) { /* Muting or suspending audio never blocks progress. */ }
+    }
+
+    function playGrowl() {
+      if (!audio || audio.state !== 'running' || doc.hidden) return;
+      try {
+        const now = audio.currentTime + .012;
+        const oscillator = audio.createOscillator();
+        const filter = audio.createBiquadFilter();
+        const gain = audio.createGain();
+        oscillator.type = 'sawtooth';
+        oscillator.frequency.setValueAtTime(92, now);
+        oscillator.frequency.linearRampToValueAtTime(71, now + .18);
+        oscillator.frequency.exponentialRampToValueAtTime(43, now + .66);
+        filter.type = 'lowpass';
+        filter.frequency.value = 245;
+        filter.Q.value = 1.6;
+        gain.gain.setValueAtTime(0.001, now);
+        gain.gain.exponentialRampToValueAtTime(0.26, now + .15);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + .69);
+        oscillator.connect(filter);
+        filter.connect(gain);
+        gain.connect(master);
+        voices.add(oscillator);
+        oscillator.onended = () => {
+          voices.delete(oscillator);
+          [oscillator, filter, gain].forEach(node => node.disconnect());
+        };
+        oscillator.start(now);
+        oscillator.stop(now + .70);
+      } catch (_) { /* Sound is optional. */ }
+    }
+
+    function stopSounds() {
+      for (const oscillator of voices) {
+        try { oscillator.stop(); }
+        catch (_) { /* An ended source may still be awaiting cleanup. */ }
+      }
+    }
+    doc.addEventListener('visibilitychange', () => { if (doc.hidden) stopSounds(); });
+
+    function mark(items, count, changed, completeClass) {
+      items.forEach((item, index) => {
+        const completed = index < count;
+        item.classList.toggle(completeClass, completed);
+        if (completeClass === 'is-lit') item.hidden = !completed;
+        item.classList.remove('is-changing');
+        if (index === changed) {
+          void item.offsetWidth;
+          item.classList.add('is-changing');
+        }
+      });
+    }
+
+    function render(stage, count, animate) {
+      const previous = counts[stage];
+      const added = Boolean(animate && count > previous);
+      counts[stage] = count;
+      const changed = added ? count - 1 : -1;
+      if (stage === 'tomb') {
+        tomb.dataset.count = String(count);
+        mark(guards, count, changed, 'is-stone');
+        if (count < previous) stopSounds();
+        if (changed === 0 || changed === 3) playGrowl();
+      } else if (stage === 'sea') {
+        sea.dataset.count = String(count);
+        mark(notes, count, changed, 'is-lit');
+        sea.classList.toggle('is-found', count === NOTES.length);
+        sea.classList.remove('is-arriving');
+        if (count === NOTES.length && added) sea.classList.add('is-arriving');
+        if (count < previous) stopSounds();
+        if (added) playNote(changed);
+      }
+    }
+
+    function resetExit() {
+      tomb.classList.remove('is-leaving');
+      sea.classList.remove('is-leaving');
+      stopSounds();
+    }
+
+    function playExit(stage) {
+      if (stage !== 'tomb' && stage !== 'sea') return 0;
+      const scene = stage === 'sea' ? sea : tomb;
+      scene.classList.remove('is-leaving');
+      void scene.offsetWidth;
+      scene.classList.add('is-leaving');
+      if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return 0;
+      return stage === 'sea' ? SEA_EXIT_MS : TOMB_EXIT_MS;
+    }
+
+    return { render, playExit, resetExit };
+  }
+
+  window.HanziTombMermaid = Object.freeze({ create });
+})(window);
 
 </script>
 <script data-source="herbalist-room.js">
@@ -5598,7 +7716,8 @@ window.HANZI_GLYPH_CATALOG={"version":"41b38d977b270e08ea493526a4ee0f8643a59bbf2
       start: '开始配药', step: '滴一滴', auto: '播放到调成', retry: '重新调配',
       demoHint: '点「滴一滴」，看草药瓶从架上飞起来。',
       demoFinished: '十种草药都加进去了。穿墙药水调好啦！',
-      next: '喝下药水，去星象台', interval: 1110,
+      reward: '加入一种草药。', completion: '十种草药都加齐了，穿墙药水调好啦！喝下它，穿过石墙去星象台。',
+      next: '喝下药水，去星象台', nextStage: 'stars', interval: 1110,
     },
     stars: {
       number: '第二关', title: '星象台', unit: '颗星星',
@@ -5607,7 +7726,58 @@ window.HANZI_GLYPH_CATALOG={"version":"41b38d977b270e08ea493526a4ee0f8643a59bbf2
       start: '开始观星', step: '点亮一颗星', auto: '播放到十颗星', retry: '重新点星',
       demoHint: '点「点亮一颗星」，看看夜空会变成什么样。',
       demoFinished: '十颗星连成一只鸟。瞧，它展开翅膀飞起来了！',
-      next: '回草药房', interval: 520,
+      reward: '天上亮起了一颗星。', completion: '十颗星连成了星座，变成一只会飞的鸟！跟着它去山脚下。',
+      next: '跟上星鸟', nextStage: 'giant', interval: 520,
+    },
+    giant: {
+      number: '第三关', title: '巨人厨房', unit: '样食材',
+      intro: '星鸟飞到山脚下。屋里有一位巨人，正在守着一口大锅。',
+      task: '每通过一个字，巨人就把一样食材扔进锅里。',
+      start: '帮巨人煮汤', step: '扔一样食材', auto: '播放到汤煮好', retry: '重新煮汤',
+      demoHint: '看看巨人的手，再看看旁边那扇门。',
+      demoFinished: '巨人汤煮好了。喝一口，看看窗台会变到哪里。',
+      reward: '巨人往锅里扔了一样食材。', completion: '十样食材煮成了巨人汤。喝下它，就有力气打碎挡路的山。',
+      next: '喝汤，打碎大山', nextStage: 'bridge', interval: 1150,
+    },
+    bridge: {
+      number: '第四关', title: '深渊断桥', unit: '块桥板',
+      intro: '山尘散开。你变回了原来的大小，脚下是一道深渊。',
+      task: '每通过一个字，就有一块木板飞回来，扣在绳索上。',
+      start: '修好断桥', step: '接回一块桥板', auto: '播放到桥修好', retry: '重新铺桥',
+      demoHint: '桥对面有一盏灯。先把木板一块块接回来。',
+      demoFinished: '十块木板都扣牢了。可以走到对岸了。',
+      reward: '一块桥板扣上了绳索。', completion: '桥接起来了。对岸的灯，原来是一座小车站。',
+      next: '走过断桥', nextStage: 'train', interval: 780,
+    },
+    train: {
+      number: '第五关', title: '气球火车', unit: '个气球',
+      intro: '一辆铜皮火车停在月台旁。车顶挂着十个瘪气球，铁轨到崖边就断了。',
+      task: '每通过一个字，车顶就鼓起一个气球。',
+      start: '给火车吹气球', step: '鼓起一个气球', auto: '播放到气球充满', retry: '重新吹气球',
+      demoHint: '先从月台看车顶，等十个气球都鼓起来。',
+      demoFinished: '十个气球充满了。上车，我们从车窗看它飞过云层。',
+      reward: '车顶鼓起了一个气球。', completion: '十个气球都鼓起来了。火车已经能离开铁轨。',
+      next: '上火车，飞过云层', nextStage: 'tomb', interval: 740,
+    },
+    tomb: {
+      number: '第六关', title: '墓穴大厅', unit: '只石化守卫',
+      intro: '火车停在山壁的石门前。墓穴深处，动物守卫围着另一扇门。',
+      task: '每通过一个字，一只守卫就会变成石像。',
+      start: '穿过墓穴大厅', step: '石化一只守卫', auto: '播放到守卫全石化', retry: '重新演示石化',
+      demoHint: '看看动物从眨眼、呼吸，到变成一尊石像。',
+      demoFinished: '守卫都变成了石像。现在可以从它们中间走过去。',
+      reward: '一只动物守卫变成了石像。', completion: '十只守卫都石化了。走到尽头，推开那扇石门。',
+      next: '推开石门', nextStage: 'sea', interval: 800,
+    },
+    sea: {
+      number: '第七关', title: '水底人鱼', unit: '个音符',
+      intro: '门后的石阶没入水中。水底飘着十个音符。',
+      task: '每通过一个字，就点亮并奏响一个音。把十个音连起来，人鱼会循声而来。',
+      start: '奏响水底音符', step: '奏响一个音符', auto: '播放到十音成曲', retry: '重新奏响',
+      demoHint: '点亮第一个音符，听它在水底响起来。',
+      demoFinished: '人鱼游来了。跟上她，一起浮出海面。',
+      reward: '一个水底音符亮了起来。', completion: '十个音符连成了曲子。人鱼循着歌声游来了。',
+      next: '跟人鱼浮出海面', nextStage: 'herbs', interval: 590,
     },
   };
 
@@ -5639,9 +7809,15 @@ window.HANZI_GLYPH_CATALOG={"version":"41b38d977b270e08ea493526a4ee0f8643a59bbf2
         </div>
       </div>`;
     body.insertBefore(backdrop, body.firstChild);
-    let observatory;
-    try { observatory = doc.defaultView?.HanziObservatory?.create({ document: doc }); }
-    catch (_) { /* An optional scene must leave the lesson playable. */ }
+    function createVisual(module) {
+      try { return module?.create({ document: doc }); }
+      catch (_) { return undefined; }
+    }
+    const observatory = createVisual(doc.defaultView?.HanziObservatory);
+    const giant = createVisual(doc.defaultView?.HanziGiantKitchen);
+    const sky = createVisual(doc.defaultView?.HanziBridgeTrain);
+    const deep = createVisual(doc.defaultView?.HanziTombMermaid);
+    const visuals = { giant, bridge: sky, train: sky, tomb: deep, sea: deep };
 
     const hud = doc.createElement('div');
     hud.className = 'herb-hud';
@@ -5662,10 +7838,14 @@ window.HANZI_GLYPH_CATALOG={"version":"41b38d977b270e08ea493526a4ee0f8643a59bbf2
         <p id="herbIntroTask"></p>
         <div class="herb-actions">
           <button class="herb-primary" id="herbStart" type="button"><span id="herbStartText"></span><span aria-hidden="true">→</span></button>
-          <button class="herb-secondary" id="herbShowDemo" type="button">观看两关演示</button>
+          <button class="herb-secondary" id="herbShowDemo" type="button">观看关卡演示</button>
         </div>
       </section>
       <section class="herb-card" id="herbDemo" hidden>
+        <label class="herb-demo-select">选择关卡
+          <select id="herbDemoStage">${Object.entries(STAGES).map(([key, story]) =>
+            `<option value="${key}">${story.number} · ${story.title}</option>`).join('')}</select>
+        </label>
         <p id="herbDemoStatus" aria-live="polite">点「滴一滴」，看草药瓶从架上飞起来。</p>
         <div class="herb-actions">
           <button class="herb-primary" id="herbDemoNext" type="button" hidden></button>
@@ -5711,6 +7891,7 @@ window.HANZI_GLYPH_CATALOG={"version":"41b38d977b270e08ea493526a4ee0f8643a59bbf2
     const demoDrop = get('herbDemoDrop');
     const demoPlay = get('herbDemoPlay');
     const demoNext = get('herbDemoNext');
+    const demoStage = get('herbDemoStage');
     const hudWallet = get('herbWallet');
     const rankIcon = get('herbRankIcon');
     const rankLabel = get('herbRankLabel');
@@ -5728,6 +7909,8 @@ window.HANZI_GLYPH_CATALOG={"version":"41b38d977b270e08ea493526a4ee0f8643a59bbf2
     let pouringBottle;
     let demoTimer;
     let fadeTimer;
+    let activeExit;
+    let seaSurfaced = false;
     let autoPlaying = false;
     let writing = true;
     let storage;
@@ -5793,7 +7976,10 @@ window.HANZI_GLYPH_CATALOG={"version":"41b38d977b270e08ea493526a4ee0f8643a59bbf2
       meter.textContent = count + ' / ' + ROOM_SIZE + ' ' + STAGES[displayStage].unit;
       if (displayStage === 'herbs') renderFill(count, animate);
       else {
-        try { observatory?.render(count, animate); }
+        try {
+          if (displayStage === 'stars') observatory?.render(count, animate);
+          else visuals[displayStage]?.render(displayStage, count, animate);
+        }
         catch (_) { /* The progress display is independent of the animation. */ }
       }
     }
@@ -5801,6 +7987,7 @@ window.HANZI_GLYPH_CATALOG={"version":"41b38d977b270e08ea493526a4ee0f8643a59bbf2
     function display(next) {
       displayStage = next;
       body.dataset.herbStage = next;
+      demoStage.value = next;
       const story = STAGES[next];
       get('herbChapter').textContent = story.number;
       get('herbTitle').textContent = story.title;
@@ -5827,8 +8014,9 @@ window.HANZI_GLYPH_CATALOG={"version":"41b38d977b270e08ea493526a4ee0f8643a59bbf2
       demoDrop.classList.toggle('herb-primary', !finished);
       demoDrop.classList.toggle('herb-secondary', finished);
       demoNext.hidden = !finished;
-      demoNext.textContent = displayStage === 'herbs' ? story.next : '再看一次两关演示';
-      demoStatus.textContent = finished ? story.demoFinished : story.demoHint;
+      demoNext.textContent = displayStage === 'sea' && seaSurfaced ? '从草药房再看一遍' : story.next;
+      demoStatus.textContent = seaSurfaced ? '你和人鱼一起浮出了海面。'
+        : finished ? story.demoFinished : story.demoHint;
     }
 
     function stopDemo() {
@@ -5848,29 +8036,79 @@ window.HANZI_GLYPH_CATALOG={"version":"41b38d977b270e08ea493526a4ee0f8643a59bbf2
       if (!info.open) info.showModal();
     }
 
-    function resetCurtain() {
+    function resetCurtain(keepExit = false) {
       clearTimeout(fadeTimer);
       curtain.classList.remove('herb-fade', 'herb-crossing');
+      if (!keepExit) resetExit();
     }
 
-    function transition(nextStage, nextMode) {
-      resetCurtain();
+    function resetExit() {
+      activeExit?.resetExit?.();
+      activeExit = undefined;
+    }
+
+    function playExit() {
+      activeExit = displayStage === 'stars' ? observatory : visuals[displayStage];
+      try { return activeExit?.playExit(displayStage) || 0; }
+      catch (_) { return 0; }
+    }
+
+    function reducedMotion() {
+      return doc.defaultView?.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+    }
+
+    function transition(nextStage, nextMode, animateExit = true) {
+      const surfaced = seaSurfaced;
+      resetCurtain(surfaced);
+      seaSurfaced = false;
       function reveal() {
         display(nextStage);
+        resetExit();
         setMode(nextMode);
         renderProgress(nextMode === 'demo' ? demoFill : actualFill);
         if (nextMode === 'demo') updateDemoControls();
         (nextMode === 'demo' ? demoDrop : get('herbStart')).focus({ preventScroll: true });
       }
-      if (doc.defaultView?.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches) {
+      if (reducedMotion()) {
         reveal();
         return;
       }
-      curtain.getBoundingClientRect();
       const crossingWall = displayStage === 'herbs' && nextStage === 'stars';
-      curtain.classList.add(crossingWall ? 'herb-crossing' : 'herb-fade');
       setMode('travel');
-      fadeTimer = setTimeout(reveal, crossingWall ? 704 : 245);
+      function beginFade() {
+        curtain.getBoundingClientRect();
+        curtain.classList.add(crossingWall && animateExit ? 'herb-crossing' : 'herb-fade');
+        fadeTimer = setTimeout(reveal, crossingWall && animateExit ? 704 : 245);
+      }
+      const duration = animateExit && !surfaced ? playExit() : 0;
+      if (duration) fadeTimer = setTimeout(beginFade, duration);
+      else beginFade();
+    }
+
+    function surface() {
+      if (displayStage !== 'sea') return false;
+      if (mode === 'travel') return true;
+      if (seaSurfaced) return false;
+      seaSurfaced = true;
+      const previousMode = mode;
+      setMode('travel');
+      const duration = playExit();
+      function finish() {
+        setMode(previousMode);
+        if (previousMode === 'demo') {
+          updateDemoControls();
+          demoNext.focus({ preventScroll: true });
+        } else {
+          const restart = get('restartBtn');
+          const detail = get('finaleDetail');
+          detail.textContent = ['你和人鱼一起浮出了海面。', ...detail.textContent.split('\n').slice(1)].join('\n');
+          restart.textContent = '回草药房';
+          restart.focus({ preventScroll: true });
+        }
+      }
+      if (duration && !reducedMotion()) fadeTimer = setTimeout(finish, duration);
+      else finish();
+      return true;
     }
 
     setupButton('herbStart', () => {
@@ -5880,6 +8118,8 @@ window.HANZI_GLYPH_CATALOG={"version":"41b38d977b270e08ea493526a4ee0f8643a59bbf2
     });
     setupButton('herbShowDemo', () => {
       stopDemo();
+      resetCurtain();
+      seaSurfaced = false;
       demoFill = 0;
       display('herbs');
       setMode('demo');
@@ -5890,6 +8130,8 @@ window.HANZI_GLYPH_CATALOG={"version":"41b38d977b270e08ea493526a4ee0f8643a59bbf2
     setupButton('herbDemoDrop', () => {
       if (autoPlaying) return;
       if (demoFill === ROOM_SIZE) {
+        resetCurtain();
+        seaSurfaced = false;
         demoFill = 0;
         renderProgress(0);
         updateDemoControls();
@@ -5911,6 +8153,8 @@ window.HANZI_GLYPH_CATALOG={"version":"41b38d977b270e08ea493526a4ee0f8643a59bbf2
     setupButton('herbDemoExit', () => {
       stopDemo();
       display(stage);
+      resetCurtain();
+      seaSurfaced = false;
       setMode('intro');
       renderProgress(actualFill);
       get('herbShowDemo').focus({ preventScroll: true });
@@ -5918,8 +8162,15 @@ window.HANZI_GLYPH_CATALOG={"version":"41b38d977b270e08ea493526a4ee0f8643a59bbf2
     setupButton('herbDemoNext', () => {
       if (mode !== 'demo' || demoFill !== ROOM_SIZE) return;
       stopDemo();
+      if (surface()) return;
       demoFill = 0;
-      transition(displayStage === 'herbs' ? 'stars' : 'herbs', 'demo');
+      transition(STAGES[displayStage].nextStage, 'demo');
+    });
+    demoStage.addEventListener('change', () => {
+      if (mode !== 'demo' || !Object.hasOwn(STAGES, demoStage.value)) return;
+      stopDemo();
+      demoFill = 0;
+      transition(demoStage.value, 'demo', false);
     });
     setupButton('herbHome', () => {
       if (!cottage.open) cottage.showModal();
@@ -5970,6 +8221,7 @@ window.HANZI_GLYPH_CATALOG={"version":"41b38d977b270e08ea493526a4ee0f8643a59bbf2
     function restoreStage(savedStage, count, resume) {
       stopDemo();
       resetCurtain();
+      seaSurfaced = false;
       stage = savedStage;
       actualFill = count;
       display(stage);
@@ -5980,9 +8232,10 @@ window.HANZI_GLYPH_CATALOG={"version":"41b38d977b270e08ea493526a4ee0f8643a59bbf2
     updateCoins(0);
     restoreStage('herbs', 0, false);
     body.classList.add('has-herbalist');
-    return { showWriting, arrive, pass, finale, nextLevel, restoreStage, updateMastered };
+    return { showWriting, arrive, pass, finale, nextLevel, restoreStage, updateMastered, surface };
   }
 
+  window.HanziStoryStages = STAGES;
   window.HanziHerbalist = { create };
 }());
 
@@ -6294,10 +8547,20 @@ function recordInk(payload, verdict){
 // cross-day review schedule is theatre: close the tab and the boxes, intervals and mastery
 // dates are gone, so every session starts the child from scratch. Manual export/import
 // remains available alongside optional encrypted progress synchronization.
-const SAVE_KEY = 'hanzi-magic-herbalist-state-v1';
+const INDEPENDENT_SAVE_KEY = 'hanzi-magic-herbalist-state-v1';
+const SHARED_STORY_KEY = 'hanzi-magic-herbalist-story-v1';
+const BEFORE_SHARED_KEY = 'hanzi-magic-herbalist-before-sharing-v1';
+const sameGameSite = window.location?.protocol === 'https:' &&
+  window.location?.hostname === 'lucyisalive.github.io' && /^\/magic-hanzi(?:\/|$)/.test(window.location.pathname);
+const sharedLearning = sameGameSite ? window.HanziSharedLearning : null;
+const SAVE_KEY = sharedLearning ? 'hanzi-magic-door-state-v1' : INDEPENDENT_SAVE_KEY;
 const LOCAL_RECOVERY_PREFIX = 'hanzi-magic-herbalist-local-recovery-v1-';
 const PRE_RESTORE_KEY = 'hanzi-magic-herbalist-pre-restore-v1';
 let progressStorageBase = null;
+let storyStorageBase = null;
+let legacyLearning = null;
+let needsSharedBackup = false;
+let needsInitialMerge = false;
 let progressWrites = 0;
 let pendingProgressText = null;
 let pendingProgressCopyKey = null;
@@ -6323,7 +8586,7 @@ function showProgressSaveNotice(message){
 function preservePendingProgress(){
   if(!progressWrites || !pendingProgressText) return;
   try{
-    if(localStorage.getItem(SAVE_KEY) === pendingProgressText) return;
+    if(!sharedLearning && localStorage.getItem(SAVE_KEY) === pendingProgressText) return;
     const key = LOCAL_RECOVERY_PREFIX + storagePageId() + '-pending';
     localStorage.setItem(key, JSON.stringify({at:Date.now(), progress:JSON.parse(pendingProgressText)}));
     pendingProgressCopyKey = key;
@@ -6343,11 +8606,23 @@ function finishPendingProgress(saved){
   }
   pendingProgressText = null;
 }
-function writeLocalProgress(text, operation = 'save'){
+function currentProgressBase(){
+  return localStorage.getItem(SAVE_KEY) === progressStorageBase &&
+    (!sharedLearning || localStorage.getItem(SHARED_STORY_KEY) === storyStorageBase);
+}
+
+function writeLocalProgress(text, operation = 'save', currentLegacy = legacyLearning){
   const stored = localStorage.getItem(SAVE_KEY);
-  if(stored !== progressStorageBase){
+  const storedStory = sharedLearning ? localStorage.getItem(SHARED_STORY_KEY) : null;
+  const fullProgress = sharedLearning ? JSON.parse(text) : null;
+  const projected = sharedLearning ? sharedLearning.learningRecord(fullProgress, currentLegacy) : null;
+  const learningText = sharedLearning ? JSON.stringify(projected) : text;
+  const storyText = sharedLearning
+    ? JSON.stringify({version:1, ...sharedLearning.storyRecord(fullProgress)}) : null;
+  if(stored !== progressStorageBase || (sharedLearning && storedStory !== storyStorageBase)){
     if(operation !== 'save') throw new Error('另一个游戏页面已保存，请重新打开本页再恢复进度。');
-    if(text !== progressStorageBase && text !== stored){
+    if((learningText !== progressStorageBase || storyText !== storyStorageBase) &&
+        (learningText !== stored || storyText !== storedStory)){
       localStorage.setItem(LOCAL_RECOVERY_PREFIX + storagePageId(), JSON.stringify({at:Date.now(), progress:JSON.parse(text)}));
       showProgressSaveNotice('另一个游戏页面已有更新。本页进度已另存，可在设置的「手动备份」下载。请用一个游戏页面继续。');
     } else {
@@ -6359,11 +8634,28 @@ function writeLocalProgress(text, operation = 'save'){
   if(operation === 'restore'){
     previousBackup = localStorage.getItem(PRE_RESTORE_KEY);
     // Preserve the exact old bytes even if they could not be parsed at startup.
-    localStorage.setItem(PRE_RESTORE_KEY, JSON.stringify({at:Date.now(), raw:stored || JSON.stringify(state)}));
+    const beforeRestore = sharedLearning ? JSON.stringify(state) : stored || JSON.stringify(state);
+    localStorage.setItem(PRE_RESTORE_KEY, JSON.stringify({at:Date.now(), raw:beforeRestore}));
   }
+  let wroteStory = false;
   try{
-    localStorage.setItem(SAVE_KEY, text);
+    if(needsSharedBackup && stored !== null && localStorage.getItem(BEFORE_SHARED_KEY) === null){
+      localStorage.setItem(BEFORE_SHARED_KEY, JSON.stringify({at:Date.now(), raw:stored}));
+    }
+    // The old page serializes the shared learning key under the same lock.
+    // Keep this game's position alongside it, restoring it if the shared write fails.
+    if(sharedLearning && storyText !== storedStory){
+      localStorage.setItem(SHARED_STORY_KEY, storyText);
+      wroteStory = true;
+    }
+    localStorage.setItem(SAVE_KEY, learningText);
   }catch(error){
+    if(wroteStory){
+      try{
+        if(storedStory === null) localStorage.removeItem(SHARED_STORY_KEY);
+        else localStorage.setItem(SHARED_STORY_KEY, storedStory);
+      }catch(_){ /* Keep the original learning record. */ }
+    }
     if(operation === 'restore'){
       try{
         if(previousBackup === null) localStorage.removeItem(PRE_RESTORE_KEY);
@@ -6372,7 +8664,13 @@ function writeLocalProgress(text, operation = 'save'){
     }
     throw error;
   }
-  progressStorageBase = text;
+  progressStorageBase = learningText;
+  if(sharedLearning){
+    storyStorageBase = storyText;
+    legacyLearning = projected;
+    needsSharedBackup = false;
+    needsInitialMerge = false;
+  }
   showProgressSaveNotice('');
   return true;
 }
@@ -6467,15 +8765,36 @@ function migrateState(s){
   return s;
 }
 
+function parseSavedState(raw){
+  if(!raw) return null;
+  try{ return migrateState(JSON.parse(raw)); }
+  catch(_){ return null; }
+}
+
 function loadSavedState(){
-  let raw = null;
-  try{ raw = localStorage.getItem(SAVE_KEY); }catch(e){ return; }
+  let raw;
+  try{ raw = localStorage.getItem(SAVE_KEY); }
+  catch(_){ return; }
   progressStorageBase = raw;
-  if(!raw) return;
+  const fromDisk = parseSavedState(raw);
+  if(!sharedLearning){
+    if(fromDisk) state = fromDisk;
+    return;
+  }
+  legacyLearning = fromDisk;
+  let story, independent;
   try{
-    const migrated = migrateState(JSON.parse(raw));
-    if(migrated) state = migrated;
-  }catch(e){ /* corrupt entry — fall back to a fresh bank rather than refusing to start */ }
+    storyStorageBase = localStorage.getItem(SHARED_STORY_KEY);
+    try{ story = JSON.parse(storyStorageBase); }
+    catch(_){ /* Recover from the earlier independent save below. */ }
+    if(story?.version !== 1) story = null;
+    if(!story) independent = parseSavedState(localStorage.getItem(INDEPENDENT_SAVE_KEY));
+  }catch(_){ /* The legacy learning record is still available. */ }
+  needsSharedBackup = raw !== null && (!fromDisk || Boolean(independent));
+  needsInitialMerge = Boolean(independent);
+  const learning = fromDisk && independent ? sharedLearning.mergeLearning(fromDisk, independent)
+    : fromDisk || independent || state;
+  state = sharedLearning.assemble(learning, story || independent);
 }
 
 // ---------- session runtime ----------
@@ -8287,10 +10606,11 @@ function syncSessionSnapshot(){
 function getCloudProgressState(){
   if(progressSaveNotice) throw new Error(progressSaveNotice);
   if(progressWrites) throw new Error('本机进度正在保存，请稍后同步。');
-  if(localStorage.getItem(SAVE_KEY) !== progressStorageBase){
+  if(!currentProgressBase()){
     throw new Error('另一个游戏页面已有更新，请重新打开本页再同步。');
   }
-  return {...state, sessionProgress:syncSessionSnapshot()};
+  return sharedLearning ? sharedLearning.learningRecord(state, legacyLearning)
+    : {...state, sessionProgress:syncSessionSnapshot()};
 }
 function syncQuestionSafe(){
   if(parentValidation || isDrawing || submitBtn.disabled || syncFileReading || progressWrites || parentQueueChanged || pendingRetests.length) return false;
@@ -8298,7 +10618,7 @@ function syncQuestionSafe(){
   return currentMode === 'free' && strokesPoints.length === 0;
 }
 function syncCanApplyProgress(){
-  return syncQuestionSafe() && !progressSaveNotice && localStorage.getItem(SAVE_KEY) === progressStorageBase &&
+  return syncQuestionSafe() && !progressSaveNotice && currentProgressBase() &&
     (!panelOverlay.classList.contains('show') || syncExplicitAdopt);
 }
 function restoreSyncedRound(){
@@ -8314,10 +10634,10 @@ function restoreSyncedRound(){
 function restoreHerbalistStage(){
   if(typeof herbalistRoom?.restoreStage !== 'function') return false;
   const saved = state.herbalistStage;
-  const hasStory = saved === 'herbs' || saved === 'stars';
+  const hasStory = Object.hasOwn(HERBALIST_STAGES, saved);
   if(hasStory) restoreSyncedRound();
   // An old exploration total does not indicate a saved point in this story.
-  state.herbalistStage = saved === 'stars' ? 'stars' : 'herbs';
+  state.herbalistStage = hasStory ? saved : 'herbs';
   herbalistCall('restoreStage', state.herbalistStage, passedCount, passedCount > 0 || syncRoundCompleted);
   return hasStory;
 }
@@ -8364,13 +10684,16 @@ function applyProgressToPage(next, connected){
     if(connected || storyRestored) presentSyncedProgress(); else loadNextDoor();
   } finally { syncApplying = false; }
 }
-function applySyncedProgress(remote){
-  const next = migrateState(JSON.parse(JSON.stringify(remote)));
-  if(!next || !syncCanApplyProgress()) throw new Error('请先完成当前练习，再接上云端进度。');
+function applySyncedProgress(remote, reason){
+  const incoming = migrateState(JSON.parse(JSON.stringify(remote)));
+  if(!incoming || !syncCanApplyProgress()) throw new Error('请先完成当前练习，再接上云端进度。');
   return withLocalWrite(SAVE_KEY, () => {
     if(!syncCanApplyProgress()) throw new Error('请先完成当前练习，再接上云端进度。');
     // Persist before replacing live objects. A quota failure leaves this question intact.
-    writeLocalProgress(JSON.stringify(next), 'sync');
+    const joining = reason === 'join-family' || reason === 'join-password-family';
+    const learning = sharedLearning && joining ? sharedLearning.mergeLearning(incoming, state) : incoming;
+    const next = sharedLearning ? sharedLearning.assemble(learning, state) : incoming;
+    writeLocalProgress(JSON.stringify(next), 'sync', sharedLearning ? incoming : null);
     applyProgressToPage(next, true);
   });
 }
@@ -8681,6 +11004,7 @@ function mountainCall(method, ...args){
 }
 
 let herbalistRoom = null;
+const HERBALIST_STAGES = window.HanziStoryStages || {};
 function initHerbalistRoom(){
   try{
     herbalistRoom = window.HanziHerbalist?.create({document, onTap}) || null;
@@ -8692,6 +11016,7 @@ function herbalistCall(method, ...args){
     if(typeof herbalistRoom?.[method] !== 'function') return;
     const result = herbalistRoom[method](...args);
     if(result && typeof result.then === 'function') Promise.resolve(result).catch(() => {});
+    return result;
   }catch(_){ /* The room display cannot interrupt learning or persistence. */ }
 }
 
@@ -8905,7 +11230,7 @@ function markPassed(item, outcome, message){
   timerRing.style.display = 'none';
   if(typeof herbalistRoom !== 'undefined' && herbalistRoom){
     const cheer = outcome === 'first-try' ? '一次就写对啦！' : '隔了一会儿还记得！';
-    const reward = state.herbalistStage === 'stars' ? '天上亮起了一颗星。' : '加入一种草药。';
+    const reward = HERBALIST_STAGES[state.herbalistStage]?.reward || '加入一种草药。';
     resultBanner.textContent = cheer + reward;
   } else resultBanner.textContent = message;
   resultBanner.className = 'result-banner correct';
@@ -9312,7 +11637,8 @@ onTap(restartBtn, function(){
   // The next level on the same day keeps waiting retests and their actual
   // filler counts. Calendar-based learning history and priority dates stay intact.
   if(stage){
-    state.herbalistStage = stage === 'herbs' ? 'stars' : 'herbs';
+    if(stage === 'sea' && herbalistCall('surface') === true) return;
+    state.herbalistStage = HERBALIST_STAGES[stage]?.nextStage || 'herbs';
     herbalistCall('nextLevel', state.herbalistStage);
   }
   if(syncRoundDay !== todayStr()) pendingRetests = [];
@@ -9691,7 +12017,7 @@ function renderLocalRecoveryCopies(){
   if(!section || !select) return;
   const copies = [];
   try{
-    const keys = new Set([PRE_RESTORE_KEY]);
+    const keys = new Set([PRE_RESTORE_KEY, BEFORE_SHARED_KEY]);
     if(localPageId) keys.add(LOCAL_RECOVERY_PREFIX + localPageId);
     for(let i = 0; i < localStorage.length; i++){
       const key = localStorage.key(i);
@@ -9701,13 +12027,17 @@ function renderLocalRecoveryCopies(){
       const copy = JSON.parse(localStorage.getItem(key));
       if(copy && Number.isFinite(copy.at) && (copy.progress || typeof copy.raw === 'string')) copies.push({key, at:copy.at});
     }
+    if(sharedLearning && localStorage.getItem(INDEPENDENT_SAVE_KEY)) copies.push({key:INDEPENDENT_SAVE_KEY, at:null});
   }catch(_){}
   const selected = select.value;
   while(select.firstChild) select.removeChild(select.firstChild);
   copies.sort((a,b) => b.at - a.at).forEach(({key, at}) => {
     const option = document.createElement('option');
     option.value = key;
-    option.textContent = `${key === PRE_RESTORE_KEY ? '恢复前的进度' : '另一个页面的练习'} · ${new Date(at).toLocaleString()}`;
+    const label = key === INDEPENDENT_SAVE_KEY ? '合并前的新版学习进度'
+      : key === PRE_RESTORE_KEY ? '恢复前的进度'
+      : key === BEFORE_SHARED_KEY ? '合并前的旧版学习进度' : '另一个页面的练习';
+    option.textContent = at === null ? label : label + ' · ' + new Date(at).toLocaleString();
     select.appendChild(option);
   });
   if(copies.some(copy => copy.key === selected)) select.value = selected;
@@ -9716,7 +12046,12 @@ function renderLocalRecoveryCopies(){
 onTap(document.getElementById('localRecoveryDownload'), () => {
   try{
     const key = document.getElementById('localRecoverySelect').value;
-    if(key !== PRE_RESTORE_KEY && !key.startsWith(LOCAL_RECOVERY_PREFIX)) return;
+    if(key === INDEPENDENT_SAVE_KEY && sharedLearning){
+      const original = localStorage.getItem(INDEPENDENT_SAVE_KEY);
+      if(original) downloadProgress(original, '恢复副本');
+      return;
+    }
+    if(key !== PRE_RESTORE_KEY && key !== BEFORE_SHARED_KEY && !key.startsWith(LOCAL_RECOVERY_PREFIX)) return;
     const copy = JSON.parse(localStorage.getItem(key));
     if(copy) downloadProgress(copy.raw || JSON.stringify(copy.progress, null, 2), '恢复副本');
   }catch(_){ alert('未能下载本机副本，请稍后再试。'); }
@@ -9771,8 +12106,10 @@ fileInput.addEventListener('change', (e) => {
       next = validateProgressBackup(JSON.parse(ev.target.result));
     }catch(_){}
     if(!next){ alert('这个文件不是有效的进度备份。本机进度已保留。'); return; }
+    if(sharedLearning) next = sharedLearning.assemble(next, next.herbalistStage ? next : state);
     const connected = cloudSyncController?.status().connected;
-    if(connected && !confirm('恢复的进度会同步到同一家庭的其他设备。本机将保留恢复前的副本。继续恢复吗？')) return;
+    if((connected || sharedLearning) &&
+        !confirm('恢复会替换共用的学习进度。当前进度会保留一份恢复前的副本。继续恢复吗？')) return;
     syncFileReading = true;
     const failed = error => {
       syncFileReading = false;
@@ -9784,7 +12121,7 @@ fileInput.addEventListener('change', (e) => {
       const result = withLocalWrite(SAVE_KEY, () => {
         syncFileReading = false;
         if(!syncQuestionSafe()) throw new Error('busy');
-        if(localStorage.getItem(SAVE_KEY) !== progressStorageBase) throw new Error('another-tab');
+        if(!currentProgressBase()) throw new Error('another-tab');
         writeLocalProgress(JSON.stringify(next), 'restore');
         applyProgressToPage(next, connected);
         if(cloudSyncController) cloudSyncController.changed();
@@ -9819,9 +12156,7 @@ function applyScene(index){
 }
 
 function herbalistCompletionMessage(){
-  return state.herbalistStage === 'stars'
-    ? '十颗星连成了星座，变成一只会飞的鸟！草药房和星象台都走过啦。'
-    : '十种草药都加齐了，穿墙药水调好啦！喝下它，穿过石墙去星象台。';
+  return (HERBALIST_STAGES[state.herbalistStage] || HERBALIST_STAGES.herbs)?.completion || '';
 }
 
 function showFinale(bankEmpty){
@@ -9850,7 +12185,7 @@ function showFinale(bankEmpty){
     ? `\n「${justMastered.map(b => b.char).join('、')}」已经在 ${MASTERED_DAYS} 个不同的日子写对了，永久掌握，不用再练啦！`
     : '';
   const remaining = unfinishedParentEntries().length;
-  const nextRound = state.herbalistStage === 'stars' ? '下一轮' : '下一关';
+  const nextRound = state.herbalistStage === 'sea' ? '下一轮' : '下一关';
   const nextNote = remaining ? `\n还有 ${remaining} 个家长安排的字，${nextRound}优先练。` : '';
   const completedMessage = typeof herbalistRoom !== 'undefined' && herbalistRoom
     ? herbalistCompletionMessage()
@@ -9899,8 +12234,10 @@ recoverPendingInkCopies();
 loadParentTestInkLog();
 initMountainJourney();
 initHerbalistRoom();
-document.body.classList.add('herbalist-local-preview');
+document.body.classList.add('herbalist-no-ai');
+if(!sharedLearning) document.body.classList.add('herbalist-local-preview');
 const herbalistStoryRestored = restoreHerbalistStage();
+if(sharedLearning) initProgressSync();
 applyScene(state.scenesUnlocked);
 renderQueueList();
 renderMasteredList();
@@ -9913,7 +12250,11 @@ batchInput.addEventListener('focus',loadPinyinForParent);
 if(herbalistStoryRestored || (cloudSyncController && cloudSyncController.status().connected)) presentSyncedProgress();
 else loadNextDoor();
 document.getElementById('startupNotice').hidden = true;
-if(cloudSyncController) Promise.resolve(cloudSyncController.start()).catch(() => {});
+if(needsInitialMerge){
+  Promise.resolve(saveState()).then(saved => {
+    if(saved) return cloudSyncController?.start();
+  }).catch(() => {});
+} else if(cloudSyncController) Promise.resolve(cloudSyncController.start()).catch(() => {});
 </script>
 </body>
 </html>

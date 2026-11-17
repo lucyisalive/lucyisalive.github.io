@@ -18,8 +18,19 @@
 .has-herbalist .doorway,
 .has-herbalist .progress-path,
 .herbalist-local-preview .cloud-sync,
-.herbalist-local-preview #aiSentenceSettings { display: none; }
+.herbalist-no-ai #aiSentenceSettings { display: none; }
 .has-herbalist :is(.herb-card, .herb-actions button)[hidden] { display: none; }
+.has-herbalist:not([data-herb-stage="herbs"]) #herbalistBackdrop { display: none; }
+
+.story-scene {
+  display: none;
+  position: fixed;
+  inset: 0;
+  width: min(100%, 106dvh, 1080px);
+  margin-inline: auto;
+  overflow: hidden;
+  pointer-events: none;
+}
 
 #herbalistBackdrop {
   position: fixed;
@@ -462,6 +473,22 @@
 }
 .herb-card p, .herb-cottage p, .herb-info p { margin: 0 0 11px; font-size: 14px; color: #f3dfb9; line-height: 1.45; }
 .herb-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 7px; }
+.herb-demo-select {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 9px;
+  font-size: 13px;
+}
+.herb-demo-select select {
+  min-height: 34px;
+  padding: 4px 8px;
+  color: var(--herb-paper);
+  border: 1px solid var(--herb-line);
+  border-radius: 7px;
+  background: #18261e;
+  font: inherit;
+}
 .herb-primary, .herb-secondary {
   min-height: 42px;
   padding: 8px 14px;

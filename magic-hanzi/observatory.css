@@ -108,6 +108,19 @@ body[data-herb-stage="stars"] #observatoryBackdrop { display: block; }
 .observatory-transforming .observatory-bird { animation: observatory-flight 1.32s cubic-bezier(.16,.62,.35,1) .93s both; }
 .observatory-transforming .observatory-wing-right { animation: observatory-far-wing 1.32s ease-in-out .93s both; }
 .observatory-transforming .observatory-wing-left { animation: observatory-near-wing 1.32s ease-in-out .93s both; }
+.observatory-following .observatory-art { animation: observatory-look-up 1.06s ease-in both; }
+.observatory-following .observatory-bird { animation: observatory-depart 1.06s ease-in both; }
+.observatory-following .observatory-bird canvas { animation: observatory-far-wing .5s ease-in-out infinite; }
+
+@keyframes observatory-look-up {
+  from { transform: scale(1); }
+  to { transform: scale(1.17) translateY(6%); filter: blur(2px) brightness(.69); }
+}
+@keyframes observatory-depart {
+  0% { opacity: 1; transform: translate(3%, -7%) scale(.96); }
+  35% { opacity: 1; transform: translate(14%, -34%) scale(.78); }
+  100% { opacity: 0; transform: translate(29%, -84%) scale(.35); }
+}
 
 @keyframes observatory-light {
   0% { transform: translate(-50%, -50%) scale(.5); opacity: .4; }

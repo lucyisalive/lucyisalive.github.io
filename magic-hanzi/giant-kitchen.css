@@ -1,0 +1,512 @@
+.has-herbalist[data-herb-stage="giant"] {
+  --herb-paper: #ffefcf;
+  --herb-gold: #f4bc73;
+  --herb-line: #b3764c96;
+  background: #1f1511;
+}
+
+body[data-herb-stage="giant"] .story-giant { display: block; }
+
+.story-giant {
+  --story-giant-pot-x: 51.5%;
+  --story-giant-pot-y: 49.5%;
+  --story-giant-fill: 0;
+  background: radial-gradient(ellipse at 62% 30%, #543626, #21150e 67%, #130e0b);
+}
+
+.story-giant-viewport {
+  position: absolute;
+  inset: 0;
+  width: min(100%, 86dvh);
+  margin-inline: auto;
+  overflow: hidden;
+  background: radial-gradient(ellipse at 55% 45%, #5d3d29, #291a14 58%, #1a100e 98%);
+  box-shadow: 0 0 120px 35px #150d09e6;
+}
+
+.story-giant-viewport::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  pointer-events: none;
+  background: linear-gradient(180deg, #180e10bb 0%, transparent 22% 64%, #170e0ccc 100%);
+}
+
+.story-giant-room {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(100%, 76dvh);
+  aspect-ratio: 3 / 4;
+  transform: translate(-50%, -50%);
+  transform-origin: 42% 44%;
+  background: #38251b url("assets/story/giant-kitchen.webp") center / 100% 100% no-repeat;
+  box-shadow: 0 0 62px 23px #271812;
+}
+
+.story-giant-pot-glow {
+  position: absolute;
+  left: var(--story-giant-pot-x);
+  top: var(--story-giant-pot-y);
+  width: 44%;
+  height: 9%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, #ffe885a1 0%, #fda64380 42%, transparent 72%);
+  opacity: calc(.14 + .55 * var(--story-giant-fill));
+  transform: translate(-50%, -34%);
+  mix-blend-mode: screen;
+  transition: opacity .35s ease;
+}
+
+.story-giant-steam {
+  position: absolute;
+  left: var(--story-giant-pot-x);
+  top: var(--story-giant-pot-y);
+  width: 33%;
+  height: 13%;
+  transform: translate(-50%, -93%);
+  opacity: calc(.22 + .58 * var(--story-giant-fill));
+  transition: opacity .35s ease;
+}
+.story-giant-steam i {
+  position: absolute;
+  bottom: 0;
+  left: 24%;
+  width: 29%;
+  height: 92%;
+  border-radius: 47% 65% 50% 50%;
+  background: radial-gradient(ellipse at 50% 70%, #ffe8c17a, #d5b49c44 48%, transparent 72%);
+  filter: blur(8px);
+  animation: story-giant-steam 3s ease-in-out infinite;
+}
+.story-giant-steam i:nth-child(2) { left: 42%; animation-delay: -1.2s; }
+.story-giant-steam i:nth-child(3) { left: 61%; animation-delay: -2.1s; }
+@keyframes story-giant-steam {
+  0% { opacity: 0; transform: translate(5%, 12%) scale(.72, .6); }
+  30% { opacity: .7; }
+  100% { opacity: 0; transform: translate(-29%, -50%) scale(1.3); }
+}
+
+.story-giant-food {
+  --ingredient-light: #ffc16c;
+  --ingredient-main: #bd581e;
+  --ingredient-shadow: #622d1d;
+  position: absolute;
+  z-index: 3;
+  top: var(--story-giant-pot-y);
+  left: var(--story-giant-pot-x);
+  width: 18%;
+  aspect-ratio: 1;
+  opacity: 0;
+  filter: drop-shadow(1px 4px 4px #2c150f86);
+}
+
+.story-giant-food i {
+  position: absolute;
+  inset: 14% 5% 7%;
+  border-radius: 48% 54% 43% 47%;
+  background: radial-gradient(ellipse at 32% 23%, var(--ingredient-light), var(--ingredient-main) 50%, var(--ingredient-shadow) 91%);
+  box-shadow: inset 1px 2px 2px #fff1d055, inset -3px -4px 8px #1b0c1252;
+}
+.story-giant-food i::before {
+  content: '';
+  position: absolute;
+  top: -13%;
+  left: 45%;
+  width: 13%;
+  height: 26%;
+  border-radius: 40% 40% 22% 10%;
+  background: linear-gradient(90deg, #8d9560, #485937 67%, #211f15);
+  transform: rotate(18deg);
+}
+.story-giant[data-ingredient="pumpkin"] .story-giant-food i {
+  background: repeating-linear-gradient(90deg, #63310b26 0 4%, transparent 8% 19%, #fff6b637 25%, transparent 30% 35%),
+    radial-gradient(ellipse at 32% 23%, #ffc16c, #c46a26 49%, #70351a 91%);
+}
+.story-giant[data-ingredient="onion"] .story-giant-food {
+  --ingredient-light: #f8e6bd;
+  --ingredient-main: #c1a16f;
+  --ingredient-shadow: #75543a;
+}
+.story-giant[data-ingredient="onion"] .story-giant-food i {
+  inset: 13% 12% 6%;
+  border-radius: 60% 61% 47% 51%;
+  transform: rotate(13deg);
+}
+.story-giant[data-ingredient="onion"] .story-giant-food i::before {
+  background: #a38e64;
+  clip-path: polygon(3% 0, 100% 12%, 70% 100%, 28% 100%);
+}
+.story-giant[data-ingredient="carrot"] .story-giant-food i {
+  inset: -9% 32% -4%;
+  border-radius: 28% 30% 30% 28%;
+  clip-path: polygon(0 18%, 100% 12%, 64% 98%, 43% 100%);
+  transform: rotate(46deg);
+  background: repeating-linear-gradient(175deg, #ac4725 0 2%, transparent 3% 17%, #fff1b43b 20% 21%, transparent 22% 25%),
+    linear-gradient(90deg, #96411e, #ef943d 45%, #bc531f 100%);
+}
+.story-giant[data-ingredient="carrot"] .story-giant-food::before {
+  content: '';
+  position: absolute;
+  left: 59%;
+  top: 2%;
+  width: 38%;
+  height: 26%;
+  background: linear-gradient(65deg, #304627, #749155, #405b3c);
+  clip-path: polygon(0 61%, 72% 0, 52% 46%, 100% 24%, 60% 80%, 71% 100%, 18% 95%);
+  transform: rotate(-13deg);
+}
+.story-giant[data-ingredient="mushroom"] .story-giant-food i {
+  inset: 8% 4% 32%;
+  border-radius: 60% 67% 37% 39% / 74% 76% 34% 39%;
+  background: radial-gradient(ellipse at 40% 26%, #d5a36f, #925a42 60%, #633e30 96%);
+}
+.story-giant[data-ingredient="mushroom"] .story-giant-food i::before {
+  top: 87%;
+  left: 34%;
+  width: 32%;
+  height: 75%;
+  border-radius: 22% 26% 40% 40%;
+  background: linear-gradient(90deg, #a5805d, #e0c59c 50%, #af906f);
+  box-shadow: inset 0 4px 5px #41292081;
+  transform: rotate(1deg);
+}
+.story-giant[data-ingredient="turnip"] .story-giant-food {
+  --ingredient-light: #d3afc7;
+  --ingredient-main: #8d516e;
+  --ingredient-shadow: #512d50;
+}
+.story-giant[data-ingredient="turnip"] .story-giant-food i {
+  inset: 22% 11% 14%;
+  border-radius: 57% 42% 57% 40%;
+  transform: rotate(16deg);
+}
+.story-giant[data-ingredient="turnip"] .story-giant-food i::before,
+.story-giant[data-ingredient="tomato"] .story-giant-food i::before {
+  left: 29%;
+  top: -9%;
+  width: 46%;
+  height: 27%;
+  clip-path: polygon(54% 0, 62% 31%, 97% 34%, 75% 57%, 97% 98%, 52% 72%, 13% 100%, 22% 63%, 0 39%, 43% 40%);
+}
+.story-giant[data-ingredient="leek"] .story-giant-food i {
+  inset: -5% 31% 0%;
+  border-radius: 19% 23% 26% 25%;
+  transform: rotate(43deg);
+  background: repeating-linear-gradient(90deg, #4b533820 0 15%, transparent 26% 42%, #d1df9f55 50%, transparent 61%),
+    linear-gradient(180deg, #4b603c 0%, #608055 31%, #b0bf86 59%, #e7d8ae 88%);
+  clip-path: polygon(0 0, 47% 14%, 65% 2%, 100% 0, 90% 88%, 66% 100%, 27% 96%, 6% 85%);
+}
+.story-giant[data-ingredient="corn"] .story-giant-food i {
+  inset: -3% 23% 3%;
+  border-radius: 48% 50% 34% 42%;
+  transform: rotate(30deg);
+  background: repeating-linear-gradient(90deg, #66371888 0 2%, transparent 5% 17%, #fff5af5e 20% 22%),
+    repeating-linear-gradient(0deg, #5e3e1c60 0 3%, transparent 7% 10%, #fff1a02e 14% 15%), #dfab4e;
+}
+.story-giant[data-ingredient="corn"] .story-giant-food i::before {
+  inset: 36% 0 -2% -14%;
+  width: 109%;
+  height: 66%;
+  transform: none;
+  clip-path: polygon(0 0, 35% 36%, 57% 78%, 92% 10%, 100% 70%, 67% 100%, 23% 93%);
+}
+.story-giant[data-ingredient="potato"] .story-giant-food i {
+  inset: 17% 7% 6%;
+  border-radius: 52% 42% 53% 40%;
+  transform: rotate(-16deg);
+  background: radial-gradient(ellipse at 22% 33%, #5e3b29 0 2%, transparent 5%),
+    radial-gradient(ellipse at 58% 67%, #62412a 0 2%, transparent 5%),
+    radial-gradient(ellipse at 51% 38%, #744323 0 2%, transparent 6%),
+    radial-gradient(ellipse at 32% 21%, #d5ab73, #a57544 58%, #62492c);
+}
+.story-giant[data-ingredient="potato"] .story-giant-food i::before { content: none; }
+.story-giant[data-ingredient="tomato"] .story-giant-food {
+  --ingredient-light: #e2a075;
+  --ingredient-main: #b84b3e;
+  --ingredient-shadow: #751e1e;
+}
+.story-giant[data-ingredient="cabbage"] .story-giant-food i {
+  inset: 9% 9% 8%;
+  background: radial-gradient(ellipse at 26% 33%, #b7bc83 0%, #78895b 35%, transparent 45%),
+    radial-gradient(ellipse at 76% 57%, #6e905f 0%, #4b6945 45%, transparent 54%),
+    radial-gradient(ellipse at 52% 48%, #a2a877, #405c41 88%);
+}
+.story-giant[data-ingredient="cabbage"] .story-giant-food i::before {
+  top: 16%;
+  left: 15%;
+  width: 65%;
+  height: 65%;
+  border: 1px solid #d7df9b77;
+  border-radius: 41% 52% 25% 50%;
+  background: repeating-linear-gradient(30deg, transparent 0 14%, #dde5ac38 16% 18%, transparent 20% 29%),
+    linear-gradient(125deg, #b0bb80aa, #52764b91);
+  transform: rotate(-14deg);
+}
+
+.story-giant-tossing .story-giant-food { animation: story-giant-toss-food 790ms cubic-bezier(.24,.47,.4,.94) both; }
+
+@keyframes story-giant-toss-food {
+  0% { opacity: 0; transform: translate(-130%, -292%) rotate(-18deg) scale(.68); }
+  15% { opacity: 1; }
+  29% { transform: translate(-112%, -276%) rotate(3deg) scale(.91); }
+  49% { transform: translate(-83%, -221%) rotate(35deg) scale(.96); }
+  78% { opacity: 1; transform: translate(-52%, -119%) rotate(78deg); }
+  100% { opacity: 0; transform: translate(-48%, -49%) rotate(113deg) scale(.39); }
+}
+
+.story-giant-splash {
+  position: absolute;
+  left: var(--story-giant-pot-x);
+  top: var(--story-giant-pot-y);
+  z-index: 4;
+}
+.story-giant-splash i {
+  position: absolute;
+  width: clamp(3px, 1dvh, 8px);
+  aspect-ratio: 1;
+  border-radius: 60% 47% 52% 60%;
+  opacity: 0;
+  background: #f5bd75;
+  box-shadow: 0 0 5px #f5aa605c;
+}
+.story-giant-tossing .story-giant-splash i {
+  animation: story-giant-splash 470ms ease-out calc(620ms + var(--splash-delay)) both;
+}
+@keyframes story-giant-splash {
+  0% { opacity: 0; transform: none; }
+  24% { opacity: .9; }
+  62% { transform: translate(var(--splash-x), var(--splash-y)) scale(.83); }
+  100% { opacity: 0; transform: translate(var(--splash-x), 9px) scale(.35); }
+}
+
+.story-giant-bowl {
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  bottom: 15%;
+  width: min(53%, 318px);
+  aspect-ratio: 2.1;
+  border-radius: 19% 18% 49% 48% / 20% 19% 80% 83%;
+  opacity: 0;
+  background: repeating-linear-gradient(105deg, transparent 0 9%, #f9c77d29 10%, transparent 12% 15%),
+    linear-gradient(#f6c98d, #99603a 44%, #4c2a19 77%, #311e15);
+  box-shadow: inset -13px -12px 17px #270e0879, 0 16px 24px #2a110ac2;
+  transform: translate(-50%, 130%) scale(.66);
+}
+.story-giant-bowl i {
+  position: absolute;
+  left: 2%;
+  top: -12%;
+  width: 96%;
+  height: 46%;
+  border: 2px solid #d8a976;
+  border-radius: 50%;
+  background: repeating-radial-gradient(ellipse at 54% 53%, #ffe9a5a0 0 1%, transparent 4% 13%), #b76a3e;
+  box-shadow: inset 0 4px 8px #672e1c82;
+}
+.story-giant-bowl::after {
+  content: '';
+  position: absolute;
+  inset: -73% 6% 51%;
+  background: radial-gradient(ellipse, #ffd7a68f, transparent 69%);
+  filter: blur(14px);
+}
+.story-giant-exiting .story-giant-bowl { animation: story-giant-drink 1170ms ease-in-out both; }
+.story-giant-exiting .story-giant-room { animation: story-giant-rise 1650ms cubic-bezier(.18,.55,.4,1) both; }
+@keyframes story-giant-drink {
+  0% { opacity: 0; transform: translate(-50%, 142%) scale(.65); }
+  19% { opacity: 1; }
+  52% { opacity: 1; transform: translate(-50%, -78%) scale(1.48) rotate(4deg); }
+  68% { opacity: 1; transform: translate(-50%, -91%) scale(1.57) rotate(7deg); }
+  100% { opacity: 0; transform: translate(-50%, 118%) scale(.97); }
+}
+@keyframes story-giant-rise {
+  0%, 34% { transform: translate(-50%, -50%); }
+  100% { transform: translate(-50%, -34%) scale(1.21) rotate(-1.4deg); }
+}
+
+.story-giant-mountain {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: none;
+  overflow: hidden;
+  background: #282c27;
+  opacity: 0;
+}
+.story-giant-ravine,
+.story-giant-rock-face {
+  position: absolute;
+  inset: 0;
+}
+.story-giant-ravine {
+  background: radial-gradient(ellipse at 50% 35%, #49505b, #171d25 76%);
+}
+.story-giant-ravine::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(100%, 76dvh);
+  aspect-ratio: 3 / 4;
+  transform: translate(-50%, -50%);
+  background: url("assets/story/bridge.webp") center / 100% 100% no-repeat;
+  box-shadow: 0 0 55px 30px #171d25;
+}
+.story-giant-rock-face {
+  background: url("assets/story/mountain-face.webp") center / cover no-repeat,
+    linear-gradient(121deg, #75716a, #3d4540 56%, #222724);
+}
+.story-giant-rock-left {
+  clip-path: polygon(0 0, 49.8% 0, 47.4% 19%, 52.2% 36%, 47.9% 54%, 53% 75%, 49.5% 100%, 0 100%);
+}
+.story-giant-rock-right {
+  clip-path: polygon(49.7% 0, 100% 0, 100% 100%, 49.3% 100%, 52.8% 75%, 47.7% 54%, 52% 36%, 47.2% 19%);
+}
+.story-giant-crack {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  opacity: 0;
+  transform-origin: 50% 43%;
+  background: #1c1815a9;
+  clip-path: polygon(48% 0, 50% 0, 48% 19%, 53% 36%, 58% 30%, 78% 24%, 58% 35%, 52% 39%,
+    49% 54%, 55% 72%, 69% 66%, 83% 55%, 69% 69%, 55% 77%, 50% 100%, 48% 100%, 52% 75%,
+    47% 56%, 34% 51%, 26% 38%, 34% 47%, 47% 52%, 51% 36%, 46% 19%);
+}
+.story-giant-rubble {
+  position: absolute;
+  z-index: 2;
+  left: 53%;
+  top: 43%;
+}
+.story-giant-rubble i {
+  position: absolute;
+  width: var(--rock-size);
+  aspect-ratio: .85;
+  opacity: 0;
+  background: linear-gradient(141deg, #a69a86, #696355 47%, #4c4237 48%, #3a3630);
+  clip-path: polygon(16% 18%, 53% 0, 94% 28%, 100% 75%, 69% 100%, 25% 89%, 0 66%);
+  box-shadow: inset 3px 3px 2px #e3cfab82;
+}
+.story-giant-dust {
+  position: absolute;
+  z-index: 4;
+  inset: -15%;
+  opacity: 0;
+  background: radial-gradient(ellipse at 28% 58%, #b4a692 0%, transparent 58%),
+    radial-gradient(ellipse at 71% 63%, #a79b8d 0%, transparent 64%),
+    radial-gradient(ellipse at 53% 39%, #d8cbbb 0%, #aa9d8d 32%, transparent 61%);
+  filter: blur(12px);
+}
+
+.story-giant-fist {
+  position: absolute;
+  left: 45%;
+  top: 40%;
+  z-index: 3;
+  width: 56%;
+  height: 18%;
+  transform-origin: 26% 45%;
+  opacity: 0;
+  filter: drop-shadow(4px 10px 8px #1b1617ac);
+}
+.story-giant-fist i {
+  position: absolute;
+  inset: 3% 54% 6% 0;
+  z-index: 1;
+  border-radius: 46% 20% 31% 47% / 42% 25% 51% 52%;
+  background: radial-gradient(ellipse at 23% 34%, #d2a785 0%, #a67155 45%, #633e31 96%);
+  box-shadow: inset 2px 5px 3px #e3c39b77, inset -3px -5px 8px #382525b2;
+}
+.story-giant-fist i::before {
+  content: '';
+  position: absolute;
+  top: 38%;
+  left: 38%;
+  width: 64%;
+  height: 62%;
+  border-radius: 43% 33% 40% 50%;
+  transform: rotate(-13deg);
+  background: linear-gradient(169deg, #ca9b79, #8a533c 73%);
+  box-shadow: -3px 5px 5px #56332278, inset 2px 2px 2px #ebc6a572;
+}
+.story-giant-fist i::after {
+  content: '';
+  position: absolute;
+  inset: 12% 56% 7% 2%;
+  border-radius: 50%;
+  background: repeating-linear-gradient(180deg, #d5b0947a 0 17%, #68473773 22%, transparent 25%, transparent 32%);
+}
+.story-giant-fist b {
+  position: absolute;
+  inset: 18% -56% -31% 34%;
+  border-radius: 20% 3% 18% 36%;
+  background: repeating-linear-gradient(96deg, #ada1ad18 0 5px, #1f1a2844 9px, #1f1a2800 20px),
+    linear-gradient(155deg, #554c4b, #28282e 61%, #181a20);
+  box-shadow: inset 7px 6px 6px #ae9c8262;
+}
+
+.story-giant-exiting .story-giant-mountain {
+  display: block;
+  animation: story-giant-mountain-in 410ms ease 1160ms both;
+}
+.story-giant-exiting .story-giant-fist { animation: story-giant-punch 650ms cubic-bezier(.3,.04,.78,.56) 1490ms both; }
+.story-giant-exiting .story-giant-crack { animation: story-giant-crack 470ms ease-out 1770ms both; }
+.story-giant-exiting .story-giant-rock-left { animation: story-giant-rock-left 1140ms cubic-bezier(.4,.05,.7,.8) 1900ms both; }
+.story-giant-exiting .story-giant-rock-right { animation: story-giant-rock-right 1140ms cubic-bezier(.4,.05,.7,.8) 1900ms both; }
+.story-giant-exiting .story-giant-rubble i {
+  animation: story-giant-fragment 860ms ease-in calc(1830ms + var(--rock-delay)) both;
+}
+.story-giant-exiting .story-giant-dust { animation: story-giant-dust 1530ms ease-in-out 1870ms both; }
+.story-giant-exiting .story-giant-ravine { animation: story-giant-descend 820ms ease-out 2540ms both; }
+
+@keyframes story-giant-mountain-in {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+@keyframes story-giant-punch {
+  0% { opacity: .1; transform: translate(44%, 214%) rotate(22deg) scale(1.27); }
+  30% { opacity: 1; transform: translate(18%, 129%) rotate(13deg) scale(1.05); }
+  48% { opacity: 1; transform: translate(-9%, -6%) rotate(0deg) scale(.63); }
+  59% { opacity: .93; transform: translate(-6%, 3%) rotate(3deg) scale(.68); }
+  100% { opacity: 0; transform: translate(51%, 193%) rotate(10deg) scale(1.19); }
+}
+@keyframes story-giant-crack {
+  0% { opacity: 0; transform: scale(.02); }
+  29% { opacity: 1; transform: scale(1); }
+  78% { opacity: .75; }
+  100% { opacity: 0; }
+}
+@keyframes story-giant-rock-left {
+  0% { transform: none; }
+  100% { transform: translate(-42%, 34%) rotate(-11deg); }
+}
+@keyframes story-giant-rock-right {
+  0% { transform: none; }
+  100% { transform: translate(40%, 32%) rotate(12deg); }
+}
+@keyframes story-giant-fragment {
+  0% { opacity: 1; transform: translate(-12px, -21px) rotate(7deg) scale(.2); }
+  25% { opacity: 1; transform: translate(calc(var(--rock-x) * .48), -65px) rotate(calc(var(--rock-angle) * .35)) scale(.67); }
+  70% { opacity: .66; }
+  100% { opacity: 0; transform: translate(var(--rock-x), var(--rock-y)) rotate(var(--rock-angle)) scale(1.08); }
+}
+@keyframes story-giant-dust {
+  0% { opacity: 0; transform: scale(.45) translateY(16%); }
+  52% { opacity: .94; transform: scale(1.08); }
+  72% { opacity: .84; }
+  100% { opacity: 0; transform: scale(1.26) translateY(-11%); }
+}
+@keyframes story-giant-descend {
+  0% { transform: translateY(8%) scale(1.21); }
+  100% { transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .story-giant-steam i,
+  .story-giant-tossing :is(.story-giant-food, .story-giant-splash i) { animation: none; }
+  .story-giant-pot-glow, .story-giant-steam { transition: none; }
+}
