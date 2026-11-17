@@ -226,4 +226,85 @@ async function test() {
   console.log('Shared learning: guarded same-site merge, independent rounds and ink, stale-save recovery, and legacy cloud join and write passed.');
 }
 
-test().catch(error => { console.error(error); process.exitCode = 1; });
+async function temporarySaveFailureBeforePasswordJoin() {
+  const local = {
+    bank: [item('固', 'gù'), item('犬', 'quǎn')], bankVersion: 5, dailyCount: 10,
+    priorityQueue: [], scenesUnlocked: 0,
+  };
+  const remote = { ...local, bank: [item('固', 'gù'), item('犬', 'quǎn', ['2026-11-02'])] };
+  const story = { version: 1, herbalistStage: 'herbs', scenesUnlocked: 0, sessionProgress: round('retry-round', 0) };
+  const firestore = mockLegacyFirestore(remote);
+  const { environment, flush, inkFor } = setup(require, __dirname, process,
+    { crypto: webcrypto, TextEncoder, TextDecoder, firestore });
+  const page = environment({
+    initialStorage: [[OLD_SAVE, JSON.stringify(local)], [STORY, JSON.stringify(story)]], location: LOCATION,
+  });
+  await flush();
+  assert.equal(page.run('cloudSyncController.status().kind'), 'off');
+
+  const originalLearning = page.storage.get(OLD_SAVE);
+  const originalStory = page.storage.get(STORY);
+  const setItem = page.context.localStorage.setItem;
+  let writable = false;
+  page.context.localStorage.setItem = (key, value) => {
+    if (key === OLD_SAVE && !writable) throw new Error('synthetic temporary local storage failure');
+    return setItem(key, value);
+  };
+  const fetch = firestore.fetch;
+  firestore.fetch = (...args) => {
+    assert.deepEqual(passedDays(read(page.storage, OLD_SAVE), '固'), [TODAY],
+      'Save the pending local pass before reading or writing the remote family');
+    return fetch(...args);
+  };
+
+  page.run("presentDoor(state.bank.find(entry => entry.char === '固'), 'free', 1)");
+  await flush();
+  inkFor(page, '固');
+  page.tap('submitBtn');
+  await flush();
+  assert.equal(page.run('passedCount'), 1);
+  assert.match(page.ids.get('localProgressNotice').textContent, /本机进度暂存未成功/);
+  assert.equal(page.storage.get(OLD_SAVE), originalLearning);
+  assert.equal(page.storage.get(STORY), originalStory);
+
+  let liveBackup;
+  page.context.Blob = Blob;
+  page.context.URL = { createObjectURL(blob) { liveBackup = blob; return 'blob:synthetic-backup'; }, revokeObjectURL() {} };
+  page.tap('saveProgressBtn');
+  const backup = JSON.parse(await liveBackup.text());
+  assert.deepEqual(passedDays(backup, '固'), [TODAY], 'Manual backup reads the current page even if local storage failed');
+  assert.equal(backup.sessionProgress.passedCount, 1);
+
+  const join = () => {
+    page.ids.get('cloudSyncPassword').value = PASSWORD;
+    return page.run("syncWithCredential('joinPasswordFamily', 'cloudSyncPassword', true)");
+  };
+  await join();
+  assert.equal(page.run('cloudSyncController.status().connected'), false);
+  assert.deepEqual(firestore.calls, []);
+  assert.equal(page.storage.get(OLD_SAVE), originalLearning);
+
+  writable = true;
+  await join();
+  assert.equal(firestore.calls[0], 'GET', 'Retry the same-page password join once local storage is writable');
+  assert.equal(page.run('cloudSyncController.status().connected'), true);
+  assert.equal(page.ids.get('localProgressNotice').hidden, true);
+  assert.deepEqual(passedDays(read(page.storage, OLD_SAVE), '固'), [TODAY]);
+  assert.deepEqual(passedDays(read(page.storage, OLD_SAVE), '犬'), ['2026-11-02']);
+  assert.equal(read(page.storage, STORY).sessionProgress.passedCount, 1);
+
+  if (page.run('cloudSyncController.status().kind') !== 'synced') await page.run('cloudSyncController.sync()');
+  assert.equal(page.run('cloudSyncController.status().kind'), 'synced');
+  assert.equal(firestore.decoded.length, 1);
+  assert.deepEqual(passedDays(firestore.decoded[0], '固'), [TODAY]);
+  assert.deepEqual(passedDays(firestore.decoded[0], '犬'), ['2026-11-02']);
+  const reopened = environment({ initialStorage: page.storage, location: LOCATION });
+  assert.equal(reopened.run('cloudSyncController.status().connected'), true);
+  assert.equal(reopened.ids.get('cloudSyncPasswordSetup').hidden, true, 'Reopening the same browser does not ask for the password again');
+  assert.equal(reopened.run('passedCount'), 1);
+  await reopened.run('cloudSyncController.sync()');
+  assert.equal(reopened.run('cloudSyncController.status().kind'), 'synced');
+  console.log('Password join: same-page recovery, merged learning and a remembered connection after reopening passed.');
+}
+
+test().then(temporarySaveFailureBeforePasswordJoin).catch(error => { console.error(error); process.exitCode = 1; });

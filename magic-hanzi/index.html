@@ -3288,11 +3288,15 @@ body[data-herb-stage="sea"] .story-sea { display: block; }
     <div class="cloud-sync">
       <b>跨设备同步</b>
       <p id="cloudSyncStatus" role="status">尚未开启，学习记录保存在这台设备。</p>
+      <div class="cloud-sync-actions" id="cloudSyncLocalRecovery" hidden>
+        <button class="secondary" id="cloudSyncRetrySaveBtn">重试本机保存</button>
+        <button class="secondary" id="cloudSyncDownloadBtn">下载当前进度</button>
+      </div>
       <p>新旧版在同一个浏览器中共用学习进度。要换设备接着练，可以在这里用已有的家庭密码或同步码接入。</p>
       <div id="cloudSyncPasswordSetup">
         <label for="cloudSyncPassword">家庭密码（至少 12 个字符，可用中文）</label>
         <input type="password" id="cloudSyncPassword" placeholder="输入你自己设定的家庭密码" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="cloudSyncPasswordHint">
-        <p id="cloudSyncPasswordHint">可以用几个不相干的词组合，区分大小写。</p>
+        <p id="cloudSyncPasswordHint">在这台设备接入成功后，游戏会记住连接。浏览器如果询问是否存储密码，可以取消。</p>
         <div class="cloud-sync-actions">
           <button id="cloudSyncCreateBtn">用这个密码首次开启</button>
           <button class="secondary" id="cloudSyncJoinBtn">用这个密码接入</button>
@@ -8752,7 +8756,7 @@ function saveState(){
     return saved;
   }
   function failed(){
-    showProgressSaveNotice('本机进度暂存未成功，当前页面仍保留；请先不要关闭。');
+    showProgressSaveNotice('本机进度暂存未成功，当前页面仍保留。请重试本机保存，或先下载当前进度。');
     return false;
   }
   try{
@@ -10782,6 +10786,8 @@ function renderCloudSyncStatus(){
   const status = cloudSyncController ? cloudSyncController.status() : {kind:'off',connected:false,message:'尚未开启，学习记录保存在这台设备。'};
   const legacyCode = status.connected && cloudSyncController ? cloudSyncController.code() : '';
   document.getElementById('cloudSyncStatus').textContent = progressSaveNotice || status.message;
+  document.getElementById('cloudSyncLocalRecovery').hidden = !progressSaveNotice;
+  document.getElementById('cloudSyncRetrySaveBtn').disabled = syncUiBusy || !!progressWrites;
   document.getElementById('cloudSyncPasswordSetup').hidden = status.connected && status.credentialMode === 'password';
   document.getElementById('cloudSyncConnectedActions').hidden = !status.connected;
   document.getElementById('cloudSyncCodeWrap').hidden = !legacyCode;
@@ -10810,13 +10816,19 @@ async function cloudSyncAction(action, adopt){
   syncExplicitAdopt = !!adopt;
   renderCloudSyncStatus();
   let failed = false;
-  try{ await action(); }
+  try{
+    // A transient local write failure must not permanently block the first join.
+    // Retry the same guarded save before reading or writing any family progress.
+    if(progressSaveNotice && !(await saveState())) return;
+    await action();
+  }
   catch(_){ failed = true; }
   finally{ syncExplicitAdopt = false; syncUiBusy = false; renderCloudSyncStatus(); }
   if(failed){
     document.getElementById('cloudSyncStatus').textContent = '这次没有完成同步，本机仍可继续学习。'; return;
   }
-  if(cloudSyncController.status().connected && !['conflict','error'].includes(cloudSyncController.status().kind)) saveState();
+  if(!sharedLearning && cloudSyncController.status().connected &&
+      !['conflict','error'].includes(cloudSyncController.status().kind)) saveState();
 }
 function syncWithCredential(method, inputId, adopt){
   return cloudSyncAction(() => {
@@ -10843,6 +10855,9 @@ onTap(document.getElementById('cloudSyncCreateBtn'), () => syncWithCredential('c
 onTap(document.getElementById('cloudSyncJoinBtn'), () => syncWithCredential('joinPasswordFamily', 'cloudSyncPassword', true));
 onTap(document.getElementById('cloudSyncLegacyJoinBtn'), () => syncWithCredential('joinFamily', 'cloudSyncJoinInput', true));
 onTap(document.getElementById('cloudSyncNowBtn'), syncTick);
+onTap(document.getElementById('cloudSyncRetrySaveBtn'), () => cloudSyncAction(() => {
+  if(cloudSyncController.status().connected) return cloudSyncController.sync();
+}, false));
 onTap(document.getElementById('cloudKeepLocalBtn'), () => cloudSyncAction(() => cloudSyncController.resolveConflict('local'), false));
 onTap(document.getElementById('cloudUseRemoteBtn'), () => cloudSyncAction(() => cloudSyncController.resolveConflict('remote'), true));
 onTap(document.getElementById('cloudSyncDisconnectBtn'), () => { if(cloudSyncController) cloudSyncController.disconnect(); renderCloudSyncStatus(); });
@@ -12120,9 +12135,13 @@ function downloadProgress(text, label){
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
 }
-onTap(saveProgressBtn, () => downloadProgress(JSON.stringify(state, null, 2), '存档'));
+function downloadCurrentProgress(){
+  downloadProgress(JSON.stringify(state, null, 2), '存档');
+}
+onTap(saveProgressBtn, downloadCurrentProgress);
+onTap(document.getElementById('cloudSyncDownloadBtn'), downloadCurrentProgress);
 
 function renderLocalRecoveryCopies(){
   const section = document.getElementById('localRecoveryCopies');
