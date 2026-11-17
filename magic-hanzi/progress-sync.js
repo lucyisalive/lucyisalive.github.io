@@ -9,6 +9,8 @@
   // and every unknown field are deliberately never read or copied into a payload.
   var META_KEY = 'hanzi-magic-herbalist-sync-v1';
   var BACKUP_KEY = 'hanzi-magic-herbalist-sync-backups-v1';
+  var BACKUP_STORE = 'snapshots';
+  var BACKUP_LIMIT = 6;
   var APP = 'hanzi-magic-door';
   var PASSWORD_ROUNDS = 600000;
   var MAX_BYTES = 600 * 1024;
@@ -22,6 +24,9 @@
     return error;
   }
   function object(value) { return value && typeof value === 'object' && !Array.isArray(value); }
+  function quotaError(error) {
+    return error && (error.name === 'QuotaExceededError' || error.name === 'NS_ERROR_DOM_QUOTA_REACHED');
+  }
   function string(value, max, label) {
     if (typeof value !== 'string' || value.length > max || /[\u0000-\u0008\u000b\u000c\u000e-\u001f]/.test(value)) {
       throw problem('进度中的' + label + '格式不正确');
@@ -193,8 +198,9 @@
     var Encoder = root.TextEncoder || environment.TextEncoder;
     var Decoder = root.TextDecoder || environment.TextDecoder;
     var Abort = root.AbortController || environment.AbortController;
-    var storage;
+    var storage, backupDatabase;
     try { storage = own(options, 'storage') ? options.storage : root.localStorage; } catch (_) { storage = null; }
+    try { backupDatabase = own(options, 'indexedDB') ? options.indexedDB : root.indexedDB; } catch (_) { backupDatabase = null; }
     var later = options.setTimeout || (root.setTimeout && root.setTimeout.bind(root)) || (environment.setTimeout && environment.setTimeout.bind(environment));
     var cancelTimer = options.clearTimeout || (root.clearTimeout && root.clearTimeout.bind(root)) || (environment.clearTimeout && environment.clearTimeout.bind(environment));
     var now = options.now || Date.now;
@@ -217,7 +223,11 @@
     function persist(candidate) {
       requireStorage();
       try { storage.setItem(META_KEY, JSON.stringify(candidate)); }
-      catch (_) { throw problem('本机同步设置未能保存，请保留此页面并检查存储空间'); }
+      catch (error) {
+        var failure = problem('本机同步设置未能保存，请保留此页面并检查存储空间');
+        failure.storageQuota = quotaError(error);
+        throw failure;
+      }
     }
     function saveMeta() { if (meta) persist(meta); }
     function snapshot() {
@@ -395,37 +405,162 @@
         iv: { stringValue: base64(iv) }, payload: { stringValue: base64(new Uint8Array(payload)) }
       } };
     }
-    function backup(local, remote, reason) {
+    function checkedBackup(entry) {
+      if (!object(entry)) throw new Error('Invalid backup');
+      return {
+        timestamp: integer(entry.timestamp, 0, Number.MAX_SAFE_INTEGER, 'backup time'),
+        reason: string(entry.reason, 100, 'backup reason'),
+        local: project(entry.local), remote: entry.remote === null ? null : project(entry.remote),
+        remoteUpdateTime: entry.remoteUpdateTime === null ? null : string(entry.remoteUpdateTime, 100, 'backup version')
+      };
+    }
+
+    function localBackups() {
       requireStorage();
+      var previous = storage.getItem(BACKUP_KEY);
+      var entries = previous ? JSON.parse(previous) : [];
+      if (!Array.isArray(entries)) throw new Error('Invalid backup');
+      return entries;
+    }
+
+    function indexedBackup(mode, operation) {
+      return new Promise(function (resolve, reject) {
+        if (!backupDatabase || typeof backupDatabase.open !== 'function') {
+          reject(new Error('IndexedDB unavailable'));
+          return;
+        }
+        var db, transaction, result, finished = false;
+        function finish(error) {
+          if (finished) return;
+          finished = true;
+          cancelTimer(timer);
+          if (db) db.close();
+          if (error) reject(error);
+          else resolve(result);
+        }
+        var timer = later(function () {
+          if (transaction) {
+            try { transaction.abort(); } catch (_) { /* It may already have completed. */ }
+          }
+          finish(new Error('Backup storage timed out'));
+        }, TIMEOUT_MS);
+        var request;
+        try { request = backupDatabase.open(BACKUP_KEY, 1); }
+        catch (error) { finish(error); return; }
+        request.onerror = function () { finish(request.error || new Error('Backup storage unavailable')); };
+        request.onblocked = function () { finish(new Error('Backup storage blocked')); };
+        request.onupgradeneeded = function () {
+          if (finished) { request.transaction.abort(); return; }
+          request.result.createObjectStore(BACKUP_STORE, { autoIncrement: true });
+        };
+        request.onsuccess = function () {
+          db = request.result;
+          if (finished) { db.close(); return; }
+          db.onversionchange = function () { db.close(); };
+          try {
+            transaction = db.transaction(BACKUP_STORE, mode);
+            transaction.onabort = function () { finish(transaction.error || new Error('Backup transaction aborted')); };
+            transaction.oncomplete = function () { finish(); };
+            result = operation(transaction.objectStore(BACKUP_STORE));
+          } catch (error) {
+            if (transaction) {
+              try { transaction.abort(); } catch (_) { /* Preserve the original error. */ }
+            }
+            finish(error);
+          }
+        };
+      });
+    }
+
+    async function backup(local, remote, reason) {
+      var entry = { timestamp: now(), reason: reason, local: local.state,
+        remote: remote ? remote.state : null, remoteUpdateTime: remote ? remote.updateTime : null };
       try {
-        var previous = storage.getItem(BACKUP_KEY);
-        var groups = previous ? JSON.parse(previous) : [];
-        if (!Array.isArray(groups)) throw new Error('Invalid backup');
-        // Existing records are from this module, but project them again so a
-        // malformed local backup can never smuggle handwriting into a new one.
-        groups = groups.slice(-2).map(function (group) {
-          if (!object(group)) throw new Error('Invalid backup');
-          return {
-            timestamp: integer(group.timestamp, 0, Number.MAX_SAFE_INTEGER, 'backup time'),
-            reason: string(group.reason, 100, 'backup reason'),
-            local: project(group.local), remote: group.remote === null ? null : project(group.remote),
-            remoteUpdateTime: group.remoteUpdateTime === null ? null : string(group.remoteUpdateTime, 100, 'backup version')
-          };
+        var previous = localBackups().map(checkedBackup);
+        if (!backupDatabase || previous.length < 3) {
+          previous.push(entry);
+          storage.setItem(BACKUP_KEY, JSON.stringify(previous));
+          return;
+        }
+      } catch (_) { /* Keep an unreadable or full localStorage archive intact. */ }
+      try {
+        await indexedBackup('readwrite', function (store) { store.add(entry); });
+      } catch (_) {
+        throw problem('未能在本机备份两份进度，尚未替换任何进度。请保留此页面，并先在「手动备份」下载进度。');
+      }
+    }
+
+    async function archiveLocalBackups(token, localRevision) {
+      var raw, archive;
+      try {
+        raw = storage.getItem(BACKUP_KEY);
+        if (!raw || typeof storage.removeItem !== 'function') return false;
+        archive = JSON.parse(raw);
+        if (!Array.isArray(archive) || !archive.length || JSON.stringify(archive.map(checkedBackup)) !== raw) return false;
+        await indexedBackup('readwrite', function (store) {
+          archive.forEach(function (entry) { store.add(entry); });
         });
-        groups.push({ timestamp: now(), reason: reason, local: local.state,
-          remote: remote ? remote.state : null, remoteUpdateTime: remote ? remote.updateTime : null });
-        storage.setItem(BACKUP_KEY, JSON.stringify(groups));
-      } catch (_) { throw problem('未能在本机备份两份进度，尚未替换任何进度；请检查存储空间'); }
+      } catch (_) { return false; }
+      ensureUnchanged(token, localRevision);
+      if (!mayApply()) return false;
+      try {
+        // Release only an exact copy already committed in the durable store.
+        // Leave a newer archive, unreadable record, or unrelated key untouched.
+        if (storage.getItem(BACKUP_KEY) !== raw) return false;
+        storage.removeItem(BACKUP_KEY);
+        return true;
+      } catch (_) { return false; }
+    }
+
+    async function listBackups() {
+      var pairs = [], failed = false;
+      try {
+        var previous = localBackups();
+        previous.forEach(function (entry) {
+          try { pairs.push(checkedBackup(entry)); } catch (_) { failed = true; }
+        });
+      } catch (_) { failed = true; }
+      if (backupDatabase) {
+        try {
+          var indexed = await indexedBackup('readonly', function (store) {
+            var entries = [], request = store.openCursor(null, 'prev');
+            request.onsuccess = function () {
+              var cursor = request.result;
+              if (!cursor) return;
+              try { entries.push(checkedBackup(cursor.value)); } catch (_) { failed = true; }
+              if (entries.length < BACKUP_LIMIT) cursor.continue();
+            };
+            return entries;
+          });
+          pairs.push.apply(pairs, indexed);
+        } catch (_) { failed = true; }
+      }
+      if (failed && !pairs.length) throw problem('本机同步备份暂时无法读取；可以下载当前进度。');
+      var seen = new Set();
+      return pairs.sort(function (left, right) { return right.timestamp - left.timestamp; })
+        .filter(function (entry) {
+          var fingerprint = JSON.stringify(entry);
+          if (seen.has(fingerprint)) return false;
+          seen.add(fingerprint);
+          return true;
+        }).slice(0, BACKUP_LIMIT);
     }
     function mayApply() {
       try { return typeof options.canApply !== 'function' || options.canApply() === true; }
       catch (_) { return false; }
     }
+    async function applyBackedUpProgress(remote, reason) {
+      var result;
+      applying = true;
+      try { result = options.applyState(remote.state, reason); }
+      finally { applying = false; }
+      if ((await result) === false) throw new Error('Page refused progress');
+    }
     async function adopt(remote, token, localRevision, reason, candidateMeta) {
       ensureUnchanged(token, localRevision);
       if (!mayApply()) return emit('pending', '云端有更新，等这一题结束后再同步');
       var before = snapshot();
-      backup(before, remote, reason);
+      await backup(before, remote, reason);
       ensureUnchanged(token, localRevision);
       if (!mayApply()) return emit('pending', '云端有更新，等这一题结束后再同步');
       if (typeof options.applyState !== 'function') throw problem('当前页面暂不能恢复同步进度');
@@ -433,22 +568,30 @@
       // Adoption is a two-step local transaction. Keep the previous baseline
       // until the page has actually accepted the remote state. The durable
       // barrier also protects a reload/crash between identity and primary save.
-      persist(stagedMeta);
+      try { persist(stagedMeta); }
+      catch (error) {
+        if (!error.storageQuota || !await archiveLocalBackups(token, localRevision)) throw error;
+        ensureUnchanged(token, localRevision);
+        if (!mayApply()) return emit('pending', '云端有更新，等这一题结束后再同步');
+        persist(stagedMeta);
+      }
       meta = stagedMeta;
-      applying = true;
-      var result;
-      try { result = options.applyState(remote.state, reason); }
+      try { await applyBackedUpProgress(remote, reason); }
       catch (error) {
         ensureEpoch(token);
-        throw problem('恢复进度未完成；两份进度已在本机备份，请重新选择保留哪份', 'conflict');
-      }
-      finally { applying = false; }
-      try {
-        if (result && typeof result.then === 'function') result = await result;
-        if (result === false) throw new Error('Page refused progress');
-      } catch (_) {
-        ensureEpoch(token);
-        throw problem('当前页面未接受云端进度；两份进度已在本机备份，请重新选择保留哪份', 'conflict');
+        if (!quotaError(error)) {
+          throw problem('当前页面未接受云端进度；两份进度已在本机备份，请重新选择保留哪份', 'conflict');
+        }
+        if (!await archiveLocalBackups(token, localRevision)) {
+          throw problem('本机存储空间不足，云端进度未接入。两份进度的备份可在「手动备份」查看。', 'conflict');
+        }
+        ensureUnchanged(token, localRevision);
+        if (!mayApply()) throw problem('请先完成当前练习，再接上家庭进度。两份进度已在本机备份。', 'conflict');
+        try { await applyBackedUpProgress(remote, reason); }
+        catch (_) {
+          ensureEpoch(token);
+          throw problem('本机仍未能接入家庭进度。两份进度已在本机备份。', 'conflict');
+        }
       }
       ensureEpoch(token);
       var actual = snapshot();
@@ -462,7 +605,7 @@
       meta = nextMeta;
       conflictRemote = null;
       if (meta.dirty) {
-        if (reason === 'join-family' || reason === 'join-password-family') {
+        if (reason === 'join-family' || reason === 'join-password-family' || reason === 'conflict-merge') {
           schedule();
           return emit('pending', '已合并本机和家庭进度，正等待同步');
         }
@@ -639,6 +782,9 @@
         }
         if (remote.updateTime !== meta.baseUpdateTime) {
           if (meta.dirty) throw problem('两台设备都更新过学习进度，请选择保留哪份；两份都还在', 'conflict');
+          if (typeof options.wouldLoseProgress === 'function' && options.wouldLoseProgress(remote.state) === true) {
+            throw problem('家庭进度缺少本机已有的学习记录，请在设置里选择合并两份进度。', 'conflict');
+          }
           return adopt(remote, token, localRevision, 'remote-update');
         }
         if (remote.hash !== meta.baseHash) throw problem('云端版本与本机摘要不一致，两份进度均已保留', 'conflict');
@@ -733,7 +879,10 @@
       });
     }
     function resolveConflict(choice) {
-      if (choice !== 'local' && choice !== 'remote') return Promise.resolve(emit('error', '请选择保留本机或云端进度'));
+      var merging = choice === 'merge' && options.mergeOnConflict === true;
+      if (choice !== 'local' && choice !== 'remote' && !merging) {
+        return Promise.resolve(emit('error', '请选择保留本机或云端进度'));
+      }
       if (!meta || view.kind !== 'conflict') return Promise.resolve(status());
       var token = beginEpoch();
       return run(token, async function () {
@@ -744,12 +893,12 @@
         var remote = await readRemote(derived, token);
         conflictRemote = remote;
         ensureUnchanged(token, localRevision);
-        if (choice === 'remote') {
+        if (choice === 'remote' || merging) {
           if (!remote) throw problem('云端已没有这份进度，本机进度仍保留', 'conflict');
           if (!mayApply()) return emit('conflict', '请先结束当前书写，再选择采用云端进度');
-          return adopt(remote, token, localRevision, 'conflict-remote');
+          return adopt(remote, token, localRevision, merging ? 'conflict-merge' : 'conflict-remote');
         }
-        backup(current, remote, 'conflict-local');
+        await backup(current, remote, 'conflict-local');
         ensureUnchanged(token, localRevision);
         meta.dirty = true;
         saveMeta();
@@ -783,7 +932,8 @@
     return { start: start, createFamily: createFamily, joinFamily: joinFamily, sync: sync, changed: changed,
       createPasswordFamily: function (value) { return connectPassword(value, true); },
       joinPasswordFamily: function (value) { return connectPassword(value, false); },
-      resolveConflict: resolveConflict, disconnect: disconnect, status: status, code: function () { return displayCode(meta && meta.code); } };
+      resolveConflict: resolveConflict, disconnect: disconnect, status: status, listBackups: listBackups,
+      code: function () { return displayCode(meta && meta.code); } };
   }
 
   return { create: create };

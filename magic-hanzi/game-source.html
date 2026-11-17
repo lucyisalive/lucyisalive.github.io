@@ -357,6 +357,17 @@
     justify-content:space-between; gap:12px; margin:0 -16px 14px; padding:12px 16px;
     background:var(--paper); border-bottom:1px solid #ddd2b8; }
   .panel .panel-header h2{ margin:0; }
+  .panel-sync-summary{
+    display:inline-flex; align-items:center; gap:7px; margin-top:5px; padding:5px 9px;
+    border:1px solid #c9bfa8; border-radius:7px; color:#40372a; background:#f4ead5;
+    font:inherit; font-size:13px; font-weight:700; line-height:1.35; text-align:left; cursor:pointer;
+  }
+  .panel-sync-summary[hidden]{ display:none; }
+  .panel-sync-summary[data-tone="good"]{ background:#dcebdc; border-color:#9ebaa0; color:#234d36; }
+  .panel-sync-summary[data-tone="warn"]{ background:#f6e5cf; border-color:#c89872; color:#772b1b; }
+  .cloud-sync{ scroll-margin-top:106px; color:#2c392d; }
+  .cloud-sync h3{ color:#2c392d; margin:0; font-size:17px; }
+  .cloud-sync #cloudSyncStatus{ color:#2c392d; font-size:14px; font-weight:700; }
   .panel h2{ font-family:'Ma Shan Zheng', cursive; color:var(--seal-dark); margin:0 0 12px; font-size:24px; }
   .panel label{ display:block; font-size:12px; color:#6b6355; margin:10px 0 4px; font-weight:700; }
   .panel input[type=text], .panel input[type=password]{
@@ -585,7 +596,12 @@
 <div class="panel-overlay" id="panelOverlay">
   <div class="panel">
     <div class="panel-header">
-      <h2>今日汉字设置</h2>
+      <div>
+        <h2>今日汉字设置</h2>
+        <button class="panel-sync-summary" id="cloudSyncSummaryBtn" aria-controls="cloudSyncSection" hidden>
+          <span id="cloudSyncSummary" role="status">跨设备同步 · 未连接</span><span aria-hidden="true">↘</span>
+        </button>
+      </div>
       <button class="btn-close-panel" id="closePanelBtn" aria-label="关闭设置" title="关闭设置">×</button>
     </div>
     <section class="today-learning" aria-labelledby="todayLearningTitle">
@@ -665,11 +681,20 @@
         <select id="localRecoverySelect"></select>
         <button class="btn-save" id="localRecoveryDownload">下载所选副本</button>
       </div>
+      <div id="cloudSyncBackupCopies" hidden>
+        <label for="cloudSyncBackupSelect">合并或同步前的进度</label>
+        <select id="cloudSyncBackupSelect"></select>
+        <div class="panel-actions">
+          <button class="btn-save" id="cloudSyncBackupLocalBtn">下载当时的本机进度</button>
+          <button class="btn-save" id="cloudSyncBackupRemoteBtn">下载当时的云端进度</button>
+        </div>
+      </div>
       <input type="file" id="fileInput" accept="application/json">
     </details>
-    <div class="cloud-sync">
-      <b>跨设备同步</b>
+    <section class="cloud-sync" id="cloudSyncSection" aria-labelledby="cloudSyncTitle" tabindex="-1">
+      <h3 id="cloudSyncTitle">跨设备同步</h3>
       <p id="cloudSyncStatus" role="status">尚未开启，学习记录保存在这台设备。</p>
+      <p id="cloudSyncLastTime" hidden></p>
       <div class="cloud-sync-actions" id="cloudSyncLocalRecovery" hidden>
         <button class="secondary" id="cloudSyncRetrySaveBtn">重试本机保存</button>
         <button class="secondary" id="cloudSyncDownloadBtn">下载当前进度</button>
@@ -704,13 +729,20 @@
       </details>
       <p>学习进度和家长加入的字会加密同步。笔迹与批改异议留在当前浏览器。</p>
       <div class="cloud-conflict" id="cloudSyncConflict" hidden>
-        <p>两台设备各有新进度，已暂停覆盖。两份会先保留本机备份，再按你的选择继续。</p>
+        <p>两边都有新进度。合并可以保留两边的默写记录和家长安排。</p>
         <div class="cloud-sync-actions">
-          <button id="cloudKeepLocalBtn">用这台设备的进度</button>
-          <button class="secondary" id="cloudUseRemoteBtn">接上云端进度</button>
+          <button id="cloudMergeBtn">合并两边进度</button>
         </div>
+        <details>
+          <summary>只采用其中一份</summary>
+          <p>如果要替换其中一份，游戏会先备份两边的进度。</p>
+          <div class="cloud-sync-actions">
+            <button class="secondary" id="cloudKeepLocalBtn">只用这台设备的进度</button>
+            <button class="secondary" id="cloudUseRemoteBtn">只用云端进度</button>
+          </div>
+        </details>
       </div>
-    </div>
+    </section>
     <p class="hint-text" id="gameVersion">版本 2026.11.11.7</p>
   </div>
 </div>
@@ -3200,28 +3232,58 @@ function applySyncedProgress(remote, reason){
   return withLocalWrite(SAVE_KEY, () => {
     if(!syncCanApplyProgress()) throw new Error('请先完成当前练习，再接上云端进度。');
     // Persist before replacing live objects. A quota failure leaves this question intact.
-    const joining = reason === 'join-family' || reason === 'join-password-family';
-    const learning = sharedLearning && joining ? sharedLearning.mergeLearning(incoming, state) : incoming;
+    const merging = reason === 'join-family' || reason === 'join-password-family' || reason === 'conflict-merge';
+    const learning = sharedLearning && merging ? sharedLearning.mergeLearning(incoming, state) : incoming;
     const next = sharedLearning ? sharedLearning.assemble(learning, state) : incoming;
     writeLocalProgress(JSON.stringify(next), 'sync', sharedLearning ? incoming : null);
     applyProgressToPage(next, true);
+  });
+}
+function wouldLoseSharedProgress(remote){
+  const incoming = new Map(remote.bank.map(item => [item.char, item]));
+  return state.bank.some(item => {
+    const other = incoming.get(item.char);
+    if(item.fromParent && !other?.fromParent) return true;
+    if((item.wrongDay || '') > (other?.wrongDay || '') ||
+        (item.stuckDay || '') > (other?.stuckDay || '')) return true;
+    // Early cloud records may have formal passes in the history alone.
+    return item.passedDays?.some(day => !other?.passedDays?.includes(day) &&
+      !other?.history?.some(entry => entry.day === day &&
+        (entry.outcome === 'first-try' || entry.outcome === 'retest-pass')));
   });
 }
 let syncUiBusy = false;
 function renderCloudSyncStatus(){
   const status = cloudSyncController ? cloudSyncController.status() : {kind:'off',connected:false,message:'尚未开启，学习记录保存在这台设备。'};
   const legacyCode = status.connected && cloudSyncController ? cloudSyncController.code() : '';
+  const summaryBtn = document.getElementById('cloudSyncSummaryBtn');
+  const labels = {
+    synced:'已连接 · 已同步', syncing:status.connected ? '已连接 · 同步中' : '正在连接',
+    error:status.connected ? '已连接 · 同步失败' : '未连接 · 接入失败',
+    offline:status.connected ? '已连接 · 等待联网' : '未连接 · 等待联网',
+    conflict:status.connected ? '已连接 · 等待合并' : '未连接 · 进度有冲突',
+    unsupported:status.connected ? '已连接 · 本次无法同步' : '本机无法连接',
+  };
+  const label = progressSaveNotice ? '本机保存失败'
+    : labels[status.kind] || (status.connected ? '已连接 · 待同步' : '未连接');
+  document.getElementById('cloudSyncSummary').textContent = '跨设备同步 · ' + label;
+  summaryBtn.hidden = !sharedLearning;
+  summaryBtn.dataset.tone = progressSaveNotice || ['error','offline','conflict','unsupported'].includes(status.kind)
+    ? 'warn' : status.kind === 'synced' ? 'good' : 'neutral';
   document.getElementById('cloudSyncStatus').textContent = progressSaveNotice || status.message;
+  const lastTime = document.getElementById('cloudSyncLastTime');
+  lastTime.hidden = !status.lastSyncedAt;
+  lastTime.textContent = status.lastSyncedAt ? '上次同步 ' + new Date(status.lastSyncedAt).toLocaleString() : '';
   document.getElementById('cloudSyncLocalRecovery').hidden = !progressSaveNotice;
   document.getElementById('cloudSyncRetrySaveBtn').disabled = syncUiBusy || !!progressWrites;
   document.getElementById('cloudSyncPasswordSetup').hidden = status.connected && status.credentialMode === 'password';
   document.getElementById('cloudSyncConnectedActions').hidden = !status.connected;
   document.getElementById('cloudSyncCodeWrap').hidden = !legacyCode;
   document.getElementById('cloudSyncCreateBtn').textContent = legacyCode ? '用这个密码另建同步' : '用这个密码首次开启';
-  document.getElementById('cloudSyncConflict').hidden = status.kind !== 'conflict';
+  document.getElementById('cloudSyncConflict').hidden = !status.connected || status.kind !== 'conflict';
   document.getElementById('cloudSyncCode').value = legacyCode || '';
   const disabled = !cloudSyncController || syncUiBusy || status.kind === 'syncing' || status.kind === 'unsupported';
-  for(const id of ['cloudSyncCreateBtn','cloudSyncJoinBtn','cloudSyncLegacyJoinBtn','cloudSyncNowBtn','cloudKeepLocalBtn','cloudUseRemoteBtn']) document.getElementById(id).disabled = disabled;
+  for(const id of ['cloudSyncCreateBtn','cloudSyncJoinBtn','cloudSyncLegacyJoinBtn','cloudSyncNowBtn','cloudMergeBtn','cloudKeepLocalBtn','cloudUseRemoteBtn']) document.getElementById(id).disabled = disabled;
   if(panelOverlay.classList.contains('show')) renderLocalRecoveryCopies();
 }
 function syncTick(){
@@ -3269,23 +3331,31 @@ function initProgressSync(){
     cloudSyncController = window.HanziProgressSync.create({projectId:"game-e-40894", storage:localStorage,
       fetch:window.fetch ? window.fetch.bind(window) : fetch, crypto:window.crypto,
       getState:getCloudProgressState, applyState:applySyncedProgress, canApply:syncCanApplyProgress,
+      mergeOnConflict:!!sharedLearning, wouldLoseProgress:wouldLoseSharedProgress,
       onStatus:renderCloudSyncStatus, setTimeout, clearTimeout, now:() => Date.now()});
     if(cloudSyncController.status().connected) restoreSyncedRound();
     renderCloudSyncStatus();
   }catch(_){
     cloudSyncController = null;
+    renderCloudSyncStatus();
     document.getElementById('cloudSyncStatus').textContent = '这个浏览器暂时无法开启同步，游戏和本机记录仍可使用。';
   }
 }
 onTap(document.getElementById('cloudSyncCreateBtn'), () => syncWithCredential('createPasswordFamily', 'cloudSyncPassword', false));
 onTap(document.getElementById('cloudSyncJoinBtn'), () => syncWithCredential('joinPasswordFamily', 'cloudSyncPassword', true));
 onTap(document.getElementById('cloudSyncLegacyJoinBtn'), () => syncWithCredential('joinFamily', 'cloudSyncJoinInput', true));
-onTap(document.getElementById('cloudSyncNowBtn'), syncTick);
+onTap(document.getElementById('cloudSyncSummaryBtn'), () => {
+  const section = document.getElementById('cloudSyncSection');
+  section.scrollIntoView({block:'start'});
+  section.focus({preventScroll:true});
+});
+onTap(document.getElementById('cloudSyncNowBtn'), () => cloudSyncAction(() => cloudSyncController.sync(), true));
 onTap(document.getElementById('cloudSyncRetrySaveBtn'), () => cloudSyncAction(() => {
   if(cloudSyncController.status().connected) return cloudSyncController.sync();
 }, false));
 onTap(document.getElementById('cloudKeepLocalBtn'), () => cloudSyncAction(() => cloudSyncController.resolveConflict('local'), false));
 onTap(document.getElementById('cloudUseRemoteBtn'), () => cloudSyncAction(() => cloudSyncController.resolveConflict('remote'), true));
+onTap(document.getElementById('cloudMergeBtn'), () => cloudSyncAction(() => cloudSyncController.resolveConflict('merge'), true));
 onTap(document.getElementById('cloudSyncDisconnectBtn'), () => { if(cloudSyncController) cloudSyncController.disconnect(); renderCloudSyncStatus(); });
 onTap(document.getElementById('cloudSyncCopyBtn'), async () => {
   const code = document.getElementById('cloudSyncCode');
@@ -4568,6 +4638,41 @@ function downloadCurrentProgress(){
 }
 onTap(saveProgressBtn, downloadCurrentProgress);
 onTap(document.getElementById('cloudSyncDownloadBtn'), downloadCurrentProgress);
+
+let cloudBackupCopies = [];
+const manualBackupSettings = document.getElementById('manualBackupSettings');
+const cloudBackupSelect = document.getElementById('cloudSyncBackupSelect');
+const cloudBackupRemoteBtn = document.getElementById('cloudSyncBackupRemoteBtn');
+function selectedCloudBackup(){
+  return cloudBackupSelect.value === '' ? null : cloudBackupCopies[Number(cloudBackupSelect.value)];
+}
+manualBackupSettings.addEventListener('toggle', async () => {
+  if(!manualBackupSettings.open || !cloudSyncController) return;
+  try{
+    const selected = selectedCloudBackup()?.timestamp;
+    cloudBackupCopies = await cloudSyncController.listBackups();
+    cloudBackupSelect.replaceChildren();
+    cloudBackupCopies.forEach((copy, index) => {
+      const option = document.createElement('option');
+      option.value = String(index);
+      option.textContent = new Date(copy.timestamp).toLocaleString();
+      cloudBackupSelect.appendChild(option);
+    });
+    const index = cloudBackupCopies.findIndex(copy => copy.timestamp === selected);
+    if(cloudBackupCopies.length) cloudBackupSelect.value = String(Math.max(0, index));
+    cloudBackupRemoteBtn.disabled = !selectedCloudBackup()?.remote;
+    document.getElementById('cloudSyncBackupCopies').hidden = !cloudBackupCopies.length;
+  }catch(_){ document.getElementById('cloudSyncBackupCopies').hidden = true; }
+});
+cloudBackupSelect.addEventListener('change', () => { cloudBackupRemoteBtn.disabled = !selectedCloudBackup()?.remote; });
+onTap(document.getElementById('cloudSyncBackupLocalBtn'), () => {
+  const copy = selectedCloudBackup();
+  if(copy) downloadProgress(JSON.stringify(copy.local, null, 2), '合并前本机');
+});
+onTap(cloudBackupRemoteBtn, () => {
+  const copy = selectedCloudBackup();
+  if(copy?.remote) downloadProgress(JSON.stringify(copy.remote, null, 2), '合并前云端');
+});
 
 function renderLocalRecoveryCopies(){
   const section = document.getElementById('localRecoveryCopies');

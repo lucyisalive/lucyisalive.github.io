@@ -61,21 +61,26 @@ function mockLegacyFirestore(state) {
   const digest = purpose => createHash('sha256').update(app + ':' + purpose + ':password-v1:' + seed).digest();
   const key = digest('key');
   const resource = '/v1/projects/' + project + '/databases/(default)/documents/families/hanzi-password-v1-' + digest('document').toString('hex');
-  const iv = Buffer.alloc(12, 1);
-  const cipher = createCipheriv('aes-256-gcm', key, iv);
-  const encrypted = Buffer.concat([cipher.update(JSON.stringify(state)), cipher.final(), cipher.getAuthTag()]);
-  let record = {
-    updateTime: '2026-11-03T12:00:00.000Z',
-    fields: {
+  let revision = 0;
+  const updateTime = () => new Date(Date.parse('2026-11-03T12:00:00.000Z') + revision++ * 1000).toISOString();
+  function encryptedFields(value) {
+    const iv = Buffer.alloc(12, revision + 1);
+    const cipher = createCipheriv('aes-256-gcm', key, iv);
+    const encrypted = Buffer.concat([cipher.update(JSON.stringify(value)), cipher.final(), cipher.getAuthTag()]);
+    return {
       app: { stringValue: app }, formatVersion: { integerValue: '1' },
       iv: { stringValue: iv.toString('base64') }, payload: { stringValue: encrypted.toString('base64') },
-    },
-  };
+    };
+  }
+  let record = { fields: encryptedFields(state), updateTime: updateTime() };
+  let rejectNextRead = false;
   const calls = [];
   const decoded = [];
   return {
     calls,
     decoded,
+    anotherDeviceSaved(value) { record = { fields: encryptedFields(value), updateTime: updateTime() }; },
+    failNextRead() { rejectNextRead = true; },
     async fetch(url, init) {
       const endpoint = new URL(url);
       calls.push(init.method);
@@ -89,8 +94,14 @@ function mockLegacyFirestore(state) {
         const decipher = createDecipheriv('aes-256-gcm', key, Buffer.from(fields.iv.stringValue, 'base64'));
         decipher.setAuthTag(payload.subarray(-16));
         decoded.push(JSON.parse(Buffer.concat([decipher.update(payload.subarray(0, -16)), decipher.final()])));
-        record = { fields, updateTime: '2026-11-03T12:00:01.000Z' };
-      } else assert.equal(init.method, 'GET');
+        record = { fields, updateTime: updateTime() };
+      } else {
+        assert.equal(init.method, 'GET');
+        if (rejectNextRead) {
+          rejectNextRead = false;
+          return { ok: false, status: 403, text: async () => '{}' };
+        }
+      }
       return { ok: true, status: 200, text: async () => JSON.stringify(record) };
     },
   };
@@ -264,6 +275,7 @@ async function temporarySaveFailureBeforePasswordJoin() {
   await flush();
   assert.equal(page.run('passedCount'), 1);
   assert.match(page.ids.get('localProgressNotice').textContent, /本机进度暂存未成功/);
+  assert.equal(page.ids.get('cloudSyncSummary').textContent, '跨设备同步 · 本机保存失败');
   assert.equal(page.storage.get(OLD_SAVE), originalLearning);
   assert.equal(page.storage.get(STORY), originalStory);
 
@@ -307,4 +319,108 @@ async function temporarySaveFailureBeforePasswordJoin() {
   console.log('Password join: same-page recovery, merged learning and a remembered connection after reopening passed.');
 }
 
-test().then(temporarySaveFailureBeforePasswordJoin).catch(error => { console.error(error); process.exitCode = 1; });
+async function tapSyncButton(page, id) {
+  page.tap(id);
+  for (let attempt = 0; page.run('syncUiBusy'); attempt++) {
+    assert.ok(attempt < 500, 'Finish the simulated sync action: ' + id);
+    await new Promise(resolve => setTimeout(resolve, 10));
+  }
+}
+
+async function syncStatusAndOpenSettings() {
+  const practiced = [...'匕乙犬冗止泥夕目牛互甘命剪而才本眉子认收机幻记呼纤精实材价累经验确定忧可惜远'];
+  assert.equal(practiced.length, 38);
+  const local = {
+    bankVersion: 5, dailyCount: 10, priorityQueue: [], scenesUnlocked: 0,
+    bank: [...practiced.map((char, index) => index < 30 ? item(char, 'zì', [TODAY])
+      : { ...item(char, 'zì'), wrongToday: 1, wrongDay: TODAY }), item('固', 'gù')],
+  };
+  const assignments = [...'山水林火花鸟风雨大小上下左右天地方圆新旧一二悄'].map(char => ({
+    char, word: char === '悄' ? '悄悄' : '', pinyin: char === '悄' ? 'qiāo' : 'zì',
+    addedDay: TODAY, completedDay: null, requestId: 'assigned-' + char,
+  }));
+  assert.equal(assignments.length, 23);
+  const cloud = {
+    ...local, priorityQueue: assignments,
+    bank: assignments.map(({char, word, pinyin}) => ({ ...item(char, pinyin), word, fromParent: true })),
+  };
+  const firestore = mockLegacyFirestore(cloud);
+  const { environment, flush, inkFor } = setup(require, __dirname, process,
+    { crypto: webcrypto, TextEncoder, TextDecoder, firestore });
+  const story = { version: 1, herbalistStage: 'stars', scenesUnlocked: 1, sessionProgress: round('local-level', 2) };
+  const page = environment({
+    initialStorage: [[OLD_SAVE, JSON.stringify(local)], [STORY, JSON.stringify(story)]], location: LOCATION,
+  });
+  await flush();
+  const status = () => page.ids.get('cloudSyncSummary').textContent;
+  const todayText = () => page.ids.get('todayPassed').textContent;
+  const parentPlan = () => page.ids.get('todayParentPlan').textContent;
+  const heldPlan = '家长安排 23 个字 · 已完成 0 个 · 剩余 23 个';
+  page.tap('settingsBtn');
+  assert.equal(page.ids.get('cloudSyncSummaryBtn').hidden, false);
+  assert.equal(status(), '跨设备同步 · 未连接');
+  assert.equal(todayText(), '今天练了 38 个字 · 已通过 30 个');
+  assert.equal(parentPlan(), '今天还没有家长安排的字');
+
+  page.ids.get('cloudSyncPassword').value = PASSWORD;
+  await tapSyncButton(page, 'cloudSyncJoinBtn');
+  assert.equal(status(), '跨设备同步 · 已连接 · 待同步');
+  assert.equal(todayText(), '今天练了 38 个字 · 已通过 30 个');
+  assert.equal(parentPlan(), heldPlan);
+  assert.equal(read(page.storage, OLD_SAVE).priorityQueue.at(-1).char, '悄');
+  assert.equal(page.run('passedCount'), 2);
+
+  await tapSyncButton(page, 'cloudSyncNowBtn');
+  assert.equal(status(), '跨设备同步 · 已连接 · 已同步');
+  assert.match(page.ids.get('cloudSyncLastTime').textContent, /^上次同步 /);
+  const merged = firestore.decoded.at(-1);
+  assert.equal(merged.priorityQueue.length, 23);
+
+  firestore.failNextRead();
+  await tapSyncButton(page, 'cloudSyncNowBtn');
+  assert.equal(status(), '跨设备同步 · 已连接 · 同步失败');
+  assert.equal(todayText(), '今天练了 38 个字 · 已通过 30 个');
+  assert.equal(parentPlan(), heldPlan);
+
+  const remoteUpdate = { ...merged, bank: [...merged.bank, item('海', 'hǎi', [TODAY])] };
+  firestore.anotherDeviceSaved(remoteUpdate);
+  page.run('strokesPoints = [[[1, 1], [2, 2]]];');
+  const requestsBeforeBusy = firestore.calls.length;
+  await tapSyncButton(page, 'cloudSyncNowBtn');
+  assert.equal(firestore.calls.length, requestsBeforeBusy, 'Manual sync must respect existing strokes');
+  assert.equal(todayText(), '今天练了 38 个字 · 已通过 30 个');
+  page.run('clearCanvas();');
+
+  await tapSyncButton(page, 'cloudSyncNowBtn');
+  assert.equal(status(), '跨设备同步 · 已连接 · 已同步');
+  assert.equal(page.ids.get('panelOverlay').classList.contains('show'), true);
+  assert.equal(todayText(), '今天练了 39 个字 · 已通过 31 个', 'Manual sync adopts a safe pull in open settings');
+  assert.equal(parentPlan(), heldPlan);
+
+  page.run("presentDoor(state.bank.find(entry => entry.char === '固'), 'free', 1);");
+  await flush();
+  inkFor(page, '固');
+  page.tap('submitBtn');
+  await flush();
+  firestore.anotherDeviceSaved({ ...remoteUpdate, bank: [...remoteUpdate.bank, item('宝', 'bǎo', [TODAY])] });
+  await tapSyncButton(page, 'cloudSyncNowBtn');
+  assert.equal(status(), '跨设备同步 · 已连接 · 等待合并');
+  assert.equal(page.ids.get('cloudSyncConflict').hidden, false);
+  assert.equal(todayText(), '今天练了 40 个字 · 已通过 32 个');
+
+  await tapSyncButton(page, 'cloudMergeBtn');
+  assert.equal(todayText(), '今天练了 41 个字 · 已通过 33 个');
+  assert.equal(parentPlan(), heldPlan);
+  assert.deepEqual(passedDays(read(page.storage, OLD_SAVE), '固'), [TODAY]);
+  assert.deepEqual(passedDays(read(page.storage, OLD_SAVE), '宝'), [TODAY]);
+  assert.equal(read(page.storage, STORY).sessionProgress.passedCount, 3);
+  if (page.run('cloudSyncController.status().kind') !== 'synced') await tapSyncButton(page, 'cloudSyncNowBtn');
+  assert.equal(status(), '跨设备同步 · 已连接 · 已同步');
+  assert.deepEqual(passedDays(firestore.decoded.at(-1), '固'), [TODAY]);
+  assert.deepEqual(passedDays(firestore.decoded.at(-1), '宝'), [TODAY]);
+  assert.equal(firestore.decoded.at(-1).priorityQueue.at(-1).char, '悄');
+  console.log('Family settings: visible status, 38/30 first join with 23 assignments, safe manual pull, and conflict merge passed.');
+}
+
+test().then(temporarySaveFailureBeforePasswordJoin).then(syncStatusAndOpenSettings)
+  .catch(error => { console.error(error); process.exitCode = 1; });
