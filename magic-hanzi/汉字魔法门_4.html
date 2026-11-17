@@ -579,19 +579,43 @@
     border:none; border-radius:8px; padding:7px 12px; background:var(--jade); color:#fff;
     font-family:inherit; font-weight:700; font-size:12.5px; cursor:pointer; white-space:nowrap;
   }
-  .mastered-list{
-    display:flex; flex-wrap:wrap; gap:6px; margin-top:4px;
-    max-height:120px; overflow-y:auto;
+  .today-learning {
+    margin:0 0 14px; padding:10px 12px; border:1px solid #a9b8a3;
+    border-radius:10px; background:#f4f6ed; color:#344336;
   }
-  .mastered-chip{
-    background:var(--jade); color:#fff; border-radius:8px;
-    padding:4px 9px; font-size:15px; font-weight:700;
+  .today-learning h3 { margin:0 0 4px; font-size:15px; }
+  .today-learning p { margin:3px 0; font-size:13px; }
+  .today-learning .today-passed { color:#245b49; font-size:18px; font-weight:700; }
+  .today-learning progress {
+    display:block; width:100%; height:8px; margin:3px 0 6px;
+    appearance:none; border:0; border-radius:6px; overflow:hidden; background:#dce4d8;
   }
-  .mastered-chip small{ font-weight:500; opacity:.8; font-size:10px; margin-left:3px; }
-  .progress-chip{
-    background:#e6dcc0; color:#6b6355; border-radius:8px;
-    padding:4px 9px; font-size:15px; font-weight:700;
+  .today-learning progress::-webkit-progress-bar { background:#dce4d8; }
+  .today-learning progress::-webkit-progress-value { background:#46725a; }
+  .today-learning progress::-moz-progress-bar { background:#46725a; }
+  .learning-overview { margin:0 0 15px; color:var(--ink); }
+  .learning-totals {
+    display:flex; flex-wrap:wrap; align-items:baseline; column-gap:12px;
+    row-gap:2px; margin:0 0 7px; font-size:14px;
   }
+  .learning-totals strong { font-size:17px; }
+  .learning-overview .hint-text { margin:6px 0 0; }
+  .learning-groups { display:grid; gap:4px; }
+  .learning-group { background:#fffaf0; border:1px solid #ded2b5; border-radius:8px; }
+  .learning-group summary { padding:7px 10px; cursor:pointer; font-weight:700; }
+  .learning-count { float:right; font-size:13px; color:#62513a; }
+  .learning-group:last-child summary { color:#245b49; }
+  .learning-list {
+    display:flex; flex-wrap:wrap; gap:6px; margin:0; padding:3px 10px 9px;
+    max-height:160px; overflow-y:auto; list-style:none;
+  }
+  .learning-chip {
+    display:flex; flex-wrap:wrap; align-items:baseline; gap:5px; background:#f0e6cd;
+    color:#402e24; border-radius:6px; padding:2px 7px; font-size:13px; overflow-wrap:anywhere;
+  }
+  .learning-stars { color:#79500e; white-space:nowrap; }
+  .learning-empty { color:#62513a; font-size:13px; }
+  .queue-item > span:first-child { color:var(--ink); }
   .py-alt{
     color:var(--seal); font-weight:800; cursor:pointer;
     border-bottom:1.5px dashed var(--seal); padding-bottom:1px;
@@ -3182,6 +3206,34 @@ body[data-herb-stage="sea"] .story-sea { display: block; }
       <h2>今日汉字设置</h2>
       <button class="btn-close-panel" id="closePanelBtn" aria-label="关闭设置" title="关闭设置">×</button>
     </div>
+    <section class="today-learning" aria-labelledby="todayLearningTitle">
+      <h3 id="todayLearningTitle">今日学习</h3>
+      <p class="today-passed" id="todayPassed"></p>
+      <p id="todayLevel"></p>
+      <progress id="todayLevelBar" aria-hidden="true"></progress>
+      <p id="todayParentPlan"></p>
+    </section>
+    <section class="learning-overview" aria-label="学习进度">
+      <p class="learning-totals" aria-live="polite">
+        <strong id="learningTotal"></strong>
+        <span id="learningParentTotal"></span>
+      </p>
+      <div class="learning-groups">
+        <details class="learning-group" id="learningPendingDetails">
+          <summary>待进行 <span class="learning-count" id="learningPendingCount"></span></summary>
+          <ul class="learning-list" id="learningPendingList"></ul>
+        </details>
+        <details class="learning-group" id="learningActiveDetails">
+          <summary>进行中 <span class="learning-count" id="learningActiveCount"></span></summary>
+          <ul class="learning-list" id="learningActiveList"></ul>
+        </details>
+        <details class="learning-group" id="learningMemoryDetails">
+          <summary>长时记忆库 <span class="learning-count" id="learningMemoryCount"></span></summary>
+          <ul class="learning-list" id="masteredList"></ul>
+        </details>
+      </div>
+      <p class="hint-text">每天正式通过最多记一颗星。在 3 个不同的日子通过，就进入长时记忆库。</p>
+    </section>
     <label for="batchInput">添加今天要练的字</label>
     <textarea id="batchInput" rows="3" placeholder="奇迹的迹。求救的救，师弟的弟"></textarea>
     <div class="batch-row">
@@ -3198,18 +3250,14 @@ body[data-herb-stage="sea"] .story-sea { display: block; }
     <details class="settings-details" id="aiSentenceSettings">
       <summary>AI 造句</summary>
       <p id="aiSentenceStatus" role="status">尚未连接。</p>
-      <p>授权 OpenRouter 后，加入没有例句的词会自动造句。模型服务会收到词语、目标字和读音，可能保留这些文本。请只录普通学习词语。</p>
+      <p>连接后，词库没有收录的词会自动补例句。连接在此页面有效，已生成的例句会保留。服务会收到词语、目标字和读音，可能保留这些文本。请只录普通学习词语。</p>
       <button id="aiSentenceConnectBtn">连接 AI 造句</button>
-      <button id="aiSentenceFillBtn" hidden>补齐今天的例句</button>
-      <button id="aiSentenceDisconnectBtn" hidden>断开这台设备</button>
+      <button id="aiSentenceDisconnectBtn" hidden>断开连接</button>
     </details>
     <div class="queue-list" id="queueList"></div>
 
     <label>需要家长讲解（今天错了 3 次，已经停下来）</label>
     <div class="stuck-list" id="stuckList"></div>
-
-    <label>已永久掌握（在 3 个不同的日子写对过，不再出现）</label>
-    <div class="mastered-list" id="masteredList"></div>
 
     <label>笔迹记录<span id="inkCount" style="font-weight:400;color:#8a8272;"></span></label>
     <div class="ink-list" id="inkList"></div>
@@ -4662,6 +4710,20 @@ window.HANZI_CURRICULUM = {
     '漫天卷地': '沙尘漫天卷地，连远处的房子都看不清了。',
     '鸦雀无声': '电影开始了，原本热闹的大厅顿时鸦雀无声。',
     '囫囵吞枣': '读故事不能囫囵吞枣，要慢慢想清楚情节。',
+
+    // Parent spelling words from the sparrow lesson.
+    '麻雀': '一只麻雀落在窗台上，低头啄了几粒米。',
+    '猛烈': '猛烈的风吹得窗户直响。',
+    '无可奈何': '球卡在树枝间，我们无可奈何，只好请老师来帮忙。',
+    '身躯': '大象的身躯像一堵墙，把小象挡在身后。',
+    '掩护': '老鹰飞过来，母鸡张开翅膀掩护小鸡躲进草丛。',
+    '紧张': '第一次上台表演，我紧张得手心出了汗。',
+    '浑身': '小狗从水里跳出来，浑身湿透了。',
+    '牺牲': '为了照顾生病的小猫，哥哥牺牲了出去玩的时间。',
+    '庞大': '这艘庞大的货船能装下几百个大箱子。',
+    '强大': '这台吊车有强大的动力，能吊起很重的钢梁。',
+    '嗅觉': '小狗的嗅觉很灵敏，能闻到藏在盒子里的饼干。',
+    '悄悄': '大家悄悄走进房间，怕吵醒熟睡的宝宝。',
   };
 
   // Original examples for the remaining entries in the full grade-three word list.
@@ -4907,6 +4969,17 @@ window.HANZI_CURRICULUM = {
       (code >= 0xf900 && code <= 0xfaff) || (code >= 0x20000 && code <= 0x323af);
   }
 
+  function cueWord(char, word) {
+    const hasTarget = Array.from(char).length === 1 && isHan(char);
+    // Old saved prompts may contain a blank in place of the tested character.
+    if (word.includes('_')) {
+      if (!hasTarget || word.indexOf('_') !== word.lastIndexOf('_')) return '';
+      word = word.replace('_', char);
+    }
+    if (char && (!hasTarget || !word.includes(char))) return '';
+    return word;
+  }
+
   // Return speech text only. The caller decides when to speak it; this module
   // has no UI, audio, or storage access and never changes the supplied item.
   function get(item) {
@@ -4915,16 +4988,8 @@ window.HANZI_CURRICULUM = {
     if (custom) return custom;
 
     const char = text(item.char);
-    let word = text(item.word);
-    if (word) {
-      // Old saved prompts may contain a blank in place of the tested character.
-      if (word.includes('_')) {
-        if (Array.from(char).length !== 1 || !isHan(char) || word.indexOf('_') !== word.lastIndexOf('_')) return null;
-        word = word.replace('_', char);
-      }
-      if (char && (Array.from(char).length !== 1 || !isHan(char) || !word.includes(char))) return null;
-      return sentences[word] || null;
-    }
+    const word = text(item.word);
+    if (word) return sentences[cueWord(char, word)] || null;
 
     // A bare character may use a reviewed default only when it is unambiguous
     // for the requested reading. For example 便 biàn must not use 便宜 pián.
@@ -4934,7 +4999,17 @@ window.HANZI_CURRICULUM = {
     return candidates.length === 1 ? sentences[candidates[0].word] || null : null;
   }
 
-  return Object.freeze({ get });
+  // An unfamiliar cue can still be spoken as a dictation prompt. Quoting it
+  // keeps the prompt usable without guessing the word's meaning or grammar.
+  function fallback(item) {
+    if (!item || typeof item !== 'object') return null;
+    const word = cueWord(text(item.char), text(item.word));
+    const letters = Array.from(word);
+    if (letters.length < 2 || letters.length > 24 || !letters.every(isHan)) return null;
+    return `请写出“${word}”里指定的字。`;
+  }
+
+  return Object.freeze({ get, fallback });
 });
 
 </script>
@@ -4946,16 +5021,16 @@ window.HANZI_CURRICULUM = {
 })(typeof window !== 'undefined' ? window : globalThis, function () {
   'use strict';
 
-  // Only the parent action starts OAuth or generation. The access key lives
-  // in this tab's session; the separate cache contains just exact word hints.
+  // The parent action starts OAuth. The key only lives in the current page's
+  // memory; the separate cache contains just exact word hints.
   const ORIGIN = 'https://lucyisalive.github.io';
-  const CALLBACK = ORIGIN + '/';
+  const CALLBACK_PATH = '/magic-hanzi/';
+  const CALLBACK = ORIGIN + CALLBACK_PATH;
   const AUTH = 'https://openrouter.ai/auth';
   const EXCHANGE = 'https://openrouter.ai/api/v1/auth/keys';
   const CHAT = 'https://openrouter.ai/api/v1/chat/completions';
   const FREE_MODEL = 'google/gemma-4-31b-it:free';
-  const PKCE_KEY = 'hanzi-ai-sentences-pkce-v1';
-  const AUTH_KEY = 'hanzi-ai-sentences-auth-v1';
+  const PKCE_KEY = 'hanzi-herbalist-ai-sentences-pkce-v1';
   const CACHE_KEY = 'hanzi-ai-sentences-cache-v1';
   const AUTH_AGE = 10 * 60 * 1000;
   const TIMEOUT = 12000;
@@ -5035,7 +5110,7 @@ window.HANZI_CURRICULUM = {
     function page() {
       try { return new Url(win.location.href); } catch (_) { return null; }
     }
-    function onSite() { const here = page(); return !!here && here.origin === ORIGIN; }
+    function onSite() { const here = page(); return !!here && here.origin === ORIGIN && here.pathname.startsWith(CALLBACK_PATH); }
     function load(which, name) {
       try { return win[which].getItem(name); } catch (_) { return null; }
     }
@@ -5057,19 +5132,14 @@ window.HANZI_CURRICULUM = {
     }
     function disconnect() {
       cancelWork(); key = '';
-      const removed = remove('sessionStorage', AUTH_KEY);
       remove('sessionStorage', PKCE_KEY);
-      notify(removed ? 'AI 例句已断开；已有例句仍可使用' : '本页已停止 AI 例句，但无法清除浏览器连接，请关闭这个标签页');
+      notify('AI 例句已断开，已有例句仍可使用');
     }
     function saveCache() {
       while (cache.size > MAX_CACHE) cache.delete(cache.keys().next().value);
       store('localStorage', CACHE_KEY, JSON.stringify([...cache.values()]));
     }
     if (onSite()) {
-      const saved = load('sessionStorage', AUTH_KEY);
-      if (typeof saved === 'string' && API_KEY.test(saved)) {
-        key = saved; message = 'AI 例句已连接（OpenRouter 免费模型）';
-      }
       const raw = load('localStorage', CACHE_KEY);
       if (typeof raw === 'string' && raw.length <= 32000) {
         try {
@@ -5140,7 +5210,7 @@ window.HANZI_CURRICULUM = {
 
     async function complete() {
       const here = page();
-      if (!here || here.origin !== ORIGIN || here.pathname !== '/' || authorizing) return false;
+      if (!here || here.origin !== ORIGIN || here.pathname !== CALLBACK_PATH || authorizing) return false;
       if (!CALLBACK_FIELDS.some(field => here.searchParams.has(field))) return false;
       const tooLong = here.href.length > 8192;
       const codes = here.searchParams.getAll('code'), states = here.searchParams.getAll('state');
@@ -5167,9 +5237,7 @@ window.HANZI_CURRICULUM = {
         if (token !== epoch) return false;
         if (!body || typeof body.key !== 'string' || !API_KEY.test(body.key)) return false;
         key = body.key;
-        result = store('sessionStorage', AUTH_KEY, key)
-          ? 'AI 例句已连接（OpenRouter 免费模型）'
-          : 'AI 例句已连接，刷新页面后需重新授权';
+        result = 'AI 例句已连接（OpenRouter 免费模型）';
         return true;
       } catch (_) { return false; }
       finally { if (token === epoch) { authorizing = false; notify(result); } }
@@ -5213,7 +5281,7 @@ window.HANZI_CURRICULUM = {
       } catch (error) {
         if (token !== epoch) return;
         if (error && error.status === 401) {
-          cancelWork(); key = ''; remove('sessionStorage', AUTH_KEY);
+          cancelWork(); key = '';
           notify('AI 例句授权已失效，请从家长设置重新连接；本地例句仍可用'); return;
         }
         if (error?.status === 403) result = 'AI 例句请求被服务拒绝，连接已保留；本地提示仍可用';
@@ -8725,11 +8793,9 @@ function migrateState(s){
     if(typeof it.lastSeen !== 'string') it.lastSeen = null;
     if(!Array.isArray(it.history)) it.history = [];
     it.history = it.history.filter(h => typeof h.day === 'string');
-    if(!Array.isArray(it.passedDays)){
-      it.passedDays = [...new Set(
-        it.history.filter(h => h.outcome === 'first-try' || h.outcome === 'retest-pass').map(h => h.day)
-      )];
-    }
+    const passedDays = Array.isArray(it.passedDays) ? it.passedDays
+      : it.history.filter(h => h.outcome === 'first-try' || h.outcome === 'retest-pass').map(h => h.day);
+    it.passedDays = [...new Set(passedDays.filter(day => typeof day === 'string' && day))];
     if(typeof it.box !== 'number') it.box = 1;
     if(typeof it.interval !== 'number') it.interval = 0;
     if(typeof it.wrongToday !== 'number') it.wrongToday = 0;
@@ -10507,7 +10573,21 @@ const batchAddBtn = document.getElementById('batchAddBtn');
 const batchMsg = document.getElementById('batchMsg');
 const demoGlyph = document.getElementById('demoGlyph');
 const queueList = document.getElementById('queueList');
-const masteredList = document.getElementById('masteredList');
+const todayPassed = document.getElementById('todayPassed');
+const todayLevel = document.getElementById('todayLevel');
+const todayLevelBar = document.getElementById('todayLevelBar');
+const todayParentPlan = document.getElementById('todayParentPlan');
+const learningTotal = document.getElementById('learningTotal');
+const learningParentTotal = document.getElementById('learningParentTotal');
+const learningGroups = [
+  {key:'pending', details:'learningPendingDetails', count:'learningPendingCount', list:'learningPendingList', empty:'没有待进行的字'},
+  {key:'active', details:'learningActiveDetails', count:'learningActiveCount', list:'learningActiveList', empty:'还没有进行中的字'},
+  {key:'memory', details:'learningMemoryDetails', count:'learningMemoryCount', list:'masteredList', empty:'还没有字通过 3 天考验'},
+].map(group => ({ ...group,
+  details:document.getElementById(group.details),
+  count:document.getElementById(group.count),
+  list:document.getElementById(group.list),
+}));
 const stuckList = document.getElementById('stuckList');
 const inkList = document.getElementById('inkList');
 const inkCount = document.getElementById('inkCount');
@@ -10680,7 +10760,7 @@ function applyProgressToPage(next, connected){
     }
     const storyRestored = restoreHerbalistStage();
     applyScene(state.scenesUnlocked);
-    renderQueueList(); renderMasteredList(); renderStuckList();
+    renderQueueList(); renderLearningOverview(); renderStuckList();
     if(connected || storyRestored) presentSyncedProgress(); else loadNextDoor();
   } finally { syncApplying = false; }
 }
@@ -10772,7 +10852,10 @@ onTap(document.getElementById('cloudSyncCopyBtn'), async () => {
   catch(_){ code.focus(); code.select(); document.getElementById('cloudSyncStatus').textContent = '请长按同步码，选择复制。'; }
 });
 window.addEventListener('online', syncTick);
-window.addEventListener('focus', syncTick);
+window.addEventListener('focus', () => {
+  if(panelOverlay.classList.contains('show')) renderTodayLearning();
+  syncTick();
+});
 document.addEventListener('visibilitychange', () => { if(!document.hidden) syncTick(); });
 
 // ---------- starfield ----------
@@ -10806,14 +10889,10 @@ function requestAiSentences(items){
   try{
     const client = window.hanziAiSentenceClient;
     if(client?.status().connected){
-      const missing = items.filter(item => item.word && !sentenceFor(item));
-      if(missing.length){
-        Promise.resolve(client.generate(missing)).catch(() => {});
-        return true;
-      }
+      const missing = items.filter(item => item.word && !localSentenceFor(item) && !client.get(item));
+      if(missing.length) Promise.resolve(client.generate(missing)).catch(() => {});
     }
   }catch(_){ /* Optional generation cannot delay or undo a parent import. */ }
-  return false;
 }
 
 // Importing is a scheduling request, never a reset of the child's learning.
@@ -11021,30 +11100,31 @@ function herbalistCall(method, ...args){
 }
 
 function localSentenceFor(item){
-  let fallback = '';
+  const saved = typeof item?.sentence === 'string' ? item.sentence.trim() : '';
+  if(saved) return saved;
   try{
-    if(item && typeof item.sentence === 'string') fallback = item.sentence.trim();
-  }catch(e){ /* An invalid optional hint must not break settings or practice. */ }
+    const sentence = window.HanziSentenceHints?.get(item);
+    if(sentence && typeof sentence.then === 'function') Promise.resolve(sentence).catch(() => {});
+    return typeof sentence === 'string' ? sentence.trim() : '';
+  }catch(_){ return ''; }
+}
+
+function sentenceHintFor(item){
+  const local = localSentenceFor(item);
+  if(local) return {text:local, kind:typeof item?.sentence === 'string' && item.sentence.trim() ? 'saved' : 'local'};
   try{
-    const hints = window.HanziSentenceHints;
-    if(hints && typeof hints.get === 'function'){
-      const sentence = hints.get(item);
-      if(sentence && typeof sentence.then === 'function'){
-        Promise.resolve(sentence).catch(() => {});
-        return fallback;
-      }
-      if(typeof sentence === 'string' && sentence.trim()) return sentence.trim();
-    }
-  }catch(e){ /* Keep the parent's saved sentence if the optional module fails. */ }
-  return fallback;
+    const sentence = window.hanziAiSentenceClient?.get(item);
+    if(sentence) return {text:sentence, kind:'generated'};
+  }catch(_){ /* Try the local listening prompt. */ }
+  try{
+    const text = window.HanziSentenceHints?.fallback(item);
+    if(text) return {text, kind:'practice'};
+  }catch(_){ /* The word prompt is still available. */ }
+  return null;
 }
 
 function sentenceFor(item){
-  const local = localSentenceFor(item);
-  if(local) return local;
-  try{
-    return window.hanziAiSentenceClient?.get(item) || '';
-  }catch(_){ return ''; }
+  return sentenceHintFor(item)?.text || '';
 }
 
 let activeSpeech = null;
@@ -11179,6 +11259,7 @@ function presentDoor(item, mode, round, parentRequestId = null){
   renderProgressPath();
 
   if(mode === 'free'){
+    if(item.fromParent) requestAiSentences([item]);
     statusLine.textContent = '看拼音，把字写在格子里，写完点"写好了"';
     clearCanvas();
     setWritingView(true);
@@ -11237,6 +11318,7 @@ function markPassed(item, outcome, message){
   statusLine.textContent = '';
   passedCount += 1;
   recordResult(item, outcome);
+  if(panelOverlay.classList.contains('show')) renderTodayLearning();
   renderProgressPath();
   continueBtn.classList.add('show');
   if(typeof mountainCall === 'function') mountainCall('depart');
@@ -11271,9 +11353,11 @@ function handleAttemptResult(ok){
   // Counted across every mode, not per teaching step: the old state machine could ask for
   // seventeen attempts on one character before giving up, which is where "错了很多轮还在让
   // 他写" came from. Three tries is the whole day's budget for one character.
-  if(!ok && registerWrong(item)){
-    markAbandonedToday(item);
-    return;
+  if(!ok){
+    const hitLimit = registerWrong(item);
+    if(hitLimit) markAbandonedToday(item);
+    if(panelOverlay.classList.contains('show')) renderTodayLearning();
+    if(hitLimit) return;
   }
 
   if(currentMode === 'free'){
@@ -11654,7 +11738,7 @@ onTap(restartBtn, function(){
 });
 
 // ---------- settings panel ----------
-onTap(settingsBtn, () => { stopPromptSpeech(); renderQueueList(); renderMasteredList(); renderStuckList(); renderInkList(); inkMsg.textContent = inkSaveNotice; panelOverlay.classList.add('show'); if(typeof renderCloudSyncStatus === 'function') renderCloudSyncStatus(); if(typeof syncTick === 'function') syncTick(); });
+onTap(settingsBtn, () => { stopPromptSpeech(); renderQueueList(); renderLearningOverview(); renderStuckList(); renderInkList(); inkMsg.textContent = inkSaveNotice; panelOverlay.classList.add('show'); if(typeof renderCloudSyncStatus === 'function') renderCloudSyncStatus(); if(typeof syncTick === 'function') syncTick(); });
 onTap(closePanelBtn, () => {
   panelOverlay.classList.remove('show');
   sentenceBtn.hidden = !sentenceFor(currentItem);
@@ -11716,14 +11800,13 @@ function renderQueueList(){
     const bankItem = state.bank.find(b => b.char === p.char);
     const status = isStuck(bankItem || {}) ? '先点下方“我讲过了”再复习'
       : p.completedDay === todayStr() ? '今天已完成' : '今天优先复习';
-    const sentence = sentenceFor(p);
-    const sentenceStatus = p.sentence ? ' · 自定义例句'
-      : sentence ? (localSentenceFor(p) ? ' · 自动例句' : ' · AI 例句')
-      : p.word ? ' · 暂无例句' : '';
+    const sentence = sentenceHintFor(p);
+    const sentenceStatus = {saved:' · 自定义例句', local:' · 自动例句', generated:' · 自动例句',
+      practice:' · 听写提示已就绪'}[sentence?.kind] || '';
     return `
     <div class="queue-item">
       <span>${escapeText(p.char)}（${py}）${p.word ? ' · '+escapeText(p.word) : ''}<small>${status}${sentenceStatus}</small></span>
-      <span class="queue-actions">${sentence || p.word ? `<button class="edit-sentence" data-i="${i}">${sentence ? '换例句' : '加例句'}</button>` : ''}<button class="del" data-i="${i}">删除</button></span>
+      <span class="queue-actions"><button class="del" data-i="${i}">删除</button></span>
     </div>`;
   }).join('') || '<div style="font-size:12px;color:#8a8272;">暂无今日优先字</div>';
 
@@ -11732,6 +11815,7 @@ function renderQueueList(){
       state.priorityQueue.splice(Number(el.dataset.i), 1);
       saveState();
       renderQueueList();
+      renderTodayLearning();
     });
   });
   queueList.querySelectorAll('.py-alt').forEach(el => {
@@ -11743,22 +11827,6 @@ function renderQueueList(){
       if(bankItem) bankItem.pinyin = it.pinyin;
       saveState();
       requestAiSentences([it]);
-      renderQueueList();
-    });
-  });
-  queueList.querySelectorAll('.edit-sentence').forEach(el => {
-    onTap(el, () => {
-      const it = state.priorityQueue[Number(el.dataset.i)];
-      const sentence = prompt('可以换一句提示；清空就恢复自动例句。', sentenceFor(it) || '');
-      if(sentence === null) return;
-      const custom = sentence.trim().slice(0,100);
-      if(custom) it.sentence = custom; else delete it.sentence;
-      const bankItem = state.bank.find(b => b.char === it.char);
-      if(bankItem && bankItem.word === it.word){
-        if(custom) bankItem.sentence = custom; else delete bankItem.sentence;
-      }
-      saveState();
-      if(!custom) requestAiSentences([it]);
       renderQueueList();
     });
   });
@@ -11794,6 +11862,7 @@ function renderStuckList(){
       saveState();
       renderStuckList();
       renderQueueList();
+      renderTodayLearning();
       // A level stopped early for lack of work can resume; a full level stays complete.
       if(finale.classList.contains('show') && passedCount < ROUND_GOAL){
         syncRoundCompleted = false;
@@ -11811,9 +11880,6 @@ function renderAiSentenceStatus(){
   const connect = document.getElementById('aiSentenceConnectBtn');
   connect.hidden = !!status?.connected;
   connect.disabled = !status || !!status.busy;
-  const fill = document.getElementById('aiSentenceFillBtn');
-  fill.hidden = !status?.connected;
-  fill.disabled = !!status?.busy;
   document.getElementById('aiSentenceDisconnectBtn').hidden = !status?.connected;
 }
 
@@ -11830,6 +11896,7 @@ function initAiSentences(){
       if(!connected) return;
       panelOverlay.classList.add('show');
       document.getElementById('aiSentenceSettings').open = true;
+      requestAiSentences(parentPriorityEntries());
     }).catch(() => {});
   }catch(_){ renderAiSentenceStatus(); }
 }
@@ -11845,23 +11912,68 @@ onTap(document.getElementById('aiSentenceConnectBtn'), () => {
   }
   Promise.resolve(window.hanziAiSentenceClient?.begin()).catch(() => {});
 });
-onTap(document.getElementById('aiSentenceFillBtn'), () => {
-  if(!requestAiSentences(parentPriorityEntries())){
-    document.getElementById('aiSentenceStatus').textContent = '今天没有待补例句的词。';
-  }
-});
 onTap(document.getElementById('aiSentenceDisconnectBtn'), () => window.hanziAiSentenceClient?.disconnect());
 
-// Shows what's retired and, just as usefully, what's part-way there — "写对过 2 天" tells the
-// parent a character is one good morning away from being done, which a bare list can't.
-function renderMasteredList(){
-  const done = state.bank.filter(isMastered);
-  const partial = state.bank.filter(b => !isMastered(b) && (b.passedDays || []).length > 0);
-  const chips = done.map(b => `<span class="mastered-chip">${escapeText(b.char)}<small>${b.passedDays.length}天</small></span>`)
-    .concat(partial.map(b => `<span class="progress-chip">${escapeText(b.char)}<small>${b.passedDays.length}/${MASTERED_DAYS}</small></span>`));
-  masteredList.innerHTML = chips.join('') ||
-    '<div style="font-size:12px;color:#8a8272;">还没有字通过 3 天考验</div>';
+function renderTodayLearning(){
+  const today = todayStr();
+  const practicedChars = new Set();
+  const passedChars = new Set();
+  for(const item of state.bank){
+    const passedToday = item.passedDays?.includes(today);
+    if(passedToday) passedChars.add(item.char);
+    if(passedToday || item.wrongDay === today || item.stuckDay === today) practicedChars.add(item.char);
+  }
+  const levelPasses = Math.min(passedCount, ROUND_GOAL);
+  const remaining = parentPriorityEntries().length;
+  const completed = state.priorityQueue.filter(request =>
+    (!request.addedDay || request.addedDay === today) && request.completedDay === today).length;
+
+  todayPassed.textContent = `今天练了 ${practicedChars.size} 个字 · 已通过 ${passedChars.size} 个`;
+  todayLevel.textContent = `本关已通过 ${levelPasses} / ${ROUND_GOAL} 次`;
+  todayLevelBar.max = ROUND_GOAL;
+  todayLevelBar.value = levelPasses;
+  todayParentPlan.textContent = remaining + completed
+    ? `家长安排 ${remaining + completed} 个字 · 已完成 ${completed} 个 · 剩余 ${remaining} 个`
+    : '今天还没有家长安排的字';
 }
+
+function renderLearningOverview(){
+  renderTodayLearning();
+  const groups = {pending:[], active:[], memory:[]};
+  const parentWords = new Set();
+  let total = 0;
+  let parentChars = 0;
+  for(const item of state.bank){
+    const days = item.passedDays?.length || 0;
+    if(isMastered(item)) groups.memory.push(item);
+    else if(item.retired) continue;
+    else if(days) groups.active.push(item);
+    else groups.pending.push(item);
+
+    total++;
+    if(item.fromParent){
+      parentChars++;
+      const word = typeof item.word === 'string' ? item.word.trim() : '';
+      if(word) parentWords.add(word.replaceAll('_', item.char));
+    }
+  }
+  learningTotal.textContent = `字库共 ${total} 个练习字`;
+  learningParentTotal.textContent = `家长录入 ${parentWords.size} 个词语 · ${parentChars} 个字`;
+  for(const group of learningGroups){
+    const items = groups[group.key];
+    group.count.textContent = `${items.length} 字`;
+    if(!group.details.open) continue;
+    group.list.innerHTML = items.map(item => {
+      const days = item.passedDays?.length || 0;
+      const stars = group.key === 'active'
+        ? `<span class="learning-stars" role="img" aria-label="${days} 星，已通过 ${days} 天">${'★'.repeat(days)}</span>`
+        : '';
+      const word = typeof item.word === 'string' ? item.word.trim().replaceAll('_', item.char) : '';
+      return `<li class="learning-chip"><b>${escapeText(item.char)}</b>${word ? `<span>${escapeText(word)}</span>` : ''}${stars}</li>`;
+    }).join('') || `<li class="learning-empty">${group.empty}</li>`;
+  }
+}
+learningGroups.forEach(group => group.details.addEventListener('toggle', renderLearningOverview));
 
 // 标记是待核查线索；孩子反馈与家长标记都不自动成为确认过的标准答案。
 function renderInkList(){
@@ -11996,6 +12108,7 @@ onTap(batchAddBtn, () => {
   saveState();
   batchMsg.textContent = progressSaveNotice ? msg + '；' + progressSaveNotice : msg;
   renderQueueList();
+  renderLearningOverview();
 });
 
 function downloadProgress(text, label){
@@ -12224,6 +12337,7 @@ function recoverPendingInkCopies(){
 window.addEventListener('pagehide', preservePendingLocalWrites);
 document.addEventListener('visibilitychange', () => {
   if(document.hidden) preservePendingLocalWrites();
+  else if(panelOverlay.classList.contains('show')) renderTodayLearning();
 });
 window.addEventListener('storage', event => {
   if(event.newValue && event.key?.startsWith(PENDING_INK_PREFIX)) recoverPendingInkCopies();
@@ -12234,13 +12348,14 @@ recoverPendingInkCopies();
 loadParentTestInkLog();
 initMountainJourney();
 initHerbalistRoom();
-document.body.classList.add('herbalist-no-ai');
+if(sameGameSite) initAiSentences();
+else document.body.classList.add('herbalist-no-ai');
 if(!sharedLearning) document.body.classList.add('herbalist-local-preview');
 const herbalistStoryRestored = restoreHerbalistStage();
 if(sharedLearning) initProgressSync();
 applyScene(state.scenesUnlocked);
 renderQueueList();
-renderMasteredList();
+renderLearningOverview();
 renderStuckList();
 renderInkList();
 showPlayerDispute(inkLog.find(entry => entry && (entry.v === 'pass' || entry.v === 'fail')) || null);

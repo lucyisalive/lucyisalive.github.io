@@ -95,6 +95,21 @@ for (const [char, word, context] of contexts) {
   assert.ok(Array.from(sentence).length <= 36 && /[。！？]$/.test(sentence), word + ': keep examples short and complete');
 }
 
+const sparrowLesson = [
+  ['麻雀', '麻雀'], ['猛烈', '猛烈'], ['奈何', '无可奈何'], ['躯', '身躯'],
+  ['掩护', '掩护'], ['紧张', '紧张'], ['浑身', '浑身'], ['牺牲', '牺牲'],
+  ['庞', '庞大'], ['强', '强大'], ['量', '力量'], ['勇气', '勇气'],
+  ['嗅', '嗅觉'], ['悄', '悄悄'],
+];
+for (const [targets, word] of sparrowLesson) {
+  for (const char of targets) {
+    const sentence = hints.get({ char, word });
+    assert.ok(sentence?.includes(word), word + ': the parent entry needs a contextual example');
+    assert.match(sentence, /[。！？]$/);
+    assert.ok(Array.from(sentence).length <= 36, word);
+  }
+}
+
 // A word without a usable context has no sentence. Neither a reference to the
 // spelling nor a substring of a known word is a contextual example.
 const unknownWords = [
@@ -129,10 +144,17 @@ for (const item of [undefined, null, '', 7, {}, { word: 7 }, { word: '__proto__'
 }
 for (const word of ['一'.repeat(25), '图书馆📚', '<svg>画', '画\n图', 'http://example.org/画', 'hello']) {
   assert.equal(hints.get({ word }), null, 'Do not turn non-word or oversized input into a hint: ' + word);
+  assert.equal(hints.fallback({ word }), null, 'Do not speak malformed or oversized cues: ' + word);
 }
+assert.equal(hints.fallback(unknown), '请写出“霙羽”里指定的字。');
+assert.equal(hints.fallback({ char: '霙', word: '_羽' }), hints.fallback(unknown));
+assert.equal(hints.fallback({ char: '𠮷', word: '𠮷字帖' }), '请写出“𠮷字帖”里指定的字。');
+assert.equal(hints.fallback({ char: '岫', word: '云袖里' }), null, 'Never speak a contradictory cue');
+assert.equal(hints.fallback({ char: '轻', word: '_又_' }), null, 'Do not guess what multiple placeholders mean');
+assert.equal(hints.fallback({ char: '救' }), null, 'A bare target has no cue after reviewed defaults');
 
 // A browser can load and call the module with no document, speech, or storage
-// globals at all. The only browser export is a pure getter returning audio text;
+// globals at all. The browser exports are pure functions returning audio text;
 // showing a button and speaking the result belong to the caller.
 const browser = { window: {} };
 vm.createContext(browser);
@@ -140,7 +162,8 @@ vm.runInContext(fs.readFileSync(path.join(root, 'sentence-hints.js'), 'utf8'), b
 assert.equal(typeof browser.window.HanziSentenceHints.get, 'function');
 assert.equal(browser.window.HanziSentenceHints.get({ char: '园', word: '公园' }), '我们去公园放风筝。');
 assert.equal(browser.window.HanziSentenceHints.get(unknown), hints.get(unknown), 'Browser generation needs no network, DOM or storage');
-assert.deepEqual(Object.keys(browser.window.HanziSentenceHints), ['get']);
+assert.equal(browser.window.HanziSentenceHints.fallback(unknown), hints.fallback(unknown));
+assert.deepEqual(Object.keys(browser.window.HanziSentenceHints), ['get', 'fallback']);
 assert.equal(Object.isFrozen(hints), true);
 
 console.log('Sentence hints: all 271 textbook words, earlier targets, custom precedence, semantic cues for homophones, and unavailable contexts passed.');

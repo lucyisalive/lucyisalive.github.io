@@ -20,7 +20,7 @@ function element() {
 }
 function environment() {
   const calls = {correct: 0, wrong: 0, celebrate: [], reset: 0, unlock: 0, speechCancel: 0, save: 0, teaching: 0, open: 0, close: 0, clear: 0, progress: 0, writing: [], events: [], spoken: []};
-  const ui = Object.fromEntries(['resultBanner', 'continueBtn', 'timerRing', 'pinyinTag', 'statusLine', 'submitBtn', 'clearBtn', 'speakBtn', 'sentenceBtn'].map(name => [name, element()]));
+  const ui = Object.fromEntries(['resultBanner', 'continueBtn', 'timerRing', 'pinyinTag', 'statusLine', 'submitBtn', 'clearBtn', 'speakBtn', 'sentenceBtn', 'panelOverlay'].map(name => [name, element()]));
   let now = 1000;
   class TestDate extends Date { static now() { return now; } }
   const feedback = {

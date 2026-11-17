@@ -5,16 +5,16 @@
 })(typeof window !== 'undefined' ? window : globalThis, function () {
   'use strict';
 
-  // Only the parent action starts OAuth or generation. The access key lives
-  // in this tab's session; the separate cache contains just exact word hints.
+  // The parent action starts OAuth. The key only lives in the current page's
+  // memory; the separate cache contains just exact word hints.
   const ORIGIN = 'https://lucyisalive.github.io';
-  const CALLBACK = ORIGIN + '/';
+  const CALLBACK_PATH = '/magic-hanzi/';
+  const CALLBACK = ORIGIN + CALLBACK_PATH;
   const AUTH = 'https://openrouter.ai/auth';
   const EXCHANGE = 'https://openrouter.ai/api/v1/auth/keys';
   const CHAT = 'https://openrouter.ai/api/v1/chat/completions';
   const FREE_MODEL = 'google/gemma-4-31b-it:free';
-  const PKCE_KEY = 'hanzi-ai-sentences-pkce-v1';
-  const AUTH_KEY = 'hanzi-ai-sentences-auth-v1';
+  const PKCE_KEY = 'hanzi-herbalist-ai-sentences-pkce-v1';
   const CACHE_KEY = 'hanzi-ai-sentences-cache-v1';
   const AUTH_AGE = 10 * 60 * 1000;
   const TIMEOUT = 12000;
@@ -94,7 +94,7 @@
     function page() {
       try { return new Url(win.location.href); } catch (_) { return null; }
     }
-    function onSite() { const here = page(); return !!here && here.origin === ORIGIN; }
+    function onSite() { const here = page(); return !!here && here.origin === ORIGIN && here.pathname.startsWith(CALLBACK_PATH); }
     function load(which, name) {
       try { return win[which].getItem(name); } catch (_) { return null; }
     }
@@ -116,19 +116,14 @@
     }
     function disconnect() {
       cancelWork(); key = '';
-      const removed = remove('sessionStorage', AUTH_KEY);
       remove('sessionStorage', PKCE_KEY);
-      notify(removed ? 'AI 例句已断开；已有例句仍可使用' : '本页已停止 AI 例句，但无法清除浏览器连接，请关闭这个标签页');
+      notify('AI 例句已断开，已有例句仍可使用');
     }
     function saveCache() {
       while (cache.size > MAX_CACHE) cache.delete(cache.keys().next().value);
       store('localStorage', CACHE_KEY, JSON.stringify([...cache.values()]));
     }
     if (onSite()) {
-      const saved = load('sessionStorage', AUTH_KEY);
-      if (typeof saved === 'string' && API_KEY.test(saved)) {
-        key = saved; message = 'AI 例句已连接（OpenRouter 免费模型）';
-      }
       const raw = load('localStorage', CACHE_KEY);
       if (typeof raw === 'string' && raw.length <= 32000) {
         try {
@@ -199,7 +194,7 @@
 
     async function complete() {
       const here = page();
-      if (!here || here.origin !== ORIGIN || here.pathname !== '/' || authorizing) return false;
+      if (!here || here.origin !== ORIGIN || here.pathname !== CALLBACK_PATH || authorizing) return false;
       if (!CALLBACK_FIELDS.some(field => here.searchParams.has(field))) return false;
       const tooLong = here.href.length > 8192;
       const codes = here.searchParams.getAll('code'), states = here.searchParams.getAll('state');
@@ -226,9 +221,7 @@
         if (token !== epoch) return false;
         if (!body || typeof body.key !== 'string' || !API_KEY.test(body.key)) return false;
         key = body.key;
-        result = store('sessionStorage', AUTH_KEY, key)
-          ? 'AI 例句已连接（OpenRouter 免费模型）'
-          : 'AI 例句已连接，刷新页面后需重新授权';
+        result = 'AI 例句已连接（OpenRouter 免费模型）';
         return true;
       } catch (_) { return false; }
       finally { if (token === epoch) { authorizing = false; notify(result); } }
@@ -272,7 +265,7 @@
       } catch (error) {
         if (token !== epoch) return;
         if (error && error.status === 401) {
-          cancelWork(); key = ''; remove('sessionStorage', AUTH_KEY);
+          cancelWork(); key = '';
           notify('AI 例句授权已失效，请从家长设置重新连接；本地例句仍可用'); return;
         }
         if (error?.status === 403) result = 'AI 例句请求被服务拒绝，连接已保留；本地提示仍可用';

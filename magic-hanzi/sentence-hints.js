@@ -273,6 +273,20 @@
     '漫天卷地': '沙尘漫天卷地，连远处的房子都看不清了。',
     '鸦雀无声': '电影开始了，原本热闹的大厅顿时鸦雀无声。',
     '囫囵吞枣': '读故事不能囫囵吞枣，要慢慢想清楚情节。',
+
+    // Parent spelling words from the sparrow lesson.
+    '麻雀': '一只麻雀落在窗台上，低头啄了几粒米。',
+    '猛烈': '猛烈的风吹得窗户直响。',
+    '无可奈何': '球卡在树枝间，我们无可奈何，只好请老师来帮忙。',
+    '身躯': '大象的身躯像一堵墙，把小象挡在身后。',
+    '掩护': '老鹰飞过来，母鸡张开翅膀掩护小鸡躲进草丛。',
+    '紧张': '第一次上台表演，我紧张得手心出了汗。',
+    '浑身': '小狗从水里跳出来，浑身湿透了。',
+    '牺牲': '为了照顾生病的小猫，哥哥牺牲了出去玩的时间。',
+    '庞大': '这艘庞大的货船能装下几百个大箱子。',
+    '强大': '这台吊车有强大的动力，能吊起很重的钢梁。',
+    '嗅觉': '小狗的嗅觉很灵敏，能闻到藏在盒子里的饼干。',
+    '悄悄': '大家悄悄走进房间，怕吵醒熟睡的宝宝。',
   };
 
   // Original examples for the remaining entries in the full grade-three word list.
@@ -518,6 +532,17 @@
       (code >= 0xf900 && code <= 0xfaff) || (code >= 0x20000 && code <= 0x323af);
   }
 
+  function cueWord(char, word) {
+    const hasTarget = Array.from(char).length === 1 && isHan(char);
+    // Old saved prompts may contain a blank in place of the tested character.
+    if (word.includes('_')) {
+      if (!hasTarget || word.indexOf('_') !== word.lastIndexOf('_')) return '';
+      word = word.replace('_', char);
+    }
+    if (char && (!hasTarget || !word.includes(char))) return '';
+    return word;
+  }
+
   // Return speech text only. The caller decides when to speak it; this module
   // has no UI, audio, or storage access and never changes the supplied item.
   function get(item) {
@@ -526,16 +551,8 @@
     if (custom) return custom;
 
     const char = text(item.char);
-    let word = text(item.word);
-    if (word) {
-      // Old saved prompts may contain a blank in place of the tested character.
-      if (word.includes('_')) {
-        if (Array.from(char).length !== 1 || !isHan(char) || word.indexOf('_') !== word.lastIndexOf('_')) return null;
-        word = word.replace('_', char);
-      }
-      if (char && (Array.from(char).length !== 1 || !isHan(char) || !word.includes(char))) return null;
-      return sentences[word] || null;
-    }
+    const word = text(item.word);
+    if (word) return sentences[cueWord(char, word)] || null;
 
     // A bare character may use a reviewed default only when it is unambiguous
     // for the requested reading. For example 便 biàn must not use 便宜 pián.
@@ -545,5 +562,15 @@
     return candidates.length === 1 ? sentences[candidates[0].word] || null : null;
   }
 
-  return Object.freeze({ get });
+  // An unfamiliar cue can still be spoken as a dictation prompt. Quoting it
+  // keeps the prompt usable without guessing the word's meaning or grammar.
+  function fallback(item) {
+    if (!item || typeof item !== 'object') return null;
+    const word = cueWord(text(item.char), text(item.word));
+    const letters = Array.from(word);
+    if (letters.length < 2 || letters.length > 24 || !letters.every(isHan)) return null;
+    return `请写出“${word}”里指定的字。`;
+  }
+
+  return Object.freeze({ get, fallback });
 });

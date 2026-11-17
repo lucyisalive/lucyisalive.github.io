@@ -57,6 +57,7 @@ run(section('function feedbackCall(', 'let activeSpeech = null;'));
 run(`let strokesPoints=[];let isDrawing=false;let finaleCalls=0;let finaleBankEmpty=false;
   function stopPromptSpeech(){} function setDoorClosed(){} function setDoorOpen(){}
   function showGlowChar(){} function showDemoGlyph(){} function setWritingView(){} function renderQueueList(){}
+  function renderTodayLearning(){} function renderLearningOverview(){}
   function clearCanvas(){strokesPoints=[];} function getCharData(){return Promise.resolve({});}
   function startTeachingRound(){} function applyScene(){}
   function showFinale(bankEmpty){finaleCalls++;finaleBankEmpty=!!bankEmpty;finale.classList.add('show');}`);
@@ -363,25 +364,12 @@ assert.equal(run('finaleCalls'), 0);
 reset();
 delete context.window.HanziGameFeedback;
 delete context.window.HanziSentenceHints;
-// Use the real queue editor for a custom sentence after importing a word.
-// Only the DOM node and the parent's response are synthetic.
-const editSentence = { id: 'edit-example-0', dataset: { i: '0' } };
-context.queueList = { innerHTML: '', querySelectorAll(selector) {
-  return selector === '.edit-sentence' && /class="edit-sentence"\s+data-i="0"/.test(this.innerHTML) ? [editSentence] : [];
-} };
-let examplePromptCalls = 0;
-context.prompt = (_message, initial) => {
-  examplePromptCalls++;
-  assert.equal(initial, '');
-  return '  飞龙飞过天空。  ';
-};
+context.queueList = { innerHTML: '', querySelectorAll: () => [] };
 run(section('function escapeText(value){', 'function renderStuckList(){'));
+run("enqueueParentItems([{char:'龙',word:'飞龙',pinyin:'lóng',sentence:'飞龙飞过天空。'}]);");
 ui.batchInput.value = '飞龙的龙 lóng';
 handlers.get('batchAddBtn')();
-assert.match(context.queueList.innerHTML, /暂无例句/);
-assert.equal(typeof handlers.get(editSentence.id), 'function');
-handlers.get(editSentence.id)();
-assert.equal(examplePromptCalls, 1);
+assert.doesNotMatch(context.queueList.innerHTML, /加例句|换例句/);
 assert.equal(queue()[0].sentence, '飞龙飞过天空。');
 assert.equal(bankItem('龙').sentence, '飞龙飞过天空。');
 assert.equal(JSON.parse(saved.get(run('SAVE_KEY'))).priorityQueue[0].sentence, '飞龙飞过天空。');
