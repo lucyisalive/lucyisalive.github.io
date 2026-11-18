@@ -8772,6 +8772,12 @@ function daysBetween(fromStr, toStr){
   return Math.round((b - a) / 86400000);
 }
 
+function isCalendarDay(day){
+  if(typeof day !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(day)) return false;
+  const date = new Date(day);
+  return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === day;
+}
+
 // ---------- default character bank ----------
 // interval: 距离上次练习多少天后应该再次出现（简化的间隔重复）
 // box: 掌握等级 0(生) -> 4(熟练)，等级越高 interval 越长
@@ -9308,9 +9314,9 @@ function migrateState(s){
     if(typeof it.lastSeen !== 'string') it.lastSeen = null;
     if(!Array.isArray(it.history)) it.history = [];
     it.history = it.history.filter(h => typeof h.day === 'string');
-    const passedDays = Array.isArray(it.passedDays) ? it.passedDays
-      : it.history.filter(h => h.outcome === 'first-try' || h.outcome === 'retest-pass').map(h => h.day);
-    it.passedDays = [...new Set(passedDays.filter(day => typeof day === 'string' && day))];
+    const recordedDays = Array.isArray(it.passedDays) ? it.passedDays : [];
+    const historyDays = it.history.filter(h => h.outcome === 'first-try' || h.outcome === 'retest-pass').map(h => h.day);
+    it.passedDays = [...new Set([...recordedDays, ...historyDays].filter(isCalendarDay))].sort();
     if(typeof it.box !== 'number') it.box = 1;
     if(typeof it.interval !== 'number') it.interval = 0;
     if(typeof it.wrongToday !== 'number') it.wrongToday = 0;
@@ -11575,17 +11581,20 @@ function pickNextChar(){
   // before the real interleaving gap has happened.
   // Characters already written correctly on MASTERED_DAYS different days leave the rotation
   // for good, so the bank keeps shrinking towards whatever the child still can't do.
-  const active = state.bank.filter(b => !isMastered(b) && !isStuck(b) && !b.retired
-    && !(b.passedDays || []).includes(todayStr()));
-  if(active.length === 0) return null;             // nothing left to practise — caller ends the day
-  const candidates = active.filter(b => !pendingChars.has(b.char));
-  const pickFrom = candidates.length ? candidates : active; // only fall back if literally everything is pending
+  const today = todayStr();
+  const candidates = state.bank.filter(b => !isMastered(b) && !isStuck(b) && !b.retired
+    && !(b.passedDays || []).includes(today) && !pendingChars.has(b.char));
+  if(!candidates.length) return null;
+  const nextDayReviews = candidates.filter(b => b.passedDays?.length === 1 &&
+    b.passedDays[0] === b.lastSeen && daysBetween(b.lastSeen, today) === 1);
+  if(nextDayReviews.length) return window.HanziPracticeSelector.choose(nextDayReviews, selectionSession);
   // Prefer unseen characters within this sitting before repeating free questions.
   // Teaching and delayed retests still use their existing separate state machine.
-  const unseen = pickFrom.filter(b => !selectionSession.byChar[b.char]);
-  const available = unseen.length ? unseen : pickFrom;
-  const today = todayStr();
-  const reviews = available.filter(b => b.lastSeen !== null && daysBetween(b.lastSeen, today) >= b.interval);
+  const unseen = candidates.filter(b => !selectionSession.byChar[b.char]);
+  const available = unseen.length ? unseen : candidates;
+  // Use the first-review rule even for saves written before the one-day interval.
+  const reviews = available.filter(b => b.lastSeen !== null &&
+    daysBetween(b.lastSeen, today) >= (b.passedDays?.length === 1 ? 1 : b.interval));
   const fresh = available.filter(b => b.lastSeen === null);
   const reviewSlot = selectionSession.total % 5 === 0 || selectionSession.total % 5 === 2;
   let pool;
@@ -11894,8 +11903,6 @@ function recordResult(item, outcome){
   if(outcome === 'first-try') item.box = Math.min(6, item.box + 1);
   else if(outcome === 'abandoned') item.box = Math.max(0, item.box - 1);
   // 'retest-pass' leaves box unchanged — it took real effort, not free
-  const schedule = [1, 2, 4, 7, 14, 21, 30]; // days, indexed by box 0..6
-  item.interval = outcome === 'abandoned' ? 1 : schedule[Math.min(item.box, schedule.length - 1)];
   item.history.push({ day: today, outcome });
 
   // Mastery counts DISTINCT days, not passes: writing it correctly five times this afternoon
@@ -11907,6 +11914,9 @@ function recordResult(item, outcome){
     if(!item.passedDays) item.passedDays = [];
     if(!item.passedDays.includes(today)) item.passedDays.push(today);
   }
+  const schedule = [1, 2, 4, 7, 14, 21, 30]; // days, indexed by box 0..6
+  item.interval = outcome === 'abandoned' || item.passedDays?.length === 1
+    ? 1 : schedule[Math.min(item.box, schedule.length - 1)];
   saveState();
 }
 

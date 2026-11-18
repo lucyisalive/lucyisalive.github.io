@@ -433,6 +433,53 @@ async function syncStatusAndOpenSettings() {
   console.log('Family settings: visible status, 38/30 first join with 23 assignments, safe manual pull, and conflict merge passed.');
 }
 
+async function remotePullPreservesDatedMastery() {
+  const dates = ['2026-10-29', '2026-10-31', '2026-11-02'];
+  const local = {
+    bankVersion: 5, dailyCount: 10, priorityQueue: [], scenesUnlocked: 0,
+    bank: [item('奖', 'jiǎng', dates), item('敢', 'gǎn', dates), item('止', 'zhǐ')],
+  };
+  const firestore = mockLegacyFirestore(local);
+  const { environment, flush } = setup(require, __dirname, process,
+    { crypto: webcrypto, TextEncoder, TextDecoder, firestore });
+  const page = environment({ initialStorage: [[OLD_SAVE, JSON.stringify(local)]], location: LOCATION });
+  await flush();
+  page.tap('settingsBtn');
+  page.ids.get('cloudSyncPassword').value = PASSWORD;
+  await tapSyncButton(page, 'cloudSyncJoinBtn');
+  assert.equal(page.run('cloudSyncController.status().kind'), 'synced', 'The later pull starts from a clean client');
+  assert.equal(page.ids.get('learningMemoryCount').textContent, '2 字');
+
+  const gapInDates = {
+    ...local.bank[1],
+    passedDays: [dates[2], dates[2]],
+    history: [
+      { day: dates[2], outcome: 'retest-pass' },
+      { day: '2026-10-30', outcome: 'abandoned' },
+      { day: dates[0], outcome: 'first-try' },
+      { day: dates[1], outcome: 'retest-pass' },
+      { day: dates[0], outcome: 'first-try' },
+    ],
+  };
+  const failedOnly = {
+    ...local.bank[2],
+    history: dates.map(day => ({ day, outcome: 'abandoned' })),
+  };
+  firestore.anotherDeviceSaved({ ...local, bank: [local.bank[0], gapInDates, failedOnly] });
+  const requestsBeforePull = firestore.calls.length;
+  await tapSyncButton(page, 'cloudSyncNowBtn');
+  assert.deepEqual(firestore.calls.slice(requestsBeforePull), ['GET'], 'Read the other device’s record without overriding it');
+  assert.ok(['synced', 'pending'].includes(page.run('cloudSyncController.status().kind')));
+
+  const adopted = read(page.storage, OLD_SAVE);
+  assert.deepEqual(passedDays(adopted, '敢'), dates, 'Count distinct, chronologically sorted formal passes from both fields');
+  assert.deepEqual(passedDays(adopted, '奖'), dates, 'The other mastered character remains intact');
+  assert.deepEqual(passedDays(adopted, '止'), [], 'Failed practice is not a pass even when the dates are valid');
+  assert.deepEqual(adopted.bank[1].history, gapInDates.history, 'Preserve the underlying dated attempt history');
+  assert.equal(page.ids.get('learningMemoryCount').textContent, '2 字', 'A normal cloud pull cannot undercount documented mastery');
+  console.log('Shared progress: a clean cloud pull preserves distinct formal mastery dates from incomplete records.');
+}
+
 async function passwordConnectionSurvivesMetadataQuota() {
   const local = {
     bank: [item('固', 'gù', [TODAY])], bankVersion: 5, dailyCount: 10,
@@ -622,6 +669,7 @@ async function progressSurvivesPrimaryQuota() {
   console.log('Shared progress: learning and story quota fallback, family reconnection, and stale-page save and restore guards passed.');
 }
 
-test().then(temporarySaveFailureBeforePasswordJoin).then(syncStatusAndOpenSettings).then(passwordConnectionSurvivesMetadataQuota)
+test().then(temporarySaveFailureBeforePasswordJoin).then(syncStatusAndOpenSettings).then(remotePullPreservesDatedMastery)
+  .then(passwordConnectionSurvivesMetadataQuota)
   .then(progressSurvivesPrimaryQuota)
   .catch(error => { console.error(error); process.exitCode = 1; });

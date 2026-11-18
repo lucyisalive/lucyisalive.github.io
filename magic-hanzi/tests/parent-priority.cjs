@@ -219,6 +219,49 @@ context.testChar = passedToday; run('state.bank.find(item=>item.char===testChar)
 assert.ok(Array.from({ length: 15 }, () => run('pickNextChar().char')).every(char => char !== passedToday));
 enqueue([request(passedToday)]); assert.equal(run('pickNextChar().char'), passedToday);
 
+// A first formal pass earns a next-calendar-day review, whichever path passed.
+const nextMorning = new Date(2026, 10, 3, 12).getTime();
+const reviewItem = (char, overrides = {}) => ({ ...plain(`newBankItem(${JSON.stringify(char)}, 'zì')`), ...overrides });
+for (const mode of ['free', 'retest']) {
+  reset({ ...initialState, bank: [reviewItem('龙'), reviewItem('山')] });
+  run(`presentDoor(state.bank[0], '${mode}', 1);`);
+  answer(true);
+  assert.equal(bankItem('龙').interval, 1, `First formal pass in ${mode} mode is due next day`);
+  assert.deepEqual(bankItem('龙').passedDays, [TODAY]);
+  const savedFirstPass = plain('state');
+  next(); assert.equal(current().char, '山', 'Passed characters do not get an ordinary repeat on the same day');
+
+  reset(savedFirstPass); clockTime = nextMorning;
+  next(); assert.equal(current().char, '龙'); answer(true);
+  assert.deepEqual(bankItem('龙').passedDays, [TODAY, run('todayStr()')]);
+  assert.equal(bankItem('龙').interval, mode === 'free' ? 7 : 4, 'Later passes use the existing box schedule');
+}
+
+// The same open page can carry yesterday's selection history into the new day.
+reset({ ...initialState, bank: [reviewItem('龙'), reviewItem('山')] });
+enqueueChars('龙');
+next(); assert.equal(current().char, '龙'); answer(true);
+clockTime = nextMorning;
+next(); assert.equal(current().char, '龙', 'Next-day review survives an overnight tab that has already shown the word');
+
+// Already saved first passes on either legacy interval should receive the same
+// next-day priority, ahead of both fresh words and an older weaker due review.
+for (const [interval, outcome, box] of [[4, 'first-try', 2], [2, 'retest-pass', 1]]) {
+  const firstPass = reviewItem('龙', { interval, box, lastSeen: TODAY,
+    history: [{ day: TODAY, outcome }], passedDays: [TODAY] });
+  const olderReview = reviewItem('海', { interval: 1, box: 0, lastSeen: '2026-10-28',
+    history: [{ day: '2026-10-28', outcome: 'abandoned' }] });
+  reset({ ...initialState, bank: [olderReview, reviewItem('山'), firstPass] });
+  clockTime = nextMorning;
+  enqueueChars('林');
+  next(); assert.equal(current().char, '林', 'The parent request is still the first question'); answer(true);
+  next(); assert.equal(current().char, '龙', `A legacy ${interval}-day first pass is due before other ordinary questions`);
+  answer(true);
+  next(); assert.equal(current().char, '海', 'After the next-day review, the usual review slot still works');
+  answer(true);
+  next(); assert.equal(current().char, '山');
+}
+
 // Stuck means blocked until the explicit "我讲过了" action. Readding cannot erase
 // the previous failures, and a two-wrong item still parks on its next wrong answer.
 reset();
@@ -292,6 +335,17 @@ next(); assert.equal(current().char, '林'); answer(true);
 next(); assert.equal(current().char, '龙'); assert.equal(run('currentMode'), 'retest');
 assert.equal(run('currentParentRequestId'), delayedId); answer(true);
 assert.equal(queue().find(item => item.char === '龙').completedDay, TODAY);
+
+// If no other independent character is available, run the waiting delayed retest.
+reset({ ...initialState, bank: [reviewItem('龙')] });
+next(); answer(false); run('stepIndex=TEACHING_STEPS.length-1;'); answer(true);
+assert.equal(plain('pendingRetests')[0].fillersSeen, 0);
+next();
+assert.equal(current().char, '龙');
+assert.equal(run('currentMode'), 'retest', 'A character cannot serve as its own filler');
+assert.equal(run('pendingRetests.length'), 0);
+answer(true);
+assert.equal(run('passedCount'), 1);
 
 // A delayed retest at the boundary neither counts as a pass nor takes an
 // eleventh slot. Next level can use the same retest and its first real filler.
@@ -387,4 +441,4 @@ run('renderQueueList()');
 assert.ok(context.queueList.innerHTML.includes('自定义例句'));
 assert.equal(run('sentenceFor(null)'), '');
 
-console.log('parent-priority: ten-pass levels, overflow and retest carryover, short-level completion, enqueue preservation, dates, mastery, parking, request races, settings preemption, and missing optional modules passed');
+console.log('parent-priority: ten-pass levels, priority, next-day first reviews, retest carryover, request races, parking, mastery, and settings preemption passed');
