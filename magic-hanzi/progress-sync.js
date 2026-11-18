@@ -665,6 +665,7 @@
     }
     async function write(current, derived, remote, token, localRevision, candidateMeta, retryLocal) {
       var body = await encrypt(current, derived, token);
+      if (typeof options.beforeRemoteWrite === 'function') await options.beforeRemoteWrite();
       if (candidateMeta) ensureConnectionUnchanged(token, localRevision);
       else ensureUnchanged(token, localRevision, retryLocal);
       var precondition = remote ? 'currentDocument.updateTime=' + encodeURIComponent(remote.updateTime) : 'currentDocument.exists=false';
@@ -828,6 +829,24 @@
         return failure(error, token);
       });
     }
+    function interruptedPasswordJoin() {
+      return options.resumeFirstJoin === true && meta?.version === 2 && meta.requireConflict &&
+        meta.baseUpdateTime === null && meta.baseHash === null && meta.lastSyncedAt === null;
+    }
+    function resumePasswordJoin() {
+      if (!mayApply()) return Promise.resolve(emit('conflict', '家庭密码已验证。请完成当前练习，再点「合并两边进度」。'));
+      var token = epoch;
+      return run(token, async function () {
+        refreshLocal();
+        var localRevision = revision;
+        emit('syncing', '正在继续接入家庭进度');
+        var derived = await keys(meta, token);
+        var remote = await readRemote(derived, token);
+        ensureUnchanged(token, localRevision);
+        if (!remote) throw problem('没有找到原来的家庭进度，本机记录仍保留。', 'conflict');
+        return adopt(remote, token, localRevision, 'join-password-family');
+      });
+    }
     function start() {
       if (!metaReady) return withStoredMeta(start);
       if (started) return meta ? sync() : Promise.resolve(status());
@@ -835,7 +854,6 @@
       try {
         if (!meta) return Promise.resolve(emit('off', '尚未开启跨设备同步'));
         observedJSON = snapshot().json;
-        if (meta.requireConflict) return Promise.resolve(emit('conflict', '上次采用进度未确认完成；两份进度仍保留，请选择保留哪份'));
       } catch (error) { return Promise.resolve(failure(error, epoch)); }
       return sync();
     }
@@ -843,6 +861,7 @@
       if (!started) return start();
       if (!meta) return Promise.resolve(emit('off', '尚未开启跨设备同步'));
       if (inFlight) return inFlight;
+      if (interruptedPasswordJoin()) return resumePasswordJoin();
       if (meta.requireConflict) return Promise.resolve(emit('conflict', '上次采用进度未确认完成；两份进度仍保留，请选择保留哪份'));
       if (view.kind === 'conflict') return Promise.resolve(status());
       var token = epoch;

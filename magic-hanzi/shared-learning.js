@@ -125,5 +125,116 @@
     return learningRecord({ ...oldState, bank, priorityQueue: mergeRequests(oldQueue, newQueue) }, oldState);
   }
 
-  return { mergeLearning, learningRecord, storyRecord, assemble };
+  function validRevision(value) {
+    return typeof value === 'string' ? value.length > 0 && value.length <= 128
+      : Number.isSafeInteger(value) && value > 0;
+  }
+
+  function checkedProgress(value) {
+    if (!value || value.version !== 1 || !validRevision(value.revision)) {
+      throw new Error('浏览器存档的版本或修订号无效。');
+    }
+    const {version, revision, learning, story, primaryLearning, primaryStory, restoreBackup} = value;
+    if (typeof learning !== 'string' || typeof story !== 'string' ||
+        (primaryLearning !== null && typeof primaryLearning !== 'string') ||
+        (primaryStory !== null && typeof primaryStory !== 'string') ||
+        (restoreBackup !== undefined && typeof restoreBackup !== 'string')) {
+      throw new Error('浏览器存档的内容无效。');
+    }
+    const progress = {version, revision, learning, story, primaryLearning, primaryStory};
+    if (restoreBackup !== undefined) progress.restoreBackup = restoreBackup;
+    return progress;
+  }
+
+  function createProgressStore(indexedDB, later = globalThis.setTimeout, cancelTimer = globalThis.clearTimeout) {
+    const databaseName = 'hanzi-magic-herbalist-shared-progress-v1';
+    const storeName = 'progress';
+    const recordKey = 'active';
+
+    function transact(mode, operation) {
+      return new Promise((resolve, reject) => {
+        if (!indexedDB || typeof indexedDB.open !== 'function') {
+          reject(new Error('浏览器数据库暂不可用。'));
+          return;
+        }
+        let db, transaction, value, timer, settled = false;
+        function finish(error) {
+          if (settled) return;
+          settled = true;
+          cancelTimer(timer);
+          if (db) db.close();
+          if (error) reject(error);
+          else resolve(value);
+        }
+        function fail(error) {
+          if (transaction) {
+            try { transaction.abort(); } catch (_) { /* The transaction may already be closed. */ }
+          }
+          finish(error);
+        }
+        timer = later(() => fail(new Error('浏览器数据库操作超时。')), 6000);
+        let open;
+        try { open = indexedDB.open(databaseName, 1); }
+        catch (error) { finish(error); return; }
+        open.onerror = () => finish(open.error || new Error('无法打开浏览器数据库。'));
+        open.onblocked = () => finish(new Error('浏览器数据库正在被另一页占用。'));
+        open.onupgradeneeded = () => {
+          try {
+            if (settled) open.transaction.abort();
+            else open.result.createObjectStore(storeName);
+          } catch (error) {
+            try { open.transaction.abort(); } catch (_) { /* Preserve the creation error. */ }
+            finish(error);
+          }
+        };
+        open.onsuccess = () => {
+          db = open.result;
+          if (settled) { db.close(); return; }
+          db.onversionchange = () => db.close();
+          try {
+            transaction = db.transaction(storeName, mode);
+            transaction.onabort = () => finish(transaction.error || new Error('浏览器数据库保存中断。'));
+            transaction.oncomplete = () => finish();
+            operation(transaction.objectStore(storeName), result => { value = result; }, fail);
+          } catch (error) { fail(error); }
+        };
+      });
+    }
+
+    function read() {
+      return transact('readonly', (store, result, fail) => {
+        const request = store.get(recordKey);
+        request.onsuccess = () => {
+          try {
+            result(request.result === undefined ? null : checkedProgress(request.result));
+          } catch (error) { fail(error); }
+        };
+      });
+    }
+
+    async function save(expectedRevision, record) {
+      const next = checkedProgress(record);
+      if ((expectedRevision !== null && !validRevision(expectedRevision)) || expectedRevision === next.revision ||
+          (typeof next.revision === 'number' && next.revision !== (expectedRevision ?? 0) + 1)) {
+        throw new Error('浏览器存档的下一修订号无效。');
+      }
+      return transact('readwrite', (store, result, fail) => {
+        const request = store.get(recordKey);
+        request.onsuccess = () => {
+          try {
+            const previous = request.result === undefined ? null : checkedProgress(request.result);
+            if ((previous?.revision ?? null) !== expectedRevision) { result(false); return; }
+            if (next.restoreBackup === undefined && previous?.restoreBackup !== undefined) {
+              next.restoreBackup = previous.restoreBackup;
+            }
+            store.put(next, recordKey);
+            result(true);
+          } catch (error) { fail(error); }
+        };
+      });
+    }
+    return { read, save };
+  }
+
+  return { mergeLearning, learningRecord, storyRecord, assemble, createProgressStore };
 });

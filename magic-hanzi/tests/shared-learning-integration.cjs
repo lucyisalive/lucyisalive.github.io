@@ -57,10 +57,14 @@ function passedDays(state, char) {
   return state.bank.find(entry => entry.char === char).passedDays;
 }
 
+function familySeed() {
+  return pbkdf2Sync(PASSWORD, 'hanzi-magic-door:password-family:v1:game-e-40894', 600000, 32, 'sha256').toString('hex');
+}
+
 function mockLegacyFirestore(state) {
   const app = 'hanzi-magic-door';
   const project = 'game-e-40894';
-  const seed = pbkdf2Sync(PASSWORD, app + ':password-family:v1:' + project, 600000, 32, 'sha256').toString('hex');
+  const seed = familySeed();
   const digest = purpose => createHash('sha256').update(app + ':' + purpose + ':password-v1:' + seed).digest();
   const key = digest('key');
   const resource = '/v1/projects/' + project + '/databases/(default)/documents/families/hanzi-password-v1-' + digest('document').toString('hex');
@@ -324,8 +328,12 @@ async function temporarySaveFailureBeforePasswordJoin() {
 
 async function tapSyncButton(page, id) {
   page.tap(id);
-  for (let attempt = 0; page.run('syncUiBusy'); attempt++) {
-    assert.ok(attempt < 500, 'Finish the simulated sync action: ' + id);
+  await waitFor(() => !page.run('syncUiBusy'), 'Finish the simulated sync action: ' + id);
+}
+
+async function waitFor(condition, description) {
+  for (let attempt = 0; !condition(); attempt++) {
+    assert.ok(attempt < 500, description);
     await new Promise(resolve => setTimeout(resolve, 10));
   }
 }
@@ -472,10 +480,8 @@ async function passwordConnectionSurvivesMetadataQuota() {
   assert.deepEqual(passedDays(firestore.decoded.at(-1), '固'), [TODAY]);
   assert.deepEqual(firestore.decoded.at(-1).priorityQueue, [queued]);
   const reopened = environment({ initialStorage: page.storage, location: LOCATION });
-  for (let attempt = 0; reopened.run("cloudSyncController.status().kind !== 'synced'"); attempt++) {
-    assert.ok(attempt < 500, 'Reopen and use the durable connection automatically');
-    await new Promise(resolve => setTimeout(resolve, 10));
-  }
+  await waitFor(() => reopened.run("cloudSyncController?.status().kind === 'synced'"),
+    'Reopen and use the durable connection automatically');
   assert.equal(reopened.ids.get('cloudSyncPasswordSetup').hidden, true);
   assert.equal(reopened.ids.get('cloudSyncSummary').textContent, '跨设备同步 · 已连接 · 已同步');
   assert.equal(reopened.ids.get('cloudSyncPassword').value, '');
@@ -484,5 +490,138 @@ async function passwordConnectionSurvivesMetadataQuota() {
   console.log('Password join: sync metadata quota fallback preserves learning and reconnects after reopening.');
 }
 
+async function progressSurvivesPrimaryQuota() {
+  const quotaCases = [
+    { blockedKeys: [OLD_SAVE] },
+    { blockedKeys: [OLD_SAVE, STORY, NEW_SYNC] },
+    { blockedKeys: [OLD_SAVE, STORY, NEW_SYNC], interrupted: true },
+  ];
+  for (const { blockedKeys, interrupted } of quotaCases) {
+    const allBlocked = blockedKeys.includes(STORY);
+    const local = {
+      bank: [item('固', 'gù', [TODAY]), item('止', 'zhǐ'), item('犬', 'quǎn'), item('刀', 'dāo')],
+      bankVersion: 5, dailyCount: 10, priorityQueue: [], scenesUnlocked: 0,
+    };
+    const queued = { char: '悄', word: '悄悄', pinyin: 'qiāo', addedDay: TODAY, completedDay: null, requestId: 'primary-quota-quiet' };
+    const remote = {
+      ...local, bank: [{ ...item(queued.char, queued.pinyin), word: queued.word, fromParent: true, retired: false }],
+      priorityQueue: [queued],
+    };
+    const story = { version: 1, herbalistStage: 'stars', scenesUnlocked: 1, sessionProgress: round('primary-quota-level', 1) };
+    const firestore = mockLegacyFirestore(remote);
+    const database = indexedDB();
+    const active = () => database.progress.get('active');
+    const writesRejected = new Set();
+    const { environment, flush, inkFor } = setup(require, __dirname, process, {
+      crypto: webcrypto, TextEncoder, TextDecoder, firestore, indexedDB: database,
+      beforeMain(context) {
+        const write = context.localStorage.setItem;
+        context.localStorage.setItem = (key, value) => {
+          if (blockedKeys.includes(key)) {
+            writesRejected.add(key);
+            throw new DOMException('Synthetic primary storage quota', 'QuotaExceededError');
+          }
+          return write(key, value);
+        };
+      },
+    });
+    async function practice(page, char, count) {
+      page.run(`presentDoor(state.bank.find(entry => entry.char === ${JSON.stringify(char)}), 'free', 1)`);
+      await flush();
+      inkFor(page, char);
+      page.tap('submitBtn');
+      await waitFor(() => page.run('passedCount') === count && !page.run('progressWrites'), 'Finish the ' + char + ' save');
+    }
+    const localBytes = JSON.stringify(local);
+    const storyBytes = JSON.stringify(story);
+    let page = environment({ initialStorage: [[OLD_SAVE, localBytes], [STORY, storyBytes]], location: LOCATION });
+    await flush();
+    assert.equal(page.run('passedCount'), 1);
+    await practice(page, '止', 2);
+    assert.ok(writesRejected.has(allBlocked ? STORY : OLD_SAVE), 'Force a rejected primary progress write');
+    assert.equal(page.storage.get(OLD_SAVE), localBytes);
+    assert.equal(page.storage.get(STORY), storyBytes);
+    assert.equal(page.ids.get('localProgressNotice').hidden, true);
+    assert.deepEqual(passedDays(JSON.parse(active().learning), '止'), [TODAY], 'Keep a formal pass even before cloud connection');
+    assert.deepEqual(JSON.parse(active().story).sessionProgress, round('primary-quota-level', 2));
+
+    if (interrupted) {
+      database.connection.set('active', { value: {
+        version: 2, passwordSeed: familySeed(), baseUpdateTime: null, baseHash: null,
+        dirty: true, requireConflict: true, lastSyncedAt: null,
+      } });
+      page = environment({ initialStorage: page.storage, location: LOCATION });
+      await waitFor(() => ['pending', 'synced'].includes(page.run('cloudSyncController?.status().kind')),
+        'Resume the interrupted first join using saved credentials');
+      page.tap('settingsBtn');
+    } else {
+      page.tap('settingsBtn');
+      page.ids.get('cloudSyncPassword').value = PASSWORD;
+      await tapSyncButton(page, 'cloudSyncJoinBtn');
+    }
+    assert.equal(page.ids.get('cloudSyncPasswordSetup').hidden, true);
+    assert.equal(page.ids.get('cloudSyncPassword').value, '');
+    assert.equal(page.ids.get('localProgressNotice').hidden, true);
+    assert.equal(page.ids.get('todayPassed').textContent, '今天练了 2 个字 · 已通过 2 个');
+    assert.equal(page.ids.get('todayParentPlan').textContent, '家长安排 1 个字 · 已完成 0 个 · 剩余 1 个');
+    const merged = JSON.parse(active().learning);
+    assert.deepEqual(passedDays(merged, '固'), [TODAY]);
+    assert.deepEqual(passedDays(merged, '止'), [TODAY]);
+    assert.deepEqual(merged.priorityQueue, [queued]);
+    assert.equal(page.storage.get(OLD_SAVE), localBytes);
+    assert.equal(page.storage.get(STORY), storyBytes);
+    if (allBlocked) {
+      if (!interrupted) assert.ok(writesRejected.has(NEW_SYNC));
+      assert.equal(page.storage.has(NEW_SYNC), false);
+    }
+    if (page.run('cloudSyncController.status().kind') !== 'synced') await tapSyncButton(page, 'cloudSyncNowBtn');
+    assert.equal(page.ids.get('cloudSyncSummary').textContent, '跨设备同步 · 已连接 · 已同步');
+    assert.deepEqual(passedDays(firestore.decoded.at(-1), '止'), [TODAY]);
+    assert.deepEqual(firestore.decoded.at(-1).priorityQueue, [queued]);
+
+    const reopened = environment({ initialStorage: page.storage, location: LOCATION });
+    await waitFor(() => reopened.ids.get('cloudSyncPasswordSetup').hidden && reopened.run('passedCount') === 2,
+      'Reopen with the durable learning and remembered family connection');
+    reopened.tap('settingsBtn');
+    assert.equal(reopened.ids.get('cloudSyncPassword').value, '');
+    assert.equal(reopened.run('state.herbalistStage'), 'stars');
+    assert.equal(reopened.ids.get('todayPassed').textContent, '今天练了 2 个字 · 已通过 2 个');
+    assert.match(reopened.ids.get('todayParentPlan').textContent, /家长安排 1 个字/);
+    if (!allBlocked || interrupted) continue;
+
+    await practice(reopened, '犬', 3);
+    const newer = active();
+    assert.deepEqual(passedDays(JSON.parse(newer.learning), '犬'), [TODAY]);
+    await practice(page, '刀', 3);
+    assert.deepEqual(active(), newer, 'A stale page cannot replace the newer progress revision');
+    assert.match(page.ids.get('localProgressNotice').textContent, /另一个游戏页面已有更新/);
+    const recoveryKey = [...page.storage.keys()].find(key => key.startsWith(RECOVERY) && !key.endsWith('-pending'));
+    assert.ok(recoveryKey, 'Keep the stale page’s newly written character as a recovery copy');
+    assert.deepEqual(passedDays(read(page.storage, recoveryKey).progress, '刀'), [TODAY]);
+
+    const alerts = [];
+    page.context.alert = message => alerts.push(message);
+    page.context.confirm = () => true;
+    page.context.FileReader = class {
+      readAsText(file) { queueMicrotask(() => this.onload({ target: { result: file.text } })); }
+    };
+    const input = page.ids.get('fileInput');
+    input.files = [{ text: localBytes }];
+    input.dispatch('change');
+    await waitFor(() => alerts.length > 0, 'Report the stale manual restore');
+    assert.match(alerts[0], /另一个页面有新进度/);
+    assert.deepEqual(active(), newer, 'A stale manual restore cannot replace the newer progress revision');
+
+    const latest = environment({ initialStorage: reopened.storage, location: LOCATION });
+    await waitFor(() => latest.ids.get('cloudSyncPasswordSetup').hidden && latest.run('passedCount') === 3,
+      'Reopen again on the most recent durable revision');
+    latest.tap('settingsBtn');
+    assert.equal(latest.ids.get('todayPassed').textContent, '今天练了 3 个字 · 已通过 3 个');
+    assert.match(latest.ids.get('todayParentPlan').textContent, /家长安排 1 个字/);
+  }
+  console.log('Shared progress: learning and story quota fallback, family reconnection, and stale-page save and restore guards passed.');
+}
+
 test().then(temporarySaveFailureBeforePasswordJoin).then(syncStatusAndOpenSettings).then(passwordConnectionSurvivesMetadataQuota)
+  .then(progressSurvivesPrimaryQuota)
   .catch(error => { console.error(error); process.exitCode = 1; });

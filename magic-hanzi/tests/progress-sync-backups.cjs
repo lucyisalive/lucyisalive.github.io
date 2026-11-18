@@ -6,6 +6,7 @@ const { create } = require('../progress-sync.js');
 
 const BACKUP = 'hanzi-magic-herbalist-sync-backups-v1';
 const META = 'hanzi-magic-herbalist-sync-v1';
+const PROGRESS = 'hanzi-magic-herbalist-shared-progress-v1';
 const PASSWORD = 'synthetic backup and conflict only';
 
 function lesson(...chars) {
@@ -33,13 +34,17 @@ function storage(previous, { denyBackup = false, metadataNeedsSpace = false, met
 function indexedDB(abortWrites = false, beforeCommit = () => {}) {
   const entries = [];
   const connection = new Map();
+  const progress = new Map();
   const created = new Set();
+  const tails = new Map();
   return {
     entries,
     connection,
+    progress,
     open(name, version) {
-      assert.ok(name === BACKUP || name === META);
-      const expectedStore = name === BACKUP ? 'snapshots' : 'connection';
+      assert.ok(name === BACKUP || name === META || name === PROGRESS);
+      const expectedStore = name === BACKUP ? 'snapshots' : name === META ? 'connection' : 'progress';
+      const records = name === META ? connection : progress;
       assert.equal(version, 1);
       const request = {
         result: {
@@ -51,38 +56,57 @@ function indexedDB(abortWrites = false, beforeCommit = () => {}) {
           },
           transaction(store, mode) {
             assert.equal(store, expectedStore);
-            let writes = 0;
+            const previous = tails.get(name) || Promise.resolve();
+            let release;
+            const completion = new Promise(resolve => { release = resolve; });
+            tails.set(name, previous.then(() => completion));
+            let requests = 0, finished = false, savedBackup = false;
+
+            function end(event) {
+              if (finished) return;
+              finished = true;
+              release();
+              transaction[event]();
+            }
+
+            function enqueue(action) {
+              requests++;
+              previous.then(() => {
+                if (finished) return;
+                action();
+                if (--requests === 0 && !finished) {
+                  if (savedBackup) beforeCommit();
+                  end('oncomplete');
+                }
+              });
+            }
+
             const transaction = {
-              abort() { transaction.onabort(); },
+              abort() { end('onabort'); },
               objectStore() {
                 return {
                   get(key) {
-                    assert.equal(mode, 'readonly');
+                    assert.ok(mode === 'readonly' || (name === PROGRESS && mode === 'readwrite'));
                     const result = {};
-                    queueMicrotask(() => {
-                      result.result = structuredClone(connection.get(key));
-                      transaction.oncomplete();
+                    enqueue(() => {
+                      result.result = structuredClone(records.get(key));
+                      result.onsuccess?.();
                     });
                     return result;
                   },
                   put(record, key) {
                     assert.equal(mode, 'readwrite');
-                    queueMicrotask(() => {
+                    enqueue(() => {
                       if (abortWrites) { transaction.abort(); return; }
-                      connection.set(key, structuredClone(record));
-                      transaction.oncomplete();
+                      records.set(key, structuredClone(record));
                     });
                   },
                   add(entry) {
                     assert.equal(mode, 'readwrite');
-                    writes++;
-                    queueMicrotask(() => {
+                    enqueue(() => {
                       if (abortWrites) { transaction.abort(); return; }
                       entries.push(structuredClone(entry));
-                      if (--writes === 0) {
-                        beforeCommit();
-                        transaction.oncomplete();
-                      }
+                      savedBackup = true;
                     });
                   },
                   openCursor(_, direction) {
@@ -91,15 +115,13 @@ function indexedDB(abortWrites = false, beforeCommit = () => {}) {
                     const cursorRequest = {};
                     let index = entries.length;
                     function next() {
-                      queueMicrotask(() => {
-                        let continued = false;
+                      enqueue(() => {
                         const value = entries[--index];
                         cursorRequest.result = value ? {
                           value: structuredClone(value),
-                          continue() { continued = true; next(); },
+                          continue: next,
                         } : null;
                         cursorRequest.onsuccess();
-                        if (!continued) transaction.oncomplete();
                       });
                     }
                     next();

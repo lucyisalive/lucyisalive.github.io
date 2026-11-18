@@ -6693,6 +6693,7 @@ window.HANZI_GLYPH_CATALOG={"version":"41b38d977b270e08ea493526a4ee0f8643a59bbf2
     }
     async function write(current, derived, remote, token, localRevision, candidateMeta, retryLocal) {
       var body = await encrypt(current, derived, token);
+      if (typeof options.beforeRemoteWrite === 'function') await options.beforeRemoteWrite();
       if (candidateMeta) ensureConnectionUnchanged(token, localRevision);
       else ensureUnchanged(token, localRevision, retryLocal);
       var precondition = remote ? 'currentDocument.updateTime=' + encodeURIComponent(remote.updateTime) : 'currentDocument.exists=false';
@@ -6856,6 +6857,24 @@ window.HANZI_GLYPH_CATALOG={"version":"41b38d977b270e08ea493526a4ee0f8643a59bbf2
         return failure(error, token);
       });
     }
+    function interruptedPasswordJoin() {
+      return options.resumeFirstJoin === true && meta?.version === 2 && meta.requireConflict &&
+        meta.baseUpdateTime === null && meta.baseHash === null && meta.lastSyncedAt === null;
+    }
+    function resumePasswordJoin() {
+      if (!mayApply()) return Promise.resolve(emit('conflict', '家庭密码已验证。请完成当前练习，再点「合并两边进度」。'));
+      var token = epoch;
+      return run(token, async function () {
+        refreshLocal();
+        var localRevision = revision;
+        emit('syncing', '正在继续接入家庭进度');
+        var derived = await keys(meta, token);
+        var remote = await readRemote(derived, token);
+        ensureUnchanged(token, localRevision);
+        if (!remote) throw problem('没有找到原来的家庭进度，本机记录仍保留。', 'conflict');
+        return adopt(remote, token, localRevision, 'join-password-family');
+      });
+    }
     function start() {
       if (!metaReady) return withStoredMeta(start);
       if (started) return meta ? sync() : Promise.resolve(status());
@@ -6863,7 +6882,6 @@ window.HANZI_GLYPH_CATALOG={"version":"41b38d977b270e08ea493526a4ee0f8643a59bbf2
       try {
         if (!meta) return Promise.resolve(emit('off', '尚未开启跨设备同步'));
         observedJSON = snapshot().json;
-        if (meta.requireConflict) return Promise.resolve(emit('conflict', '上次采用进度未确认完成；两份进度仍保留，请选择保留哪份'));
       } catch (error) { return Promise.resolve(failure(error, epoch)); }
       return sync();
     }
@@ -6871,6 +6889,7 @@ window.HANZI_GLYPH_CATALOG={"version":"41b38d977b270e08ea493526a4ee0f8643a59bbf2
       if (!started) return start();
       if (!meta) return Promise.resolve(emit('off', '尚未开启跨设备同步'));
       if (inFlight) return inFlight;
+      if (interruptedPasswordJoin()) return resumePasswordJoin();
       if (meta.requireConflict) return Promise.resolve(emit('conflict', '上次采用进度未确认完成；两份进度仍保留，请选择保留哪份'));
       if (view.kind === 'conflict') return Promise.resolve(status());
       var token = epoch;
@@ -7226,7 +7245,118 @@ window.HANZI_GLYPH_CATALOG={"version":"41b38d977b270e08ea493526a4ee0f8643a59bbf2
     return learningRecord({ ...oldState, bank, priorityQueue: mergeRequests(oldQueue, newQueue) }, oldState);
   }
 
-  return { mergeLearning, learningRecord, storyRecord, assemble };
+  function validRevision(value) {
+    return typeof value === 'string' ? value.length > 0 && value.length <= 128
+      : Number.isSafeInteger(value) && value > 0;
+  }
+
+  function checkedProgress(value) {
+    if (!value || value.version !== 1 || !validRevision(value.revision)) {
+      throw new Error('浏览器存档的版本或修订号无效。');
+    }
+    const {version, revision, learning, story, primaryLearning, primaryStory, restoreBackup} = value;
+    if (typeof learning !== 'string' || typeof story !== 'string' ||
+        (primaryLearning !== null && typeof primaryLearning !== 'string') ||
+        (primaryStory !== null && typeof primaryStory !== 'string') ||
+        (restoreBackup !== undefined && typeof restoreBackup !== 'string')) {
+      throw new Error('浏览器存档的内容无效。');
+    }
+    const progress = {version, revision, learning, story, primaryLearning, primaryStory};
+    if (restoreBackup !== undefined) progress.restoreBackup = restoreBackup;
+    return progress;
+  }
+
+  function createProgressStore(indexedDB, later = globalThis.setTimeout, cancelTimer = globalThis.clearTimeout) {
+    const databaseName = 'hanzi-magic-herbalist-shared-progress-v1';
+    const storeName = 'progress';
+    const recordKey = 'active';
+
+    function transact(mode, operation) {
+      return new Promise((resolve, reject) => {
+        if (!indexedDB || typeof indexedDB.open !== 'function') {
+          reject(new Error('浏览器数据库暂不可用。'));
+          return;
+        }
+        let db, transaction, value, timer, settled = false;
+        function finish(error) {
+          if (settled) return;
+          settled = true;
+          cancelTimer(timer);
+          if (db) db.close();
+          if (error) reject(error);
+          else resolve(value);
+        }
+        function fail(error) {
+          if (transaction) {
+            try { transaction.abort(); } catch (_) { /* The transaction may already be closed. */ }
+          }
+          finish(error);
+        }
+        timer = later(() => fail(new Error('浏览器数据库操作超时。')), 6000);
+        let open;
+        try { open = indexedDB.open(databaseName, 1); }
+        catch (error) { finish(error); return; }
+        open.onerror = () => finish(open.error || new Error('无法打开浏览器数据库。'));
+        open.onblocked = () => finish(new Error('浏览器数据库正在被另一页占用。'));
+        open.onupgradeneeded = () => {
+          try {
+            if (settled) open.transaction.abort();
+            else open.result.createObjectStore(storeName);
+          } catch (error) {
+            try { open.transaction.abort(); } catch (_) { /* Preserve the creation error. */ }
+            finish(error);
+          }
+        };
+        open.onsuccess = () => {
+          db = open.result;
+          if (settled) { db.close(); return; }
+          db.onversionchange = () => db.close();
+          try {
+            transaction = db.transaction(storeName, mode);
+            transaction.onabort = () => finish(transaction.error || new Error('浏览器数据库保存中断。'));
+            transaction.oncomplete = () => finish();
+            operation(transaction.objectStore(storeName), result => { value = result; }, fail);
+          } catch (error) { fail(error); }
+        };
+      });
+    }
+
+    function read() {
+      return transact('readonly', (store, result, fail) => {
+        const request = store.get(recordKey);
+        request.onsuccess = () => {
+          try {
+            result(request.result === undefined ? null : checkedProgress(request.result));
+          } catch (error) { fail(error); }
+        };
+      });
+    }
+
+    async function save(expectedRevision, record) {
+      const next = checkedProgress(record);
+      if ((expectedRevision !== null && !validRevision(expectedRevision)) || expectedRevision === next.revision ||
+          (typeof next.revision === 'number' && next.revision !== (expectedRevision ?? 0) + 1)) {
+        throw new Error('浏览器存档的下一修订号无效。');
+      }
+      return transact('readwrite', (store, result, fail) => {
+        const request = store.get(recordKey);
+        request.onsuccess = () => {
+          try {
+            const previous = request.result === undefined ? null : checkedProgress(request.result);
+            if ((previous?.revision ?? null) !== expectedRevision) { result(false); return; }
+            if (next.restoreBackup === undefined && previous?.restoreBackup !== undefined) {
+              next.restoreBackup = previous.restoreBackup;
+            }
+            store.put(next, recordKey);
+            result(true);
+          } catch (error) { fail(error); }
+        };
+      });
+    }
+    return { read, save };
+  }
+
+  return { mergeLearning, learningRecord, storyRecord, assemble, createProgressStore };
 });
 
 </script>
@@ -8940,6 +9070,21 @@ const sharedLearning = sameGameSite ? window.HanziSharedLearning : null;
 const SAVE_KEY = sharedLearning ? 'hanzi-magic-door-state-v1' : INDEPENDENT_SAVE_KEY;
 const LOCAL_RECOVERY_PREFIX = 'hanzi-magic-herbalist-local-recovery-v1-';
 const PRE_RESTORE_KEY = 'hanzi-magic-herbalist-pre-restore-v1';
+const DB_RESTORE_COPY = 'browser-database-before-restore';
+const progressStore = (() => {
+  try{
+    return window.indexedDB && sharedLearning?.createProgressStore
+      ? sharedLearning.createProgressStore(window.indexedDB, setTimeout, clearTimeout) : null;
+  }catch(_){ return null; }
+})();
+const progressChannel = (() => {
+  try{ return progressStore && window.BroadcastChannel ? new window.BroadcastChannel('hanzi-magic-herbalist-progress') : null; }
+  catch(_){ return null; }
+})();
+let progressDatabaseBase = null;
+let progressDatabaseReadFailed = false;
+let progressDatabaseStale = false;
+let sharedProgressWrites = Promise.resolve();
 let progressStorageBase = null;
 let storyStorageBase = null;
 let legacyLearning = null;
@@ -8991,8 +9136,76 @@ function finishPendingProgress(saved){
   pendingProgressText = null;
 }
 function currentProgressBase(){
-  return localStorage.getItem(SAVE_KEY) === progressStorageBase &&
+  return !progressDatabaseReadFailed && !progressDatabaseStale &&
+    localStorage.getItem(SAVE_KEY) === progressStorageBase &&
     (!sharedLearning || localStorage.getItem(SHARED_STORY_KEY) === storyStorageBase);
+}
+
+function keepStaleProgress(text, operation){
+  if(operation !== 'save') throw new Error('another-tab');
+  try{
+    localStorage.setItem(LOCAL_RECOVERY_PREFIX + storagePageId(),
+      JSON.stringify({at:Date.now(), progress:JSON.parse(text)}));
+    showProgressSaveNotice('另一个游戏页面已有更新。本页进度已另存，可在设置的「手动备份」下载。请用一个游戏页面继续。');
+  }catch(_){
+    showProgressSaveNotice('另一个游戏页面已有更新。本页进度仍在，请先下载当前进度。');
+  }
+  return false;
+}
+
+function writeProgress(text, operation = 'save', currentLegacy = legacyLearning){
+  if(!progressStore) return writeLocalProgress(text, operation, currentLegacy);
+  return writeSharedProgress(text, operation, currentLegacy);
+}
+
+function withProgressWrite(write){
+  if(!progressStore) return withLocalWrite(SAVE_KEY, write);
+  const pending = sharedProgressWrites.catch(() => {}).then(() => withLocalWrite(SAVE_KEY, write));
+  sharedProgressWrites = pending;
+  return pending;
+}
+
+async function writeSharedProgress(text, operation, currentLegacy){
+  if(progressDatabaseReadFailed) throw new Error('本机存档无法读取，请保留页面并下载当前进度。');
+  const latest = await progressStore.read();
+  if(latest?.revision !== progressDatabaseBase?.revision){
+    progressDatabaseStale = true;
+    return keepStaleProgress(text, operation);
+  }
+  if(!currentProgressBase()) return keepStaleProgress(text, operation);
+  if(!latest){
+    try{ return writeLocalProgress(text, operation, currentLegacy); }
+    catch(error){
+      if(error?.name !== 'QuotaExceededError' && error?.name !== 'NS_ERROR_DOM_QUOTA_REACHED' &&
+          error?.code !== 22 && error?.code !== 1014) throw error;
+      if(!currentProgressBase()) return keepStaleProgress(text, operation);
+    }
+  }
+  const full = JSON.parse(text);
+  const projected = sharedLearning.learningRecord(full, currentLegacy);
+  const next = {
+    version:1, revision:(latest?.revision || 0) + 1,
+    learning:JSON.stringify(projected),
+    story:JSON.stringify({version:1, ...sharedLearning.storyRecord(full)}),
+    primaryLearning:progressStorageBase, primaryStory:storyStorageBase,
+  };
+  if(operation === 'restore') next.restoreBackup = JSON.stringify(state);
+  else if(latest?.restoreBackup) next.restoreBackup = latest.restoreBackup;
+  if(operation !== 'restore' && latest?.learning === next.learning && latest.story === next.story &&
+      latest.primaryLearning === next.primaryLearning && latest.primaryStory === next.primaryStory){
+    showProgressSaveNotice('');
+    return true;
+  }
+  if(!await progressStore.save(latest?.revision ?? null, next)){
+    progressDatabaseStale = true;
+    return keepStaleProgress(text, operation);
+  }
+  progressDatabaseBase = next;
+  try{ progressChannel?.postMessage(next.revision); }catch(_){}
+  legacyLearning = projected;
+  needsSharedBackup = needsInitialMerge = false;
+  showProgressSaveNotice('');
+  return true;
 }
 
 function writeLocalProgress(text, operation = 'save', currentLegacy = legacyLearning){
@@ -9073,7 +9286,7 @@ function saveState(){
   }
   try{
     const text = JSON.stringify(state);
-    const written = withLocalWrite(SAVE_KEY, () => writeLocalProgress(text));
+    const written = withProgressWrite(() => writeProgress(text));
     if(written?.then){
       progressWrites++;
       pendingProgressText = text;
@@ -9154,9 +9367,9 @@ function parseSavedState(raw){
 }
 
 function loadSavedState(){
-  let raw;
+  let raw = null;
   try{ raw = localStorage.getItem(SAVE_KEY); }
-  catch(_){ return; }
+  catch(_){ if(!progressDatabaseBase) return; }
   progressStorageBase = raw;
   const fromDisk = parseSavedState(raw);
   if(!sharedLearning){
@@ -9172,6 +9385,20 @@ function loadSavedState(){
     if(story?.version !== 1) story = null;
     if(!story) independent = parseSavedState(localStorage.getItem(INDEPENDENT_SAVE_KEY));
   }catch(_){ /* The legacy learning record is still available. */ }
+  if(progressDatabaseBase){
+    const saved = parseSavedState(progressDatabaseBase.learning);
+    let savedStory;
+    try{ savedStory = JSON.parse(progressDatabaseBase.story); }catch(_){}
+    if(saved && savedStory?.version === 1){
+      const oldPageChanged = raw !== progressDatabaseBase.primaryLearning && fromDisk;
+      legacyLearning = oldPageChanged
+        ? sharedLearning.learningRecord(sharedLearning.mergeLearning(saved, fromDisk), fromDisk) : saved;
+      state = sharedLearning.assemble(legacyLearning, savedStory);
+      needsInitialMerge = Boolean(oldPageChanged);
+      return;
+    }
+    progressDatabaseReadFailed = true;
+  }
   needsSharedBackup = raw !== null && (!fromDisk || Boolean(independent));
   needsInitialMerge = Boolean(independent);
   const learning = fromDisk && independent ? sharedLearning.mergeLearning(fromDisk, independent)
@@ -9220,7 +9447,7 @@ function svgPointFromEvent(e){
 let capturedPointerId = null;
 
 drawSvg.addEventListener('pointerdown', (e) => {
-  if(submitBtn.disabled) return;
+  if(submitBtn.disabled || syncApplying) return;
   if(parentValidation && (parentValidation.busy || parentValidation.pendingRecord || parentValidation.session.finished())) return;
   e.preventDefault();
   isDrawing = true;
@@ -11008,8 +11235,14 @@ function getCloudProgressState(){
   return sharedLearning ? sharedLearning.learningRecord(state, legacyLearning)
     : {...state, sessionProgress:syncSessionSnapshot()};
 }
+async function ensureCloudProgressCurrent(){
+  if(!progressStore) return;
+  const latest = await progressStore.read();
+  if(latest?.revision !== progressDatabaseBase?.revision) progressDatabaseStale = true;
+  getCloudProgressState();
+}
 function syncQuestionSafe(){
-  if(parentValidation || isDrawing || submitBtn.disabled || syncFileReading || progressWrites || parentQueueChanged || pendingRetests.length) return false;
+  if(syncApplying || parentValidation || isDrawing || submitBtn.disabled || syncFileReading || progressWrites || parentQueueChanged || pendingRetests.length) return false;
   if(finale.classList.contains('show') || continueBtn.classList.contains('show')) return true;
   return currentMode === 'free' && strokesPoints.length === 0;
 }
@@ -11080,17 +11313,31 @@ function applyProgressToPage(next, connected){
     if(connected || storyRestored) presentSyncedProgress(); else loadNextDoor();
   } finally { syncApplying = false; }
 }
+function persistAndApplyProgress(next, operation, currentLegacy, connected){
+  function apply(saved){
+    if(!saved) throw new Error('another-tab');
+    applyProgressToPage(next, connected);
+  }
+  syncApplying = true;
+  try{
+    const written = writeProgress(JSON.stringify(next), operation, currentLegacy);
+    if(written?.then) return written.then(apply).finally(() => { syncApplying = false; });
+    apply(written);
+  }catch(error){
+    syncApplying = false;
+    throw error;
+  }
+}
 function applySyncedProgress(remote, reason){
   const incoming = migrateState(JSON.parse(JSON.stringify(remote)));
   if(!incoming || !syncCanApplyProgress()) throw new Error('请先完成当前练习，再接上云端进度。');
-  return withLocalWrite(SAVE_KEY, () => {
+  return withProgressWrite(() => {
     if(!syncCanApplyProgress()) throw new Error('请先完成当前练习，再接上云端进度。');
     // Persist before replacing live objects. A quota failure leaves this question intact.
     const merging = reason === 'join-family' || reason === 'join-password-family' || reason === 'conflict-merge';
     const learning = sharedLearning && merging ? sharedLearning.mergeLearning(incoming, state) : incoming;
     const next = sharedLearning ? sharedLearning.assemble(learning, state) : incoming;
-    writeLocalProgress(JSON.stringify(next), 'sync', sharedLearning ? incoming : null);
-    applyProgressToPage(next, true);
+    return persistAndApplyProgress(next, 'sync', sharedLearning ? incoming : null, true);
   });
 }
 function wouldLoseSharedProgress(remote){
@@ -11185,6 +11432,7 @@ function initProgressSync(){
     cloudSyncController = window.HanziProgressSync.create({projectId:"game-e-40894", storage:localStorage,
       fetch:window.fetch ? window.fetch.bind(window) : fetch, crypto:window.crypto,
       getState:getCloudProgressState, applyState:applySyncedProgress, canApply:syncCanApplyProgress,
+      beforeRemoteWrite:ensureCloudProgressCurrent, resumeFirstJoin:true,
       mergeOnConflict:!!sharedLearning, wouldLoseProgress:wouldLoseSharedProgress,
       onStatus:renderCloudSyncStatus, setTimeout, clearTimeout, now:() => Date.now()});
     if(cloudSyncController.status().connected) restoreSyncedRound();
@@ -11301,24 +11549,31 @@ function pickNextChar(){
   if(nextPriority){
     priorityConsumedToday.add(nextPriority.char);
     let existing = state.bank.find(b => b.char === nextPriority.char);
+    let updated = !existing;
     if(!existing){
       existing = newBankItem(nextPriority.char, nextPriority.pinyin, nextPriority.word);
-      existing.fromParent = true;      // survives a starter-bank swap; built-in ones don't
       state.bank.push(existing);
     } else {
       // The parent just told us which word and which reading they want for this character,
       // which beats whatever the bank was seeded with — "薄" as 单薄/bó vs 薄饼/báo is exactly
       // the case where the stored default would show the child the wrong pinyin.
-      existing.pinyin = nextPriority.pinyin;
+      if(existing.pinyin !== nextPriority.pinyin){
+        existing.pinyin = nextPriority.pinyin;
+        updated = true;
+      }
       if(nextPriority.word !== undefined && nextPriority.word !== existing.word){
         existing.word = nextPriority.word;
         delete existing.sentence;
+        updated = true;
       }
     }
-    if(typeof nextPriority.sentence === 'string') existing.sentence = nextPriority.sentence;
-    existing.fromParent = true;
-    existing.retired = false;
-    saveState();
+    if(typeof nextPriority.sentence === 'string' && existing.sentence !== nextPriority.sentence){
+      existing.sentence = nextPriority.sentence;
+      updated = true;
+    }
+    if(!existing.fromParent){ existing.fromParent = true; updated = true; }
+    if(existing.retired){ existing.retired = false; updated = true; }
+    if(updated) saveState();
     // A character the parent typed in for today is wanted today, mastered or not — that's
     // the whole point of the priority list (e.g. it's on tomorrow's 听写). Unless it's
     // already been parked for explanation, in which case it waits for the parent too.
@@ -11893,7 +12148,7 @@ document.addEventListener('click', (e) => {
 function onTap(el, handler){
   let lastFired = 0;
   function fire(e){
-    if(el.disabled) return;
+    if(el.disabled || (typeof syncApplying !== 'undefined' && syncApplying)) return;
     const now = Date.now();
     if(now - lastFired < 400) return;
     lastFired = now;
@@ -12550,13 +12805,14 @@ function renderLocalRecoveryCopies(){
     }
     if(sharedLearning && localStorage.getItem(INDEPENDENT_SAVE_KEY)) copies.push({key:INDEPENDENT_SAVE_KEY, at:null});
   }catch(_){}
+  if(progressDatabaseBase?.restoreBackup) copies.push({key:DB_RESTORE_COPY, at:null});
   const selected = select.value;
   while(select.firstChild) select.removeChild(select.firstChild);
   copies.sort((a,b) => b.at - a.at).forEach(({key, at}) => {
     const option = document.createElement('option');
     option.value = key;
     const label = key === INDEPENDENT_SAVE_KEY ? '合并前的新版学习进度'
-      : key === PRE_RESTORE_KEY ? '恢复前的进度'
+      : key === PRE_RESTORE_KEY || key === DB_RESTORE_COPY ? '恢复前的进度'
       : key === BEFORE_SHARED_KEY ? '合并前的旧版学习进度' : '另一个页面的练习';
     option.textContent = at === null ? label : label + ' · ' + new Date(at).toLocaleString();
     select.appendChild(option);
@@ -12567,6 +12823,10 @@ function renderLocalRecoveryCopies(){
 onTap(document.getElementById('localRecoveryDownload'), () => {
   try{
     const key = document.getElementById('localRecoverySelect').value;
+    if(key === DB_RESTORE_COPY && progressDatabaseBase?.restoreBackup){
+      downloadProgress(progressDatabaseBase.restoreBackup, '恢复副本');
+      return;
+    }
     if(key === INDEPENDENT_SAVE_KEY && sharedLearning){
       const original = localStorage.getItem(INDEPENDENT_SAVE_KEY);
       if(original) downloadProgress(original, '恢复副本');
@@ -12639,15 +12899,18 @@ fileInput.addEventListener('change', (e) => {
         : '恢复的进度未能保存，请检查浏览器存储空间。');
     };
     try{
-      const result = withLocalWrite(SAVE_KEY, () => {
+      const result = withProgressWrite(() => {
         syncFileReading = false;
         if(!syncQuestionSafe()) throw new Error('busy');
         if(!currentProgressBase()) throw new Error('another-tab');
-        writeLocalProgress(JSON.stringify(next), 'restore');
-        applyProgressToPage(next, connected);
-        if(cloudSyncController) cloudSyncController.changed();
-        renderLocalRecoveryCopies();
-        alert('存档已恢复，并已保存在本机。');
+        const saved = persistAndApplyProgress(next, 'restore', legacyLearning, connected);
+        const done = () => {
+          if(cloudSyncController) cloudSyncController.changed();
+          renderLocalRecoveryCopies();
+          alert('存档已恢复，并已保存在本机。');
+        };
+        if(saved?.then) return saved.then(done);
+        done();
       });
       if(result?.catch) result.catch(failed);
     }catch(error){ failed(error); }
@@ -12750,34 +13013,49 @@ document.addEventListener('visibilitychange', () => {
 window.addEventListener('storage', event => {
   if(event.newValue && event.key?.startsWith(PENDING_INK_PREFIX)) recoverPendingInkCopies();
 });
-loadSavedState();
-loadInkLog();
-recoverPendingInkCopies();
-loadParentTestInkLog();
-initMountainJourney();
-initHerbalistRoom();
-if(sameGameSite) initAiSentences();
-else document.body.classList.add('herbalist-no-ai');
-if(!sharedLearning) document.body.classList.add('herbalist-local-preview');
-const herbalistStoryRestored = restoreHerbalistStage();
-if(sharedLearning) initProgressSync();
-applyScene(state.scenesUnlocked);
-renderQueueList();
-renderLearningOverview();
-renderStuckList();
-renderInkList();
-showPlayerDispute(inkLog.find(entry => entry && (entry.v === 'pass' || entry.v === 'fail')) || null);
-onTap(speakBtn, speakPrompt);
-onTap(sentenceBtn, speakSentence);
-batchInput.addEventListener('focus',loadPinyinForParent);
-if(herbalistStoryRestored || (cloudSyncController && cloudSyncController.status().connected)) presentSyncedProgress();
-else loadNextDoor();
-document.getElementById('startupNotice').hidden = true;
-if(needsInitialMerge){
-  Promise.resolve(saveState()).then(saved => {
-    if(saved) return cloudSyncController?.start();
-  }).catch(() => {});
-} else if(cloudSyncController) Promise.resolve(cloudSyncController.start()).catch(() => {});
+if(progressChannel) progressChannel.onmessage = event => {
+  if(Number.isSafeInteger(event.data) && event.data > (progressDatabaseBase?.revision || 0)) progressDatabaseStale = true;
+};
+function startGame(){
+  loadSavedState();
+  loadInkLog();
+  recoverPendingInkCopies();
+  loadParentTestInkLog();
+  initMountainJourney();
+  initHerbalistRoom();
+  if(sameGameSite) initAiSentences();
+  else document.body.classList.add('herbalist-no-ai');
+  if(!sharedLearning) document.body.classList.add('herbalist-local-preview');
+  const herbalistStoryRestored = restoreHerbalistStage();
+  if(sharedLearning) initProgressSync();
+  if(progressDatabaseReadFailed) showProgressSaveNotice('本机存档暂时无法读取。当前显示最近可读的进度，请先下载备份。');
+  applyScene(state.scenesUnlocked);
+  renderQueueList();
+  renderLearningOverview();
+  renderStuckList();
+  renderInkList();
+  showPlayerDispute(inkLog.find(entry => entry && (entry.v === 'pass' || entry.v === 'fail')) || null);
+  onTap(speakBtn, speakPrompt);
+  onTap(sentenceBtn, speakSentence);
+  batchInput.addEventListener('focus',loadPinyinForParent);
+  if(herbalistStoryRestored || (cloudSyncController && cloudSyncController.status().connected)) presentSyncedProgress();
+  else loadNextDoor();
+  document.getElementById('startupNotice').hidden = true;
+  if(needsInitialMerge){
+    Promise.resolve(saveState()).then(saved => {
+      if(saved) return cloudSyncController?.start();
+    }).catch(() => {});
+  } else if(cloudSyncController) Promise.resolve(cloudSyncController.start()).catch(() => {});
+}
+if(progressStore){
+  progressStore.read().then(saved => {
+    progressDatabaseBase = saved;
+    startGame();
+  }, () => {
+    progressDatabaseReadFailed = true;
+    startGame();
+  });
+} else startGame();
 </script>
 </body>
 </html>
