@@ -6,8 +6,8 @@ const path = require('node:path');
 
 const startup = fs.readFileSync(path.join(__dirname, 'offline-startup.cjs'), 'utf8');
 const harness = new Function('require', '__dirname', 'process',
-  startup.slice(0, startup.indexOf('\n(async()=>{')) + '\nreturn {environment,flush,inkFor};')(require, __dirname, process);
-const {environment, flush, inkFor} = harness;
+  startup.slice(0, startup.indexOf('\n(async()=>{')) + '\nreturn {environment,flush,inkFor,html};')(require, __dirname, process);
+const {environment, flush, inkFor, html} = harness;
 const SAVE = 'hanzi-magic-herbalist-state-v1';
 const INK = 'hanzi-magic-herbalist-ink-v1';
 const RECOVERY = 'hanzi-magic-herbalist-local-recovery-v1-';
@@ -206,11 +206,62 @@ async function pendingInkCase(){
   assert.equal(shared.has(key), false);
 }
 
+async function compactInkPanel(){
+  const backup = html.match(/<details\b([^>]*\bid="manualBackupSettings"[^>]*)>([\s\S]*?)<\/details>/);
+  assert.ok(backup);
+  assert.doesNotMatch(backup[1], /\bopen\b/);
+  for(const id of ['inkCopyBtn', 'inkDownloadBtn', 'inkClearBtn', 'inkOut']) assert.ok(backup[2].includes(`id="${id}"`));
+
+  const empty = environment();
+  empty.tap('settingsBtn');
+  assert.equal(empty.ids.get('inkCount').textContent, '已标记 0 条');
+  assert.equal(empty.ids.has('inkList'), false);
+
+  const points = [[[10, 20], [30, 40]]];
+  const marked = { id:'synthetic-mark', c:'犬', v:'fail', d:'2026-11-03', timestamp:10, disputed:true,
+    s:points, rawS:points, formatVersion:2,
+    playerReview:{source:'player', reportedAt:11, reportedExpected:'pass', priorDisputed:false} };
+  const ordinary = { id:'synthetic-input', c:'止', v:'pass', d:'2026-11-03', timestamp:9, disputed:false,
+    s:points, rawS:points, formatVersion:2 };
+  const original = JSON.stringify([marked, ordinary]);
+  const page = environment({initialStorage:[[INK, original]]});
+  page.tap('settingsBtn');
+  assert.equal(page.ids.get('inkCount').textContent, '已标记 1 条');
+  assert.equal(page.ids.get('inkOut').hidden, true);
+  assert.equal(page.storage.get(INK), original);
+
+  let copied;
+  page.context.navigator.clipboard = { async writeText(text){ copied = text; } };
+  page.tap('inkCopyBtn');
+  await flush();
+  const [markedExport] = JSON.parse(copied).cases;
+  assert.equal(JSON.parse(copied).cases.length, 1);
+  assert.equal(markedExport.c, '犬');
+  assert.deepEqual(markedExport.rawS, points);
+  assert.deepEqual(markedExport.playerReview, marked.playerReview);
+  assert.equal(page.ids.get('inkOut').hidden, true);
+
+  page.context.navigator.clipboard.writeText = async () => { throw new Error('Synthetic clipboard rejection'); };
+  page.tap('inkCopyBtn');
+  await flush();
+  assert.equal(page.ids.get('inkOut').hidden, false);
+  assert.equal(page.ids.get('inkOut').value, copied);
+
+  let download;
+  page.context.Blob = Blob;
+  page.context.URL = { createObjectURL(blob){ download = blob; return 'blob:synthetic-ink'; }, revokeObjectURL(){} };
+  page.tap('inkDownloadBtn');
+  const exported = JSON.parse(await download.text()).cases;
+  assert.deepEqual(exported.map(entry => [entry.c, entry.disputed, entry.rawS]), [['犬', true, points], ['止', false, points]]);
+  assert.equal(page.storage.get(INK), original, 'Opening or exporting never rewrites saved ink');
+}
+
 (async()=>{
   await simultaneousTabs(false);
   await simultaneousTabs(true);
   await backupCases();
   await pendingProgressCase();
   await pendingInkCase();
-  console.log('Local progress: independent tab recovery, merged ink and marks, safe restore, quota failure, and legacy/corrupt backups passed.');
+  await compactInkPanel();
+  console.log('Local progress: tab recovery, ink storage and exports, compact ink count, safe restore and quota handling passed.');
 })().catch(error=>{console.error(error);process.exitCode=1;});

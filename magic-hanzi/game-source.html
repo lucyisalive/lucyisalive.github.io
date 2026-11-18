@@ -408,22 +408,7 @@
     font-family:inherit; font-weight:700; font-size:13px; cursor:pointer;
   }
   .batch-msg{ font-size:12px; color:#6b6355; }
-  .ink-list{ display:flex; flex-direction:column; gap:5px; margin-top:4px; max-height:190px; overflow-y:auto; }
-  .ink-item{
-    display:flex; align-items:center; justify-content:space-between; gap:8px;
-    background:#fff; border:1.5px solid #ddd2b8; border-radius:9px; padding:5px 9px;
-  }
-  .ink-item.marked{ background:#f3e2df; border-color:#d98a82; }
-  .ink-item .ch{ font-size:18px; font-weight:800; color:var(--ink); }
-  .ink-item .meta{ font-size:11px; color:#8a8272; margin-left:7px; }
-  .ink-item .v-pass{ color:var(--jade); font-weight:700; }
-  .ink-item .v-fail{ color:var(--seal); font-weight:700; }
-  .ink-mark{
-    border:1.5px solid #cfc4a8; background:transparent; color:#6b6355;
-    border-radius:7px; padding:5px 9px; font-family:inherit; font-size:11.5px;
-    cursor:pointer; white-space:nowrap;
-  }
-  .ink-item.marked .ink-mark{ background:var(--seal); border-color:var(--seal); color:#fff; }
+  .ink-summary{ display:flex; gap:10px; align-items:baseline; margin:12px 0 8px; color:#6b6355; font-size:12px; }
   .ink-actions{ display:flex; align-items:center; gap:7px; margin-top:7px; flex-wrap:wrap; }
   .btn-ink{
     border:none; border-radius:8px; padding:8px 12px; background:var(--jade); color:#fff;
@@ -434,6 +419,7 @@
     width:100%; box-sizing:border-box; margin-top:6px; padding:7px 9px; border-radius:8px;
     border:1.5px solid #cfc4a8; font-family:ui-monospace,Menlo,monospace; font-size:10px;
     line-height:1.4; resize:vertical; color:#6b6355;
+    -webkit-user-select:text; user-select:text; -webkit-touch-callout:default;
   }
   .stuck-list{ display:flex; flex-direction:column; gap:6px; margin-top:4px; }
   .stuck-item{
@@ -657,15 +643,7 @@
     <label>需要家长讲解（今天错了 3 次，已经停下来）</label>
     <div class="stuck-list" id="stuckList"></div>
 
-    <label>笔迹记录<span id="inkCount" style="font-weight:400;color:#8a8272;"></span></label>
-    <div class="ink-list" id="inkList"></div>
-    <div class="ink-actions">
-      <button class="btn-ink" id="inkCopyBtn">📋 复制标记的</button>
-      <button class="btn-ink" id="inkDownloadBtn">⬇️ 下载全部</button>
-      <button class="btn-ink btn-ink-clear" id="inkClearBtn">清空全部笔迹</button>
-      <span class="batch-msg" id="inkMsg"></span>
-    </div>
-    <textarea id="inkOut" readonly rows="3" placeholder="点上面的「复制标记的」，内容会出现在这里；复制不成功就长按这里全选拷贝。"></textarea>
+    <p class="ink-summary"><strong>笔迹记录</strong><span id="inkCount" role="status">已标记 0 条</span></p>
 
     <p class="hint-text">学习范围：统编人教版·三年级下册（2025年10月版）<br>从课本词语表选取的 92 个字词中，搭配难度和结构随机出题；每格写一个字。</p>
 
@@ -689,6 +667,13 @@
           <button class="btn-save" id="cloudSyncBackupRemoteBtn">下载当时的云端进度</button>
         </div>
       </div>
+      <div class="ink-actions">
+        <button class="btn-ink" id="inkCopyBtn">复制已标记笔迹</button>
+        <button class="btn-ink" id="inkDownloadBtn">下载全部笔迹</button>
+        <button class="btn-ink btn-ink-clear" id="inkClearBtn">清空全部笔迹</button>
+        <span class="batch-msg" id="inkMsg" role="status"></span>
+      </div>
+      <textarea id="inkOut" aria-label="手动复制已标记笔迹" readonly rows="3" hidden></textarea>
       <input type="file" id="fileInput" accept="application/json">
     </details>
     <section class="cloud-sync" id="cloudSyncSection" aria-labelledby="cloudSyncTitle" tabindex="-1">
@@ -3148,7 +3133,6 @@ const learningGroups = [
   list:document.getElementById(group.list),
 }));
 const stuckList = document.getElementById('stuckList');
-const inkList = document.getElementById('inkList');
 const inkCount = document.getElementById('inkCount');
 const inkOut = document.getElementById('inkOut');
 const inkMsg = document.getElementById('inkMsg');
@@ -4615,31 +4599,10 @@ function renderLearningOverview(){
 }
 learningGroups.forEach(group => group.details.addEventListener('toggle', renderLearningOverview));
 
-// 标记是待核查线索；孩子反馈与家长标记都不自动成为确认过的标准答案。
+// 本机归档工具沿用此入口刷新笔迹标记数量。
 function renderInkList(){
-  inkList.innerHTML = inkLog.map((it, i) => `
-    <div class="ink-item ${it.disputed ? 'marked' : ''}">
-      <span><span class="ch">${escapeText(it.c)}</span><span class="meta">${escapeText(it.d)} · 系统判<span class="${it.v === 'pass' ? 'v-pass' : 'v-fail'}">${it.v === 'pass' ? '对' : '错'}</span> · ${it.s.length}笔${it.playerReview ? ' · 孩子反馈：' + (it.playerReview.reportedExpected === 'pass' ? '写对判错' : '写错判对') : ''}</span></span>
-      <button class="ink-mark" data-i="${i}">${it.disputed ? '✓ 已标记' : '判得不对'}</button>
-    </div>`).join('') ||
-    '<div style="font-size:12px;color:#8a8272;">还没有笔迹记录，让孩子写几个字就有了</div>';
-
-  const marked = inkLog.filter(x => x.disputed).length;
-  inkCount.textContent = inkLog.length
-    ? `　共 ${inkLog.length} 条，已标记 ${marked} 条（通常保留最近 ${MAX_INK} 条，已标记的优先保留）`
-    : '';
-
-  inkList.querySelectorAll('.ink-mark').forEach(el => {
-    const it = inkLog[Number(el.dataset.i)];
-    onTap(el, () => {
-      if(!it || !inkLog.includes(it)) return;
-      it.disputed = !it.disputed;
-      if(!it.disputed) delete it.playerReview;
-      saveInkLog();
-      renderInkList();
-      if(typeof renderPlayerDispute === 'function') renderPlayerDispute();
-    });
-  });
+  const summary = `已标记 ${inkLog.filter(entry => entry.disputed).length} 条`;
+  if(inkCount.textContent !== summary) inkCount.textContent = summary;
 }
 
 function inkPayloadText(only){
@@ -4696,18 +4659,19 @@ function parseBatch(text){
 }
 
 onTap(inkCopyBtn, async () => {
-  const marked = inkLog.filter(x => x.disputed);
-  if(!marked.length){ inkMsg.textContent = '先点一下判得不对的那几条'; return; }
+  inkOut.hidden = true;
+  inkOut.value = '';
+  const marked = inkLog.filter(x => x.disputed).length;
+  if(!marked){ inkMsg.textContent = '没有已标记的笔迹'; return; }
   const text = inkPayloadText(true);
-  inkOut.value = text;
-  // iPad 上 Safari 的剪贴板 API 偶尔会拒绝，所以内容同时显示在下面的框里，
-  // 复制失败时家长长按全选也能拿走，不至于白点一场。
   try{
     await navigator.clipboard.writeText(text);
-    inkMsg.textContent = `已复制 ${marked.length} 条，粘贴给我就行`;
+    inkMsg.textContent = `已复制 ${marked} 条`;
   }catch(e){
+    inkOut.value = text;
+    inkOut.hidden = false;
     inkOut.focus(); inkOut.select();
-    inkMsg.textContent = `${marked.length} 条已放在下面的框里，长按全选拷贝`;
+    inkMsg.textContent = `${marked} 条已放在下面的框里，长按全选复制`;
   }
 });
 
@@ -4726,10 +4690,11 @@ onTap(inkClearBtn, () => {
   if(submitBtn.disabled){ inkMsg.textContent = '正在批改，请等这次完成后再清空。'; return; }
   inkLog = []; const saved = saveInkLog(); renderInkList();
   playerDisputeEntry = playerDisputePressedEntry = null; renderPlayerDispute();
+  inkOut.hidden = true;
   inkOut.value = '';
   const report = ok => {
     renderInkList();
-    inkMsg.textContent = ok ? (inkLog.length ? '本页显示过的笔迹已清空，其他页面的新笔迹已保留。' : '已清空')
+    inkMsg.textContent = ok ? (inkLog.length ? '本页记录的笔迹已清空，其他页面的新笔迹已保留。' : '已清空')
       : '暂存失败，清空尚未保存。';
   };
   if(saved?.then) saved.then(report); else report(saved);
