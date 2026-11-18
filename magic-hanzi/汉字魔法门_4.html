@@ -5349,11 +5349,14 @@ window.HANZI_CURRICULUM = {
   if (window.HanziGameFeedback) return;
 
   const CELEBRATION_MS = 2400;
+  const RESULT_SOUND_WAIT_MS = 500;
   const particles = new Set();
   const timers = new Set();
   const voices = new Set();
   let context = null;
   let master = null;
+  let resuming = null;
+  let waitingSound = null;
   let muted = false;
   let layer = null;
   let stage = null;
@@ -5438,24 +5441,78 @@ window.HANZI_CURRICULUM = {
     }
   }
 
-  function unlock() {
-    if (muted) return Promise.resolve(false);
-    const audio = ensureAudio();
-    if (!audio) return Promise.resolve(false);
+  function primeAudio(audio) {
     try {
       // A one-frame silent source primes older iPad Safari implementations. It is
       // started synchronously inside the gesture, never after an awaited operation.
-      if (audio.state !== 'running') {
-        const silent = audio.createBufferSource();
-        silent.buffer = audio.createBuffer(1, 1, audio.sampleRate);
-        silent.connect(master);
-        silent.onended = function () { try { silent.disconnect(); } catch (error) {} };
-        silent.start(0);
+      const silent = audio.createBufferSource();
+      silent.buffer = audio.createBuffer(1, 1, audio.sampleRate);
+      silent.connect(master);
+      silent.onended = function () { try { silent.disconnect(); } catch (error) {} };
+      silent.start(0);
+    } catch (error) { /* A priming failure must not skip resume(). */ }
+  }
+
+  function audioClock() {
+    return window.performance?.now?.() ?? Date.now();
+  }
+
+  function clearWaitingSound() {
+    if (!waitingSound) return;
+    cancelTimer(waitingSound.timer);
+    waitingSound = null;
+  }
+
+  function playWaitingSound(audio) {
+    if (waitingSound?.audio !== audio) return;
+    const pending = waitingSound;
+    clearWaitingSound();
+    if (muted || document.hidden || audioClock() >= pending.deadline) return;
+    pending.patterns.forEach(function (pattern) { pattern(); });
+  }
+
+  function playResultSound(pattern, followsCorrect) {
+    if (muted || document.hidden || !context) return;
+    if (!followsCorrect) clearWaitingSound();
+    if (context.state === 'running') {
+      if (followsCorrect) playWaitingSound(context);
+      pattern();
+      return;
+    }
+    // Avoid a late chime if no trusted gesture has started resuming this context.
+    if (resuming?.audio !== context || !resuming.pending) return;
+    if (!waitingSound) {
+      waitingSound = {audio: context, deadline: audioClock() + RESULT_SOUND_WAIT_MS, patterns: [],
+        timer: later(clearWaitingSound, RESULT_SOUND_WAIT_MS)};
+    }
+    waitingSound.patterns.push(pattern);
+  }
+
+  function unlock() {
+    if (muted || document.hidden) return Promise.resolve(false);
+    const audio = ensureAudio();
+    if (!audio) return Promise.resolve(false);
+    if (audio.state !== 'running') primeAudio(audio);
+    if (audio.state === 'running') {
+      playWaitingSound(audio);
+      return Promise.resolve(true);
+    }
+    try {
+      const attempt = resuming?.audio === audio ? resuming : {audio: audio, pending: 0};
+      const resumed = audio.resume();
+      resuming = attempt;
+      attempt.pending++;
+      function onResumeSettled() {
+        attempt.pending--;
+        const ready = audio === context && audio.state === 'running';
+        if (ready) playWaitingSound(audio);
+        if (resuming === attempt && !attempt.pending) {
+          resuming = null;
+          if (!ready) clearWaitingSound();
+        }
+        return ready;
       }
-      const resumed = audio.state === 'running' ? null : audio.resume();
-      return Promise.resolve(resumed).then(function () {
-        return audio.state === 'running';
-      }, function () { return false; });
+      return Promise.resolve(resumed).then(onResumeSettled, onResumeSettled);
     } catch (error) { return Promise.resolve(false); }
   }
 
@@ -5473,7 +5530,6 @@ window.HANZI_CURRICULUM = {
   }
 
   function startSound(preserveExisting) {
-    // Never queue a sound to replay unexpectedly when a locked/hidden iPad returns.
     if (muted || document.hidden || !context || context.state !== 'running') return null;
     if (!preserveExisting) stopSounds();
     return context.currentTime + 0.008;
@@ -5625,18 +5681,18 @@ window.HANZI_CURRICULUM = {
   }
 
   function playCorrect() {
-    correctSound();
+    playResultSound(correctSound);
     sparkle(false);
     return 700;
   }
 
   function playWrong() {
-    wrongSound();
+    playResultSound(wrongSound);
     return 300;
   }
 
   function celebrate(char) {
-    victorySound();
+    playResultSound(victorySound, true);
     sparkle(true);
     if (!ensureLayer()) return CELEBRATION_MS;
     cancelTimer(celebrationTimer);
@@ -5655,6 +5711,7 @@ window.HANZI_CURRICULUM = {
   }
 
   function reset() {
+    clearWaitingSound();
     timers.forEach(function (handle) { window.clearTimeout(handle); });
     timers.clear();
     celebrationTimer = hideTimer = null;
@@ -5669,9 +5726,23 @@ window.HANZI_CURRICULUM = {
     stopSounds();
   }
 
+  function releaseAudio() {
+    reset();
+    const audio = context;
+    const output = master;
+    context = master = resuming = null;
+    try { output?.disconnect(); } catch (error) { /* The context may already be closed. */ }
+    try {
+      if (audio && audio.state !== 'closed') Promise.resolve(audio.close?.()).catch(function () {});
+    } catch (error) { /* Recreate the context only on the next gesture. */ }
+  }
+
   function setMuted(value) {
     muted = Boolean(value);
-    if (muted) stopSounds();
+    if (muted) {
+      clearWaitingSound();
+      stopSounds();
+    }
     return muted;
   }
 
@@ -5685,18 +5756,18 @@ window.HANZI_CURRICULUM = {
     celebrationMs: CELEBRATION_MS
   });
 
-  // Capturing listeners run before the game's touch handlers. A pencil stroke normally
-  // unlocks sound well before asynchronous grading completes. Retrying also recovers
-  // after Safari suspends audio while the iPad is locked; no sound is queued meanwhile.
+  // Start resuming directly on the gesture. In Safari a pen or touch pointer-up
+  // can activate audio even when pointer-down did not.
   function unlockFromGesture(event) {
-    if (event.target?.closest?.('#speakBtn, #sentenceBtn')) return;
+    if (event.isTrusted === false || event.target?.closest?.('#speakBtn, #sentenceBtn')) return;
     if (!context || context.state !== 'running') unlock();
   }
   document.addEventListener('pointerdown', unlockFromGesture, {capture: true, passive: true});
+  document.addEventListener('pointerup', unlockFromGesture, {capture: true, passive: true});
   document.addEventListener('touchend', unlockFromGesture, {capture: true, passive: true});
   document.addEventListener('keydown', unlockFromGesture, {capture: true});
-  document.addEventListener('visibilitychange', function () { if (document.hidden) reset(); });
-  window.addEventListener('pagehide', reset);
+  document.addEventListener('visibilitychange', function () { if (document.hidden) releaseAudio(); });
+  window.addEventListener('pagehide', releaseAudio);
   if (document.body) ensureLayer();
   else document.addEventListener('DOMContentLoaded', ensureLayer, {once: true});
 })(window, document);
@@ -8082,16 +8153,21 @@ window.HANZI_GLYPH_CATALOG={"version":"41b38d977b270e08ea493526a4ee0f8643a59bbf2
           master.connect(audio.destination);
         }
         if (audio.state !== 'running') {
-          const silent = audio.createBufferSource();
-          silent.buffer = audio.createBuffer(1, 1, audio.sampleRate);
-          silent.connect(master);
-          silent.onended = () => silent.disconnect();
-          silent.start(0);
+          try {
+            const silent = audio.createBufferSource();
+            silent.buffer = audio.createBuffer(1, 1, audio.sampleRate);
+            silent.connect(master);
+            silent.onended = () => { try { silent.disconnect(); } catch (_) {} };
+            silent.start(0);
+          } catch (_) { /* Still try to resume when a browser refuses the silent source. */ }
           Promise.resolve(audio.resume()).catch(() => {});
         }
       } catch (_) { /* Audio is optional. */ }
     }
     doc.addEventListener('pointerdown', unlock, { capture: true, passive: true });
+    doc.addEventListener('pointerup', event => {
+      if (event.pointerType !== 'mouse') unlock();
+    }, { capture: true, passive: true });
     doc.addEventListener('touchend', unlock, { capture: true, passive: true });
     doc.addEventListener('keydown', unlock, { capture: true });
 
@@ -8182,7 +8258,18 @@ window.HANZI_GLYPH_CATALOG={"version":"41b38d977b270e08ea493526a4ee0f8643a59bbf2
         catch (_) { /* An ended source may still be awaiting cleanup. */ }
       }
     }
-    doc.addEventListener('visibilitychange', () => { if (doc.hidden) stopSounds(); });
+    function releaseAudio() {
+      stopSounds();
+      voices.clear();
+      const previous = audio;
+      audio = master = null;
+      if (previous && previous.state !== 'closed') {
+        try { Promise.resolve(previous.close?.()).catch(() => {}); }
+        catch (_) { /* A later gesture can open a fresh context. */ }
+      }
+    }
+    doc.addEventListener('visibilitychange', () => { if (doc.hidden) releaseAudio(); });
+    window.addEventListener('pagehide', releaseAudio);
 
     function mark(items, count, changed, completeClass) {
       items.forEach((item, index) => {

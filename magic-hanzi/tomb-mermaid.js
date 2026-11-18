@@ -226,16 +226,21 @@
           master.connect(audio.destination);
         }
         if (audio.state !== 'running') {
-          const silent = audio.createBufferSource();
-          silent.buffer = audio.createBuffer(1, 1, audio.sampleRate);
-          silent.connect(master);
-          silent.onended = () => silent.disconnect();
-          silent.start(0);
+          try {
+            const silent = audio.createBufferSource();
+            silent.buffer = audio.createBuffer(1, 1, audio.sampleRate);
+            silent.connect(master);
+            silent.onended = () => { try { silent.disconnect(); } catch (_) {} };
+            silent.start(0);
+          } catch (_) { /* Still try to resume when a browser refuses the silent source. */ }
           Promise.resolve(audio.resume()).catch(() => {});
         }
       } catch (_) { /* Audio is optional. */ }
     }
     doc.addEventListener('pointerdown', unlock, { capture: true, passive: true });
+    doc.addEventListener('pointerup', event => {
+      if (event.pointerType !== 'mouse') unlock();
+    }, { capture: true, passive: true });
     doc.addEventListener('touchend', unlock, { capture: true, passive: true });
     doc.addEventListener('keydown', unlock, { capture: true });
 
@@ -326,7 +331,18 @@
         catch (_) { /* An ended source may still be awaiting cleanup. */ }
       }
     }
-    doc.addEventListener('visibilitychange', () => { if (doc.hidden) stopSounds(); });
+    function releaseAudio() {
+      stopSounds();
+      voices.clear();
+      const previous = audio;
+      audio = master = null;
+      if (previous && previous.state !== 'closed') {
+        try { Promise.resolve(previous.close?.()).catch(() => {}); }
+        catch (_) { /* A later gesture can open a fresh context. */ }
+      }
+    }
+    doc.addEventListener('visibilitychange', () => { if (doc.hidden) releaseAudio(); });
+    window.addEventListener('pagehide', releaseAudio);
 
     function mark(items, count, changed, completeClass) {
       items.forEach((item, index) => {
