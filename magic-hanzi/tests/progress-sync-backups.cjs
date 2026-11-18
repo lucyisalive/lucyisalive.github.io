@@ -339,5 +339,40 @@ async function test() {
   console.log('Progress backups: durable quota fallback, malformed archive preservation, failed backup barrier, and guarded merge passed.');
 }
 
-if (require.main === module) test().catch(error => { console.error(error); process.exitCode = 1; });
+async function masteryCodec() {
+  const server = firestore();
+  const state = lesson('敢');
+  const char = state.bank[0];
+  const older = '2026-10-30';
+  const today = '2026-11-01';
+  char.passedDays = [older, today];
+  char.history = [{ day: older, outcome: 'first-try' }, { day: today, outcome: 'retest-pass' }];
+  char.masteryReset = { day: today, at: 80, rawInk: 'synthetic ignored field' };
+  char.masteryPassTimes = [{ day: today, at: 100 }, { day: older, at: 75 }, { day: today, at: 70 }];
+
+  const author = device(server, state, storage());
+  assert.equal((await author.client.createPasswordFamily(PASSWORD)).kind, 'synced');
+  const reader = device(server, lesson('甲'), storage());
+  assert.equal((await reader.client.joinPasswordFamily(PASSWORD)).kind, 'synced');
+  const remote = reader.value().bank[0];
+  assert.deepEqual(remote.passedDays, char.passedDays);
+  assert.deepEqual(remote.history, char.history);
+  assert.deepEqual(remote.masteryReset, { day: today, at: 80 });
+  assert.deepEqual(remote.masteryPassTimes, [{ day: older, at: 75 }, { day: today, at: 100 }]);
+  assert.deepEqual(server.calls, ['GET', 'PATCH', 'GET']);
+
+  for (const invalid of [
+    { masteryReset: { day: '2026-02-30', at: 1 } },
+    { masteryReset: { day: today, at: -1 } },
+    { masteryPassTimes: [{ day: today, at: Number.MAX_SAFE_INTEGER + 1 }] },
+  ]) {
+    const malformed = { ...state, bank: [{ ...char, ...invalid }] };
+    const rejected = device(server, malformed, storage());
+    assert.equal((await rejected.client.joinPasswordFamily(PASSWORD)).kind, 'error');
+  }
+  assert.deepEqual(server.calls, ['GET', 'PATCH', 'GET'], 'Reject malformed timestamps before any network operation');
+  console.log('Mastery codec: encrypted same-family round-trip, canonical per-day timestamps, and validation passed.');
+}
+
+if (require.main === module) test().then(masteryCodec).catch(error => { console.error(error); process.exitCode = 1; });
 module.exports = { indexedDB };

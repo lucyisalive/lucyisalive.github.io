@@ -50,6 +50,10 @@
     if (!Number.isFinite(date.getTime()) || date.toISOString().slice(0, 10) !== value) throw problem('进度中的' + label + '日期不正确');
     return value;
   }
+  function masteryMark(value) {
+    if (!object(value)) throw problem('记忆进度的时间记录格式不正确');
+    return { day: day(value.day, '记忆进度'), at: integer(value.at, 0, Number.MAX_SAFE_INTEGER, '记忆进度时间') };
+  }
   function char(value) {
     string(value, 2, '汉字');
     var point = value.codePointAt(0);
@@ -91,6 +95,16 @@
     if (own(input, 'passedDays')) {
       if (!Array.isArray(input.passedDays) || input.passedDays.length > 5000) throw problem('掌握日期格式不正确');
       result.passedDays = input.passedDays.map(function (entry) { return day(entry, 'passedDays'); });
+    }
+    if (own(input, 'masteryReset')) result.masteryReset = masteryMark(input.masteryReset);
+    if (own(input, 'masteryPassTimes')) {
+      if (!Array.isArray(input.masteryPassTimes) || input.masteryPassTimes.length > 5000) throw problem('记忆进度的通过时间格式不正确');
+      var byDay = new Map();
+      input.masteryPassTimes.map(masteryMark).forEach(function (mark) {
+        var previous = byDay.get(mark.day);
+        if (!previous || mark.at > previous.at) byDay.set(mark.day, mark);
+      });
+      result.masteryPassTimes = Array.from(byDay.values()).sort(function (left, right) { return left.day.localeCompare(right.day); });
     }
     return result;
   }
@@ -658,6 +672,10 @@
         if (reason === 'join-family' || reason === 'join-password-family' || reason === 'conflict-merge') {
           schedule();
           return emit('pending', '已合并本机和家庭进度，正等待同步');
+        }
+        if (reason === 'remote-update' && options.mergeOnConflict) {
+          schedule();
+          return emit('pending', '已读取家庭进度，正在同步本机保留的记录');
         }
         return emit('pending', '进度已读取，但本机还有新的改动；请再次同步');
       }

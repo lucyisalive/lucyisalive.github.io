@@ -44,7 +44,7 @@ const context = vm.createContext({
   localStorage: { getItem: key => saved.get(key) || null, setItem: (key, value) => saved.set(key, value) },
   onTap: (el, handler) => handlers.set(el.id, handler),
 });
-for (const file of ['hanzi-data.js', 'curriculum-hanzi-data.js', 'curriculum-data.js', 'pinyin-data.js', 'practice-selector.js']) {
+for (const file of ['hanzi-data.js', 'curriculum-hanzi-data.js', 'curriculum-data.js', 'pinyin-data.js', 'practice-selector.js', 'shared-learning.js']) {
   vm.runInContext(read(file), context, { filename: file });
 }
 const run = source => vm.runInContext(source, context);
@@ -219,22 +219,25 @@ context.testChar = passedToday; run('state.bank.find(item=>item.char===testChar)
 assert.ok(Array.from({ length: 15 }, () => run('pickNextChar().char')).every(char => char !== passedToday));
 enqueue([request(passedToday)]); assert.equal(run('pickNextChar().char'), passedToday);
 
-// A first formal pass earns a next-calendar-day review, whichever path passed.
+// The first and second stars each earn a next-calendar-day review.
 const nextMorning = new Date(2026, 10, 3, 12).getTime();
+const thirdMorning = new Date(2026, 10, 4, 12).getTime();
 const reviewItem = (char, overrides = {}) => ({ ...plain(`newBankItem(${JSON.stringify(char)}, 'zì')`), ...overrides });
+const dragonStars = () => plain("masteryDays(state.bank.find(item => item.char === '龙'))");
 for (const mode of ['free', 'retest']) {
   reset({ ...initialState, bank: [reviewItem('龙'), reviewItem('山')] });
   run(`presentDoor(state.bank[0], '${mode}', 1);`);
   answer(true);
   assert.equal(bankItem('龙').interval, 1, `First formal pass in ${mode} mode is due next day`);
   assert.deepEqual(bankItem('龙').passedDays, [TODAY]);
+  assert.deepEqual(dragonStars(), [TODAY]);
   const savedFirstPass = plain('state');
   next(); assert.equal(current().char, '山', 'Passed characters do not get an ordinary repeat on the same day');
 
   reset(savedFirstPass); clockTime = nextMorning;
   next(); assert.equal(current().char, '龙'); answer(true);
   assert.deepEqual(bankItem('龙').passedDays, [TODAY, run('todayStr()')]);
-  assert.equal(bankItem('龙').interval, mode === 'free' ? 7 : 4, 'Later passes use the existing box schedule');
+  assert.equal(bankItem('龙').interval, 1, 'The second star is also due next day');
 }
 
 // The same open page can carry yesterday's selection history into the new day.
@@ -244,23 +247,82 @@ next(); assert.equal(current().char, '龙'); answer(true);
 clockTime = nextMorning;
 next(); assert.equal(current().char, '龙', 'Next-day review survives an overnight tab that has already shown the word');
 
-// Already saved first passes on either legacy interval should receive the same
-// next-day priority, ahead of both fresh words and an older weaker due review.
-for (const [interval, outcome, box] of [[4, 'first-try', 2], [2, 'retest-pass', 1]]) {
-  const firstPass = reviewItem('龙', { interval, box, lastSeen: TODAY,
-    history: [{ day: TODAY, outcome }], passedDays: [TODAY] });
+// Older one- and two-star saves still get next-day priority over fresh words
+// and other due reviews, behind explicit same-day parent requests.
+for (const [interval, outcome, box, dates] of [
+  [4, 'first-try', 2, [TODAY]], [2, 'retest-pass', 1, [TODAY]],
+  [7, 'first-try', 3, ['2026-10-29', TODAY]],
+]) {
+  const savedReview = reviewItem('龙', { interval, box, lastSeen: TODAY,
+    history: dates.map(day => ({ day, outcome })), passedDays: dates });
   const olderReview = reviewItem('海', { interval: 1, box: 0, lastSeen: '2026-10-28',
     history: [{ day: '2026-10-28', outcome: 'abandoned' }] });
-  reset({ ...initialState, bank: [olderReview, reviewItem('山'), firstPass] });
+  reset({ ...initialState, bank: [olderReview, reviewItem('山'), savedReview] });
   clockTime = nextMorning;
   enqueueChars('林');
   next(); assert.equal(current().char, '林', 'The parent request is still the first question'); answer(true);
-  next(); assert.equal(current().char, '龙', `A legacy ${interval}-day first pass is due before other ordinary questions`);
+  next(); assert.equal(current().char, '龙', `A legacy ${interval}-day save is due before other ordinary questions`);
   answer(true);
   next(); assert.equal(current().char, '海', 'After the next-day review, the usual review slot still works');
   answer(true);
   next(); assert.equal(current().char, '山');
 }
+
+// A valid miss retires current stars immediately, while earlier formal passes
+// remain in the history. Teaching only prepares for the unaided retest.
+const originalDragonDays = ['2026-10-24', '2026-10-25', TODAY];
+const fillerProgress = { box:3, interval:7, lastSeen:'2026-10-14', passedDays:['2026-10-13', '2026-10-14'] };
+reset({ ...initialState, bank: [reviewItem('龙', { box:4, interval:14, lastSeen:TODAY,
+  history:originalDragonDays.map(day => ({day, outcome:'first-try'})), passedDays:originalDragonDays }),
+  reviewItem('山', fillerProgress), reviewItem('石', fillerProgress)] });
+assert.deepEqual(dragonStars(), originalDragonDays);
+enqueueChars('龙'); next(); answer(true);
+enqueueChars('龙'); next();
+const requestAfterMastery = run('currentParentRequestId');
+clockTime += 1000; answer(false);
+assert.deepEqual(dragonStars(), []);
+assert.equal(run('isMastered(currentItem)'), false);
+assert.equal(bankItem('龙').wrongToday, 1, 'Reset happens on the first mistake, before parking');
+assert.equal(queue()[0].completedDay, null);
+assert.deepEqual(bankItem('龙').passedDays, originalDragonDays);
+const savedAfterMistake = JSON.parse(saved.get(run('SAVE_KEY')));
+
+answer(true);
+assert.deepEqual(dragonStars(), [], 'Guided writing does not earn a star');
+run('stepIndex=TEACHING_STEPS.length-1;'); answer(true);
+assert.deepEqual(dragonStars(), [], 'Unaided teaching only queues the retest');
+for (let i = 0; i < 2; i++) {
+  next(); assert.notEqual(current().char, '龙'); answer(true);
+}
+next(); assert.equal(current().char, '龙');
+assert.equal(run('currentMode'), 'retest');
+assert.equal(run('currentParentRequestId'), requestAfterMastery);
+clockTime += 1000; answer(true);
+assert.deepEqual(dragonStars(), [TODAY], 'A formal pass after the mistake starts a new streak on the same date');
+assert.equal(queue()[0].completedDay, TODAY);
+enqueueChars('龙'); next(); clockTime += 1000; answer(true);
+assert.deepEqual(dragonStars(), [TODAY], 'A second pass on that date cannot give another star');
+assert.deepEqual(bankItem('龙').passedDays, originalDragonDays);
+
+const secondDay = '2026-11-03', thirdDay = '2026-11-04';
+reset(plain('state')); clockTime = nextMorning;
+next(); assert.equal(current().char, '龙'); answer(true);
+assert.deepEqual(dragonStars(), [TODAY, secondDay]);
+assert.equal(run('isMastered(currentItem)'), false);
+reset(plain('state')); clockTime = thirdMorning;
+next(); assert.equal(current().char, '龙'); answer(true);
+assert.deepEqual(dragonStars(), [TODAY, secondDay, thirdDay]);
+assert.equal(run('isMastered(currentItem)'), true);
+assert.deepEqual(bankItem('龙').passedDays, [...originalDragonDays, secondDay, thirdDay]);
+
+context.testSaved = savedAfterMistake;
+const reopenedAfterMistake = plain('migrateState(testSaved)');
+reset({ ...reopenedAfterMistake, bank: reopenedAfterMistake.bank.filter(item => item.char === '龙'), priorityQueue: [] });
+assert.deepEqual(dragonStars(), [], 'The written save carries the reset across reopening');
+next(); assert.equal(current().char, '龙', 'Historical same-day passes no longer exclude a reset word');
+clockTime += 2000; answer(true);
+assert.deepEqual(dragonStars(), [TODAY], 'An independent formal pass also restarts the streak');
+assert.deepEqual(bankItem('龙').passedDays, originalDragonDays);
 
 // Stuck means blocked until the explicit "我讲过了" action. Readding cannot erase
 // the previous failures, and a two-wrong item still parks on its next wrong answer.
@@ -441,4 +503,4 @@ run('renderQueueList()');
 assert.ok(context.queueList.innerHTML.includes('自定义例句'));
 assert.equal(run('sentenceFor(null)'), '');
 
-console.log('parent-priority: ten-pass levels, priority, next-day first reviews, retest carryover, request races, parking, mastery, and settings preemption passed');
+console.log('parent-priority: ten-pass levels, priority, next-day reviews, star reset and recovery, retest carryover, request races, and parking passed');

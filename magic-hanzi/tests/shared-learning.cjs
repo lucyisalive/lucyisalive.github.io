@@ -3,7 +3,7 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
-const { mergeLearning, learningRecord, storyRecord, assemble } = require('../shared-learning.js');
+const { mergeLearning, mergeMastery, learningRecord, storyRecord, assemble } = require('../shared-learning.js');
 
 const d1 = '2026-11-13', d2 = '2026-11-14', d3 = '2026-11-15', d4 = '2026-11-16';
 const event = (day, outcome = 'first-try') => ({ day, outcome });
@@ -70,6 +70,32 @@ assert.deepEqual(merged.sessionProgress, round('old-round'));
 assert.deepEqual(mergeLearning(merged, newSave), merged, 'Importing the same archive twice is idempotent');
 assert.equal(JSON.stringify([oldSave, newSave]), before, 'Merging must leave both source saves intact');
 
+const mark = (day, at) => ({ day, at });
+const masteryA = {
+  masteryReset: mark(d3, 900),
+  masteryPassTimes: [mark(d3, 850), mark(d1, 25), mark(d4, 130)],
+};
+const masteryB = {
+  masteryReset: mark(d4, 100),
+  masteryPassTimes: [mark(d4, 115), mark(d1, 20), mark(d2, 50), mark('2026-02-30', 500)],
+};
+const mastery = mergeMastery(masteryA, masteryB);
+assert.deepEqual(mastery, {
+  masteryReset: mark(d4, 100),
+  masteryPassTimes: [mark(d1, 25), mark(d2, 50), mark(d3, 850), mark(d4, 130)],
+});
+assert.deepEqual(mergeMastery(masteryA, masteryB), mergeMastery(masteryB, masteryA));
+assert.deepEqual(mergeMastery(mastery, {masteryReset: mark(d4, 140)}).masteryReset, mark(d4, 140));
+assert.deepEqual(mergeMastery({}, mastery), mastery, 'A legacy snapshot supplies no reset to supersede existing evidence');
+assert.deepEqual(mergeMastery({masteryReset: mark(d4, -1), masteryPassTimes: []}), {masteryPassTimes: []});
+assert.deepEqual(mergeMastery({}), {});
+assert.notEqual(mastery.masteryReset, masteryB.masteryReset);
+assert.notEqual(mastery.masteryPassTimes[0], masteryA.masteryPassTimes[1]);
+const withMastery = mergeLearning({ ...oldSave, bank: [{ ...oldSave.bank[0], ...masteryA }] },
+  { ...newSave, bank: [{ ...newSave.bank[0], ...masteryB }] });
+assert.deepEqual(mergeMastery(withMastery.bank[0]), mastery);
+assert.deepEqual(withMastery.bank[0].passedDays, [d1, d2, d3, d4], 'Mastery evidence does not replace historical passes');
+
 const oldLegacyItem = item('分', { wrongDay: d2, word: '分别', pinyin: 'fēn', retired: false,
   structure: '上下', strokeCount: 4, curriculumId: 'synthetic', unit: 2, lesson: '第二课',
   history: [event(d1), { day: d2 }, event(d3, 'legacy-unknown'), event(d3, 'legacy-unknown')] });
@@ -120,6 +146,7 @@ assert.ok(!Object.hasOwn(firstLaunch, 'sessionProgress'), 'A legacy round must n
 const browser = vm.createContext({ window: {} });
 vm.runInContext(fs.readFileSync(require.resolve('../shared-learning.js'), 'utf8'), browser);
 assert.equal(typeof browser.window.HanziSharedLearning.mergeLearning, 'function');
+assert.equal(typeof browser.window.HanziSharedLearning.mergeMastery, 'function');
 assert.equal(typeof browser.window.HanziSharedLearning.assemble, 'function');
 
 console.log('Shared learning: dates, history multiplicity, parent priority, retry state, and story separation passed.');

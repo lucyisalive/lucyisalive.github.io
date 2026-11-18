@@ -477,7 +477,61 @@ async function remotePullPreservesDatedMastery() {
   assert.deepEqual(passedDays(adopted, '止'), [], 'Failed practice is not a pass even when the dates are valid');
   assert.deepEqual(adopted.bank[1].history, gapInDates.history, 'Preserve the underlying dated attempt history');
   assert.equal(page.ids.get('learningMemoryCount').textContent, '2 字', 'A normal cloud pull cannot undercount documented mastery');
-  console.log('Shared progress: a clean cloud pull preserves distinct formal mastery dates from incomplete records.');
+
+  if (page.run('cloudSyncController.status().kind') !== 'synced') await tapSyncButton(page, 'cloudSyncNowBtn');
+  assert.equal(page.run('cloudSyncController.status().kind'), 'synced');
+  const activeDays = () => Array.from(page.run("masteryDays(state.bank.find(entry => entry.char === '敢'))"));
+  const reset = { day: dates[2], at: 80 };
+  const book = read(page.storage, OLD_SAVE);
+  const afterReset = {
+    ...book, bank: book.bank.map(item => item.char === '敢'
+      ? { ...item, masteryReset: reset, masteryPassTimes: [{ day: reset.day, at: 50 }] } : item),
+  };
+  firestore.anotherDeviceSaved(afterReset);
+  await tapSyncButton(page, 'cloudSyncNowBtn');
+  assert.equal(page.run('cloudSyncController.status().kind'), 'synced');
+  assert.deepEqual(activeDays(), [], 'The new reset wins over an earlier pass on the same day');
+  assert.deepEqual(passedDays(read(page.storage, OLD_SAVE), '敢'), dates, 'Resetting mastery keeps the historical passes');
+  assert.equal(page.ids.get('learningMemoryCount').textContent, '1 字');
+
+  const laterPass = { day: reset.day, at: 100 };
+  const passedAgain = {
+    ...afterReset, bank: afterReset.bank.map(item => item.char === '敢'
+      ? { ...item, masteryPassTimes: [laterPass], history: [...item.history, { day: laterPass.day, outcome: 'retest-pass' }] }
+      : item),
+  };
+  firestore.anotherDeviceSaved(passedAgain);
+  await tapSyncButton(page, 'cloudSyncNowBtn');
+  assert.equal(page.run('cloudSyncController.status().kind'), 'synced');
+  assert.deepEqual(activeDays(), [dates[2]], 'A later formal pass earns exactly one star on the reset day');
+  assert.deepEqual(passedDays(read(page.storage, OLD_SAVE), '敢'), dates);
+
+  const legacyUpdate = {
+    ...passedAgain, scenesUnlocked: passedAgain.scenesUnlocked + 1,
+    bank: passedAgain.bank.map(item => {
+      const { masteryReset, masteryPassTimes, ...legacyItem } = item;
+      return legacyItem;
+    }),
+  };
+  firestore.anotherDeviceSaved(legacyUpdate);
+  const beforeLegacyPull = firestore.calls.length;
+  await tapSyncButton(page, 'cloudSyncNowBtn');
+  assert.deepEqual(firestore.calls.slice(beforeLegacyPull), ['GET']);
+  const restored = read(page.storage, OLD_SAVE);
+  const restoredCharacter = restored.bank.find(item => item.char === '敢');
+  assert.equal(restored.scenesUnlocked, legacyUpdate.scenesUnlocked, 'Still apply the legitimate legacy update');
+  assert.deepEqual(restoredCharacter.masteryReset, reset);
+  assert.deepEqual(restoredCharacter.masteryPassTimes, [laterPass]);
+  assert.deepEqual(restoredCharacter.passedDays, dates);
+  assert.deepEqual(restoredCharacter.history, passedAgain.bank.find(item => item.char === '敢').history);
+  assert.deepEqual(activeDays(), [dates[2]], 'A legacy pull must neither lose the earned star nor revive older stars');
+  assert.equal(page.ids.get('learningMemoryCount').textContent, '1 字');
+  page.advance(800);
+  await waitFor(() => page.run('cloudSyncController.status().kind') === 'synced', 'Restore preserved mastery to the family copy automatically');
+  const repairedCharacter = firestore.decoded.at(-1).bank.find(item => item.char === '敢');
+  assert.deepEqual(repairedCharacter.masteryReset, reset);
+  assert.deepEqual(repairedCharacter.masteryPassTimes, [laterPass]);
+  console.log('Shared progress: sync preserves historical pass dates, latest mastery resets, and later same-day passes.');
 }
 
 async function passwordConnectionSurvivesMetadataQuota() {

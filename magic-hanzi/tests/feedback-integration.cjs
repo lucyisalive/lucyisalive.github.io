@@ -42,12 +42,10 @@ function environment() {
   });
   vm.runInContext(`let state={priorityQueue:[],bank:[]},currentItem=null,currentMode='free',currentRound=1,currentParentRequestId=null;
     let passedCount=0,stepIndex=0,stepAttempts=0,pendingRetests=[],activeSpeech=null;`, context);
-  for (const name of ['TEACHING_STEPS', 'WRONG_LIMIT']) {
-    const declaration = html.match(new RegExp('const ' + name + '\\s*=\\s*[^;]+;'));
-    assert.ok(declaration, 'Production declaration missing: ' + name);
-    vm.runInContext(declaration[0], context);
-  }
-  vm.runInContext(source('function wrongCountToday(', '// ---------- 笔迹记录'), context);
+  const teachingSteps = html.match(/const TEACHING_STEPS\s*=\s*[^;]+;/);
+  assert.ok(teachingSteps, 'Production declaration missing: TEACHING_STEPS');
+  vm.runInContext(teachingSteps[0], context);
+  vm.runInContext(source('const MASTERED_DAYS =', '// ---------- 笔迹记录'), context);
   vm.runInContext(source('function parentPriorityEntries(){', 'function unfinishedParentEntries(){'), context);
   vm.runInContext(source('function feedbackCall(', 'let activeSpeech = null;'), context);
   vm.runInContext(source('function stopPromptSpeech(){', 'function speakText('), context);

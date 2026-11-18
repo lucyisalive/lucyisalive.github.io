@@ -17,11 +17,42 @@
       .map(field => [field, record[field]]));
   }
 
+  function masteryMark(value) {
+    if (!value || typeof value.day !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value.day) ||
+        !Number.isSafeInteger(value.at) || value.at < 0) return null;
+    const date = new Date(value.day + 'T00:00:00.000Z');
+    if (!Number.isFinite(date.getTime()) || date.toISOString().slice(0, 10) !== value.day) return null;
+    return { day: value.day, at: value.at };
+  }
+
+  function mergeMastery(oldItem, newItem) {
+    const result = {};
+    const oldReset = masteryMark(oldItem?.masteryReset);
+    const newReset = masteryMark(newItem?.masteryReset);
+    const reset = !oldReset || (newReset &&
+      (newReset.day > oldReset.day || (newReset.day === oldReset.day && newReset.at > oldReset.at)))
+      ? newReset : oldReset;
+    if (reset) result.masteryReset = reset;
+
+    const oldPasses = oldItem?.masteryPassTimes;
+    const newPasses = newItem?.masteryPassTimes;
+    if (Array.isArray(oldPasses) || Array.isArray(newPasses)) {
+      const byDay = new Map();
+      for (const value of [...(Array.isArray(oldPasses) ? oldPasses : []), ...(Array.isArray(newPasses) ? newPasses : [])]) {
+        const mark = masteryMark(value);
+        if (mark && (!byDay.has(mark.day) || mark.at > byDay.get(mark.day).at)) byDay.set(mark.day, mark);
+      }
+      result.masteryPassTimes = [...byDay.values()].sort((left, right) => left.day.localeCompare(right.day));
+    }
+    return result;
+  }
+
   function projectBankItem(item) {
     return {
       ...pick(item, BANK_FIELDS),
       history: (item.history || []).map(entry => pick(entry, ['day', 'outcome'])),
       passedDays: [...(item.passedDays || [])],
+      ...mergeMastery(item),
     };
   }
 
@@ -90,6 +121,7 @@
       ...pick(parent, PARENT_FIELDS),
       history: mergeHistory(oldItem.history || [], newItem.history || []),
       passedDays: [...new Set([...(oldItem.passedDays || []), ...(newItem.passedDays || [])])].sort(),
+      ...mergeMastery(oldItem, newItem),
     };
   }
 
@@ -236,5 +268,5 @@
     return { read, save };
   }
 
-  return { mergeLearning, learningRecord, storyRecord, assemble, createProgressStore };
+  return { mergeLearning, mergeMastery, learningRecord, storyRecord, assemble, createProgressStore };
 });

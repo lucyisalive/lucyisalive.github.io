@@ -3235,7 +3235,7 @@ body[data-herb-stage="sea"] .story-sea { display: block; }
           <ul class="learning-list" id="masteredList"></ul>
         </details>
       </div>
-      <p class="hint-text">每天正式通过最多记一颗星。在 3 个不同的日子通过，就进入长时记忆库。</p>
+      <p class="hint-text">每天正式通过最多记一颗星。写错后从零重新计星，满三颗星进入长时记忆库。</p>
     </section>
     <label for="batchInput">添加今天要练的字</label>
     <textarea id="batchInput" rows="3" placeholder="奇迹的迹。求救的救，师弟的弟"></textarea>
@@ -6064,6 +6064,10 @@ window.HANZI_GLYPH_CATALOG={"version":"41b38d977b270e08ea493526a4ee0f8643a59bbf2
     if (!Number.isFinite(date.getTime()) || date.toISOString().slice(0, 10) !== value) throw problem('进度中的' + label + '日期不正确');
     return value;
   }
+  function masteryMark(value) {
+    if (!object(value)) throw problem('记忆进度的时间记录格式不正确');
+    return { day: day(value.day, '记忆进度'), at: integer(value.at, 0, Number.MAX_SAFE_INTEGER, '记忆进度时间') };
+  }
   function char(value) {
     string(value, 2, '汉字');
     var point = value.codePointAt(0);
@@ -6105,6 +6109,16 @@ window.HANZI_GLYPH_CATALOG={"version":"41b38d977b270e08ea493526a4ee0f8643a59bbf2
     if (own(input, 'passedDays')) {
       if (!Array.isArray(input.passedDays) || input.passedDays.length > 5000) throw problem('掌握日期格式不正确');
       result.passedDays = input.passedDays.map(function (entry) { return day(entry, 'passedDays'); });
+    }
+    if (own(input, 'masteryReset')) result.masteryReset = masteryMark(input.masteryReset);
+    if (own(input, 'masteryPassTimes')) {
+      if (!Array.isArray(input.masteryPassTimes) || input.masteryPassTimes.length > 5000) throw problem('记忆进度的通过时间格式不正确');
+      var byDay = new Map();
+      input.masteryPassTimes.map(masteryMark).forEach(function (mark) {
+        var previous = byDay.get(mark.day);
+        if (!previous || mark.at > previous.at) byDay.set(mark.day, mark);
+      });
+      result.masteryPassTimes = Array.from(byDay.values()).sort(function (left, right) { return left.day.localeCompare(right.day); });
     }
     return result;
   }
@@ -6673,6 +6687,10 @@ window.HANZI_GLYPH_CATALOG={"version":"41b38d977b270e08ea493526a4ee0f8643a59bbf2
           schedule();
           return emit('pending', '已合并本机和家庭进度，正等待同步');
         }
+        if (reason === 'remote-update' && options.mergeOnConflict) {
+          schedule();
+          return emit('pending', '已读取家庭进度，正在同步本机保留的记录');
+        }
         return emit('pending', '进度已读取，但本机还有新的改动；请再次同步');
       }
       return emit('synced', '两台设备的学习进度已同步');
@@ -7123,11 +7141,42 @@ window.HANZI_GLYPH_CATALOG={"version":"41b38d977b270e08ea493526a4ee0f8643a59bbf2
       .map(field => [field, record[field]]));
   }
 
+  function masteryMark(value) {
+    if (!value || typeof value.day !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value.day) ||
+        !Number.isSafeInteger(value.at) || value.at < 0) return null;
+    const date = new Date(value.day + 'T00:00:00.000Z');
+    if (!Number.isFinite(date.getTime()) || date.toISOString().slice(0, 10) !== value.day) return null;
+    return { day: value.day, at: value.at };
+  }
+
+  function mergeMastery(oldItem, newItem) {
+    const result = {};
+    const oldReset = masteryMark(oldItem?.masteryReset);
+    const newReset = masteryMark(newItem?.masteryReset);
+    const reset = !oldReset || (newReset &&
+      (newReset.day > oldReset.day || (newReset.day === oldReset.day && newReset.at > oldReset.at)))
+      ? newReset : oldReset;
+    if (reset) result.masteryReset = reset;
+
+    const oldPasses = oldItem?.masteryPassTimes;
+    const newPasses = newItem?.masteryPassTimes;
+    if (Array.isArray(oldPasses) || Array.isArray(newPasses)) {
+      const byDay = new Map();
+      for (const value of [...(Array.isArray(oldPasses) ? oldPasses : []), ...(Array.isArray(newPasses) ? newPasses : [])]) {
+        const mark = masteryMark(value);
+        if (mark && (!byDay.has(mark.day) || mark.at > byDay.get(mark.day).at)) byDay.set(mark.day, mark);
+      }
+      result.masteryPassTimes = [...byDay.values()].sort((left, right) => left.day.localeCompare(right.day));
+    }
+    return result;
+  }
+
   function projectBankItem(item) {
     return {
       ...pick(item, BANK_FIELDS),
       history: (item.history || []).map(entry => pick(entry, ['day', 'outcome'])),
       passedDays: [...(item.passedDays || [])],
+      ...mergeMastery(item),
     };
   }
 
@@ -7196,6 +7245,7 @@ window.HANZI_GLYPH_CATALOG={"version":"41b38d977b270e08ea493526a4ee0f8643a59bbf2
       ...pick(parent, PARENT_FIELDS),
       history: mergeHistory(oldItem.history || [], newItem.history || []),
       passedDays: [...new Set([...(oldItem.passedDays || []), ...(newItem.passedDays || [])])].sort(),
+      ...mergeMastery(oldItem, newItem),
     };
   }
 
@@ -7342,7 +7392,7 @@ window.HANZI_GLYPH_CATALOG={"version":"41b38d977b270e08ea493526a4ee0f8643a59bbf2
     return { read, save };
   }
 
-  return { mergeLearning, learningRecord, storyRecord, assemble, createProgressStore };
+  return { mergeLearning, mergeMastery, learningRecord, storyRecord, assemble, createProgressStore };
 });
 
 </script>
@@ -8781,7 +8831,8 @@ function isCalendarDay(day){
 // ---------- default character bank ----------
 // interval: 距离上次练习多少天后应该再次出现（简化的间隔重复）
 // box: 掌握等级 0(生) -> 4(熟练)，等级越高 interval 越长
-// passedDays: 在哪些**不同日期**通过过；集满 3 个不同的日子就算永久掌握，移出轮换
+// passedDays retains all formal pass dates for learning history and daily totals.
+// Stars use the formal pass dates since the most recent valid mistake.
 function newBankItem(char, pinyin, word){
   return { char, pinyin, word: word || '', box:1, interval:0, lastSeen:null, history:[], passedDays:[], wrongToday:0 };
 }
@@ -8813,8 +8864,22 @@ let state = {
   scenesUnlocked: 0,    // how many magic-world scenes have been unlocked so far (persisted)
 };
 
-const MASTERED_DAYS = 3;   // 在 3 个不同的日子写对过 = 永久掌握
-const isMastered = it => (it.passedDays || []).length >= MASTERED_DAYS;
+const MASTERED_DAYS = 3;
+function masteryPassTime(item, day){
+  return (item.masteryPassTimes || []).reduce((at, pass) => pass.day === day ? Math.max(at, pass.at) : at, 0);
+}
+function masteryDays(item){
+  const dates = item.passedDays || [];
+  const reset = item.masteryReset;
+  if(!reset) return dates;
+  const passedAfterReset = masteryPassTime(item, reset.day) > reset.at;
+  return dates.filter(day => day > reset.day || (day === reset.day && passedAfterReset));
+}
+function nextMasteryTime(item, day){
+  const resetAt = item.masteryReset?.day === day ? item.masteryReset.at : 0;
+  return Math.max(Date.now(), resetAt + 1, masteryPassTime(item, day) + 1);
+}
+const isMastered = it => masteryDays(it).length >= MASTERED_DAYS;
 
 // 今天来回写错 3 次就停：再练下去只是把挫败感堆高，这个字需要的是大人讲一遍，不是再写一遍。
 // 讲完之后家长在设置里点「我讲过了」，它当天就能重新出现。
@@ -8824,8 +8889,14 @@ const isStuck = it => it.stuck && it.stuckDay === todayStr();
 // Wrong counts are per day, so a character that was hard yesterday starts fresh today.
 function wrongCountToday(it){ return it.wrongDay === todayStr() ? (it.wrongToday || 0) : 0; }
 function registerWrong(it){
+  const day = todayStr();
+  const wasMastered = isMastered(it);
   it.wrongToday = wrongCountToday(it) + 1;
-  it.wrongDay = todayStr();
+  it.wrongDay = day;
+  it.masteryReset = {day, at:nextMasteryTime(it, day)};
+  if(wasMastered && typeof herbalistRoom !== 'undefined' && herbalistRoom){
+    herbalistCall('updateMastered', state.bank.filter(isMastered).length);
+  }
   saveState();
   return it.wrongToday >= WRONG_LIMIT;
 }
@@ -9314,9 +9385,14 @@ function migrateState(s){
     if(typeof it.lastSeen !== 'string') it.lastSeen = null;
     if(!Array.isArray(it.history)) it.history = [];
     it.history = it.history.filter(h => typeof h.day === 'string');
+    const validStamp = stamp => stamp && isCalendarDay(stamp.day) && Number.isSafeInteger(stamp.at) && stamp.at >= 0;
+    if(!validStamp(it.masteryReset)) delete it.masteryReset;
+    if(Array.isArray(it.masteryPassTimes)) it.masteryPassTimes = it.masteryPassTimes.filter(validStamp);
+    else delete it.masteryPassTimes;
     const recordedDays = Array.isArray(it.passedDays) ? it.passedDays : [];
     const historyDays = it.history.filter(h => h.outcome === 'first-try' || h.outcome === 'retest-pass').map(h => h.day);
-    it.passedDays = [...new Set([...recordedDays, ...historyDays].filter(isCalendarDay))].sort();
+    const timedDays = (it.masteryPassTimes || []).map(pass => pass.day);
+    it.passedDays = [...new Set([...recordedDays, ...historyDays, ...timedDays].filter(isCalendarDay))].sort();
     if(typeof it.box !== 'number') it.box = 1;
     if(typeof it.interval !== 'number') it.interval = 0;
     if(typeof it.wrongToday !== 'number') it.wrongToday = 0;
@@ -11327,6 +11403,14 @@ function applySyncedProgress(remote, reason){
     // Persist before replacing live objects. A quota failure leaves this question intact.
     const merging = reason === 'join-family' || reason === 'join-password-family' || reason === 'conflict-merge';
     const learning = sharedLearning && merging ? sharedLearning.mergeLearning(incoming, state) : incoming;
+    if(sharedLearning && reason === 'remote-update'){
+      // A legacy cloud client can omit the extra mastery evidence from an otherwise valid pull.
+      const local = new Map(state.bank.map(item => [item.char, item]));
+      for(const item of learning.bank){
+        const previous = local.get(item.char);
+        if(previous) Object.assign(item, sharedLearning.mergeMastery(item, previous));
+      }
+    }
     const next = sharedLearning ? sharedLearning.assemble(learning, state) : incoming;
     return persistAndApplyProgress(next, 'sync', sharedLearning ? incoming : null, true);
   });
@@ -11580,21 +11664,24 @@ function pickNextChar(){
   // delayed retest are excluded so they can't jump the queue and reappear
   // before the real interleaving gap has happened.
   // Characters already written correctly on MASTERED_DAYS different days leave the rotation
-  // for good, so the bank keeps shrinking towards whatever the child still can't do.
+  // until a later mistake on a parent-assigned review resets their stars.
   const today = todayStr();
-  const candidates = state.bank.filter(b => !isMastered(b) && !isStuck(b) && !b.retired
-    && !(b.passedDays || []).includes(today) && !pendingChars.has(b.char));
+  const candidates = state.bank.filter(b => {
+    if(isStuck(b) || b.retired || pendingChars.has(b.char)) return false;
+    const dates = masteryDays(b);
+    return dates.length < MASTERED_DAYS && !dates.includes(today);
+  });
   if(!candidates.length) return null;
-  const nextDayReviews = candidates.filter(b => b.passedDays?.length === 1 &&
-    b.passedDays[0] === b.lastSeen && daysBetween(b.lastSeen, today) === 1);
+  const nextDayReviews = candidates.filter(b => masteryDays(b).includes(b.lastSeen) &&
+    daysBetween(b.lastSeen, today) === 1);
   if(nextDayReviews.length) return window.HanziPracticeSelector.choose(nextDayReviews, selectionSession);
   // Prefer unseen characters within this sitting before repeating free questions.
   // Teaching and delayed retests still use their existing separate state machine.
   const unseen = candidates.filter(b => !selectionSession.byChar[b.char]);
   const available = unseen.length ? unseen : candidates;
-  // Use the first-review rule even for saves written before the one-day interval.
+  // Apply the next-day rule to older saves with longer intervals as well.
   const reviews = available.filter(b => b.lastSeen !== null &&
-    daysBetween(b.lastSeen, today) >= (b.passedDays?.length === 1 ? 1 : b.interval));
+    daysBetween(b.lastSeen, today) >= (masteryDays(b).length ? 1 : b.interval));
   const fresh = available.filter(b => b.lastSeen === null);
   const reviewSlot = selectionSession.total % 5 === 0 || selectionSession.total % 5 === 2;
   let pool;
@@ -11905,17 +11992,18 @@ function recordResult(item, outcome){
   // 'retest-pass' leaves box unchanged — it took real effort, not free
   item.history.push({ day: today, outcome });
 
-  // Mastery counts DISTINCT days, not passes: writing it correctly five times this afternoon
-  // is one day's evidence, and the thing being tested is whether it survives a night's sleep.
+  // Timestamp formal passes so a same-day retest can start the count again after a mistake.
   if(outcome === 'first-try' || outcome === 'retest-pass'){
     const request = state.priorityQueue.find(p => p.requestId === currentParentRequestId &&
       (!p.addedDay || p.addedDay === today));
     if(request) request.completedDay = today;
     if(!item.passedDays) item.passedDays = [];
     if(!item.passedDays.includes(today)) item.passedDays.push(today);
+    const pass = {day:today, at:nextMasteryTime(item, today)};
+    item.masteryPassTimes = [...(item.masteryPassTimes || []).filter(previous => previous.day !== today), pass];
   }
   const schedule = [1, 2, 4, 7, 14, 21, 30]; // days, indexed by box 0..6
-  item.interval = outcome === 'abandoned' || item.passedDays?.length === 1
+  item.interval = outcome === 'abandoned' || !isMastered(item)
     ? 1 : schedule[Math.min(item.box, schedule.length - 1)];
   saveState();
 }
@@ -12563,10 +12651,10 @@ function renderLearningOverview(){
   let total = 0;
   let parentChars = 0;
   for(const item of state.bank){
-    const days = item.passedDays?.length || 0;
-    if(isMastered(item)) groups.memory.push(item);
+    const stars = masteryDays(item).length;
+    if(stars >= MASTERED_DAYS) groups.memory.push(item);
     else if(item.retired) continue;
-    else if(days) groups.active.push(item);
+    else if(stars) groups.active.push(item);
     else groups.pending.push(item);
 
     total++;
@@ -12589,7 +12677,7 @@ function renderLearningOverview(){
       items.sort((a, b) => rank(a.char) - rank(b.char));
     }
     group.list.innerHTML = items.map(item => {
-      const days = item.passedDays?.length || 0;
+      const days = masteryDays(item).length;
       const stars = group.key === 'active'
         ? `<span class="learning-stars" role="img" aria-label="${days} 星，已通过 ${days} 天">${'★'.repeat(days)}</span>`
         : '';
@@ -12946,10 +13034,12 @@ function showFinale(bankEmpty){
   // Exactly the ones that crossed the line *today*: hitting the count today, not merely
   // having practised today — a parent-requested character that's already mastered can pick
   // up a 4th day and must not set off the fanfare again.
-  const justMastered = state.bank.filter(b => (b.passedDays || []).length === MASTERED_DAYS &&
-                                              b.passedDays[b.passedDays.length - 1] === todayStr());
+  const justMastered = state.bank.filter(b => {
+    const dates = masteryDays(b);
+    return dates.length === MASTERED_DAYS && dates[dates.length - 1] === todayStr();
+  });
   const masteredNote = justMastered.length
-    ? `\n「${justMastered.map(b => b.char).join('、')}」已经在 ${MASTERED_DAYS} 个不同的日子写对了，永久掌握，不用再练啦！`
+    ? `\n「${justMastered.map(b => b.char).join('、')}」集满 ${MASTERED_DAYS} 颗星，进入长时记忆库！`
     : '';
   const remaining = unfinishedParentEntries().length;
   const nextRound = state.herbalistStage === 'sea' ? '下一轮' : '下一关';
