@@ -345,7 +345,10 @@
   // Capturing listeners run before the game's touch handlers. A pencil stroke normally
   // unlocks sound well before asynchronous grading completes. Retrying also recovers
   // after Safari suspends audio while the iPad is locked; no sound is queued meanwhile.
-  function unlockFromGesture() { if (!context || context.state !== 'running') unlock(); }
+  function unlockFromGesture(event) {
+    if (event.target?.closest?.('#speakBtn, #sentenceBtn')) return;
+    if (!context || context.state !== 'running') unlock();
+  }
   document.addEventListener('pointerdown', unlockFromGesture, {capture: true, passive: true});
   document.addEventListener('touchend', unlockFromGesture, {capture: true, passive: true});
   document.addEventListener('keydown', unlockFromGesture, {capture: true});

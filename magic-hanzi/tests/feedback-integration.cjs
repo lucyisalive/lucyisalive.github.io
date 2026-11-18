@@ -6,7 +6,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 const root = path.resolve(__dirname, '..');
-const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+const html = process.argv.includes('--source') ? require('../tools/build-page.cjs').buildPage().html
+  : fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 function source(start, end) {
   const a = html.indexOf(start), b = html.indexOf(end, a);
   assert.ok(a >= 0 && b > a, 'Production source boundaries missing: ' + start);
@@ -19,10 +20,22 @@ function element() {
     addEventListener(type, handler) { this.listeners[type] = handler; }};
 }
 function environment() {
-  const calls = {correct: 0, wrong: 0, celebrate: [], reset: 0, unlock: 0, speechCancel: 0, save: 0, teaching: 0, open: 0, close: 0, clear: 0, progress: 0, writing: [], events: [], spoken: []};
-  const ui = Object.fromEntries(['resultBanner', 'continueBtn', 'timerRing', 'pinyinTag', 'statusLine', 'submitBtn', 'clearBtn', 'speakBtn', 'sentenceBtn', 'panelOverlay'].map(name => [name, element()]));
-  let now = 1000;
+  const calls = {correct: 0, wrong: 0, celebrate: [], reset: 0, unlock: 0, speechCancel: 0, speechResume: 0,
+    save: 0, teaching: 0, open: 0, close: 0, clear: 0, progress: 0, writing: [], events: [], spoken: [], utterances: []};
+  const ui = Object.fromEntries(['resultBanner', 'continueBtn', 'timerRing', 'pinyinTag', 'statusLine', 'speechStatus',
+    'submitBtn', 'clearBtn', 'speakBtn', 'sentenceBtn', 'panelOverlay'].map(name => [name, element()]));
+  let now = 1000, timerSequence = 0;
+  const timers = new Map();
   class TestDate extends Date { static now() { return now; } }
+  class Utterance { constructor(text) { this.text = text; this.voice = null; } }
+  const navigator = {userActivation: {isActive: true}};
+  const synthesis = {
+    speaking: false, pending: false, paused: false,
+    getVoices() { return [{lang:'en-US'}, {lang:'zh-CN', localService:true}]; },
+    resume() { calls.speechResume++; this.paused = false; },
+    cancel() { calls.speechCancel++; calls.events.push('speech-cancel'); },
+    speak(utterance) { calls.spoken.push(utterance.text); calls.utterances.push(utterance); },
+  };
   const feedback = {
     playCorrect() { calls.correct++; calls.events.push('correct'); },
     playWrong() { calls.wrong++; calls.events.push('wrong'); },
@@ -31,28 +44,32 @@ function environment() {
     unlock() { calls.unlock++; calls.events.push('unlock'); return Promise.resolve(true); }
   };
   const context = vm.createContext({
-    ...ui, Date: TestDate, calls,
-    window: {HanziGameFeedback: feedback, speechSynthesis: {cancel() { calls.speechCancel++; calls.events.push('speech-cancel'); }}},
+    ...ui, Date: TestDate, calls, navigator, SpeechSynthesisUtterance: Utterance,
+    window: {HanziGameFeedback: feedback, speechSynthesis: synthesis, SpeechSynthesisUtterance: Utterance, navigator},
+    setTimeout(handler, delay) {
+      timers.set(++timerSequence, {handler, at: now + delay});
+      return timerSequence;
+    },
+    clearTimeout: id => timers.delete(id),
     todayStr: () => '2026-11-02', saveState: () => { calls.save++; },
     setDoorClosed: () => { calls.close++; }, setDoorOpen: () => { calls.open++; },
     showGlowChar() {}, showDemoGlyph() {}, cancelTeachingRound() {}, clearCanvas: () => { calls.clear++; },
     setWritingView: visible => calls.writing.push(visible), renderProgressPath: () => { calls.progress++; },
     startTeachingRound: () => { calls.teaching++; }, getCharData: () => Promise.resolve({}),
-    speakText: text => { calls.spoken.push(text); },
   });
   vm.runInContext(`let state={priorityQueue:[],bank:[]},currentItem=null,currentMode='free',currentRound=1,currentParentRequestId=null;
-    let passedCount=0,stepIndex=0,stepAttempts=0,pendingRetests=[],activeSpeech=null;`, context);
+    let passedCount=0,stepIndex=0,stepAttempts=0,pendingRetests=[],syncApplying=false;`, context);
   const teachingSteps = html.match(/const TEACHING_STEPS\s*=\s*[^;]+;/);
   assert.ok(teachingSteps, 'Production declaration missing: TEACHING_STEPS');
   vm.runInContext(teachingSteps[0], context);
   vm.runInContext(source('const MASTERED_DAYS =', '// ---------- 笔迹记录'), context);
   vm.runInContext(source('function parentPriorityEntries(){', 'function unfinishedParentEntries(){'), context);
   vm.runInContext(source('function feedbackCall(', 'let activeSpeech = null;'), context);
-  vm.runInContext(source('function stopPromptSpeech(){', 'function speakText('), context);
-  vm.runInContext(source('function speakSentence(){', '// The demo character'), context);
+  vm.runInContext(source('let activeSpeech = null;', '// The demo character'), context);
   vm.runInContext(source('function hintFor(item){', '// ---------- main flow ----------'), context);
   vm.runInContext(source('function presentDoor(', 'function startTeachingRound(){'), context);
-  vm.runInContext(source('function onTap(el, handler){', '// ---------- isolated adult recognition acceptance ----------'), context);
+  vm.runInContext(source('function onTap(', '// ---------- isolated adult recognition acceptance ----------'), context);
+  vm.runInContext(source('onTap(speakBtn,', "batchInput.addEventListener('focus'"), context);
   const run = code => vm.runInContext(code, context);
   function prepare(mode = 'free', blind = false) {
     const item = {char: '慧', pinyin: 'huì', word: '智慧', box: 1, interval: 0, history: [], passedDays: []};
@@ -62,7 +79,23 @@ function environment() {
     run("currentItem=item;currentMode=mode;currentRound=1;currentParentRequestId='request-1';stepIndex=blind?TEACHING_STEPS.length-1:0;stepAttempts=0;state.bank=[item];state.priorityQueue=[{char:item.char,requestId:'request-1',addedDay:todayStr()}];");
     return item;
   }
-  return {context, calls, ui, run, prepare, advance: ms => { now += ms; }};
+  function advance(ms) {
+    const until = now + ms;
+    for (;;) {
+      const next = [...timers].filter(([, timer]) => timer.at <= until).sort(([, a], [, b]) => a.at - b.at)[0];
+      if (!next) break;
+      const [id, timer] = next;
+      timers.delete(id);
+      now = timer.at;
+      timer.handler();
+    }
+    now = until;
+  }
+  function speechTap(button, type, active = true) {
+    navigator.userActivation.isActive = active;
+    ui[button].listeners[type]({type, pointerType:'touch', isTrusted:true, cancelable:true, preventDefault() {}});
+  }
+  return {context, calls, ui, run, prepare, advance, speechTap, synthesis};
 }
 
 // A first independent success receives the small chime and one daily mastery event.
@@ -163,6 +196,81 @@ for (const mode of ['free', 'teaching', 'retest']) {
   assert.equal(e.calls.unlock, 2);
 }
 
+// The two real buttons preserve the user gesture and share no sound-effect lock.
+{
+  const e = environment(), item = e.prepare();
+  item.sentence = '她用智慧解决了问题。';
+  e.speechTap('speakBtn', 'pointerup');
+  e.speechTap('speakBtn', 'touchend');
+  e.speechTap('speakBtn', 'click');
+  assert.deepEqual(e.calls.spoken, ['智慧']);
+  assert.equal(e.calls.unlock, 0);
+  assert.equal(e.calls.speechCancel, 0, 'A fresh tap need not first cancel an idle voice');
+  const word = e.calls.utterances[0];
+  assert.equal(word.lang, 'zh-CN');
+  assert.equal(word.voice.lang, 'zh-CN');
+  word.onstart();
+  assert.equal(e.ui.speakBtn.classList.contains('speaking'), true);
+
+  e.synthesis.paused = true;
+  e.synthesis.getVoices = () => { throw Error('Voice list unavailable'); };
+  e.speechTap('sentenceBtn', 'pointerup', false);
+  assert.equal(e.calls.spoken.length, 1, 'Inactive pointerup leaves room for a trusted touchend');
+  e.speechTap('sentenceBtn', 'touchend');
+  e.speechTap('sentenceBtn', 'click');
+  assert.deepEqual(e.calls.spoken, ['智慧', item.sentence]);
+  assert.equal(e.calls.speechResume, 1);
+  assert.equal(e.calls.speechCancel, 1);
+  assert.equal(e.calls.unlock, 0);
+  const sentence = e.calls.utterances[1];
+  assert.equal(sentence.lang, 'zh-CN');
+  assert.equal(sentence.voice, null, 'Voice enumeration failure falls back to the Mandarin locale');
+  sentence.onstart();
+  word.onerror({error:'interrupted'});
+  assert.equal(e.ui.speakBtn.classList.contains('speaking'), false);
+  assert.equal(e.ui.sentenceBtn.classList.contains('speaking'), true);
+  assert.equal(e.ui.speechStatus.textContent, '');
+}
+
+// A missing start callback surfaces a status, and a later explicit tap can retry.
+{
+  const e = environment();
+  e.prepare();
+  e.speechTap('speakBtn', 'click');
+  assert.equal(e.calls.spoken.length, 1, 'Click alone also requests speech');
+  e.advance(4500);
+  assert.match(e.ui.speechStatus.textContent, /朗读|语音|声音/);
+  assert.equal(e.ui.speechStatus.hidden, false);
+  assert.equal(e.ui.speakBtn.classList.contains('speaking'), false);
+  const previous = e.calls.utterances[0];
+  e.speechTap('speakBtn', 'pointerup');
+  assert.equal(e.calls.spoken.length, 2);
+  const retry = e.calls.utterances[1];
+  assert.equal(retry.voice, null, 'Retry uses the system voice after the selected voice did not start');
+  retry.onstart();
+  previous.onend();
+  previous.onerror({error:'interrupted'});
+  e.advance(4500);
+  assert.equal(e.ui.speechStatus.textContent, '');
+  assert.equal(e.ui.speakBtn.classList.contains('speaking'), true);
+  retry.onend();
+  assert.equal(e.ui.speakBtn.classList.contains('speaking'), false);
+}
+
+// Sync adoption must not play stale prompts and tells the child when to retry.
+{
+  const e = environment();
+  e.prepare();
+  e.run('syncApplying = true');
+  e.speechTap('speakBtn', 'pointerup');
+  assert.equal(e.calls.spoken.length, 0);
+  assert.match(e.ui.speechStatus.textContent, /接收学习进度|同步/);
+  e.run('syncApplying = false');
+  e.advance(401);
+  e.speechTap('speakBtn', 'pointerup');
+  assert.equal(e.calls.spoken.length, 1);
+}
+
 // The entire optional resource can be missing, not merely its browser audio API.
 // Drawing/initialization, a physical button tap, grading, and saving must survive.
 function optionalModuleScenario(feedback) {
@@ -198,7 +306,7 @@ optionalModuleScenario(new Proxy({}, {get() { throw Error('Optional module gette
   e.context.window.speechSynthesis.cancel = () => { throw Error('Speech service failed'); };
   e.ui.speakBtn.classList.add('speaking');
   e.ui.sentenceBtn.classList.add('speaking');
-  e.run("presentDoor(item,'free',1);handleAttemptResult(true)");
+  e.run("activeSpeech={text:'旧的朗读'};presentDoor(item,'free',1);handleAttemptResult(true)");
   assert.equal(e.calls.reset, 1);
   assert.equal(e.calls.correct, 1);
   assert.equal(item.history.length, 1);
@@ -224,5 +332,5 @@ optionalModuleScenario(new Proxy({}, {get() { throw Error('Optional module gette
     await new Promise(resolve => setImmediate(resolve));
     assert.equal(unhandled.length, 0, 'Optional effects must consume rejected promises');
   } finally { process.removeListener('unhandledRejection', recordUnhandled); }
-  console.log('Feedback integration passed: rewards, three-error parking, speech/reset cleanup, pointer unlock, and missing/failing/pending optional modules.');
+  console.log('Feedback integration passed: rewards, three-error parking, real speech controls, interruption/timeout, and optional audio isolation.');
 })().catch(error => { console.error(error); process.exitCode = 1; });

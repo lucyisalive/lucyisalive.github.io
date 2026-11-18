@@ -3154,9 +3154,10 @@ body[data-herb-stage="sea"] .story-sea { display: block; }
         <div class="pinyin-tag" id="pinyinTag"></div>
         <!-- Never speaks on its own: reading the pinyin is the skill being practised, so
              the sound is there for when he's stuck, not handed to him every time. -->
-        <button class="speak-btn" id="speakBtn" title="读一遍给我听">🔊</button>
+        <button class="speak-btn" id="speakBtn" aria-label="听词语" title="读一遍给我听">🔊</button>
         <button class="sentence-btn" id="sentenceBtn" title="听一句话，分清词语的意思" hidden>句子提示</button>
       </div>
+      <div class="status-line" id="speechStatus" role="status" hidden></div>
       <div class="write-canvas-wrap" id="writeTile">
         <div class="grid-lines"></div>
         <div class="demo-glyph hidden" id="demoGlyph"></div>
@@ -5687,7 +5688,10 @@ window.HANZI_CURRICULUM = {
   // Capturing listeners run before the game's touch handlers. A pencil stroke normally
   // unlocks sound well before asynchronous grading completes. Retrying also recovers
   // after Safari suspends audio while the iPad is locked; no sound is queued meanwhile.
-  function unlockFromGesture() { if (!context || context.state !== 'running') unlock(); }
+  function unlockFromGesture(event) {
+    if (event.target?.closest?.('#speakBtn, #sentenceBtn')) return;
+    if (!context || context.state !== 'running') unlock();
+  }
   document.addEventListener('pointerdown', unlockFromGesture, {capture: true, passive: true});
   document.addEventListener('touchend', unlockFromGesture, {capture: true, passive: true});
   document.addEventListener('keydown', unlockFromGesture, {capture: true});
@@ -11208,6 +11212,7 @@ const inkDownloadBtn = document.getElementById('inkDownloadBtn');
 const inkClearBtn = document.getElementById('inkClearBtn');
 const speakBtn = document.getElementById('speakBtn');
 const sentenceBtn = document.getElementById('sentenceBtn');
+const speechStatus = document.getElementById('speechStatus');
 const saveProgressBtn = document.getElementById('saveProgressBtn');
 const loadProgressBtn = document.getElementById('loadProgressBtn');
 const fileInput = document.getElementById('fileInput');
@@ -11314,7 +11319,7 @@ function syncQuestionSafe(){
   return currentMode === 'free' && strokesPoints.length === 0;
 }
 function syncCanApplyProgress(){
-  return syncQuestionSafe() && !progressSaveNotice && currentProgressBase() &&
+  return syncQuestionSafe() && !promptSpeechBusy() && !progressSaveNotice && currentProgressBase() &&
     (!panelOverlay.classList.contains('show') || syncExplicitAdopt);
 }
 function restoreSyncedRound(){
@@ -11833,34 +11838,80 @@ function sentenceFor(item){
 }
 
 let activeSpeech = null;
+let speechStartTimer = null;
+let preferSystemSpeechVoice = false;
+
+function showSpeechStatus(text){
+  speechStatus.textContent = text;
+  speechStatus.hidden = !text;
+}
+
+function clearSpeechStartTimer(){
+  if(speechStartTimer !== null) clearTimeout(speechStartTimer);
+  speechStartTimer = null;
+}
+
+function promptSpeechBusy(){
+  return activeSpeech !== null && (speechStartTimer !== null || window.speechSynthesis?.speaking === true);
+}
+
 function stopPromptSpeech(){
+  const wasActive = activeSpeech !== null;
   activeSpeech = null;
+  clearSpeechStartTimer();
   try{
-    if(window.speechSynthesis && typeof window.speechSynthesis.cancel === 'function'){
-      window.speechSynthesis.cancel();
-    }
+    const synthesis = window.speechSynthesis;
+    if(wasActive || synthesis?.speaking || synthesis?.pending) synthesis?.cancel();
   }catch(e){ /* A speech-service failure cannot prevent switching questions. */ }
   speakBtn.classList.remove('speaking');
   sentenceBtn.classList.remove('speaking');
+  showSpeechStatus('');
 }
 
 function speakText(text, button){
-  if(!text || !window.speechSynthesis) return;
+  if(!text) return;
   stopPromptSpeech();
+  const synthesis = window.speechSynthesis;
+  if(!synthesis || typeof SpeechSynthesisUtterance !== 'function'){
+    showSpeechStatus('当前浏览器无法朗读。');
+    return;
+  }
   const u = new SpeechSynthesisUtterance(text);
   activeSpeech = u; // Keep the utterance alive on Safari.
   u.lang = 'zh-CN';
   u.rate = 0.78;
-  const voices = window.speechSynthesis.getVoices();
-  const zh = voices.find(v => /^zh[-_]CN$/i.test(v.lang)) || voices.find(v => /^zh/i.test(v.lang));
-  if(zh) u.voice = zh;
-  u.onstart = () => { if(activeSpeech === u) button.classList.add('speaking'); };
-  u.onend = u.onerror = () => {
+  if(!preferSystemSpeechVoice){
+    try{
+      const mandarin = synthesis.getVoices().filter(voice => /^(?:zh(?:[-_](?:CN|SG|TW|Hans)|$)|cmn(?:[-_]|$))/i.test(voice.lang));
+      const voice = mandarin.find(v => v.localService && /^zh[-_]CN$/i.test(v.lang))
+        || mandarin.find(v => v.localService) || mandarin.find(v => /^zh[-_]CN$/i.test(v.lang));
+      if(voice) u.voice = voice;
+    }catch(_){ /* Use the system's voice for zh-CN even if the voice list fails. */ }
+  }
+  const failed = () => {
     if(activeSpeech !== u) return;
+    if(u.voice) preferSystemSpeechVoice = true;
+    stopPromptSpeech();
+    showSpeechStatus('朗读没有开始，请再点一次。');
+  };
+  u.onstart = () => {
+    if(activeSpeech !== u) return;
+    clearSpeechStartTimer();
+    button.classList.add('speaking');
+  };
+  u.onend = () => {
+    if(activeSpeech !== u) return;
+    clearSpeechStartTimer();
     activeSpeech = null;
     button.classList.remove('speaking');
   };
-  window.speechSynthesis.speak(u);
+  u.onerror = failed;
+  speechStartTimer = setTimeout(failed, 3000);
+  try{ if(synthesis.paused) synthesis.resume(); }
+  catch(_){ /* A failed resume must not prevent trying a new utterance. */ }
+  // Start from the tap itself so iPad Safari sees the user gesture.
+  try{ synthesis.speak(u); }
+  catch(_){ failed(); }
 }
 
 function speakPrompt(){
@@ -12228,17 +12279,23 @@ document.addEventListener('click', (e) => {
 // which the diagnostics confirmed DOES fire — with 'click' kept as a second listener and
 // a short dedupe window, so this also keeps working normally in any browser where click
 // fires fine (desktop, most others) without ever double-firing.
-function onTap(el, handler){
-  let lastFired = 0;
+function onTap(el, handler, playsSpeech = false){
+  let lastFired = -Infinity;
   function fire(e){
-    if(el.disabled || (typeof syncApplying !== 'undefined' && syncApplying)) return;
+    if(el.disabled) return;
+    if(typeof syncApplying !== 'undefined' && syncApplying){
+      if(playsSpeech) showSpeechStatus('正在同步学习进度，请稍后再点。');
+      return;
+    }
+    if(playsSpeech && e.type === 'pointerup' && window.navigator?.userActivation?.isActive === false) return;
     const now = Date.now();
     if(now - lastFired < 400) return;
     lastFired = now;
-    feedbackCall('unlock');
+    if(!playsSpeech) feedbackCall('unlock');
     handler(e);
   }
   el.addEventListener('pointerup', fire);
+  if(playsSpeech) el.addEventListener('touchend', fire, {passive:true});
   el.addEventListener('click', fire);
 }
 
@@ -13079,8 +13136,12 @@ function recoverPendingInkCopies(){
   }catch(_){}
 }
 window.addEventListener('pagehide', preservePendingLocalWrites);
+window.addEventListener('pagehide', stopPromptSpeech);
 document.addEventListener('visibilitychange', () => {
-  if(document.hidden) preservePendingLocalWrites();
+  if(document.hidden){
+    stopPromptSpeech();
+    preservePendingLocalWrites();
+  }
   else if(panelOverlay.classList.contains('show')) renderLearningOverview();
 });
 window.addEventListener('storage', event => {
@@ -13108,8 +13169,8 @@ function startGame(){
   renderStuckList();
   renderInkList();
   showPlayerDispute(inkLog.find(entry => entry && (entry.v === 'pass' || entry.v === 'fail')) || null);
-  onTap(speakBtn, speakPrompt);
-  onTap(sentenceBtn, speakSentence);
+  onTap(speakBtn, speakPrompt, true);
+  onTap(sentenceBtn, speakSentence, true);
   batchInput.addEventListener('focus',loadPinyinForParent);
   if(herbalistStoryRestored || (cloudSyncController && cloudSyncController.status().connected)) presentSyncedProgress();
   else loadNextDoor();
