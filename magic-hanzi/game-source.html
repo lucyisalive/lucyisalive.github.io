@@ -2,7 +2,7 @@
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
-<meta name="game-version" content="2026.11.11.7">
+<meta name="game-version" content="2026.11.18.1">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>魔法闯关汉字游戏</title>
 <link rel="stylesheet" href="game-feedback.css?v=2026.11.02.4">
@@ -730,7 +730,7 @@
         </details>
       </div>
     </section>
-    <p class="hint-text" id="gameVersion">版本 2026.11.11.7</p>
+    <p class="hint-text" id="gameVersion">版本 2026.11.18.1</p>
   </div>
 </div>
 
@@ -821,7 +821,7 @@ function defaultBank(){
 // set — the change would reach nobody who actually uses the game.
 const BANK_VERSION = 5;
 const ROUND_GOAL = 10;
-const GAME_VERSION = '2026.11.11.7';
+const GAME_VERSION = '2026.11.18.1';
 
 let state = {
   bank: defaultBank(),
@@ -2707,8 +2707,7 @@ function rescueFixedStrokeRoles(char, baseline, official, user, charDiag){
 }
 
 function rescueShortDistinctMark(char, baseline, official, user, charDiag){
-  const role=char==='瞧'?5:2;
-  const count=char==='瞧'?17:6;
+  const [role,count]={便:[0,9],瞧:[5,17],当:[2,6]}[char];
   const rows=baseline.rows;
   if(user.length!==count||official.length!==count||rows.length!==count)return null;
   const aligned=alignClusterUniform(user,bboxOf(official));
@@ -2737,7 +2736,23 @@ function rescueShortDistinctMark(char, baseline, official, user, charDiag){
 
   const ordered=(roles,axis,gap)=>roles.every((index,i)=>i===0||mids[index][axis]-mids[roles[i-1]][axis]>gap*charDiag);
   let quality;
-  if(char==='瞧'){
+  if(char==='便'){
+    // 亻 can start with a compact left-falling stroke. It still has to
+    // reach the top of the left stem and extend visibly down and left.
+    const stem=byRole[1];
+    const first=stem[0],last=stem.at(-1);
+    const anchor=first.y<last.y?first:last;
+    const rightPartStart=Math.min(...mids.slice(2).map(point=>point.x));
+    if(dx>-.065*charDiag||dy<.035*charDiag||length>strokeLength(ref)*.55||
+      top.y>=anchor.y||bottom.x>anchor.x-.02*charDiag||anchor.y>bottom.y+.02*charDiag||
+      Math.min(...resample(stroke,16).map(point=>ptDist(point,anchor)))>.065*charDiag||
+      Math.max(top.x,bboxOf([stem]).maxX)>=rightPartStart||
+      rows.some(row=>row.o!=='0'&&(row.c.q<.65||row.c.posDist>.22)))return null;
+    const scale=strokeLength(ref)*.65/length;
+    quality=strokeQuality(stroke.map(point=>({
+      x:mark.x+(point.x-mark.x)*scale, y:mark.y+(point.y-mark.y)*scale
+    })),ref,charDiag,false);
+  }else if(char==='瞧'){
     // The shortened 撇 must still travel down and left, and meet the upper
     // end of 隹's left vertical. Keep all the other strokes and their roles.
     if(dx>-.045*charDiag||dy<.045*charDiag||length>strokeLength(ref)*.55)return null;
@@ -2873,30 +2888,95 @@ function borrowedComponentStroke(char, rows, user){
     return !!leftStem && matchedBounds(leftStem).minX>box.minX+box.w*.44
       && !hasVerticalStem(user,box,'left',.26,.76,.42);
   }
+  if(char==='确'){
+    // The left stroke of 角 can sit under 石. Recheck only pronounced
+    // crossings, including those introduced by recovery of split strokes.
+    const left=[],right=[];
+    for(const row of rows){
+      const [start,end=start]=row.o.split('..').map(Number);
+      if(end<5)left.push(matchedBounds(row).cx);
+      if(start>=5)right.push(matchedBounds(row).cx);
+    }
+    return Math.max(...left)-Math.min(...right)>box.w*.15;
+  }
   // 舒's four 予 strokes belong on the right. Allow small or shifted
   // components: an absent long stem is decisive only with repeated borrowing.
   const borrowed=rows.filter(row=>/^\d+$/.test(row.o) && Number(row.o)>=8 && matchedBounds(row).maxX<box.cx);
   return borrowed.length>=2 && !hasVerticalStem(user,box,'right',.28,.67,.51);
 }
 
-async function gradeDrawing(char){
+function retainShortDots(drawn, retained, official, inkDiag){
+  if(!retained.size || retained.size>=official.length || retained.size===drawn.length)return;
+  const userBox=bboxOf([...retained]), refBox=bboxOf(official);
+  if(userBox.w<1e-6 || userBox.h<1e-6)return;
+  const scale=(refBox.w/userBox.w+refBox.h/userBox.h)/2;
+  const radius=refBox.diag*.065;
+  // The lookup includes the reference's slightly longer dots (for example,
+  // the lower-right dot in 霎). Final scoring still checks the actual stroke.
+  const dots=official.filter(s=>strokeLength(s)<refBox.diag*.075)
+    .map(s=>({box:bboxOf([s]),length:strokeLength(s)}));
+  const locate=s=>{
+    const box=bboxOf([s]);
+    return {cx:refBox.cx+(box.cx-userBox.cx)*scale,cy:refBox.cy+(box.cy-userBox.cy)*scale,
+      length:strokeLength(s)*scale};
+  };
+  const distance=(mark,dot)=>Math.hypot(mark.cx-dot.box.cx,mark.cy-dot.box.cy);
+  const present=[...retained].map(locate);
+  const missing=dots.filter(dot=>!present.some(mark=>mark.length<=DOT_LEN*dot.length
+    && distance(mark,dot)<=radius));
+  const candidates=[];
+  for(const stroke of drawn){
+    // A directed little mark can be a dot. Stationary and wandering taps
+    // cannot qualify merely by landing where a dot would be.
+    if(retained.has(stroke) || ptDist(stroke[0],stroke.at(-1))<inkDiag*.02)continue;
+    const mark=locate(stroke);
+    for(const dot of missing){
+      const error=distance(mark,dot);
+      if(error<=radius && mark.length<=DOT_LEN*dot.length)candidates.push({stroke,dot,error});
+    }
+  }
+  const recovered=new Set();
+  for(const {stroke,dot} of candidates.sort((a,b)=>a.error-b.error)){
+    if(retained.size===official.length)break;
+    if(retained.has(stroke) || recovered.has(dot))continue;
+    retained.add(stroke);
+    recovered.add(dot);
+  }
+}
+
+function ganNeedsRightPartPractice(user, official, charDiag){
+  const leftRef=official.slice(0,4), rightRef=official.slice(4);
+  const leftBox=bboxOf(leftRef), rightBox=bboxOf(rightRef);
+  const boundary=(leftBox.maxX+rightBox.minX)/2;
+  const left=[], right=[];
+  for(const stroke of user){
+    const side=centroidOf(resample(stroke,16)).x<boundary?left:right;
+    side.push(stroke);
+  }
+  if(left.length!==leftRef.length || right.length===0)return false;
+  return matchComponent(leftRef,alignClusterUniform(left,leftBox),'月',charDiag,[],true).pass &&
+    !matchComponent(rightRef,alignClusterUniform(right,rightBox),'干',charDiag,[],true).pass;
+}
+
+async function gradeDrawing(char, reportHint){
   const data = await getCharData(char);
   const officialAll = (data.medians || []).map(medianToCanvasPoints);
   // Drop touch artefacts before anything else looks at the ink. A palm or a pencil tip
   // resting on the glass leaves a mark with essentially no length, and it was costing a
   // real stroke its place: writing 隐 correctly in 11 strokes plus one stray tap made 12
   // marks for 11 slots, so a genuine stroke went unmatched and the whole character failed.
-  // Measured, the gap is wide: that tap ran 1.7% of the character's diagonal, this child's
-  // shortest real stroke 11%, and the shortest stroke in any reference glyph 5.5%.
+  // Short, directed marks can still be intentional dots where a dot is expected.
   const drawn = strokesPoints.filter(s => s.length > 1);
   const inkDiag = drawn.length ? Math.max(bboxOf(drawn).diag, 1) : 1;
-  const rawUser = drawn.filter(s => strokeLength(s) / inkDiag >= 0.03);
+  const retained = new Set(drawn.filter(s => strokeLength(s) >= inkDiag * 0.03));
+  retainShortDots(drawn, retained, officialAll, inkDiag);
+  const rawUser = drawn.filter(s => retained.has(s));
   if(rawUser.length === 0 && strokesPoints.length === 0) return false;
 
-  // Keep evidence of input that the existing touch-artifact filter removed.
+  // Keep evidence of input that the touch-artifact filter removed.
   // A missing dot in the graded ink does not prove the player never drew it.
   // These traces are diagnostic only; they do not change what gets graded.
-  const ignored = strokesPoints.filter(s => s.length < 2 || strokeLength(s) / inkDiag < 0.03);
+  const ignored = strokesPoints.filter(s => !retained.has(s));
   const filtering = {
     inputStrokeCount: strokesPoints.length,
     retainedStrokeCount: rawUser.length,
@@ -3073,7 +3153,7 @@ async function gradeDrawing(char){
     if(rescue)result=rescue;
   }
 
-  if(!result.pass&&(char==='瞧'||char==='当')){
+  if(!result.pass&&(char==='便'||char==='瞧'||char==='当')){
     const rescued=rescueShortDistinctMark(char,result,officialAll,user,charDiag);
     if(rescued)result=rescued;
   }
@@ -3082,12 +3162,23 @@ async function gradeDrawing(char){
      && borrowedComponentStroke(char,result.rows,user)){
     result={...result,pass:false,diag:[...result.diag,'component stem confirmation failed']};
   }
+  if(result.pass && char==='确' && officialAll.length===12 && borrowedComponentStroke(char,result.rows,user)){
+    const tree={...regionSplit('x',regionLeaf('石',0,5),regionLeaf('角',5,12)),recoverPenLifts:true};
+    const confirmation=recursiveRegionGrade(tree,officialAll,user,charDiag);
+    if(!confirmation.pass){
+      result={...result,pass:false,diag:[...result.diag,...confirmation.diag,'确 component confirmation failed']};
+    }
+  }
 
 
   // TEMPORARY diagnostics — prints exactly why a drawing passed/failed, so grading can
   // be calibrated from real data. Safe to remove once stable.
   console.log(`[diag-grade] char=${char} userStrokeCount=${rawUser.length} officialStrokeCount=${officialAll.length} pass=${result.pass}${flipNote}\n` + result.diag.join('\n'));
   recordInk(inkPayload, result.pass);
+  if(!result.pass && reportHint && char==='肝' && officialAll.length===7 &&
+     ganNeedsRightPartPractice(user,officialAll,charDiag)){
+    reportHint('这个字的右半边还要再练一下。');
+  }
   return result.pass;
 }
 
@@ -4046,14 +4137,14 @@ function markPassed(item, outcome, message){
   if(typeof herbalistRoom !== 'undefined' && herbalistRoom) herbalistCall('pass', passedCount, state.bank.filter(isMastered).length);
 }
 
-function markAbandonedToday(item){
+function markAbandonedToday(item, hint=''){
   setWritingView(false);
   submitBtn.style.display = 'none';
   clearBtn.style.display = 'none';
   timerRing.style.display = 'none';
   showGlowChar('', false);
   const retryMessage = typeof herbalistRoom !== 'undefined' && herbalistRoom ? '再来练' : '再来闯这扇门';
-  resultBanner.textContent = `这个字今天先放一放，等爸爸妈妈讲一讲，讲完还能${retryMessage}`;
+  resultBanner.textContent = hint+`这个字今天先放一放，等爸爸妈妈讲一讲，讲完还能${retryMessage}`;
   resultBanner.className = 'result-banner wrong';
   statusLine.textContent = '';
   item.stuck = true;
@@ -4064,7 +4155,7 @@ function markAbandonedToday(item){
   continueBtn.classList.add('show');
 }
 
-function handleAttemptResult(ok){
+function handleAttemptResult(ok, hint=''){
   if(typeof parentValidation !== 'undefined' && parentValidation) return;
   const item = currentItem;
   stopPromptSpeech();
@@ -4076,7 +4167,7 @@ function handleAttemptResult(ok){
   // 他写" came from. Three tries is the whole day's budget for one character.
   if(!ok){
     const hitLimit = registerWrong(item);
-    if(hitLimit) markAbandonedToday(item);
+    if(hitLimit) markAbandonedToday(item,hint);
     if(panelOverlay.classList.contains('show')) renderLearningOverview();
     if(hitLimit) return;
   }
@@ -4089,7 +4180,7 @@ function handleAttemptResult(ok){
       currentRound = 1;
       stepIndex = 0;
       stepAttempts = 0;
-      resultBanner.textContent = '这次没对，我们一起再练几次';
+      resultBanner.textContent = hint || '这次没对，我们一起再练几次';
       resultBanner.className = 'result-banner wrong';
       startTeachingRound();
     }
@@ -4100,7 +4191,7 @@ function handleAttemptResult(ok){
     if(ok){
       markPassed(item, 'retest-pass', '隔了一会儿还记得！真的记住啦 ✨');
     } else {
-      handleRoundFailure(item);
+      handleRoundFailure(item,hint);
     }
     return;
   }
@@ -4132,26 +4223,26 @@ function handleAttemptResult(ok){
   } else {
     stepAttempts += 1;
     if(stepAttempts >= 2){
-      handleRoundFailure(item);
+      handleRoundFailure(item,hint);
     } else {
-      resultBanner.textContent = '还差一点，再看一眼';
+      resultBanner.textContent = hint || '还差一点，再看一眼';
       resultBanner.className = 'result-banner wrong';
       startTeachingRound();
     }
   }
 }
 
-function handleRoundFailure(item){
+function handleRoundFailure(item, hint){
   if(currentRound === 1){
     currentMode = 'teaching';
     currentRound = 2;
     stepIndex = 0;
     stepAttempts = 0;
-    resultBanner.textContent = '这一轮没完全成功，我们完整地再来一轮';
+    resultBanner.textContent = hint || '这一轮没完全成功，我们完整地再来一轮';
     resultBanner.className = 'result-banner wrong';
     startTeachingRound();
   } else {
-    markAbandonedToday(item);
+    markAbandonedToday(item,hint);
   }
 }
 
@@ -4390,7 +4481,8 @@ onTap(submitBtn, async function(){
   statusLine.textContent = '正在检查...';
   try{
     console.log('[diag] about to gradeDrawing for char', item && item.char);
-    const ok = await gradeDrawing(item.char);
+    let hint = '';
+    const ok = await gradeDrawing(item.char, parentSession ? undefined : text => { hint = text; });
     console.log('[diag] gradeDrawing resolved:', ok);
     if(parentSession){
       if(parentValidation !== parentSession) return;
@@ -4407,7 +4499,7 @@ onTap(submitBtn, async function(){
     submitBtn.disabled = false;
     clearBtn.disabled = false;
     statusLine.textContent = priorStatus;
-    handleAttemptResult(ok);
+    handleAttemptResult(ok,hint);
   }catch(e){
     console.log('[diag] gradeDrawing threw:', e && e.message, e && e.stack);
     submitBtn.disabled = false;
