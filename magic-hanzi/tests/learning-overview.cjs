@@ -77,6 +77,56 @@ async function checkOverview(){
   await flush();
 }
 
+async function checkPendingPriority(){
+  const bankOrder = [...'页敲荷夕月栽固犬'];
+  const page = environment({initialSave:{
+    ...initialSave,
+    bank:bankOrder.map(char => ({char, pinyin:'zì', passedDays:[],
+      ...(char === '荷' ? {stuck:true, stuckDay:today, wrongToday:3, wrongDay:today} : {}) })),
+    priorityQueue:[
+      {char:'荷', pinyin:'hé', addedDay:today},
+      {char:'犬', pinyin:'quǎn', addedDay:today},
+      {char:'夕', pinyin:'xī', addedDay:today, completedDay:today},
+      {char:'月', pinyin:'yuè', addedDay:thirdDay},
+      {char:'固', pinyin:'gù', addedDay:today},
+    ],
+  }});
+  await flush();
+  const deleteRequest = page.context.document.createElement('button');
+  deleteRequest.className = 'del';
+  deleteRequest.dataset.i = '0';
+  const taught = page.context.document.createElement('button');
+  taught.className = 'btn-taught';
+  taught.dataset.ch = '荷';
+  page.ids.get('stuckList').appendChild(taught);
+
+  page.tap('settingsBtn');
+  openDetails(page, 'learningPendingDetails');
+  const assertOrder = (priorities, regular) => {
+    const list = page.ids.get('learningPendingList').innerHTML;
+    const rows = [...list.matchAll(/<li class="learning-chip"><b>(.)<\/b>(.*?)<\/li>/gu)];
+    assert.deepEqual(rows.map(row => row[1]), [...priorities, ...regular]);
+    assert.deepEqual(rows.filter(row => row[2].includes('>今日优先</span>')).map(row => row[1]), [...priorities]);
+    assert.deepEqual(JSON.parse(page.run('JSON.stringify(state.bank.map(item => item.char))')), bankOrder);
+  };
+  assertOrder('犬固', '页敲荷夕月栽');
+
+  page.ids.get('queueList').appendChild(deleteRequest);
+  page.ids.get('batchInput').value = '栽树的栽 zāi，敲门的敲 qiāo';
+  page.tap('batchAddBtn');
+  assertOrder('栽敲犬固', '页荷夕月');
+  deleteRequest.remove();
+  deleteRequest.dispatch('pointerup');
+  assertOrder('敲犬固', '页荷夕月栽');
+  taught.remove();
+  taught.dispatch('pointerup');
+  assertOrder('敲荷犬固', '页夕月栽');
+
+  page.advance(24 * 60 * 60 * 1000);
+  page.tap('settingsBtn');
+  assertOrder('', bankOrder);
+}
+
 async function checkAutomaticSentences(){
   const page = environment({mode:'offline', location:{protocol:'file:', href:'file:///preview/index.html'}});
   await flush();
@@ -146,6 +196,6 @@ async function checkTodayLearning(){
   expectToday(0, 0, 5, '今天还没有家长安排的字');
 }
 
-Promise.resolve().then(checkOverview).then(checkAutomaticSentences).then(checkTodayLearning).then(() => {
-  console.log('Learning overview: today’s passes, level and parent plan, distinct-day progress, and automatic offline sentences passed.');
+Promise.resolve().then(checkOverview).then(checkPendingPriority).then(checkAutomaticSentences).then(checkTodayLearning).then(() => {
+  console.log('Learning overview: today’s passes and parent plan, pending priority order, distinct-day progress, and automatic offline sentences passed.');
 }).catch(error => { console.error(error); process.exitCode = 1; });

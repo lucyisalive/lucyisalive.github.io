@@ -610,6 +610,7 @@
     display:flex; flex-wrap:wrap; align-items:baseline; gap:5px; background:#f0e6cd;
     color:#402e24; border-radius:6px; padding:2px 7px; font-size:13px; overflow-wrap:anywhere;
   }
+  .learning-priority { color:#245b49; font-size:.85em; }
   .learning-stars { color:#79500e; white-space:nowrap; }
   .learning-empty { color:#62513a; font-size:13px; }
   .queue-item > span:first-child { color:var(--ink); }
@@ -11454,7 +11455,7 @@ onTap(document.getElementById('cloudSyncCopyBtn'), async () => {
 });
 window.addEventListener('online', syncTick);
 window.addEventListener('focus', () => {
-  if(panelOverlay.classList.contains('show')) renderTodayLearning();
+  if(panelOverlay.classList.contains('show')) renderLearningOverview();
   syncTick();
 });
 document.addEventListener('visibilitychange', () => { if(!document.hidden) syncTick(); });
@@ -11926,7 +11927,7 @@ function markPassed(item, outcome, message){
   statusLine.textContent = '';
   passedCount += 1;
   recordResult(item, outcome);
-  if(panelOverlay.classList.contains('show')) renderTodayLearning();
+  if(panelOverlay.classList.contains('show')) renderLearningOverview();
   renderProgressPath();
   continueBtn.classList.add('show');
   if(typeof mountainCall === 'function') mountainCall('depart');
@@ -11964,7 +11965,7 @@ function handleAttemptResult(ok){
   if(!ok){
     const hitLimit = registerWrong(item);
     if(hitLimit) markAbandonedToday(item);
-    if(panelOverlay.classList.contains('show')) renderTodayLearning();
+    if(panelOverlay.classList.contains('show')) renderLearningOverview();
     if(hitLimit) return;
   }
 
@@ -12423,7 +12424,7 @@ function renderQueueList(){
       state.priorityQueue.splice(Number(el.dataset.i), 1);
       saveState();
       renderQueueList();
-      renderTodayLearning();
+      renderLearningOverview();
     });
   });
   queueList.querySelectorAll('.py-alt').forEach(el => {
@@ -12470,7 +12471,7 @@ function renderStuckList(){
       saveState();
       renderStuckList();
       renderQueueList();
-      renderTodayLearning();
+      renderLearningOverview();
       // A level stopped early for lack of work can resume; a full level stays complete.
       if(finale.classList.contains('show') && passedCount < ROUND_GOAL){
         syncRoundCompleted = false;
@@ -12571,13 +12572,20 @@ function renderLearningOverview(){
     const items = groups[group.key];
     group.count.textContent = `${items.length} 字`;
     if(!group.details.open) continue;
+    const priorityOrder = group.key === 'pending'
+      ? new Map(unfinishedParentEntries().map(({char}, index) => [char, index])) : null;
+    if(priorityOrder?.size){
+      const rank = char => priorityOrder.get(char) ?? priorityOrder.size;
+      items.sort((a, b) => rank(a.char) - rank(b.char));
+    }
     group.list.innerHTML = items.map(item => {
       const days = item.passedDays?.length || 0;
       const stars = group.key === 'active'
         ? `<span class="learning-stars" role="img" aria-label="${days} 星，已通过 ${days} 天">${'★'.repeat(days)}</span>`
         : '';
       const word = typeof item.word === 'string' ? item.word.trim().replaceAll('_', item.char) : '';
-      return `<li class="learning-chip"><b>${escapeText(item.char)}</b>${word ? `<span>${escapeText(word)}</span>` : ''}${stars}</li>`;
+      const priority = priorityOrder?.has(item.char) ? '<span class="learning-priority">今日优先</span>' : '';
+      return `<li class="learning-chip"><b>${escapeText(item.char)}</b>${word ? `<span>${escapeText(word)}</span>` : ''}${stars}${priority}</li>`;
     }).join('') || `<li class="learning-empty">${group.empty}</li>`;
   }
 }
@@ -12973,7 +12981,7 @@ function recoverPendingInkCopies(){
 window.addEventListener('pagehide', preservePendingLocalWrites);
 document.addEventListener('visibilitychange', () => {
   if(document.hidden) preservePendingLocalWrites();
-  else if(panelOverlay.classList.contains('show')) renderTodayLearning();
+  else if(panelOverlay.classList.contains('show')) renderLearningOverview();
 });
 window.addEventListener('storage', event => {
   if(event.newValue && event.key?.startsWith(PENDING_INK_PREFIX)) recoverPendingInkCopies();
