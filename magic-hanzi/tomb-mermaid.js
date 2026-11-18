@@ -214,7 +214,8 @@
     let master;
     const voices = new Set();
 
-    function unlock() {
+    function unlock(event) {
+      if (doc.hidden || event?.isTrusted === false || event?.target?.closest?.('#speakBtn, #sentenceBtn')) return;
       if (!['tomb', 'sea'].includes(doc.body.dataset.herbStage)) return;
       try {
         const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -239,7 +240,7 @@
     }
     doc.addEventListener('pointerdown', unlock, { capture: true, passive: true });
     doc.addEventListener('pointerup', event => {
-      if (event.pointerType !== 'mouse') unlock();
+      if (event.pointerType !== 'mouse') unlock(event);
     }, { capture: true, passive: true });
     doc.addEventListener('touchend', unlock, { capture: true, passive: true });
     doc.addEventListener('keydown', unlock, { capture: true });
