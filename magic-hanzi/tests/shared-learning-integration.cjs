@@ -5,6 +5,7 @@ const { createCipheriv, createDecipheriv, createHash, pbkdf2Sync, webcrypto } = 
 const fs = require('node:fs');
 const path = require('node:path');
 const { TextDecoder, TextEncoder } = require('node:util');
+const { indexedDB } = require('./progress-sync-backups.cjs');
 
 const startup = fs.readFileSync(path.join(__dirname, 'offline-startup.cjs'), 'utf8');
 const boundary = startup.indexOf('\n(async()=>{');
@@ -16,6 +17,8 @@ const prelude = startup.slice(0, boundary).replace(loop, `for(let i=0;i<scripts.
     window.crypto = host.crypto;
     window.TextEncoder = host.TextEncoder;
     window.TextDecoder = host.TextDecoder;
+    window.indexedDB = host.indexedDB;
+    host.beforeMain?.(context);
     window.fetch = (url, init) => new URL(url, 'https://lucyisalive.github.io').hostname === 'firestore.googleapis.com'
       ? host.firestore.fetch(url, init) : fixtureFetch(url, init);
   }
@@ -422,5 +425,64 @@ async function syncStatusAndOpenSettings() {
   console.log('Family settings: visible status, 38/30 first join with 23 assignments, safe manual pull, and conflict merge passed.');
 }
 
-test().then(temporarySaveFailureBeforePasswordJoin).then(syncStatusAndOpenSettings)
+async function passwordConnectionSurvivesMetadataQuota() {
+  const local = {
+    bank: [item('固', 'gù', [TODAY])], bankVersion: 5, dailyCount: 10,
+    priorityQueue: [], scenesUnlocked: 0,
+  };
+  const queued = { char: '悄', word: '悄悄', pinyin: 'qiāo', addedDay: TODAY, completedDay: null, requestId: 'quota-quiet' };
+  const remote = {
+    ...local, bank: [{ ...item(queued.char, queued.pinyin), word: queued.word, fromParent: true }],
+    priorityQueue: [queued],
+  };
+  const firestore = mockLegacyFirestore(remote);
+  let rejectedMetadataWrites = 0;
+  const { environment, flush } = setup(require, __dirname, process, {
+    crypto: webcrypto, TextEncoder, TextDecoder, firestore, indexedDB: indexedDB(),
+    beforeMain(context) {
+      const write = context.localStorage.setItem;
+      context.localStorage.setItem = (key, value) => {
+        if (key === NEW_SYNC) {
+          rejectedMetadataWrites++;
+          throw new DOMException('Synthetic localStorage sync metadata quota', 'QuotaExceededError');
+        }
+        return write(key, value);
+      };
+    },
+  });
+  const story = { version: 1, herbalistStage: 'herbs', scenesUnlocked: 0, sessionProgress: round('quota-level', 1) };
+  const page = environment({
+    initialStorage: [[OLD_SAVE, JSON.stringify(local)], [STORY, JSON.stringify(story)]], location: LOCATION,
+  });
+  await flush();
+  page.tap('settingsBtn');
+  page.ids.get('cloudSyncPassword').value = PASSWORD;
+  await tapSyncButton(page, 'cloudSyncJoinBtn');
+  assert.ok(rejectedMetadataWrites > 0, 'Exercise an actual sync-metadata write rejection');
+  assert.equal(page.storage.has(NEW_SYNC), false);
+  assert.equal(page.run('cloudSyncController.status().connected'), true);
+  assert.equal(page.ids.get('cloudSyncPasswordSetup').hidden, true);
+  const combined = read(page.storage, OLD_SAVE);
+  assert.deepEqual(passedDays(combined, '固'), [TODAY]);
+  assert.deepEqual(combined.priorityQueue, [queued]);
+  assert.equal(page.run('passedCount'), 1);
+
+  if (page.run('cloudSyncController.status().kind') !== 'synced') await tapSyncButton(page, 'cloudSyncNowBtn');
+  assert.equal(page.run('cloudSyncController.status().kind'), 'synced');
+  assert.deepEqual(passedDays(firestore.decoded.at(-1), '固'), [TODAY]);
+  assert.deepEqual(firestore.decoded.at(-1).priorityQueue, [queued]);
+  const reopened = environment({ initialStorage: page.storage, location: LOCATION });
+  for (let attempt = 0; reopened.run("cloudSyncController.status().kind !== 'synced'"); attempt++) {
+    assert.ok(attempt < 500, 'Reopen and use the durable connection automatically');
+    await new Promise(resolve => setTimeout(resolve, 10));
+  }
+  assert.equal(reopened.ids.get('cloudSyncPasswordSetup').hidden, true);
+  assert.equal(reopened.ids.get('cloudSyncSummary').textContent, '跨设备同步 · 已连接 · 已同步');
+  assert.equal(reopened.ids.get('cloudSyncPassword').value, '');
+  assert.equal(reopened.run('passedCount'), 1);
+  assert.equal(reopened.storage.has(NEW_SYNC), false, 'Restoring the connection must not rely on the rejected storage');
+  console.log('Password join: sync metadata quota fallback preserves learning and reconnects after reopening.');
+}
+
+test().then(temporarySaveFailureBeforePasswordJoin).then(syncStatusAndOpenSettings).then(passwordConnectionSurvivesMetadataQuota)
   .catch(error => { console.error(error); process.exitCode = 1; });

@@ -10,6 +10,8 @@
   var META_KEY = 'hanzi-magic-herbalist-sync-v1';
   var BACKUP_KEY = 'hanzi-magic-herbalist-sync-backups-v1';
   var BACKUP_STORE = 'snapshots';
+  var META_STORE = 'connection';
+  var META_RECORD = 'active';
   var BACKUP_LIMIT = 6;
   var APP = 'hanzi-magic-door';
   var PASSWORD_ROUNDS = 600000;
@@ -205,6 +207,7 @@
     var cancelTimer = options.clearTimeout || (root.clearTimeout && root.clearTimeout.bind(root)) || (environment.clearTimeout && environment.clearTimeout.bind(environment));
     var now = options.now || Date.now;
     var meta = null, started = false, epoch = 0, revision = 0, observedJSON = null;
+    var metaReady = !backupDatabase, metaRead = null, metaInDatabase = false, metaWrites = Promise.resolve(), pendingMetaWrites = 0;
     var debounce = null, inFlight = null, keysCache = null, applying = false;
     var controllers = [], conflictRemote = null;
     var view = { kind: 'off', message: '尚未开启跨设备同步', connected: false, lastSyncedAt: null, credentialMode: null };
@@ -220,16 +223,55 @@
     function requireStorage() {
       if (!storage || typeof storage.getItem !== 'function' || typeof storage.setItem !== 'function') throw problem('本机存储不可用，进度仍保留在当前页面，暂不能同步');
     }
-    function persist(candidate) {
-      requireStorage();
-      try { storage.setItem(META_KEY, JSON.stringify(candidate)); }
-      catch (error) {
-        var failure = problem('本机同步设置未能保存，请保留此页面并检查存储空间');
-        failure.storageQuota = quotaError(error);
-        throw failure;
-      }
+    function metadataWriteError(error) {
+      var failure = problem('本机同步设置未能保存，请保留此页面并检查存储空间');
+      failure.storageQuota = quotaError(error);
+      return failure;
     }
-    function saveMeta() { if (meta) persist(meta); }
+    function persistInDatabase(candidate, token) {
+      var record = { value: candidate === null ? null : JSON.parse(JSON.stringify(candidate)) };
+      pendingMetaWrites += 1;
+      var write = metaWrites.catch(function () {}).then(async function () {
+        ensureEpoch(token);
+        await indexedStore(META_KEY, META_STORE, 'readwrite', function (store) {
+          ensureEpoch(token);
+          store.put(record, META_RECORD);
+        });
+        metaInDatabase = true;
+        ensureEpoch(token);
+      }).finally(function () {
+        pendingMetaWrites -= 1;
+      });
+      metaWrites = write;
+      return write;
+    }
+    function persist(candidate, token) {
+      if (token === undefined) token = epoch;
+      ensureEpoch(token);
+      var localError;
+      if (!metaInDatabase && !pendingMetaWrites) {
+        requireStorage();
+        try { storage.setItem(META_KEY, JSON.stringify(candidate)); return; }
+        catch (error) {
+          if (!backupDatabase) throw metadataWriteError(error);
+          localError = error;
+        }
+      }
+      var stalePrimary = null;
+      if (localError) {
+        try { stalePrimary = storage.getItem(META_KEY); } catch (_) { /* Local browser storage may be restricted. */ }
+      }
+      return persistInDatabase(candidate, token).then(function () {
+        if (stalePrimary === null) return;
+        try {
+          if (storage.getItem(META_KEY) === stalePrimary) storage.removeItem(META_KEY);
+        } catch (_) { /* The committed database record always takes precedence. */ }
+      }).catch(function (error) {
+        ensureEpoch(token);
+        throw metadataWriteError(localError || error);
+      });
+    }
+    function saveMeta() { if (meta) return persist(meta); }
     function snapshot() {
       if (typeof options.getState !== 'function') throw problem('无法读取本机学习进度');
       var value = project(options.getState());
@@ -242,7 +284,7 @@
       var current = snapshot();
       if (observedJSON !== null && observedJSON !== current.json) {
         revision += 1;
-        if (meta) { meta.dirty = true; saveMeta(); }
+        if (meta) meta.dirty = true;
       }
       observedJSON = current.json;
       return current;
@@ -423,7 +465,7 @@
       return entries;
     }
 
-    function indexedBackup(mode, operation) {
+    function indexedStore(databaseName, storeName, mode, operation) {
       return new Promise(function (resolve, reject) {
         if (!backupDatabase || typeof backupDatabase.open !== 'function') {
           reject(new Error('IndexedDB unavailable'));
@@ -445,23 +487,24 @@
           finish(new Error('Backup storage timed out'));
         }, TIMEOUT_MS);
         var request;
-        try { request = backupDatabase.open(BACKUP_KEY, 1); }
+        try { request = backupDatabase.open(databaseName, 1); }
         catch (error) { finish(error); return; }
         request.onerror = function () { finish(request.error || new Error('Backup storage unavailable')); };
         request.onblocked = function () { finish(new Error('Backup storage blocked')); };
         request.onupgradeneeded = function () {
           if (finished) { request.transaction.abort(); return; }
-          request.result.createObjectStore(BACKUP_STORE, { autoIncrement: true });
+          if (storeName === BACKUP_STORE) request.result.createObjectStore(storeName, { autoIncrement: true });
+          else request.result.createObjectStore(storeName);
         };
         request.onsuccess = function () {
           db = request.result;
           if (finished) { db.close(); return; }
           db.onversionchange = function () { db.close(); };
           try {
-            transaction = db.transaction(BACKUP_STORE, mode);
+            transaction = db.transaction(storeName, mode);
             transaction.onabort = function () { finish(transaction.error || new Error('Backup transaction aborted')); };
             transaction.oncomplete = function () { finish(); };
-            result = operation(transaction.objectStore(BACKUP_STORE));
+            result = operation(transaction.objectStore(storeName));
           } catch (error) {
             if (transaction) {
               try { transaction.abort(); } catch (_) { /* Preserve the original error. */ }
@@ -471,6 +514,7 @@
         };
       });
     }
+    function indexedBackup(mode, operation) { return indexedStore(BACKUP_KEY, BACKUP_STORE, mode, operation); }
 
     async function backup(local, remote, reason) {
       var entry = { timestamp: now(), reason: reason, local: local.state,
@@ -568,14 +612,17 @@
       // Adoption is a two-step local transaction. Keep the previous baseline
       // until the page has actually accepted the remote state. The durable
       // barrier also protects a reload/crash between identity and primary save.
-      try { persist(stagedMeta); }
+      try { await persist(stagedMeta, token); }
       catch (error) {
         if (!error.storageQuota || !await archiveLocalBackups(token, localRevision)) throw error;
         ensureUnchanged(token, localRevision);
         if (!mayApply()) return emit('pending', '云端有更新，等这一题结束后再同步');
-        persist(stagedMeta);
+        await persist(stagedMeta, token);
       }
+      ensureEpoch(token);
       meta = stagedMeta;
+      ensureUnchanged(token, localRevision);
+      if (!mayApply()) throw problem('请先完成当前练习，再接上家庭进度。两份进度已在本机备份。', 'conflict');
       try { await applyBackedUpProgress(remote, reason); }
       catch (error) {
         ensureEpoch(token);
@@ -601,8 +648,11 @@
         dirty: actual.json !== remote.json, requireConflict: false, lastSyncedAt: now()
       });
       // If this commit fails, keep the in-memory and on-disk barrier in place.
-      persist(nextMeta);
+      var persistedRevision = revision;
+      await persist(nextMeta, token);
+      ensureEpoch(token);
       meta = nextMeta;
+      if (revision !== persistedRevision) meta.dirty = true;
       conflictRemote = null;
       if (meta.dirty) {
         if (reason === 'join-family' || reason === 'join-password-family' || reason === 'conflict-merge') {
@@ -634,12 +684,15 @@
       observedJSON = actual.json;
       var nextMeta = Object.assign({}, candidateMeta || meta, { baseUpdateTime: response.updateTime, baseHash: fingerprint,
         dirty: actual.json !== current.json, requireConflict: false, lastSyncedAt: now() });
-      try { persist(nextMeta); }
+      var persistedRevision = revision;
+      try { await persist(nextMeta, token); }
       catch (error) {
         if (candidateMeta) throw problem('云端已建立进度，但本机未能保存连接；存储恢复后可用相同密码接入');
         throw error;
       }
+      ensureEpoch(token);
       meta = nextMeta;
+      if (revision !== persistedRevision) meta.dirty = true;
       conflictRemote = null;
       if (meta.dirty) { schedule(); return emit('idle', '上一份进度已同步，新改动正在等待同步'); }
       return emit('synced', '学习进度已安全同步');
@@ -660,7 +713,17 @@
         return next;
       }
       if (error.syncKind === 'conflict') {
-        if (meta) { meta.dirty = true; try { saveMeta(); } catch (storageError) { return emit('error', storageError.message); } }
+        if (meta) {
+          meta.dirty = true;
+          try {
+            var saved = saveMeta();
+            if (saved) return saved.then(function () {
+              return token === epoch ? emit('conflict', error.message) : status();
+            }, function (storageError) {
+              return token === epoch ? emit('error', storageError.message) : status();
+            });
+          } catch (storageError) { return emit('error', storageError.message); }
+        }
         return emit('conflict', error.message);
       }
       return emit(error.syncKind === 'offline' || error.syncKind === 'unsupported' ? error.syncKind : 'error', error.message || '同步未完成；本机进度仍保留');
@@ -693,9 +756,14 @@
         revision += 1;
         if (!meta) return status();
         meta.dirty = true;
-        saveMeta();
         if (view.kind !== 'conflict' && view.kind !== 'syncing') emit('idle', '新进度已在本机，等待同步');
-        schedule();
+        // The hash of the last confirmed cloud revision lets a reopen detect
+        // new local work. Avoid racing an IndexedDB adoption with an old copy.
+        var saved = metaInDatabase || pendingMetaWrites ? undefined : saveMeta(), token = epoch;
+        if (saved) saved.then(function () {
+          if (token === epoch) schedule();
+        }, function (error) { failure(error, token); });
+        else schedule();
         return status();
       } catch (error) { return failure(error, epoch); }
     }
@@ -707,6 +775,9 @@
       if (!saved) return null;
       var input;
       try { input = JSON.parse(saved); } catch (_) { throw problem('本机同步设置损坏，尚未连接云端'); }
+      return checkedMeta(input);
+    }
+    function checkedMeta(input) {
       if (!object(input) || (input.version !== 1 && input.version !== 2)) throw problem('本机同步设置版本不受支持');
       var result = { version: input.version,
         baseUpdateTime: input.baseUpdateTime === null ? null : string(input.baseUpdateTime, 100, 'baseUpdateTime'),
@@ -721,11 +792,47 @@
       if (result.baseHash !== null && !/^[0-9a-f]{64}$/.test(result.baseHash)) throw problem('本机同步摘要不正确');
       return result;
     }
+    function withStoredMeta(action) {
+      if (metaReady) return action();
+      var token = epoch;
+      if (!metaRead) {
+        metaRead = indexedStore(META_KEY, META_STORE, 'readonly', function (store) {
+          return store.get(META_RECORD);
+        }).then(function (request) {
+          var record = request.result;
+          if (record !== undefined) {
+            if (!object(record) || !own(record, 'value')) throw problem('本机同步设置损坏，尚未连接云端');
+            var saved = record.value === null ? null : checkedMeta(record.value);
+            metaInDatabase = true;
+            if (token === epoch) {
+              meta = saved;
+              if (!meta) emit('off', '尚未开启跨设备同步');
+              else if (meta.requireConflict) emit('conflict', '上次采用进度未确认完成；两份进度仍保留，请选择保留哪份');
+              else emit('idle', '已保存同步连接，等待同步');
+            }
+          }
+          metaReady = true;
+        }).catch(function (error) {
+          if (error && (error.name === 'SecurityError' || error.name === 'NotSupportedError')) {
+            backupDatabase = null;
+            metaReady = true;
+            return;
+          }
+          metaRead = null;
+          throw problem('无法读取本机同步设置，请保留此页面后重试。');
+        });
+      }
+      return metaRead.then(function () {
+        return token === epoch ? action() : status();
+      }, function (error) {
+        return failure(error, token);
+      });
+    }
     function start() {
+      if (!metaReady) return withStoredMeta(start);
       if (started) return meta ? sync() : Promise.resolve(status());
       started = true;
       try {
-        meta = loadMeta();
         if (!meta) return Promise.resolve(emit('off', '尚未开启跨设备同步'));
         observedJSON = snapshot().json;
         if (meta.requireConflict) return Promise.resolve(emit('conflict', '上次采用进度未确认完成；两份进度仍保留，请选择保留哪份'));
@@ -746,7 +853,8 @@
         var fingerprint = await hash(local.json);
         ensureUnchanged(token, localRevision, true);
         if (!meta.baseHash || fingerprint !== meta.baseHash) meta.dirty = true;
-        saveMeta();
+        await saveMeta();
+        ensureEpoch(token);
         emit('syncing', '正在同步学习进度');
         var remote = await readRemote(derived, token);
         ensureEpoch(token);
@@ -765,7 +873,7 @@
           // never gets recreated automatically using possibly outdated progress.
           if (meta.baseUpdateTime !== null) throw problem('云端进度已被移除，本机进度仍保留；请重新建立同步', 'conflict');
           meta.dirty = true;
-          saveMeta();
+          await saveMeta();
           return write(local, derived, null, token, localRevision, null, true);
         }
         // A PATCH can commit successfully even when its response times out.
@@ -776,7 +884,8 @@
           meta.baseHash = remote.hash;
           meta.dirty = false;
           meta.lastSyncedAt = now();
-          saveMeta();
+          await saveMeta();
+          ensureEpoch(token);
           conflictRemote = null;
           return emit('synced', '两台设备的学习进度已同步');
         }
@@ -791,13 +900,15 @@
         if (fingerprint === meta.baseHash) {
           meta.dirty = false;
           meta.lastSyncedAt = now();
-          saveMeta();
+          await saveMeta();
+          ensureEpoch(token);
           return emit('synced', '两台设备的学习进度已同步');
         }
         return write(local, derived, remote, token, localRevision, null, true);
       });
     }
     function createFamily() {
+      if (!metaReady) return withStoredMeta(createFamily);
       var token = beginEpoch();
       started = true;
       return run(token, async function () {
@@ -805,10 +916,12 @@
         var current = refreshLocal();
         var code = hex(crypt.getRandomValues(new Uint8Array(16)));
         var candidate = { version: 1, code: code, baseUpdateTime: null, baseHash: null, dirty: true, lastSyncedAt: null };
-        persist(candidate);
+        var localRevision = revision;
+        await persist(candidate, token);
+        ensureEpoch(token);
         meta = candidate;
         conflictRemote = null;
-        var localRevision = revision;
+        ensureUnchanged(token, localRevision);
         emit('syncing', '正在建立汉字游戏同步');
         var derived = await keys(candidate, token);
         var remote = await readRemote(derived, token);
@@ -819,6 +932,7 @@
       });
     }
     function joinFamily(value) {
+      if (!metaReady) return withStoredMeta(function () { return joinFamily(value); });
       var normalized;
       try {
         normalized = normalizeCode(value);
@@ -842,6 +956,7 @@
       });
     }
     function connectPassword(value, creating) {
+      if (!metaReady) return withStoredMeta(function () { return connectPassword(value, creating); });
       var password;
       try {
         password = normalizePassword(value);
@@ -879,6 +994,7 @@
       });
     }
     function resolveConflict(choice) {
+      if (!metaReady) return withStoredMeta(function () { return resolveConflict(choice); });
       var merging = choice === 'merge' && options.mergeOnConflict === true;
       if (choice !== 'local' && choice !== 'remote' && !merging) {
         return Promise.resolve(emit('error', '请选择保留本机或云端进度'));
@@ -901,16 +1017,30 @@
         await backup(current, remote, 'conflict-local');
         ensureUnchanged(token, localRevision);
         meta.dirty = true;
-        saveMeta();
+        await saveMeta();
         return write(current, derived, remote, token, localRevision);
       });
     }
     function disconnect() {
-      beginEpoch();
+      var token = beginEpoch();
       meta = null;
       conflictRemote = null;
       keysCache = null;
       started = true;
+      if (!metaReady) return withStoredMeta(function () { return clearMetadata(token); });
+      return clearMetadata(token);
+    }
+    function clearMetadata(token) {
+      meta = null;
+      if (metaInDatabase || pendingMetaWrites) {
+        return persistInDatabase(null, token).then(function () {
+          if (token !== epoch) return status();
+          try { storage.removeItem(META_KEY); } catch (_) { /* The database tombstone is authoritative. */ }
+          return emit('off', '已断开同步；本机学习进度和备份仍保留');
+        }, function () {
+          return token === epoch ? emit('error', '本次同步已停止，但未能清除本机连接设置；请保留页面并检查存储空间') : status();
+        });
+      }
       try {
         requireStorage();
         if (typeof storage.removeItem !== 'function') throw new Error('Storage cannot remove settings');

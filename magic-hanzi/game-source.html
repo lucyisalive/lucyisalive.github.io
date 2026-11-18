@@ -1178,7 +1178,7 @@ function writeLocalProgress(text, operation = 'save', currentLegacy = legacyLear
       localStorage.setItem(SHARED_STORY_KEY, storyText);
       wroteStory = true;
     }
-    localStorage.setItem(SAVE_KEY, learningText);
+    if(learningText !== stored) localStorage.setItem(SAVE_KEY, learningText);
   }catch(error){
     if(wroteStory){
       try{
@@ -3356,7 +3356,11 @@ onTap(document.getElementById('cloudSyncRetrySaveBtn'), () => cloudSyncAction(()
 onTap(document.getElementById('cloudKeepLocalBtn'), () => cloudSyncAction(() => cloudSyncController.resolveConflict('local'), false));
 onTap(document.getElementById('cloudUseRemoteBtn'), () => cloudSyncAction(() => cloudSyncController.resolveConflict('remote'), true));
 onTap(document.getElementById('cloudMergeBtn'), () => cloudSyncAction(() => cloudSyncController.resolveConflict('merge'), true));
-onTap(document.getElementById('cloudSyncDisconnectBtn'), () => { if(cloudSyncController) cloudSyncController.disconnect(); renderCloudSyncStatus(); });
+onTap(document.getElementById('cloudSyncDisconnectBtn'), async () => {
+  if(!cloudSyncController) return;
+  try{ await cloudSyncController.disconnect(); }
+  finally{ renderCloudSyncStatus(); }
+});
 onTap(document.getElementById('cloudSyncCopyBtn'), async () => {
   const code = document.getElementById('cloudSyncCode');
   try{ await navigator.clipboard.writeText(code.value); document.getElementById('cloudSyncStatus').textContent = '同步码已复制，可粘贴到另一台设备。'; }

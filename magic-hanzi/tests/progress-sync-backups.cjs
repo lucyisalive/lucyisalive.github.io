@@ -15,14 +15,14 @@ function lesson(...chars) {
   };
 }
 
-function storage(previous, { denyBackup = false, metadataNeedsSpace = false } = {}) {
+function storage(previous, { denyBackup = false, metadataNeedsSpace = false, metadataError = 'QuotaExceededError' } = {}) {
   const values = new Map(previous === undefined ? [] : [[BACKUP, previous]]);
   return {
     values,
     getItem(key) { return values.get(key) ?? null; },
     setItem(key, value) {
       if ((denyBackup && key === BACKUP) || (metadataNeedsSpace && key === META && values.has(BACKUP))) {
-        throw new DOMException('Synthetic storage limit', 'QuotaExceededError');
+        throw new DOMException('Synthetic storage fault', key === META ? metadataError : 'QuotaExceededError');
       }
       values.set(key, value);
     },
@@ -32,27 +32,47 @@ function storage(previous, { denyBackup = false, metadataNeedsSpace = false } = 
 
 function indexedDB(abortWrites = false, beforeCommit = () => {}) {
   const entries = [];
-  let created = false;
+  const connection = new Map();
+  const created = new Set();
   return {
     entries,
+    connection,
     open(name, version) {
-      assert.equal(name, BACKUP);
+      assert.ok(name === BACKUP || name === META);
+      const expectedStore = name === BACKUP ? 'snapshots' : 'connection';
       assert.equal(version, 1);
       const request = {
         result: {
           close() {},
-          createObjectStore(name, options) {
-            assert.equal(name, 'snapshots');
-            assert.deepEqual(options, { autoIncrement: true });
-            created = true;
+          createObjectStore(store, options) {
+            assert.equal(store, expectedStore);
+            assert.deepEqual(options, name === BACKUP ? { autoIncrement: true } : undefined);
+            created.add(name);
           },
-          transaction(name, mode) {
-            assert.equal(name, 'snapshots');
+          transaction(store, mode) {
+            assert.equal(store, expectedStore);
             let writes = 0;
             const transaction = {
               abort() { transaction.onabort(); },
               objectStore() {
                 return {
+                  get(key) {
+                    assert.equal(mode, 'readonly');
+                    const result = {};
+                    queueMicrotask(() => {
+                      result.result = structuredClone(connection.get(key));
+                      transaction.oncomplete();
+                    });
+                    return result;
+                  },
+                  put(record, key) {
+                    assert.equal(mode, 'readwrite');
+                    queueMicrotask(() => {
+                      if (abortWrites) { transaction.abort(); return; }
+                      connection.set(key, structuredClone(record));
+                      transaction.oncomplete();
+                    });
+                  },
                   add(entry) {
                     assert.equal(mode, 'readwrite');
                     writes++;
@@ -93,7 +113,7 @@ function indexedDB(abortWrites = false, beforeCommit = () => {}) {
         },
       };
       queueMicrotask(() => {
-        if (!created) request.onupgradeneeded();
+        if (!created.has(name)) request.onupgradeneeded();
         request.onsuccess();
       });
       return request;
@@ -182,13 +202,30 @@ async function test() {
   const packedDatabase = indexedDB();
   const packed = device(server, lesson('乙'), packedStorage, packedDatabase);
   assert.equal((await packed.client.joinPasswordFamily(PASSWORD)).kind, 'synced');
-  assert.equal(packedStorage.values.has(META), true, 'The connection survives a reload');
-  assert.equal(packedStorage.values.has(BACKUP), false, 'Reclaim localStorage only after moving its archive');
-  assert.deepEqual(packedDatabase.entries, [recent, prior], 'Both original archives are durable');
+  assert.equal(packedStorage.values.has(META), false);
+  assert.equal(packedStorage.values.get(BACKUP), earlier, 'Metadata fallback leaves the earlier backup in place');
+  assert.deepEqual(packedDatabase.entries, [recent], 'The new pair is durable too');
+  const storedConnection = packedDatabase.connection.get('active').value;
+  assert.equal(storedConnection.requireConflict, false);
+  assert.doesNotMatch(JSON.stringify(storedConnection), new RegExp(PASSWORD));
   const reloaded = device(server, lesson('甲'), packedStorage, packedDatabase);
-  assert.equal(reloaded.client.status().connected, true);
   assert.equal((await reloaded.client.start()).kind, 'synced');
+  assert.equal(reloaded.client.status().connected, true);
   assert.deepEqual(await reloaded.client.listBackups(), [recent, prior]);
+  packedStorage.values.set(META, JSON.stringify(storedConnection));
+  packedStorage.removeItem = () => { throw new DOMException('Synthetic local clear restriction', 'SecurityError'); };
+  assert.equal((await reloaded.client.disconnect()).kind, 'off');
+  assert.deepEqual(packedDatabase.connection.get('active'), { value: null });
+  const stale = device(server, lesson('乙'), packedStorage, packedDatabase);
+  const beforeStale = server.calls.length;
+  assert.equal((await stale.client.start()).kind, 'off');
+  assert.equal(server.calls.length, beforeStale, 'Do not resurrect an obsolete local connection');
+
+  const restricted = storage(earlier, { metadataNeedsSpace: true, metadataError: 'SecurityError' });
+  const restrictedDb = indexedDB();
+  const restrictedDevice = device(server, lesson('乙'), restricted, restrictedDb);
+  assert.equal((await restrictedDevice.client.joinPasswordFamily(PASSWORD)).kind, 'synced');
+  assert.equal(restrictedDb.connection.get('active').value.requireConflict, false);
 
   for (const rejectsAsynchronously of [false, true]) {
     const applyStorage = storage(earlier);
@@ -280,4 +317,5 @@ async function test() {
   console.log('Progress backups: durable quota fallback, malformed archive preservation, failed backup barrier, and guarded merge passed.');
 }
 
-test().catch(error => { console.error(error); process.exitCode = 1; });
+if (require.main === module) test().catch(error => { console.error(error); process.exitCode = 1; });
+module.exports = { indexedDB };
