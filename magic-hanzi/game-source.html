@@ -2,7 +2,7 @@
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
-<meta name="game-version" content="2026.11.18.1">
+<meta name="game-version" content="2026.11.23.1">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>魔法闯关汉字游戏</title>
 <link rel="stylesheet" href="game-feedback.css?v=2026.11.02.4">
@@ -634,11 +634,16 @@
     </p>
 
     <details class="settings-details" id="aiSentenceSettings">
-      <summary>AI 造句</summary>
-      <p id="aiSentenceStatus" role="status">尚未连接。</p>
-      <p>连接后，词库没有收录的词会自动补例句。连接在此页面有效，已生成的例句会保留。服务会收到词语、目标字和读音，可能保留这些文本。请只录普通学习词语。</p>
-      <button id="aiSentenceConnectBtn">连接 AI 造句</button>
-      <button id="aiSentenceDisconnectBtn" hidden>断开连接</button>
+      <summary>自动例句</summary>
+      <p id="aiSentenceStatus" role="status">正在检查本家庭的自动造句连接。</p>
+      <p>已有例句会直接使用，缺少的例句由 OpenAI 自动补齐并随家庭进度保存。每台设备接入家庭同步后可沿用这份连接。服务只接收词语、目标字和读音，请只录普通学习词语。</p>
+      <button id="aiSentenceConnectBtn">连接本家庭自动造句</button>
+      <button id="aiSentenceDisconnectBtn" hidden>暂停自动造句</button>
+      <details class="settings-details">
+        <summary>高级维护</summary>
+        <button id="aiSentenceFingerprintBtn">查看家庭连接指纹</button>
+        <output id="aiSentenceFamilyFingerprint" hidden style="overflow-wrap:anywhere;"></output>
+      </details>
     </details>
     <div class="queue-list" id="queueList"></div>
 
@@ -730,7 +735,7 @@
         </details>
       </div>
     </section>
-    <p class="hint-text" id="gameVersion">版本 2026.11.18.1</p>
+    <p class="hint-text" id="gameVersion">版本 2026.11.23.1</p>
   </div>
 </div>
 
@@ -740,10 +745,12 @@
   <div id="parentTestMsg" role="status"></div>
 </div>
 
+<script>window.HanziSentenceServiceConfig = {endpoint:'https://hanzi-magic-sentence-service.candidcypress64.chatgpt.site'};</script>
 <script src="curriculum-data.js?v=2026.11.02.3"></script>
 <script src="practice-selector.js?v=2026.11.02.3"></script>
 <script src="sentence-hints.js?v=2026.11.17.1"></script>
 <script src="ai-sentences.js"></script>
+<script src="openai-sentences.js"></script>
 <script src="game-feedback.js?v=2026.11.02.4"></script>
 <script src="glyph-catalog.js"></script>
 <script src="glyph-loader.js"></script>
@@ -821,7 +828,7 @@ function defaultBank(){
 // set — the change would reach nobody who actually uses the game.
 const BANK_VERSION = 5;
 const ROUND_GOAL = 10;
-const GAME_VERSION = '2026.11.18.1';
+const GAME_VERSION = '2026.11.23.1';
 
 let state = {
   bank: defaultBank(),
@@ -3520,6 +3527,7 @@ function renderCloudSyncStatus(){
   const disabled = !cloudSyncController || syncUiBusy || status.kind === 'syncing' || status.kind === 'unsupported';
   for(const id of ['cloudSyncCreateBtn','cloudSyncJoinBtn','cloudSyncLegacyJoinBtn','cloudSyncNowBtn','cloudMergeBtn','cloudKeepLocalBtn','cloudUseRemoteBtn']) document.getElementById(id).disabled = disabled;
   if(panelOverlay.classList.contains('show')) renderLocalRecoveryCopies();
+  refreshAiSentenceFamily();
 }
 function syncTick(){
   if(!cloudSyncController || syncUiBusy || !cloudSyncController.status().connected || parentValidation) return;
@@ -3553,13 +3561,18 @@ async function cloudSyncAction(action, adopt){
   if(!sharedLearning && cloudSyncController.status().connected &&
       !['conflict','error'].includes(cloudSyncController.status().kind)) saveState();
 }
-function syncWithCredential(method, inputId, adopt){
-  return cloudSyncAction(() => {
-    const input = document.getElementById(inputId);
-    const value = input.value;
-    input.value = '';
-    return cloudSyncController[method](value);
-  }, adopt);
+async function syncWithCredential(method, inputId, adopt){
+  if(!cloudSyncController || syncUiBusy) return;
+  aiSentenceFamilyChanging = true;
+  stopAiSentenceFamily();
+  try{
+    return await cloudSyncAction(() => {
+      const input = document.getElementById(inputId);
+      const value = input.value;
+      input.value = '';
+      return cloudSyncController[method](value);
+    }, adopt);
+  } finally { aiSentenceFamilyChanging = false; refreshAiSentenceFamily(); }
 }
 function initProgressSync(){
   try{
@@ -3594,8 +3607,10 @@ onTap(document.getElementById('cloudUseRemoteBtn'), () => cloudSyncAction(() => 
 onTap(document.getElementById('cloudMergeBtn'), () => cloudSyncAction(() => cloudSyncController.resolveConflict('merge'), true));
 onTap(document.getElementById('cloudSyncDisconnectBtn'), async () => {
   if(!cloudSyncController) return;
+  aiSentenceFamilyChanging = true;
+  stopAiSentenceFamily();
   try{ await cloudSyncController.disconnect(); }
-  finally{ renderCloudSyncStatus(); }
+  finally{ aiSentenceFamilyChanging = false; renderCloudSyncStatus(); }
 });
 onTap(document.getElementById('cloudSyncCopyBtn'), async () => {
   const code = document.getElementById('cloudSyncCode');
@@ -3636,12 +3651,55 @@ function nextParentPriority(){
   return unfinishedParentEntries().find(p => !priorityConsumedToday.has(p.char) && !pendingChars.has(p.char));
 }
 
+function sameSentenceTarget(left, right){
+  return !!left && !!right && typeof left.word === 'string' && !!left.word &&
+    typeof left.pinyin === 'string' && !!left.pinyin && left.char === right.char &&
+    left.word === right.word && left.pinyin === right.pinyin;
+}
+function persistAiSentenceHints(client, targets, familyVersion){
+  if(window.hanziAiSentenceClient !== client || familyVersion !== aiSentenceFamilyVersion) return;
+  // A cloud pull replaces state, and parent validation must never save learning.
+  // Keep only target identities while waiting, then inspect the live state again.
+  if(syncApplying || parentValidation){
+    setTimeout(() => persistAiSentenceHints(client, targets, familyVersion), 250);
+    return;
+  }
+  let changed = false;
+  for(const target of targets){
+    const item = state.bank.find(entry => entry.char === target.char);
+    const request = state.priorityQueue.find(entry => entry.char === target.char);
+    if(!sameSentenceTarget(item, target) ||
+        (target.requestId ? !request || request.requestId !== target.requestId || !sameSentenceTarget(request, target) : !!request)) continue;
+    const saved = typeof item.sentence === 'string' ? item.sentence.trim() : '';
+    const arranged = typeof request?.sentence === 'string' ? request.sentence.trim() : '';
+    let sentence = saved || arranged;
+    if(!sentence){
+      try{ sentence = client.get(target); }catch(_){ continue; }
+    }
+    if(typeof sentence !== 'string' || !sentence.trim()) continue;
+    if(!saved){ item.sentence = sentence.trim(); changed = true; }
+    if(request && !arranged){ request.sentence = sentence.trim(); changed = true; }
+  }
+  if(changed){
+    saveState();
+    if(currentItem) sentenceBtn.hidden = !sentenceFor(currentItem);
+    if(panelOverlay.classList.contains('show')) renderQueueList();
+  }
+}
 function requestAiSentences(items){
   try{
     const client = window.hanziAiSentenceClient;
-    if(client?.status().connected){
+    if(client){
+      const familyVersion = aiSentenceFamilyVersion;
+      const targets = items.filter(item => item.word).map(item => ({
+        char:item.char, word:item.word, pinyin:item.pinyin,
+        requestId:item.requestId || state.priorityQueue.find(request => request.char === item.char)?.requestId || null,
+      }));
+      persistAiSentenceHints(client, targets, familyVersion);
       const missing = items.filter(item => item.word && !localSentenceFor(item) && !client.get(item));
-      if(missing.length) Promise.resolve(client.generate(missing)).catch(() => {});
+      if(client.status().connected && missing.length){
+        return Promise.resolve(client.generate(missing)).then(() => persistAiSentenceHints(client, targets, familyVersion)).catch(() => {});
+      }
     }
   }catch(_){ /* Optional generation cannot delay or undo a parent import. */ }
 }
@@ -4693,32 +4751,143 @@ function renderStuckList(){
   });
 }
 
+let aiSentenceUsesService = false, aiSentenceServiceEndpoint = '', aiSentenceServiceOrigin = '';
+let aiSentenceFamilyToken = null, aiSentenceFamilyVersion = 0, aiSentenceFamilyRefresh = 0;
+let aiSentenceFamilyChanging = false, aiSentencePaused = false;
+let aiSentencePairPopup = null, aiSentencePairVersion = 0, aiSentencePairSent = false;
+function closeAiSentencePairing(){
+  const popup = aiSentencePairPopup;
+  aiSentencePairPopup = null; aiSentencePairSent = false; aiSentencePairVersion++;
+  try{ if(popup && !popup.closed) popup.close(); }catch(_){ /* The family may close the window first. */ }
+}
+function stopAiSentenceFamily(){
+  if(!aiSentenceUsesService) return;
+  aiSentenceFamilyRefresh++; aiSentenceFamilyVersion++; aiSentenceFamilyToken = null;
+  const fingerprint = document.getElementById('aiSentenceFamilyFingerprint');
+  fingerprint.textContent = ''; fingerprint.hidden = true;
+  closeAiSentencePairing();
+  window.hanziAiSentenceClient?.disconnect();
+}
+function beginAiSentenceConnection(){
+  const client = window.hanziAiSentenceClient, familyVersion = aiSentenceFamilyVersion;
+  if(!client || !aiSentenceFamilyToken || aiSentenceFamilyChanging || aiSentencePaused) return Promise.resolve(false);
+  return Promise.resolve(client.begin()).then(connected => {
+    if(!connected || client !== window.hanziAiSentenceClient || familyVersion !== aiSentenceFamilyVersion || aiSentenceFamilyChanging) return false;
+    requestAiSentences(parentPriorityEntries());
+    return true;
+  }).catch(() => false);
+}
+async function refreshAiSentenceFamily(){
+  if(!aiSentenceUsesService || aiSentenceFamilyChanging) return;
+  const controller = cloudSyncController, client = window.hanziAiSentenceClient;
+  if(!client) return;
+  if(!controller?.status().connected || typeof controller.sentenceAccessToken !== 'function'){
+    if(aiSentenceFamilyToken || aiSentencePairPopup || client.status().connected || client.status().busy) stopAiSentenceFamily();
+    renderAiSentenceStatus();
+    return;
+  }
+  const refresh = ++aiSentenceFamilyRefresh;
+  let token = null;
+  try{ token = await controller.sentenceAccessToken(); }catch(_){ /* Keep existing hints when connection storage is unavailable. */ }
+  if(refresh !== aiSentenceFamilyRefresh || controller !== cloudSyncController || aiSentenceFamilyChanging) return;
+  if(token !== aiSentenceFamilyToken){
+    stopAiSentenceFamily();
+    aiSentenceFamilyToken = token;
+    if(token) beginAiSentenceConnection();
+  }
+  renderAiSentenceStatus();
+}
 function renderAiSentenceStatus(){
   const status = window.hanziAiSentenceClient?.status();
-  document.getElementById('aiSentenceStatus').textContent = status?.message || '这个浏览器暂时无法连接 AI 造句。';
+  const familyConnected = !!cloudSyncController?.status().connected;
+  const unavailable = aiSentenceUsesService && (!aiSentenceServiceEndpoint || !familyConnected || !aiSentenceFamilyToken);
+  const message = !aiSentenceUsesService ? status?.message
+    : !aiSentenceServiceEndpoint ? 'OpenAI 自动造句尚未配置，已有例句仍可使用。'
+    : !familyConnected ? '请先接入下方的家庭同步，自动造句会沿用同一份家庭连接。'
+    : aiSentenceFamilyChanging || !aiSentenceFamilyToken ? '正在读取本家庭的自动造句连接。'
+    : aiSentencePaused ? '自动造句已暂停，已有例句仍可使用。' : status?.message;
+  document.getElementById('aiSentenceStatus').textContent = message || '这个浏览器暂时无法连接自动造句。';
   const connect = document.getElementById('aiSentenceConnectBtn');
   connect.hidden = !!status?.connected;
-  connect.disabled = !status || !!status.busy;
-  document.getElementById('aiSentenceDisconnectBtn').hidden = !status?.connected;
+  connect.textContent = aiSentenceUsesService ? aiSentencePaused ? '恢复自动造句' : '连接本家庭自动造句' : '连接 AI 造句';
+  connect.disabled = !status || !!status.busy || unavailable || aiSentenceFamilyChanging;
+  document.getElementById('aiSentenceDisconnectBtn').hidden = !status?.connected && !status?.busy;
+  document.getElementById('aiSentenceFingerprintBtn').disabled = !aiSentenceUsesService ||
+    !familyConnected || !aiSentenceFamilyToken || aiSentenceFamilyChanging;
 }
+
+async function showAiSentenceFamilyFingerprint(){
+  const controller = cloudSyncController, familyVersion = aiSentenceFamilyVersion;
+  if(!aiSentenceUsesService || aiSentenceFamilyChanging || !controller?.status().connected || !aiSentenceFamilyToken) return;
+  try{
+    const token = await controller.sentenceAccessToken();
+    if(!token || token !== aiSentenceFamilyToken) return;
+    const digest = await window.crypto.subtle.digest('SHA-256', new TextEncoder().encode(token));
+    if(controller !== cloudSyncController || familyVersion !== aiSentenceFamilyVersion || aiSentenceFamilyChanging || token !== aiSentenceFamilyToken) return;
+    const fingerprint = document.getElementById('aiSentenceFamilyFingerprint');
+    fingerprint.textContent = Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('');
+    fingerprint.hidden = false;
+  }catch(_){ document.getElementById('aiSentenceStatus').textContent = '家庭连接指纹暂时无法读取，已有例句仍可使用。'; }
+}
+onTap(document.getElementById('aiSentenceFingerprintBtn'), showAiSentenceFamilyFingerprint);
 
 function initAiSentences(){
   try{
-    const client = window.HanziAiSentences.create(window, () => {
+    const config = window.HanziSentenceServiceConfig;
+    aiSentenceUsesService = !!config && typeof config === 'object';
+    if(aiSentenceUsesService && typeof config.endpoint === 'string' && config.endpoint){
+      const endpoint = new URL(config.endpoint);
+      if(endpoint.protocol === 'https:' && !endpoint.username && !endpoint.password && !endpoint.search && !endpoint.hash){
+        aiSentenceServiceEndpoint = endpoint.href.replace(/\/$/, '');
+        aiSentenceServiceOrigin = endpoint.origin;
+      }
+    }
+    const factory = aiSentenceUsesService ? window.HanziOpenAiSentences : window.HanziAiSentences;
+    const client = factory.create(window, () => {
       renderAiSentenceStatus();
       if(currentItem && !parentValidation) sentenceBtn.hidden = !sentenceFor(currentItem);
       if(panelOverlay.classList.contains('show')) renderQueueList();
+    }, {
+      endpoint:aiSentenceServiceEndpoint,
+      getAccessToken:async () => {
+        const controller = cloudSyncController, familyVersion = aiSentenceFamilyVersion;
+        if(aiSentenceFamilyChanging || !controller?.status().connected) return null;
+        const token = await controller.sentenceAccessToken();
+        return controller === cloudSyncController && familyVersion === aiSentenceFamilyVersion &&
+          !aiSentenceFamilyChanging && token === aiSentenceFamilyToken ? token : null;
+      },
     });
     window.hanziAiSentenceClient = client;
     renderAiSentenceStatus();
-    Promise.resolve(client.complete()).then(connected => {
-      if(!connected) return;
-      panelOverlay.classList.add('show');
-      document.getElementById('aiSentenceSettings').open = true;
-      requestAiSentences(parentPriorityEntries());
+    if(aiSentenceUsesService) refreshAiSentenceFamily();
+    else Promise.resolve(client.complete()).then(connected => {
+      if(connected) requestAiSentences(parentPriorityEntries());
     }).catch(() => {});
   }catch(_){ renderAiSentenceStatus(); }
 }
+
+async function handleAiSentencePairMessage(event){
+  const popup = aiSentencePairPopup, pairVersion = aiSentencePairVersion;
+  if(!aiSentenceUsesService || !popup || popup.closed || event.source !== popup || event.origin !== aiSentenceServiceOrigin ||
+      aiSentenceFamilyChanging || !cloudSyncController?.status().connected) return;
+  if(event.data?.type === 'hanzi-sentence-pair-request'){
+    const controller = cloudSyncController, familyVersion = aiSentenceFamilyVersion;
+    let token;
+    try{ token = await controller.sentenceAccessToken(); }catch(_){ return; }
+    if(!token || token !== aiSentenceFamilyToken || controller !== cloudSyncController || familyVersion !== aiSentenceFamilyVersion ||
+        aiSentenceFamilyChanging || popup !== aiSentencePairPopup || pairVersion !== aiSentencePairVersion || popup.closed) return;
+    try{
+      popup.postMessage({type:'hanzi-sentence-pair-token', token}, aiSentenceServiceOrigin);
+      aiSentencePairSent = true;
+    }catch(_){ /* A closed pairing window cannot affect the game. */ }
+  } else if(event.data?.type === 'hanzi-sentence-paired' && aiSentencePairSent){
+    closeAiSentencePairing();
+    aiSentencePaused = false;
+    beginAiSentenceConnection();
+  }
+}
+window.addEventListener('message', handleAiSentencePairMessage);
+window.addEventListener('online', () => { if(aiSentenceUsesService) beginAiSentenceConnection(); });
 
 onTap(document.getElementById('aiSentenceConnectBtn'), () => {
   if(progressSaveNotice){
@@ -4729,9 +4898,33 @@ onTap(document.getElementById('aiSentenceConnectBtn'), () => {
     document.getElementById('aiSentenceStatus').textContent = '请先写完当前这题，再连接 AI 造句。';
     return;
   }
-  Promise.resolve(window.hanziAiSentenceClient?.begin()).catch(() => {});
+  if(!aiSentenceUsesService){
+    Promise.resolve(window.hanziAiSentenceClient?.begin()).catch(() => {});
+    return;
+  }
+  if(!aiSentenceServiceOrigin || !cloudSyncController?.status().connected || !aiSentenceFamilyToken || aiSentenceFamilyChanging){
+    renderAiSentenceStatus(); return;
+  }
+  if(aiSentencePaused){ aiSentencePaused = false; beginAiSentenceConnection(); return; }
+  if(aiSentencePairPopup && !aiSentencePairPopup.closed){
+    try{ aiSentencePairPopup.focus(); }catch(_){}
+    return;
+  }
+  closeAiSentencePairing();
+  // Open during the parent's tap, before any asynchronous credential work.
+  try{ aiSentencePairPopup = window.open(aiSentenceServiceOrigin + '/pair', 'hanzi-sentence-pair', 'popup,width=520,height=720'); }
+  catch(_){ aiSentencePairPopup = null; }
+  document.getElementById('aiSentenceStatus').textContent = aiSentencePairPopup
+    ? '请在新窗口确认本家庭的自动造句连接，完成后会自动接回游戏。'
+    : '连接窗口未打开，请允许此网页打开弹出窗口后再点一次。';
 });
-onTap(document.getElementById('aiSentenceDisconnectBtn'), () => window.hanziAiSentenceClient?.disconnect());
+onTap(document.getElementById('aiSentenceDisconnectBtn'), () => {
+  aiSentencePaused = true;
+  closeAiSentencePairing();
+  aiSentenceFamilyVersion++;
+  window.hanziAiSentenceClient?.disconnect();
+  renderAiSentenceStatus();
+});
 
 function renderTodayLearning(){
   const today = todayStr();
@@ -5212,11 +5405,11 @@ function startGame(){
   loadParentTestInkLog();
   initMountainJourney();
   initHerbalistRoom();
-  if(sameGameSite) initAiSentences();
-  else document.body.classList.add('herbalist-no-ai');
   if(!sharedLearning) document.body.classList.add('herbalist-local-preview');
   const herbalistStoryRestored = restoreHerbalistStage();
   if(sharedLearning) initProgressSync();
+  if(sameGameSite) initAiSentences();
+  else document.body.classList.add('herbalist-no-ai');
   if(progressDatabaseReadFailed) showProgressSaveNotice('本机存档暂时无法读取。当前显示最近可读的进度，请先下载备份。');
   applyScene(state.scenesUnlocked);
   renderQueueList();

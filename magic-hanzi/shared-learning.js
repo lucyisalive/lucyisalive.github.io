@@ -109,16 +109,39 @@
     return stuckDay > wrongDay ? stuckDay : wrongDay;
   }
 
+  function sameSentenceTarget(left, right) {
+    return !!left && !!right && typeof left.word === 'string' && !!left.word &&
+      typeof left.pinyin === 'string' && !!left.pinyin && left.char === right.char &&
+      left.word === right.word && left.pinyin === right.pinyin;
+  }
+
+  function hasSentence(item) {
+    return typeof item?.sentence === 'string' && !!item.sentence.trim();
+  }
+
   function mergeBankItem(oldItem, newItem, oldRequest, newRequest) {
     const schedule = (newItem.lastSeen || '') > (oldItem.lastSeen || '') ? newItem : oldItem;
     const retries = retryDate(newItem) > retryDate(oldItem) ? newItem : oldItem;
     const newerRequest = (newRequest?.addedDay || '') > (oldRequest?.addedDay || '');
     const parent = newItem.fromParent && (!oldItem.fromParent || newerRequest) ? newItem : oldItem;
+    const other = parent === oldItem ? newItem : oldItem;
+    const parentFields = pick(parent, PARENT_FIELDS);
+    const sameRequest = (!oldRequest && !newRequest) ||
+      (oldRequest?.requestId && oldRequest.requestId === newRequest?.requestId &&
+        sameSentenceTarget(oldRequest, newRequest) && sameSentenceTarget(parent, oldRequest));
+    const parentRequest = parent === oldItem ? oldRequest : newRequest;
+    const otherRequest = parent === oldItem ? newRequest : oldRequest;
+    const sentenceSource = hasSentence(parentRequest) ? parentRequest : hasSentence(other) ? other : otherRequest;
+    // A generated hint may arrive after the original scheduling save. Enrich
+    // that exact request without changing its word, reading, or learning record.
+    if (!hasSentence(parent) && hasSentence(sentenceSource) && sameSentenceTarget(oldItem, newItem) && sameRequest) {
+      parentFields.sentence = sentenceSource.sentence;
+    }
     return {
       ...pick({ ...newItem, ...oldItem }, ['char', 'structure', 'strokeCount', 'curriculumId', 'unit', 'lesson']),
       ...pick(schedule, SCHEDULE_FIELDS),
       ...pick(retries, RETRY_FIELDS),
-      ...pick(parent, PARENT_FIELDS),
+      ...parentFields,
       history: mergeHistory(oldItem.history || [], newItem.history || []),
       passedDays: [...new Set([...(oldItem.passedDays || []), ...(newItem.passedDays || [])])].sort(),
       ...mergeMastery(oldItem, newItem),
@@ -133,9 +156,15 @@
     for (const request of ordered) {
       const selected = byChar.get(request.char);
       if (!selected) byChar.set(request.char, request);
-      else if (request.requestId && request.requestId === selected.requestId &&
-          (request.completedDay || '') > (selected.completedDay || '')) {
-        byChar.set(request.char, { ...selected, completedDay: request.completedDay });
+      else if (request.requestId && request.requestId === selected.requestId) {
+        let combined = selected;
+        if ((request.completedDay || '') > (selected.completedDay || '')) {
+          combined = { ...combined, completedDay: request.completedDay };
+        }
+        if (!hasSentence(selected) && hasSentence(request) && sameSentenceTarget(selected, request)) {
+          combined = { ...combined, sentence: request.sentence };
+        }
+        if (combined !== selected) byChar.set(request.char, combined);
       }
     }
     return [...byChar.values()];
@@ -144,6 +173,14 @@
   function mergeLearning(oldState, independentNewState) {
     const oldQueue = oldState.priorityQueue || [];
     const newQueue = independentNewState.priorityQueue || [];
+    const withBankSentences = (queue, sourceBank) => {
+      const source = new Map(sourceBank.map(item => [item.char, item]));
+      return queue.map(request => {
+        const item = source.get(request.char);
+        return !hasSentence(request) && hasSentence(item) && sameSentenceTarget(request, item)
+          ? { ...request, sentence: item.sentence } : request;
+      });
+    };
     const oldRequests = new Map(oldQueue.map(request => [request.char, request]));
     const newRequests = new Map(newQueue.map(request => [request.char, request]));
     const remaining = new Map(independentNewState.bank.map(item => [item.char, item]));
@@ -154,7 +191,9 @@
       return mergeBankItem(item, other, oldRequests.get(item.char), newRequests.get(item.char));
     });
     bank.push(...remaining.values());
-    return learningRecord({ ...oldState, bank, priorityQueue: mergeRequests(oldQueue, newQueue) }, oldState);
+    return learningRecord({ ...oldState, bank,
+      priorityQueue: mergeRequests(withBankSentences(oldQueue, oldState.bank),
+        withBankSentences(newQueue, independentNewState.bank)) }, oldState);
   }
 
   function validRevision(value) {

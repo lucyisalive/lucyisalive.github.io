@@ -3,7 +3,7 @@
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
-<meta name="game-version" content="2026.11.18.1">
+<meta name="game-version" content="2026.11.23.1">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>魔法闯关汉字游戏</title>
 <style data-source="game-feedback.css">
@@ -3252,11 +3252,16 @@ body[data-herb-stage="sea"] .story-sea { display: block; }
     </p>
 
     <details class="settings-details" id="aiSentenceSettings">
-      <summary>AI 造句</summary>
-      <p id="aiSentenceStatus" role="status">尚未连接。</p>
-      <p>连接后，词库没有收录的词会自动补例句。连接在此页面有效，已生成的例句会保留。服务会收到词语、目标字和读音，可能保留这些文本。请只录普通学习词语。</p>
-      <button id="aiSentenceConnectBtn">连接 AI 造句</button>
-      <button id="aiSentenceDisconnectBtn" hidden>断开连接</button>
+      <summary>自动例句</summary>
+      <p id="aiSentenceStatus" role="status">正在检查本家庭的自动造句连接。</p>
+      <p>已有例句会直接使用，缺少的例句由 OpenAI 自动补齐并随家庭进度保存。每台设备接入家庭同步后可沿用这份连接。服务只接收词语、目标字和读音，请只录普通学习词语。</p>
+      <button id="aiSentenceConnectBtn">连接本家庭自动造句</button>
+      <button id="aiSentenceDisconnectBtn" hidden>暂停自动造句</button>
+      <details class="settings-details">
+        <summary>高级维护</summary>
+        <button id="aiSentenceFingerprintBtn">查看家庭连接指纹</button>
+        <output id="aiSentenceFamilyFingerprint" hidden style="overflow-wrap:anywhere;"></output>
+      </details>
     </details>
     <div class="queue-list" id="queueList"></div>
 
@@ -3348,7 +3353,7 @@ body[data-herb-stage="sea"] .story-sea { display: block; }
         </details>
       </div>
     </section>
-    <p class="hint-text" id="gameVersion">版本 2026.11.18.1</p>
+    <p class="hint-text" id="gameVersion">版本 2026.11.23.1</p>
   </div>
 </div>
 
@@ -3358,6 +3363,7 @@ body[data-herb-stage="sea"] .story-sea { display: block; }
   <div id="parentTestMsg" role="status"></div>
 </div>
 
+<script>window.HanziSentenceServiceConfig = {endpoint:'https://hanzi-magic-sentence-service.candidcypress64.chatgpt.site'};</script>
 <script data-source="curriculum-data.js">
 /* 三下教材词语抽选池。来源和逐页核对记录见 data/grade3-word-sources.json。
    生成：node tools/build-grade3-curriculum.cjs；数据与判分规则分离。 */
@@ -5340,6 +5346,212 @@ window.HANZI_CURRICULUM = {
 });
 
 </script>
+<script data-source="openai-sentences.js">
+(function (root, factory) {
+  'use strict';
+  if (typeof module === 'object' && module.exports) module.exports = factory();
+  else root.HanziOpenAiSentences = factory();
+})(typeof window !== 'undefined' ? window : globalThis, function () {
+  'use strict';
+
+  // A family-only service credential is provided by the host integration.
+  // OpenAI API keys belong exclusively in the server's secret store.
+  const CACHE_KEY = 'hanzi-ai-sentences-cache-v1';
+  const MAX_CACHE = 512, BATCH_SIZE = 6, MAX_PENDING = 24;
+  const HAN = /^[\p{Script=Han}〇]$/u;
+  const WORD = /^[\p{Script=Han}〇]{2,12}$/u;
+  const PINYIN = /^[a-züêāáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜńňǹḿ]{1,16}[1-5]?$/u;
+
+  function tuple(value) {
+    if (!value || typeof value !== 'object') return null;
+    const { char, word, pinyin } = value;
+    if (typeof char !== 'string' || typeof word !== 'string' || typeof pinyin !== 'string') return null;
+    const result = { char: char.trim().normalize('NFC'), word: word.trim().normalize('NFC'),
+      pinyin: pinyin.trim().normalize('NFC').toLowerCase() };
+    return HAN.test(result.char) && WORD.test(result.word) && result.word.includes(result.char) &&
+      PINYIN.test(result.pinyin) ? result : null;
+  }
+  function id(item) { return JSON.stringify([item.char, item.word, item.pinyin]); }
+  function sentence(value, word) {
+    if (typeof value !== 'string' || value.length > 80) return null;
+    const text = value.trim().normalize('NFC'), length = Array.from(text).length;
+    if (length < 8 || length > 36 || !text.includes(word) ||
+        !/^[\p{Script=Han}〇0-9，、；：]+[。！？]$/u.test(text) ||
+        /(这个(?:词|字)|词语本|用.{1,12}造句|例句[：是]|拼音[：是]|笔画[：是])/.test(text)) return null;
+    return text;
+  }
+  function credential(value) {
+    return typeof value === 'string' && /^[A-Za-z0-9_-]{32,256}$/.test(value) && !/^sk-/i.test(value) ? value : null;
+  }
+  function errorMessage(error) {
+    if (['unconfigured', 'not_configured', 'service_unconfigured'].includes(error?.code))
+      return 'OpenAI 自动造句尚未配置；已有例句仍可用';
+    if (error?.status === 401 || error?.status === 403)
+      return '自动造句的家庭连接未通过验证；已有例句仍可用';
+    if (['quota_exceeded', 'insufficient_quota', 'upstream_quota'].includes(error?.code))
+      return 'OpenAI 接口额度不足；已有例句仍可用';
+    if (error?.status === 429) return '自动造句暂时达到请求限额，请稍后再试；已有例句仍可用';
+    if (error?.code === 'upstream_auth') return 'OpenAI 服务端授权需要更新；已有例句仍可用';
+    if (['timeout', 'upstream_timeout'].includes(error?.code) || error?.status === 504) return 'OpenAI 造句超时；已有例句仍可用';
+    return 'OpenAI 造句暂时未完成；已有例句仍可用';
+  }
+
+  function create(win, onChange, options) {
+    win = win || {}; options = options || {};
+    const Url = win.URL || globalThis.URL;
+    const Abort = win.AbortController || globalThis.AbortController;
+    const later = (win.setTimeout || globalThis.setTimeout).bind(win);
+    const clearLater = (win.clearTimeout || globalThis.clearTimeout).bind(win);
+    const cache = new Map(), queue = new Map(), attempted = new Set();
+    let base = null, allowedPage = false, ready = false, enabled = true, epoch = 0;
+    let connecting = null, pump = null, message = 'OpenAI 自动造句尚未配置；已有例句仍可用';
+    const controllers = new Set();
+    try {
+      const page = new Url(win.location.href);
+      allowedPage = page.origin === 'https://lucyisalive.github.io' && page.pathname.startsWith('/magic-hanzi/');
+      if (options.development === true && ['localhost', '127.0.0.1'].includes(page.hostname)) allowedPage = true;
+      if (typeof options.endpoint === 'string' && options.endpoint) {
+        const url = new Url(options.endpoint);
+        if (url.protocol !== 'https:' || url.username || url.password || url.search || url.hash) throw Error();
+        base = url.href.replace(/\/$/, '');
+      }
+    } catch (_) { base = null; }
+    function status() { return { connected: ready && enabled, busy: !!connecting || !!pump, message }; }
+    function notify(text) {
+      message = text;
+      try { onChange?.(status()); } catch (_) { /* UI cannot interrupt learning. */ }
+    }
+    function saved() {
+      while (cache.size > MAX_CACHE) cache.delete(cache.keys().next().value);
+      try { win.localStorage.setItem(CACHE_KEY, JSON.stringify([...cache.values()])); } catch (_) { /* Durable host write-back is separate. */ }
+    }
+    if (allowedPage) {
+      try {
+        const raw = win.localStorage.getItem(CACHE_KEY);
+        if (raw && raw.length <= 128000) {
+          const rows = JSON.parse(raw);
+          if (Array.isArray(rows)) for (const row of rows.slice(-MAX_CACHE)) {
+            const item = tuple(row), text = item && sentence(row.sentence, item.word);
+            if (text) cache.set(id(item), { ...item, sentence: text });
+          }
+        }
+      } catch (_) { /* A broken or unavailable cache cannot block the game. */ }
+    }
+    async function request(path, body, token) {
+      if (!allowedPage || !base || typeof options.getAccessToken !== 'function' ||
+          typeof win.fetch !== 'function' || typeof Abort !== 'function') throw { code: 'unconfigured' };
+      const access = credential(await options.getAccessToken());
+      if (token !== epoch) throw { code: 'cancelled' };
+      if (!access) throw { status: 401 };
+      const controller = new Abort();
+      controllers.add(controller);
+      let timeout;
+      const interrupted = new Promise((_, reject) => {
+        timeout = later(() => { controller.abort(); reject({ code: 'timeout' }); }, 25000);
+      });
+      try {
+        return await Promise.race([interrupted, (async () => {
+          const res = await win.fetch(base + path, {
+            method: body ? 'POST' : 'GET',
+            headers: { Authorization: 'Bearer ' + access, ...(body ? { 'Content-Type': 'application/json' } : {}) },
+            ...(body ? { body: JSON.stringify(body) } : {}),
+            credentials: 'omit', redirect: 'error', referrerPolicy: 'no-referrer', cache: 'no-store', signal: controller.signal,
+          });
+          const raw = await res.text();
+          if (raw.length > 32000) throw { code: 'format' };
+          let data;
+          try { data = JSON.parse(raw); } catch (_) { throw { code: 'format' }; }
+          if (!res.ok) throw { status: res.status, code: data?.error?.code };
+          return data;
+        })()]);
+      } finally { clearLater(timeout); controllers.delete(controller); }
+    }
+    function begin() {
+      if (connecting) return connecting;
+      if (pump) return Promise.resolve(ready);
+      enabled = true;
+      attempted.clear();
+      if (!allowedPage || !base) { notify(errorMessage({ code: 'unconfigured' })); return Promise.resolve(false); }
+      const token = epoch;
+      connecting = Promise.resolve().then(async () => {
+        try {
+          const result = await request('/health', null, token);
+          if (token !== epoch) return false;
+          if (result?.ready !== true) throw { code: 'unconfigured' };
+          ready = true;
+          notify('OpenAI 自动造句已连接');
+          return true;
+        } catch (error) {
+          if (token === epoch) { ready = false; notify(errorMessage(error)); }
+          return false;
+        } finally {
+          if (token === epoch) { connecting = null; notify(message); }
+        }
+      });
+      notify('正在检查 OpenAI 自动造句');
+      return connecting;
+    }
+    function disconnect() {
+      epoch++; enabled = false; ready = false; connecting = null; pump = null; queue.clear();
+      for (const controller of controllers) controller.abort();
+      notify('自动造句已暂停；已有例句仍可用');
+    }
+    function get(item) {
+      if (typeof item?.sentence === 'string' && item.sentence.trim()) return null;
+      const value = tuple(item);
+      return value ? cache.get(id(value))?.sentence || null : null;
+    }
+    function generate(items) {
+      if (!ready || !enabled || !Array.isArray(items)) return Promise.resolve([]);
+      for (const item of items.slice(0, MAX_PENDING * 2)) {
+        if (queue.size >= MAX_PENDING) break;
+        const value = tuple(item);
+        if (!value || typeof item.sentence === 'string' && item.sentence.trim()) continue;
+        const key = id(value);
+        if (!cache.has(key) && !attempted.has(key)) queue.set(key, value);
+      }
+      if (pump) return pump;
+      if (!queue.size) return Promise.resolve([]);
+      const token = epoch;
+      pump = Promise.resolve().then(async () => {
+        const generated = [];
+        try {
+          while (token === epoch && queue.size) {
+            const batch = [...queue.values()].slice(0, BATCH_SIZE), expected = new Map(batch.map(value => [id(value), value]));
+            for (const key of expected.keys()) { queue.delete(key); attempted.add(key); }
+            const result = await request('/v1/sentences', { items: batch }, token);
+            if (token !== epoch) return [];
+            if (!Array.isArray(result?.sentences) || result.sentences.length > BATCH_SIZE) throw { code: 'format' };
+            const accepted = new Map(), seen = new Set();
+            for (const row of result.sentences) {
+              const value = tuple(row), key = value && id(value), text = value && sentence(row.sentence, value.word);
+              if (!expected.has(key)) continue;
+              if (seen.has(key)) { accepted.delete(key); continue; }
+              seen.add(key);
+              if (text) accepted.set(key, { ...value, sentence: text });
+            }
+            for (const [key, row] of accepted) { cache.set(key, row); generated.push(row); }
+            if (accepted.size) saved();
+          }
+          notify(generated.length ? '已生成 ' + generated.length + ' 条 OpenAI 例句' : '本次未生成合适的例句；已有例句仍可用');
+          return generated;
+        } catch (error) {
+          if (token === epoch) {
+            if (error?.status === 401 || error?.status === 403) ready = false;
+            notify(errorMessage(error));
+          }
+          return generated;
+        } finally { if (token === epoch) { queue.clear(); pump = null; notify(message); } }
+      });
+      notify('正在准备 OpenAI 例句');
+      return pump;
+    }
+    return Object.freeze({ status, begin, complete: begin, disconnect, get, generate });
+  }
+  return Object.freeze({ create });
+});
+
+</script>
 <script data-source="game-feedback.js">
 /* 汉字魔法门：独立声音和星光反馈。无外部音频，无判分或学习进度逻辑。
    Load game-feedback.css and this script, then use window.HanziGameFeedback.
@@ -6416,6 +6628,20 @@ window.HANZI_GLYPH_CATALOG={"version":"41b38d977b270e08ea493526a4ee0f8643a59bbf2
       if (typeof options.projectId !== 'string' || !/^[a-zA-Z0-9][a-zA-Z0-9-]{2,99}$/.test(options.projectId)) throw problem('同步服务尚未配置');
     }
     async function hash(json) { return hex(await crypt.subtle.digest('SHA-256', new Encoder().encode(json))); }
+    async function sentenceAccessToken() {
+      try {
+        if (!metaReady) await withStoredMeta(function () {});
+        if (!metaReady || !meta || !crypt?.subtle || typeof Encoder !== 'function') return null;
+        var token = epoch, mode = credentialMode(meta);
+        var secret = mode === 'password' ? meta.passwordSeed : meta.code;
+        // This separate capability cannot decrypt learning progress. It remains
+        // a private bearer credential, never part of status, exports, or URLs.
+        var result = await hash(JSON.stringify(['hanzi-sentence-access', 1, APP, options.projectId, mode, secret]));
+        if (token !== epoch || !meta || credentialMode(meta) !== mode ||
+            (mode === 'password' ? meta.passwordSeed : meta.code) !== secret) return null;
+        return result;
+      } catch (_) { return null; }
+    }
     async function passwordSeed(password, token) {
       capable();
       if (typeof crypt.subtle.deriveBits !== 'function') throw problem('此浏览器不支持家庭密码同步，仍可接入旧同步码或继续本机学习');
@@ -7189,6 +7415,7 @@ window.HANZI_GLYPH_CATALOG={"version":"41b38d977b270e08ea493526a4ee0f8643a59bbf2
       createPasswordFamily: function (value) { return connectPassword(value, true); },
       joinPasswordFamily: function (value) { return connectPassword(value, false); },
       resolveConflict: resolveConflict, disconnect: disconnect, status: status, listBackups: listBackups,
+      sentenceAccessToken: sentenceAccessToken,
       code: function () { return displayCode(meta && meta.code); } };
   }
 
@@ -7308,16 +7535,39 @@ window.HANZI_GLYPH_CATALOG={"version":"41b38d977b270e08ea493526a4ee0f8643a59bbf2
     return stuckDay > wrongDay ? stuckDay : wrongDay;
   }
 
+  function sameSentenceTarget(left, right) {
+    return !!left && !!right && typeof left.word === 'string' && !!left.word &&
+      typeof left.pinyin === 'string' && !!left.pinyin && left.char === right.char &&
+      left.word === right.word && left.pinyin === right.pinyin;
+  }
+
+  function hasSentence(item) {
+    return typeof item?.sentence === 'string' && !!item.sentence.trim();
+  }
+
   function mergeBankItem(oldItem, newItem, oldRequest, newRequest) {
     const schedule = (newItem.lastSeen || '') > (oldItem.lastSeen || '') ? newItem : oldItem;
     const retries = retryDate(newItem) > retryDate(oldItem) ? newItem : oldItem;
     const newerRequest = (newRequest?.addedDay || '') > (oldRequest?.addedDay || '');
     const parent = newItem.fromParent && (!oldItem.fromParent || newerRequest) ? newItem : oldItem;
+    const other = parent === oldItem ? newItem : oldItem;
+    const parentFields = pick(parent, PARENT_FIELDS);
+    const sameRequest = (!oldRequest && !newRequest) ||
+      (oldRequest?.requestId && oldRequest.requestId === newRequest?.requestId &&
+        sameSentenceTarget(oldRequest, newRequest) && sameSentenceTarget(parent, oldRequest));
+    const parentRequest = parent === oldItem ? oldRequest : newRequest;
+    const otherRequest = parent === oldItem ? newRequest : oldRequest;
+    const sentenceSource = hasSentence(parentRequest) ? parentRequest : hasSentence(other) ? other : otherRequest;
+    // A generated hint may arrive after the original scheduling save. Enrich
+    // that exact request without changing its word, reading, or learning record.
+    if (!hasSentence(parent) && hasSentence(sentenceSource) && sameSentenceTarget(oldItem, newItem) && sameRequest) {
+      parentFields.sentence = sentenceSource.sentence;
+    }
     return {
       ...pick({ ...newItem, ...oldItem }, ['char', 'structure', 'strokeCount', 'curriculumId', 'unit', 'lesson']),
       ...pick(schedule, SCHEDULE_FIELDS),
       ...pick(retries, RETRY_FIELDS),
-      ...pick(parent, PARENT_FIELDS),
+      ...parentFields,
       history: mergeHistory(oldItem.history || [], newItem.history || []),
       passedDays: [...new Set([...(oldItem.passedDays || []), ...(newItem.passedDays || [])])].sort(),
       ...mergeMastery(oldItem, newItem),
@@ -7332,9 +7582,15 @@ window.HANZI_GLYPH_CATALOG={"version":"41b38d977b270e08ea493526a4ee0f8643a59bbf2
     for (const request of ordered) {
       const selected = byChar.get(request.char);
       if (!selected) byChar.set(request.char, request);
-      else if (request.requestId && request.requestId === selected.requestId &&
-          (request.completedDay || '') > (selected.completedDay || '')) {
-        byChar.set(request.char, { ...selected, completedDay: request.completedDay });
+      else if (request.requestId && request.requestId === selected.requestId) {
+        let combined = selected;
+        if ((request.completedDay || '') > (selected.completedDay || '')) {
+          combined = { ...combined, completedDay: request.completedDay };
+        }
+        if (!hasSentence(selected) && hasSentence(request) && sameSentenceTarget(selected, request)) {
+          combined = { ...combined, sentence: request.sentence };
+        }
+        if (combined !== selected) byChar.set(request.char, combined);
       }
     }
     return [...byChar.values()];
@@ -7343,6 +7599,14 @@ window.HANZI_GLYPH_CATALOG={"version":"41b38d977b270e08ea493526a4ee0f8643a59bbf2
   function mergeLearning(oldState, independentNewState) {
     const oldQueue = oldState.priorityQueue || [];
     const newQueue = independentNewState.priorityQueue || [];
+    const withBankSentences = (queue, sourceBank) => {
+      const source = new Map(sourceBank.map(item => [item.char, item]));
+      return queue.map(request => {
+        const item = source.get(request.char);
+        return !hasSentence(request) && hasSentence(item) && sameSentenceTarget(request, item)
+          ? { ...request, sentence: item.sentence } : request;
+      });
+    };
     const oldRequests = new Map(oldQueue.map(request => [request.char, request]));
     const newRequests = new Map(newQueue.map(request => [request.char, request]));
     const remaining = new Map(independentNewState.bank.map(item => [item.char, item]));
@@ -7353,7 +7617,9 @@ window.HANZI_GLYPH_CATALOG={"version":"41b38d977b270e08ea493526a4ee0f8643a59bbf2
       return mergeBankItem(item, other, oldRequests.get(item.char), newRequests.get(item.char));
     });
     bank.push(...remaining.values());
-    return learningRecord({ ...oldState, bank, priorityQueue: mergeRequests(oldQueue, newQueue) }, oldState);
+    return learningRecord({ ...oldState, bank,
+      priorityQueue: mergeRequests(withBankSentences(oldQueue, oldState.bank),
+        withBankSentences(newQueue, independentNewState.bank)) }, oldState);
   }
 
   function validRevision(value) {
@@ -8946,7 +9212,7 @@ function defaultBank(){
 // set — the change would reach nobody who actually uses the game.
 const BANK_VERSION = 5;
 const ROUND_GOAL = 10;
-const GAME_VERSION = '2026.11.18.1';
+const GAME_VERSION = '2026.11.23.1';
 
 let state = {
   bank: defaultBank(),
@@ -11645,6 +11911,7 @@ function renderCloudSyncStatus(){
   const disabled = !cloudSyncController || syncUiBusy || status.kind === 'syncing' || status.kind === 'unsupported';
   for(const id of ['cloudSyncCreateBtn','cloudSyncJoinBtn','cloudSyncLegacyJoinBtn','cloudSyncNowBtn','cloudMergeBtn','cloudKeepLocalBtn','cloudUseRemoteBtn']) document.getElementById(id).disabled = disabled;
   if(panelOverlay.classList.contains('show')) renderLocalRecoveryCopies();
+  refreshAiSentenceFamily();
 }
 function syncTick(){
   if(!cloudSyncController || syncUiBusy || !cloudSyncController.status().connected || parentValidation) return;
@@ -11678,13 +11945,18 @@ async function cloudSyncAction(action, adopt){
   if(!sharedLearning && cloudSyncController.status().connected &&
       !['conflict','error'].includes(cloudSyncController.status().kind)) saveState();
 }
-function syncWithCredential(method, inputId, adopt){
-  return cloudSyncAction(() => {
-    const input = document.getElementById(inputId);
-    const value = input.value;
-    input.value = '';
-    return cloudSyncController[method](value);
-  }, adopt);
+async function syncWithCredential(method, inputId, adopt){
+  if(!cloudSyncController || syncUiBusy) return;
+  aiSentenceFamilyChanging = true;
+  stopAiSentenceFamily();
+  try{
+    return await cloudSyncAction(() => {
+      const input = document.getElementById(inputId);
+      const value = input.value;
+      input.value = '';
+      return cloudSyncController[method](value);
+    }, adopt);
+  } finally { aiSentenceFamilyChanging = false; refreshAiSentenceFamily(); }
 }
 function initProgressSync(){
   try{
@@ -11719,8 +11991,10 @@ onTap(document.getElementById('cloudUseRemoteBtn'), () => cloudSyncAction(() => 
 onTap(document.getElementById('cloudMergeBtn'), () => cloudSyncAction(() => cloudSyncController.resolveConflict('merge'), true));
 onTap(document.getElementById('cloudSyncDisconnectBtn'), async () => {
   if(!cloudSyncController) return;
+  aiSentenceFamilyChanging = true;
+  stopAiSentenceFamily();
   try{ await cloudSyncController.disconnect(); }
-  finally{ renderCloudSyncStatus(); }
+  finally{ aiSentenceFamilyChanging = false; renderCloudSyncStatus(); }
 });
 onTap(document.getElementById('cloudSyncCopyBtn'), async () => {
   const code = document.getElementById('cloudSyncCode');
@@ -11761,12 +12035,55 @@ function nextParentPriority(){
   return unfinishedParentEntries().find(p => !priorityConsumedToday.has(p.char) && !pendingChars.has(p.char));
 }
 
+function sameSentenceTarget(left, right){
+  return !!left && !!right && typeof left.word === 'string' && !!left.word &&
+    typeof left.pinyin === 'string' && !!left.pinyin && left.char === right.char &&
+    left.word === right.word && left.pinyin === right.pinyin;
+}
+function persistAiSentenceHints(client, targets, familyVersion){
+  if(window.hanziAiSentenceClient !== client || familyVersion !== aiSentenceFamilyVersion) return;
+  // A cloud pull replaces state, and parent validation must never save learning.
+  // Keep only target identities while waiting, then inspect the live state again.
+  if(syncApplying || parentValidation){
+    setTimeout(() => persistAiSentenceHints(client, targets, familyVersion), 250);
+    return;
+  }
+  let changed = false;
+  for(const target of targets){
+    const item = state.bank.find(entry => entry.char === target.char);
+    const request = state.priorityQueue.find(entry => entry.char === target.char);
+    if(!sameSentenceTarget(item, target) ||
+        (target.requestId ? !request || request.requestId !== target.requestId || !sameSentenceTarget(request, target) : !!request)) continue;
+    const saved = typeof item.sentence === 'string' ? item.sentence.trim() : '';
+    const arranged = typeof request?.sentence === 'string' ? request.sentence.trim() : '';
+    let sentence = saved || arranged;
+    if(!sentence){
+      try{ sentence = client.get(target); }catch(_){ continue; }
+    }
+    if(typeof sentence !== 'string' || !sentence.trim()) continue;
+    if(!saved){ item.sentence = sentence.trim(); changed = true; }
+    if(request && !arranged){ request.sentence = sentence.trim(); changed = true; }
+  }
+  if(changed){
+    saveState();
+    if(currentItem) sentenceBtn.hidden = !sentenceFor(currentItem);
+    if(panelOverlay.classList.contains('show')) renderQueueList();
+  }
+}
 function requestAiSentences(items){
   try{
     const client = window.hanziAiSentenceClient;
-    if(client?.status().connected){
+    if(client){
+      const familyVersion = aiSentenceFamilyVersion;
+      const targets = items.filter(item => item.word).map(item => ({
+        char:item.char, word:item.word, pinyin:item.pinyin,
+        requestId:item.requestId || state.priorityQueue.find(request => request.char === item.char)?.requestId || null,
+      }));
+      persistAiSentenceHints(client, targets, familyVersion);
       const missing = items.filter(item => item.word && !localSentenceFor(item) && !client.get(item));
-      if(missing.length) Promise.resolve(client.generate(missing)).catch(() => {});
+      if(client.status().connected && missing.length){
+        return Promise.resolve(client.generate(missing)).then(() => persistAiSentenceHints(client, targets, familyVersion)).catch(() => {});
+      }
     }
   }catch(_){ /* Optional generation cannot delay or undo a parent import. */ }
 }
@@ -12818,32 +13135,143 @@ function renderStuckList(){
   });
 }
 
+let aiSentenceUsesService = false, aiSentenceServiceEndpoint = '', aiSentenceServiceOrigin = '';
+let aiSentenceFamilyToken = null, aiSentenceFamilyVersion = 0, aiSentenceFamilyRefresh = 0;
+let aiSentenceFamilyChanging = false, aiSentencePaused = false;
+let aiSentencePairPopup = null, aiSentencePairVersion = 0, aiSentencePairSent = false;
+function closeAiSentencePairing(){
+  const popup = aiSentencePairPopup;
+  aiSentencePairPopup = null; aiSentencePairSent = false; aiSentencePairVersion++;
+  try{ if(popup && !popup.closed) popup.close(); }catch(_){ /* The family may close the window first. */ }
+}
+function stopAiSentenceFamily(){
+  if(!aiSentenceUsesService) return;
+  aiSentenceFamilyRefresh++; aiSentenceFamilyVersion++; aiSentenceFamilyToken = null;
+  const fingerprint = document.getElementById('aiSentenceFamilyFingerprint');
+  fingerprint.textContent = ''; fingerprint.hidden = true;
+  closeAiSentencePairing();
+  window.hanziAiSentenceClient?.disconnect();
+}
+function beginAiSentenceConnection(){
+  const client = window.hanziAiSentenceClient, familyVersion = aiSentenceFamilyVersion;
+  if(!client || !aiSentenceFamilyToken || aiSentenceFamilyChanging || aiSentencePaused) return Promise.resolve(false);
+  return Promise.resolve(client.begin()).then(connected => {
+    if(!connected || client !== window.hanziAiSentenceClient || familyVersion !== aiSentenceFamilyVersion || aiSentenceFamilyChanging) return false;
+    requestAiSentences(parentPriorityEntries());
+    return true;
+  }).catch(() => false);
+}
+async function refreshAiSentenceFamily(){
+  if(!aiSentenceUsesService || aiSentenceFamilyChanging) return;
+  const controller = cloudSyncController, client = window.hanziAiSentenceClient;
+  if(!client) return;
+  if(!controller?.status().connected || typeof controller.sentenceAccessToken !== 'function'){
+    if(aiSentenceFamilyToken || aiSentencePairPopup || client.status().connected || client.status().busy) stopAiSentenceFamily();
+    renderAiSentenceStatus();
+    return;
+  }
+  const refresh = ++aiSentenceFamilyRefresh;
+  let token = null;
+  try{ token = await controller.sentenceAccessToken(); }catch(_){ /* Keep existing hints when connection storage is unavailable. */ }
+  if(refresh !== aiSentenceFamilyRefresh || controller !== cloudSyncController || aiSentenceFamilyChanging) return;
+  if(token !== aiSentenceFamilyToken){
+    stopAiSentenceFamily();
+    aiSentenceFamilyToken = token;
+    if(token) beginAiSentenceConnection();
+  }
+  renderAiSentenceStatus();
+}
 function renderAiSentenceStatus(){
   const status = window.hanziAiSentenceClient?.status();
-  document.getElementById('aiSentenceStatus').textContent = status?.message || '这个浏览器暂时无法连接 AI 造句。';
+  const familyConnected = !!cloudSyncController?.status().connected;
+  const unavailable = aiSentenceUsesService && (!aiSentenceServiceEndpoint || !familyConnected || !aiSentenceFamilyToken);
+  const message = !aiSentenceUsesService ? status?.message
+    : !aiSentenceServiceEndpoint ? 'OpenAI 自动造句尚未配置，已有例句仍可使用。'
+    : !familyConnected ? '请先接入下方的家庭同步，自动造句会沿用同一份家庭连接。'
+    : aiSentenceFamilyChanging || !aiSentenceFamilyToken ? '正在读取本家庭的自动造句连接。'
+    : aiSentencePaused ? '自动造句已暂停，已有例句仍可使用。' : status?.message;
+  document.getElementById('aiSentenceStatus').textContent = message || '这个浏览器暂时无法连接自动造句。';
   const connect = document.getElementById('aiSentenceConnectBtn');
   connect.hidden = !!status?.connected;
-  connect.disabled = !status || !!status.busy;
-  document.getElementById('aiSentenceDisconnectBtn').hidden = !status?.connected;
+  connect.textContent = aiSentenceUsesService ? aiSentencePaused ? '恢复自动造句' : '连接本家庭自动造句' : '连接 AI 造句';
+  connect.disabled = !status || !!status.busy || unavailable || aiSentenceFamilyChanging;
+  document.getElementById('aiSentenceDisconnectBtn').hidden = !status?.connected && !status?.busy;
+  document.getElementById('aiSentenceFingerprintBtn').disabled = !aiSentenceUsesService ||
+    !familyConnected || !aiSentenceFamilyToken || aiSentenceFamilyChanging;
 }
+
+async function showAiSentenceFamilyFingerprint(){
+  const controller = cloudSyncController, familyVersion = aiSentenceFamilyVersion;
+  if(!aiSentenceUsesService || aiSentenceFamilyChanging || !controller?.status().connected || !aiSentenceFamilyToken) return;
+  try{
+    const token = await controller.sentenceAccessToken();
+    if(!token || token !== aiSentenceFamilyToken) return;
+    const digest = await window.crypto.subtle.digest('SHA-256', new TextEncoder().encode(token));
+    if(controller !== cloudSyncController || familyVersion !== aiSentenceFamilyVersion || aiSentenceFamilyChanging || token !== aiSentenceFamilyToken) return;
+    const fingerprint = document.getElementById('aiSentenceFamilyFingerprint');
+    fingerprint.textContent = Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('');
+    fingerprint.hidden = false;
+  }catch(_){ document.getElementById('aiSentenceStatus').textContent = '家庭连接指纹暂时无法读取，已有例句仍可使用。'; }
+}
+onTap(document.getElementById('aiSentenceFingerprintBtn'), showAiSentenceFamilyFingerprint);
 
 function initAiSentences(){
   try{
-    const client = window.HanziAiSentences.create(window, () => {
+    const config = window.HanziSentenceServiceConfig;
+    aiSentenceUsesService = !!config && typeof config === 'object';
+    if(aiSentenceUsesService && typeof config.endpoint === 'string' && config.endpoint){
+      const endpoint = new URL(config.endpoint);
+      if(endpoint.protocol === 'https:' && !endpoint.username && !endpoint.password && !endpoint.search && !endpoint.hash){
+        aiSentenceServiceEndpoint = endpoint.href.replace(/\/$/, '');
+        aiSentenceServiceOrigin = endpoint.origin;
+      }
+    }
+    const factory = aiSentenceUsesService ? window.HanziOpenAiSentences : window.HanziAiSentences;
+    const client = factory.create(window, () => {
       renderAiSentenceStatus();
       if(currentItem && !parentValidation) sentenceBtn.hidden = !sentenceFor(currentItem);
       if(panelOverlay.classList.contains('show')) renderQueueList();
+    }, {
+      endpoint:aiSentenceServiceEndpoint,
+      getAccessToken:async () => {
+        const controller = cloudSyncController, familyVersion = aiSentenceFamilyVersion;
+        if(aiSentenceFamilyChanging || !controller?.status().connected) return null;
+        const token = await controller.sentenceAccessToken();
+        return controller === cloudSyncController && familyVersion === aiSentenceFamilyVersion &&
+          !aiSentenceFamilyChanging && token === aiSentenceFamilyToken ? token : null;
+      },
     });
     window.hanziAiSentenceClient = client;
     renderAiSentenceStatus();
-    Promise.resolve(client.complete()).then(connected => {
-      if(!connected) return;
-      panelOverlay.classList.add('show');
-      document.getElementById('aiSentenceSettings').open = true;
-      requestAiSentences(parentPriorityEntries());
+    if(aiSentenceUsesService) refreshAiSentenceFamily();
+    else Promise.resolve(client.complete()).then(connected => {
+      if(connected) requestAiSentences(parentPriorityEntries());
     }).catch(() => {});
   }catch(_){ renderAiSentenceStatus(); }
 }
+
+async function handleAiSentencePairMessage(event){
+  const popup = aiSentencePairPopup, pairVersion = aiSentencePairVersion;
+  if(!aiSentenceUsesService || !popup || popup.closed || event.source !== popup || event.origin !== aiSentenceServiceOrigin ||
+      aiSentenceFamilyChanging || !cloudSyncController?.status().connected) return;
+  if(event.data?.type === 'hanzi-sentence-pair-request'){
+    const controller = cloudSyncController, familyVersion = aiSentenceFamilyVersion;
+    let token;
+    try{ token = await controller.sentenceAccessToken(); }catch(_){ return; }
+    if(!token || token !== aiSentenceFamilyToken || controller !== cloudSyncController || familyVersion !== aiSentenceFamilyVersion ||
+        aiSentenceFamilyChanging || popup !== aiSentencePairPopup || pairVersion !== aiSentencePairVersion || popup.closed) return;
+    try{
+      popup.postMessage({type:'hanzi-sentence-pair-token', token}, aiSentenceServiceOrigin);
+      aiSentencePairSent = true;
+    }catch(_){ /* A closed pairing window cannot affect the game. */ }
+  } else if(event.data?.type === 'hanzi-sentence-paired' && aiSentencePairSent){
+    closeAiSentencePairing();
+    aiSentencePaused = false;
+    beginAiSentenceConnection();
+  }
+}
+window.addEventListener('message', handleAiSentencePairMessage);
+window.addEventListener('online', () => { if(aiSentenceUsesService) beginAiSentenceConnection(); });
 
 onTap(document.getElementById('aiSentenceConnectBtn'), () => {
   if(progressSaveNotice){
@@ -12854,9 +13282,33 @@ onTap(document.getElementById('aiSentenceConnectBtn'), () => {
     document.getElementById('aiSentenceStatus').textContent = '请先写完当前这题，再连接 AI 造句。';
     return;
   }
-  Promise.resolve(window.hanziAiSentenceClient?.begin()).catch(() => {});
+  if(!aiSentenceUsesService){
+    Promise.resolve(window.hanziAiSentenceClient?.begin()).catch(() => {});
+    return;
+  }
+  if(!aiSentenceServiceOrigin || !cloudSyncController?.status().connected || !aiSentenceFamilyToken || aiSentenceFamilyChanging){
+    renderAiSentenceStatus(); return;
+  }
+  if(aiSentencePaused){ aiSentencePaused = false; beginAiSentenceConnection(); return; }
+  if(aiSentencePairPopup && !aiSentencePairPopup.closed){
+    try{ aiSentencePairPopup.focus(); }catch(_){}
+    return;
+  }
+  closeAiSentencePairing();
+  // Open during the parent's tap, before any asynchronous credential work.
+  try{ aiSentencePairPopup = window.open(aiSentenceServiceOrigin + '/pair', 'hanzi-sentence-pair', 'popup,width=520,height=720'); }
+  catch(_){ aiSentencePairPopup = null; }
+  document.getElementById('aiSentenceStatus').textContent = aiSentencePairPopup
+    ? '请在新窗口确认本家庭的自动造句连接，完成后会自动接回游戏。'
+    : '连接窗口未打开，请允许此网页打开弹出窗口后再点一次。';
 });
-onTap(document.getElementById('aiSentenceDisconnectBtn'), () => window.hanziAiSentenceClient?.disconnect());
+onTap(document.getElementById('aiSentenceDisconnectBtn'), () => {
+  aiSentencePaused = true;
+  closeAiSentencePairing();
+  aiSentenceFamilyVersion++;
+  window.hanziAiSentenceClient?.disconnect();
+  renderAiSentenceStatus();
+});
 
 function renderTodayLearning(){
   const today = todayStr();
@@ -13337,11 +13789,11 @@ function startGame(){
   loadParentTestInkLog();
   initMountainJourney();
   initHerbalistRoom();
-  if(sameGameSite) initAiSentences();
-  else document.body.classList.add('herbalist-no-ai');
   if(!sharedLearning) document.body.classList.add('herbalist-local-preview');
   const herbalistStoryRestored = restoreHerbalistStage();
   if(sharedLearning) initProgressSync();
+  if(sameGameSite) initAiSentences();
+  else document.body.classList.add('herbalist-no-ai');
   if(progressDatabaseReadFailed) showProgressSaveNotice('本机存档暂时无法读取。当前显示最近可读的进度，请先下载备份。');
   applyScene(state.scenesUnlocked);
   renderQueueList();

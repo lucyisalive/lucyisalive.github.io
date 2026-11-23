@@ -327,6 +327,20 @@
       if (typeof options.projectId !== 'string' || !/^[a-zA-Z0-9][a-zA-Z0-9-]{2,99}$/.test(options.projectId)) throw problem('同步服务尚未配置');
     }
     async function hash(json) { return hex(await crypt.subtle.digest('SHA-256', new Encoder().encode(json))); }
+    async function sentenceAccessToken() {
+      try {
+        if (!metaReady) await withStoredMeta(function () {});
+        if (!metaReady || !meta || !crypt?.subtle || typeof Encoder !== 'function') return null;
+        var token = epoch, mode = credentialMode(meta);
+        var secret = mode === 'password' ? meta.passwordSeed : meta.code;
+        // This separate capability cannot decrypt learning progress. It remains
+        // a private bearer credential, never part of status, exports, or URLs.
+        var result = await hash(JSON.stringify(['hanzi-sentence-access', 1, APP, options.projectId, mode, secret]));
+        if (token !== epoch || !meta || credentialMode(meta) !== mode ||
+            (mode === 'password' ? meta.passwordSeed : meta.code) !== secret) return null;
+        return result;
+      } catch (_) { return null; }
+    }
     async function passwordSeed(password, token) {
       capable();
       if (typeof crypt.subtle.deriveBits !== 'function') throw problem('此浏览器不支持家庭密码同步，仍可接入旧同步码或继续本机学习');
@@ -1100,6 +1114,7 @@
       createPasswordFamily: function (value) { return connectPassword(value, true); },
       joinPasswordFamily: function (value) { return connectPassword(value, false); },
       resolveConflict: resolveConflict, disconnect: disconnect, status: status, listBackups: listBackups,
+      sentenceAccessToken: sentenceAccessToken,
       code: function () { return displayCode(meta && meta.code); } };
   }
 
