@@ -3255,12 +3255,13 @@ body[data-herb-stage="sea"] .story-sea { display: block; }
       <summary>自动例句</summary>
       <p id="aiSentenceStatus" role="status">正在检查本家庭的自动造句连接。</p>
       <p>已有例句会直接使用，缺少的例句由 OpenAI 自动补齐并随家庭进度保存。每台设备接入家庭同步后可沿用这份连接。服务只接收词语、目标字和读音，请只录普通学习词语。</p>
-      <button id="aiSentenceConnectBtn">连接本家庭自动造句</button>
+      <button id="aiSentenceConnectBtn">重试自动造句</button>
       <button id="aiSentenceDisconnectBtn" hidden>暂停自动造句</button>
       <details class="settings-details">
         <summary>高级维护</summary>
         <button id="aiSentenceFingerprintBtn">查看家庭连接指纹</button>
         <output id="aiSentenceFamilyFingerprint" hidden style="overflow-wrap:anywhere;"></output>
+        <button id="aiSentencePairBtn">重新配对家庭</button>
       </details>
     </details>
     <div class="queue-list" id="queueList"></div>
@@ -13062,7 +13063,7 @@ function renderQueueList(){
     const status = isStuck(bankItem || {}) ? '先点下方“我讲过了”再复习'
       : p.completedDay === todayStr() ? '今天已完成' : '今天优先复习';
     const sentence = sentenceHintFor(p);
-    const sentenceStatus = {saved:' · 自定义例句', local:' · 自动例句', generated:' · 自动例句',
+    const sentenceStatus = {saved:' · 已保存例句', local:' · 自动例句', generated:' · 自动例句',
       practice:' · 听写提示已就绪'}[sentence?.kind] || '';
     return `
     <div class="queue-item">
@@ -13193,11 +13194,13 @@ function renderAiSentenceStatus(){
   document.getElementById('aiSentenceStatus').textContent = message || '这个浏览器暂时无法连接自动造句。';
   const connect = document.getElementById('aiSentenceConnectBtn');
   connect.hidden = !!status?.connected;
-  connect.textContent = aiSentenceUsesService ? aiSentencePaused ? '恢复自动造句' : '连接本家庭自动造句' : '连接 AI 造句';
+  connect.textContent = aiSentenceUsesService ? aiSentencePaused ? '恢复自动造句' : '重试自动造句' : '连接 AI 造句';
   connect.disabled = !status || !!status.busy || unavailable || aiSentenceFamilyChanging;
   document.getElementById('aiSentenceDisconnectBtn').hidden = !status?.connected && !status?.busy;
   document.getElementById('aiSentenceFingerprintBtn').disabled = !aiSentenceUsesService ||
     !familyConnected || !aiSentenceFamilyToken || aiSentenceFamilyChanging;
+  document.getElementById('aiSentencePairBtn').disabled = !aiSentenceUsesService || !status ||
+    !!status.busy || unavailable || aiSentenceFamilyChanging;
 }
 
 async function showAiSentenceFamilyFingerprint(){
@@ -13289,7 +13292,21 @@ onTap(document.getElementById('aiSentenceConnectBtn'), () => {
   if(!aiSentenceServiceOrigin || !cloudSyncController?.status().connected || !aiSentenceFamilyToken || aiSentenceFamilyChanging){
     renderAiSentenceStatus(); return;
   }
-  if(aiSentencePaused){ aiSentencePaused = false; beginAiSentenceConnection(); return; }
+  aiSentencePaused = false;
+  beginAiSentenceConnection();
+});
+onTap(document.getElementById('aiSentencePairBtn'), () => {
+  if(progressSaveNotice){
+    document.getElementById('aiSentenceStatus').textContent = progressSaveNotice;
+    return;
+  }
+  if(isDrawing || strokesPoints.length || submitBtn.disabled || currentMode === 'teaching' || parentValidation){
+    document.getElementById('aiSentenceStatus').textContent = '请先写完当前这题，再重新配对家庭。';
+    return;
+  }
+  if(!aiSentenceUsesService || !aiSentenceServiceOrigin || !cloudSyncController?.status().connected || !aiSentenceFamilyToken || aiSentenceFamilyChanging){
+    renderAiSentenceStatus(); return;
+  }
   if(aiSentencePairPopup && !aiSentencePairPopup.closed){
     try{ aiSentencePairPopup.focus(); }catch(_){}
     return;
