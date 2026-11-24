@@ -9213,7 +9213,7 @@ function defaultBank(){
 // set — the change would reach nobody who actually uses the game.
 const BANK_VERSION = 5;
 const ROUND_GOAL = 10;
-const GAME_VERSION = '2026.11.23.2';
+const GAME_VERSION = '2026.11.24.1';
 
 let state = {
   bank: defaultBank(),
@@ -11431,6 +11431,221 @@ function ganNeedsRightPartPractice(user, official, charDiag){
     !matchComponent(rightRef,alignClusterUniform(right,rightBox),'干',charDiag,[],true).pass;
 }
 
+// Complete structures may have compact proportions. This fallback keeps the
+// normal quality floors and refuses to replace a missing role with repeated ink.
+function rescueRongJianStructure(char,baseline,official,user,charDiag){
+  if(char==='融'){
+    if(user.length!==16||official.length!==16)return null;
+    if(dropOneRetrace(user.map((pts,index)=>({pts,id:'u'+index})),charDiag,[]))return null;
+    const tree=regionSplit('x',regionSplit('y',
+      regionSplit('y',regionLeaf('鬲顶横',0,1),regionLeaf('鬲上口',1,4)),
+      {...regionLeaf('鬲下部',4,10),semanticDots:[3]}),regionLeaf('虫',10,16));
+    const answer=recursiveRegionGrade(tree,official,user,charDiag);
+    if(!answer.pass)return null;
+    const role=index=>{
+      const row=answer.rows.find(row=>row.o===String(index));
+      return row&&/^u\d+$/.test(row.u)?user[Number(row.u.slice(1))]:null;
+    };
+    const mark=role(7);
+    if(!mark)return null;
+    const span=bboxOf([mark]);
+    const endA=mark[0],endB=mark.at(-1);
+    // The reviewed variation is a compact downward mark, almost upright.
+    // Keep its original orientation: a near-horizontal replacement is not the
+    // same short falling stroke merely because it occupies the right cell.
+    if(Math.max(span.w,span.h)<charDiag*.018 || ptDist(endA,endB)<strokeLength(mark)*.5 ||
+      Math.abs(endB.y-endA.y)<Math.abs(endB.x-endA.x))return null;
+    const foldingFrame=(stem,fold)=>{
+      if(!stem||!fold)return false;
+      const box=bboxOf([fold]);
+      const [start,end]=[fold[0],fold.at(-1)].sort((a,b)=>a.y-b.y);
+      const stemTop=[stem[0],stem.at(-1)].sort((a,b)=>a.y-b.y)[0];
+      const corner=fold.reduce((right,p)=>p.x>right.x?p:right,fold[0]);
+      const run=corner.x-start.x,drop=end.y-corner.y;
+      return run>box.w*.5 && Math.abs(corner.y-start.y)<run*.8 &&
+        drop>box.h*.35 && Math.abs(end.x-corner.x)<drop*.75 &&
+        ptDist(start,stemTop)<bboxOf([stem,fold]).diag*.35;
+    };
+    if(!foldingFrame(role(1),role(2))||!foldingFrame(role(4),role(5))||!foldingFrame(role(10),role(11)))return null;
+    const top=role(0),mouth=[role(1),role(2),role(3)];
+    if(!top||mouth.some(s=>!s))return null;
+    const cap=bboxOf([top]),opening=bboxOf(mouth);
+    if(cap.cy>=opening.cy || opening.minY-cap.maxY>opening.h*.85 ||
+      cap.cx<opening.minX-opening.w*.35||cap.cx>opening.maxX+opening.w*.35)return null;
+    return {...answer,diag:[...baseline.diag,...answer.diag,'融 complete 鬲/虫 with separate short downward mark confirmed']};
+  }
+  if(user.length!==8||official.length!==8||baseline.rows.length!==8)return null;
+  const rows=baseline.rows;
+  if(rows.some(r=>r.c.veto||!/^u\d+$/.test(r.u)||!/^\d+$/.test(r.o)))return null;
+  const byRef=new Map(rows.map(r=>[Number(r.o),Number(r.u.slice(1))]));
+  if(byRef.size!==8||new Set(byRef.values()).size!==8)return null;
+  const aligned=alignClusterUniform(user,bboxOf(official));
+  if(dropOneRetrace(aligned.map((pts,index)=>({pts,id:'u'+index})),charDiag,[]))return null;
+  const fixed=rows.filter(r=>[0,5,6,7].includes(Number(r.o)));
+  if(fixed.length!==4||fixed.some(r=>r.c.q<.5||r.c.posDist>.17))return null;
+  const spine=aligned[byRef.get(5)],fold=aligned[byRef.get(0)];
+  const bars=[1,2,3,4].map(role=>({id:byRef.get(role),points:aligned[byRef.get(role)]}));
+  bars.forEach(s=>s.mid=centroidOf(resample(s.points,16)));
+  bars.sort((a,b)=>a.mid.y-b.mid.y);
+  const crossingX=y=>{
+    for(let i=1;i<spine.length;i++){
+      const a=spine[i-1],b=spine[i];
+      if((a.y<y)===(b.y<y))continue;
+      return a.x+(b.x-a.x)*(y-a.y)/(b.y-a.y);
+    }
+    return null;
+  };
+  const foldBox=bboxOf([fold]);
+  const ends=[fold[0],fold.at(-1)].sort((a,b)=>a.y-b.y);
+  if(ends[0].x>foldBox.minX+foldBox.w*.32||ends[1].y<foldBox.minY+foldBox.h*.75||foldBox.maxX-ends[1].x<foldBox.w*.10)return null;
+  const corner=fold.reduce((right,p)=>p.x>right.x?p:right,fold[0]);
+  if(Math.abs(corner.y-ends[0].y)>(corner.x-ends[0].x)*.55)return null;
+  // 聿 has one bar inside its upper fold. The next three are below the
+  // fold's lower tip. Sorting four marks alone must not let an upward-moved
+  // lower bar invent another valid tier inside the same top compartment.
+  if(bars[0].mid.y<=corner.y+foldBox.h*.10 ||
+    bars[0].mid.y>=ends[1].y-foldBox.h*.10 ||
+    bars[1].mid.y<=ends[1].y+foldBox.h*.10)return null;
+  const leftFold=aligned[byRef.get(6)],sweep=aligned[byRef.get(7)];
+  const meets=(a,b)=>resample(a,32).some(p=>resample(b,32).some(q=>ptDist(p,q)<charDiag*.023));
+  const spineBox=bboxOf([spine]);
+  if(fixed.some(r=>r.o!=='0'&&r.c.dirDiff>29)||
+    spineBox.minY+charDiag*.037>foldBox.minY||spineBox.maxY-charDiag*.05<bars[3].mid.y||
+    bboxOf([leftFold]).minY>bars[0].mid.y||!meets(leftFold,sweep)||!meets(fold,bars[0].points))return null;
+  const revised=[];
+  for(let index=0;index<4;index++){
+    const s=bars[index],ref=official[index+1],box=bboxOf([s.points]),x=crossingX(s.mid.y);
+    if(x===null||x<=box.minX||x>=box.maxX||
+      index>0&&s.mid.y-bars[index-1].mid.y<charDiag*.035)return null;
+    // A full horizontal must visibly cross the same stem on both sides.
+    // Compare its size to the local top fold, rather than the wide outer 廴.
+    if(box.w<foldBox.w*.40||Math.min(x-box.minX,box.maxX-x)<foldBox.w*.08)return null;
+    const ordinary=strokeQuality(s.points,ref,charDiag,false);
+    if(ordinary.dirDiff>28||ordinary.rms>.5||ordinary.veto)return null;
+    const length=strokeLength(s.points),mid=s.mid;
+    const factor=strokeLength(ref)/Math.max(length,1e-6);
+    const localSize=s.points.map(p=>({x:mid.x+(p.x-mid.x)*factor,y:mid.y+(p.y-mid.y)*factor}));
+    const c=strokeQuality(localSize,ref,charDiag,false);
+    if(c.q<Q_FLOOR||c.posDist>.19)return null;
+    revised.push({u:'u'+s.id,o:String(index+1),c});
+  }
+  const all=[...fixed,...revised],mean=all.reduce((sum,r)=>sum+r.c.q,0)/8;
+  if(mean<Q_BAR)return null;
+  return {pass:true,rows:all,diag:[...baseline.diag,'建 four independent crossing tiers and anchored fold PASS avgQ='+mean.toFixed(2)]};
+}
+
+
+// A complete 善 has four independently separated horizontal layers, a central
+// stem, four short marks, and a three-stroke 口. This additional explanation is
+// used only after the established matcher fails. It never changes global bars.
+function rescueShanLayeredStrokes(official,user,charDiag){
+  if(official.length!==12 || (user.length!==12&&user.length!==13))return null;
+  const originals=user.map((pts,index)=>({pts,id:'u'+index}));
+  if(dropOneRetrace(originals.map(stroke=>({...stroke})),charDiag,[]))return null;
+  const centre=stroke=>centroidOf(resample(stroke.pts,16));
+  const axisDistance=(pts,angle)=>Math.min(angDiff(pcaAngle(pts),angle),angDiff(pcaAngle(pts),angle+180));
+  const straight=(pts,angle)=>axisDistance(pts,angle)<=35 && strokeProfile(pts).midTurn<=65 &&
+    ptDist(pts[0],pts.at(-1))>=strokeLength(pts)*.75;
+  const paths=[];
+  if(user.length===12)paths.push(originals);
+  else for(let i=0;i<user.length;i++)for(let j=i+1;j<user.length;j++){
+    const A=user[i],B=user[j];
+    if(!straight(A,90)||!straight(B,90))continue;
+    const combinations=[[A,B],[B,A],[A,[...B].reverse()],[[...A].reverse(),B]];
+    for(const [first,second]of combinations){
+      if(ptDist(first.at(-1),second[0])>charDiag*.025)continue;
+      const joined=[...first,...second];
+      if(!straight(joined,90)||ptDist(joined[0],joined.at(-1))<strokeLength(joined)*.85)continue;
+      paths.push(originals.filter((_,index)=>index!==i&&index!==j).concat({pts:joined,id:'u'+i+'+u'+j}));
+    }
+  }
+  function explain(ink){
+    for(const stem of ink){
+      if(!straight(stem.pts,90))continue;
+      const sb=bboxOf([stem.pts]),sc=centre(stem);
+      const rest=ink.filter(stroke=>stroke!==stem).sort((a,b)=>centre(a).y-centre(b).y);
+      const head=rest.slice(0,2).sort((a,b)=>centre(a).x-centre(b).x),
+        bars=rest.slice(2,5),marks=rest.slice(5,7).sort((a,b)=>centre(a).x-centre(b).x),
+        base=rest[7],mouth=rest.slice(8);
+      if(mouth.length!==3)continue;
+      const body=bboxOf([...bars.map(stroke=>stroke.pts),stem.pts,base.pts]);
+      if(sb.h<body.h*.55||sb.w>sb.h*.4)continue;
+      if(![...bars,base].every(stroke=>straight(stroke.pts,0)))continue;
+      if(!bars.every(stroke=>{
+        const box=bboxOf([stroke.pts]);
+        return sc.x>=box.minX-body.w*.06&&sc.x<=box.maxX+body.w*.06;
+      }))continue;
+      const barY=bars.map(stroke=>centre(stroke).y);
+      if(barY[1]-barY[0]<sb.h*.08||barY[2]-barY[1]<sb.h*.08)continue;
+      if(sb.minY>barY[0]+sb.h*.12||sb.maxY<Math.max(...marks.map(stroke=>centre(stroke).y)))continue;
+      if(![...head,...marks].every(stroke=>strokeLength(stroke.pts)<=body.w*.45))continue;
+      if(centre(head[1]).x-centre(head[0]).x<body.w*.12||
+         centre(marks[1]).x-centre(marks[0]).x<body.w*.12)continue;
+      if(centre(head[0]).x>sc.x-body.w*.1||centre(head[1]).x<sc.x-body.w*.06||
+         centre(marks[0]).x>sc.x-body.w*.1||centre(marks[1]).x<sc.x+body.w*.1)continue;
+      if([...head,...marks].some(stroke=>Math.abs(centre(stroke).x-sc.x)>body.w*.65)||
+         Math.min(...head.map(stroke=>centre(stroke).y))<barY[0]-sb.h*.65)continue;
+      if(Math.max(...head.map(stroke=>centre(stroke).y))>=barY[0]||
+         Math.min(...marks.map(stroke=>centre(stroke).y))<=barY[2]||
+         centre(base).y-Math.max(...marks.map(stroke=>centre(stroke).y))<(centre(base).y-barY[2])*.2||
+         Math.min(...mouth.map(stroke=>centre(stroke).y))<=centre(base).y)continue;
+      const mb=bboxOf(mouth.map(stroke=>stroke.pts));
+      if(mb.minX<sc.x-body.w*.8||mb.maxX>sc.x+body.w*.8)continue;
+      const rows=[],diag=[];
+      const compare=(stroke,role,group,roles,neutralLength=false)=>{
+        const target=roles.map(index=>official[index]),aligned=alignClusterUniform(group.map(s=>s.pts),bboxOf(target));
+        const points=aligned[group.indexOf(stroke)],ref=official[role],compDiag=Math.max(bboxOf(target).diag,1);
+        let checked=points;
+        if(neutralLength){
+          const mid=centroidOf(resample(points,16)),factor=strokeLength(ref)/Math.max(strokeLength(points),1e-6);
+          checked=points.map(p=>({x:mid.x+(p.x-mid.x)*factor,y:mid.y+(p.y-mid.y)*factor}));
+        }
+        const q=strokeQuality(checked,ref,compDiag,false);
+        rows.push({u:stroke.id,o:String(role),c:q});return q.q>=Q_FLOOR;
+      };
+      const upper=[...head,...bars,stem],upperRoles=[0,1,2,3,4,5],middle=[...marks,base];
+      let valid=true;
+      // Point roles are semantic short marks, as in the existing reviewed trees.
+      for(const [group,roles,region,regionRoles]of [[head,[0,1],[...head,...bars,stem,...marks,base],[0,1,2,3,4,5,6,7,8]],[marks,[6,7],[...head,...bars,stem,...marks,base],[0,1,2,3,4,5,6,7,8]]]){
+        const references=regionRoles.map(index=>official[index]),regionBox=bboxOf(references);
+        const aligned=alignClusterUniform(region.map(stroke=>stroke.pts),regionBox);
+        for(let i=0;i<2;i++){
+          const stroke=group[i],points=aligned[region.indexOf(stroke)],reference=official[roles[i]];
+          const quality=strokeQuality(points,reference,Math.max(regionBox.diag,1),false);
+          const dotTooLong=Math.max(0,Math.log(Math.max(quality.lenRatio,1e-3))-Math.log(DOT_LEN));
+          const q=clamp01(1-quality.posDist/.62)*clamp01(1-dotTooLong/.35);
+          if(q<Q_FLOOR)valid=false;
+          rows.push({u:stroke.id,o:String(roles[i]),c:{...quality,q,qPair:q}});
+        }
+      }
+      for(let i=0;i<3;i++)valid=compare(bars[i],i+2,upper,upperRoles,true)&&valid;
+      valid=compare(stem,5,upper,upperRoles,false)&&valid;
+      valid=compare(base,8,middle,[6,7,8],true)&&valid;
+      const mouthRef=official.slice(9),mouthDiag=[],mouthAligned=alignClusterUniform(mouth.map(stroke=>stroke.pts),bboxOf(mouthRef));
+      const matched=matchComponent(mouthRef,mouthAligned,'善口',charDiag,mouthDiag,true);
+      if(!matched.pass||matched.rows.length!==3||matched.rows.some(row=>!/^u[0-9]+$/.test(row.u)||!/^\d+$/.test(row.o)))continue;
+      for(const row of matched.rows){
+        const index=Number(row.u.slice(1)),role=Number(row.o),stroke=mouth[index];
+        if(role===0&&axisDistance(stroke.pts,90)>45)valid=false;
+        if(role===2&&axisDistance(stroke.pts,0)>45)valid=false;
+        if(role===1){const ends=[stroke.pts[0],stroke.pts.at(-1)].sort((a,b)=>a.y-b.y);if(ends[1].x<ends[0].x-mb.w*.15)valid=false;}
+        rows.push({...row,u:stroke.id,o:String(role+9)});
+      }
+      const left=rows.find(row=>row.o==='9'),bottom=rows.find(row=>row.o==='11');
+      const leftStroke=mouth.find(stroke=>stroke.id===left.u),bottomStroke=mouth.find(stroke=>stroke.id===bottom.u);
+      if(centre(leftStroke).x>=centre(bottomStroke).x||centre(bottomStroke).y<=centre(leftStroke).y)valid=false;
+      const mean=rows.reduce((sum,row)=>sum+row.c.q,0)/rows.length;
+      if(valid&&rows.length===12&&mean>=Q_BAR){
+        const roleDiag=rows.map(row=>row.u+'->official#'+row.o+' q='+row.c.q.toFixed(2)+' len='+row.c.lenRatio+' pos='+row.c.posDist);
+        return{pass:true,rows,diag:[...mouthDiag,...roleDiag,'善 independently ordered layers PASS avgQ='+mean.toFixed(2)]};
+      }
+    }
+    return null;
+  }
+  for(const ink of paths){const result=explain(ink);if(result)return result;}
+  return null;
+}
+
 async function gradeDrawing(char, reportHint){
   const data = await getCharData(char);
   const officialAll = (data.medians || []).map(medianToCanvasPoints);
@@ -11631,6 +11846,8 @@ async function gradeDrawing(char, reportHint){
     if(rescued)result=rescued;
   }
 
+  if(!result.pass&&char==='善'){const rescued=rescueShanLayeredStrokes(officialAll,user,charDiag);if(rescued)result=rescued;}
+
   if(!result.pass && APPROVED_REGION_RESCUES[char]){
     const rescued=recursiveRegionGrade(APPROVED_REGION_RESCUES[char],officialAll,user,charDiag);
     if(rescued.pass){result=rescued;flipNote+=' (validated component proportions)';}
@@ -11647,6 +11864,11 @@ async function gradeDrawing(char, reportHint){
     }
   }
 
+
+  if(!result.pass && (char==='融'||char==='建')){
+    const rescued=rescueRongJianStructure(char,result,officialAll,user,charDiag);
+    if(rescued)result=rescued;
+  }
 
   // TEMPORARY diagnostics — prints exactly why a drawing passed/failed, so grading can
   // be calibrated from real data. Safe to remove once stable.
