@@ -612,6 +612,10 @@
   font: 700 27px / 1.2 var(--herb-serif);
 }
 .herb-info { max-width: min(430px, 90vw); padding: 23px; background: #233229; }
+#herbCoinRetry[hidden], #herbCoinSaveStatus[hidden] { display: none !important; }
+.herb-coins-unsaved { border-color: #e5b56e !important; }
+.herb-coin-save-status { color: #ffe4ad; font-size: 14px; line-height: 1.6; }
+#herbCoinRetry { min-height: 44px; margin: 0 6px 8px; }
 
 @media (max-width: 739px) and (orientation: portrait), (max-width: 659px) {
   .has-herbalist {

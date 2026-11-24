@@ -1,0 +1,390 @@
+/* A single native dialog holds room, shop and one-item confirmation. */
+.herb-cottage.magic-shop-enabled {
+  --shop-paper: #f6e4c5;
+  --shop-muted: #cdbb9c;
+  --shop-gold: #d7b16b;
+  --shop-brass: #a77d40;
+  --shop-ink: #171924;
+  --shop-purple: #302639;
+  width: min(760px, calc(100vw - 20px));
+  height: min(980px, calc(100dvh - 20px));
+  max-width: none;
+  max-height: calc(100dvh - 20px);
+  overflow: hidden;
+  padding: 0;
+  color: var(--shop-paper);
+  background: #1b1c25;
+  border: 1px solid #cda568a8;
+  border-radius: 17px;
+  text-align: left;
+  box-shadow: 0 25px 90px #000b, inset 0 0 0 4px #322936;
+}
+.herb-cottage.magic-shop-enabled[open] { display: block; background: #1b1c25; }
+.magic-shop-enabled *, .magic-shop-enabled *::before, .magic-shop-enabled *::after { box-sizing: border-box; }
+.magic-shop-enabled [hidden] { display: none !important; }
+.magic-shop-enabled button { font: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+.magic-shop-enabled button:focus-visible { outline: 3px solid #fce0a1; outline-offset: 3px; }
+.magic-shop-enabled button:disabled { cursor: default; opacity: .7; }
+.magic-house-shell { height: 100%; display: flex; flex-direction: column; }
+.magic-house-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  padding: 19px 24px 15px;
+  flex: 0 0 auto;
+  border-bottom: 1px solid #b38c4e4f;
+  background: radial-gradient(ellipse at 15% 0%, #57413970, transparent 75%), linear-gradient(100deg, #26222d, #1a1e28);
+}
+.magic-house-header .magic-eyebrow { margin: 0 0 5px; color: #c3ab82; font: 11px/1.2 var(--herb-serif, serif); letter-spacing: .16em; }
+.magic-house-header h2 { margin: 0; font: 700 26px/1.2 var(--herb-serif, serif); letter-spacing: .04em; color: #f9e6c3; }
+.magic-wallet { display: flex; align-items: center; gap: 10px; flex: 0 0 auto; min-width: 94px; padding: 7px 11px; border: 1px solid #b593575e; border-radius: 8px; background: #10151ca3; }
+.magic-wallet strong { display: block; font: 700 24px/1.1 Georgia, serif; color: #f3d899; font-variant-numeric: tabular-nums; }
+.magic-wallet small { display: block; margin-top: 2px; font-size: 10px; letter-spacing: .13em; color: var(--shop-muted); }
+.magic-coin { position: relative; display: inline-block; width: 20px; height: 20px; border: 2px solid #e0c082; border-radius: 50%; box-shadow: inset 0 0 0 2px #796d53, inset 0 0 0 4px #bcb29a, 0 2px 4px #0006; background: radial-gradient(circle at 32% 24%, #e5dfcc, #a89d82 61%, #686957); vertical-align: middle; flex: 0 0 auto; }
+.magic-coin::before { content: ''; position: absolute; inset: 5px; border: 1px solid #6b6855; transform: rotate(45deg); }
+.magic-house-content { flex: 1 1 auto; min-height: 0; overflow: auto; overscroll-behavior: contain; scrollbar-color: #847051 #1a1c25; scrollbar-width: thin; }
+.magic-storage-alert { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex: 0 0 auto; padding: 9px 15px; border-bottom: 1px solid #d2a26766; background: #503c2d; }
+.magic-shop-enabled .magic-storage-alert p { margin: 0; color: #ffdfba; font-size: 11px; line-height: 1.5; }
+.magic-storage-alert .magic-button { flex: 0 0 auto; color: #ffebca; font-size: 11px; }
+.magic-panel { width: 100%; }
+.magic-house-footer { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex: 0 0 auto; padding: 10px 17px; border-top: 1px solid #b38c4e4f; background: #1b1d27; }
+.magic-house-footer > span:first-child { color: #c5b398; font-size: 11px; line-height: 1.4; }
+.magic-house-footer .magic-exit { min-height: 44px; padding: 9px 15px; white-space: nowrap; font-size: 14px; color: #f7e7cc; background: #353044; border: 1px solid #a58b61; border-radius: 7px; box-shadow: none; }
+.magic-button { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 46px; padding: 10px 18px; border: 1px solid #9d835d; border-radius: 7px; color: #f4e3c7; background: linear-gradient(#443648, #2e293b); font-weight: 650; line-height: 1.3; text-decoration: none; }
+.magic-button:hover { filter: brightness(1.13); }
+.magic-button-primary { color: #fff0ce; border-color: #d3ad6e; background: linear-gradient(#665037, #493525); box-shadow: inset 0 1px 0 #f1dbac26, 0 3px 10px #0003; }
+.magic-button-primary:disabled { border-color: #776d61; color: #c9c0b2; background: #353339; box-shadow: none; }
+.magic-button-small { min-height: 44px; padding: 7px 13px; font-size: 13px; }
+.magic-text-button { min-height: 44px; padding: 9px 4px; color: #ead2a9; background: transparent; border: 0; font-size: 14px; text-align: left; }
+.magic-text-button:hover { color: #fff1cf; text-decoration: underline; text-underline-offset: 4px; }
+
+/* The room keeps the original portrait background. All positions share its coordinates. */
+.magic-room-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 18px; background: #252331; border-bottom: 1px solid #bb985b50; }
+.magic-room-toolbar > span { color: #d9c5a1; font-size: 13px; white-space: nowrap; }
+.magic-room-toolbar .magic-button { min-height: 44px; padding: 9px 17px; font-size: 15px; }
+.magic-room-panel { background: radial-gradient(ellipse at 50% 48%, #46372d, #211f29 78%); }
+.magic-room-stage { position: relative; width: min(100%,490px,max(280px,calc(75dvh - 247.5px))); aspect-ratio: 1086/1448; margin: 0 auto; overflow: hidden; isolation: isolate; background: #62442a; box-shadow: 0 0 22px #0006; }
+.magic-room-background { position: absolute; inset: 0; z-index: 0; background: #62442a url("assets/herbalist/cottage.webp") center/100% 100% no-repeat; }
+.magic-room-background::after { content: ''; position: absolute; inset: 0; background: linear-gradient(#1b112211, transparent 60%, #17101b22); pointer-events: none; }
+.magic-room-objects { position: absolute; inset: 0; }
+.magic-old-crate { position: absolute; left: 5%; top: 65%; width: 21%; height: 8%; z-index: 15; border: 2px solid #68452e; border-radius: 3px; background: repeating-linear-gradient(0deg, #805533 0 18%, #5f3d2c 19% 21%, #87613e 22% 40%); transform: perspective(300px) rotateY(7deg); box-shadow: inset 3px 0 #b1834a44, 3px 7px 7px #35241977; }
+.magic-old-crate::before, .magic-old-crate::after { content: ''; position: absolute; top: -2px; bottom: -2px; width: 9%; border: 1px solid #362b22; background: linear-gradient(90deg, #554c39, #8f7b51, #4c4436); }
+.magic-old-crate::before { left: 15%; }.magic-old-crate::after { right: 15%; }
+.magic-wall-shelf { position: absolute; top: 52%; left: 44%; width: 17%; height: 1.2%; z-index: 20; background: linear-gradient(#a57944, #543a2c); border-bottom: 3px solid #3e2c25; box-shadow: 0 5px 9px #39282088; }
+.magic-wall-shelf::before, .magic-wall-shelf::after { content: ''; position: absolute; top: 100%; width: 7%; height: 220%; background: #5d412d; transform: skewX(-20deg); }
+.magic-wall-shelf::before { left: 10%; }.magic-wall-shelf::after { right: 10%; }
+.magic-room-item { position: absolute; left: calc(var(--room-x)*1%); top: calc(var(--room-y)*1%); width: max(44px, calc(var(--room-w)*1%)); aspect-ratio: 1; min-height: 44px; z-index: var(--room-z, 30); transform: translate(-50%, -50%); padding: 0; border: 0; border-radius: 20%; color: #ffe7ad; background: transparent; }
+.magic-room-item .magic-item-art { filter: drop-shadow(2px 5px 3px #26152577); }
+.magic-room-item:focus-visible { outline-offset: -3px; border-radius: 10%; }
+.magic-room-item:hover > .magic-item-art { filter: drop-shadow(0 0 5px #ffdf8e99) drop-shadow(2px 5px 3px #26152577); }
+.magic-room-item-name { position: absolute; display: none; top: 87%; left: 50%; transform: translateX(-50%); max-width: 160px; min-width: 75px; padding: 5px 7px; border: 1px solid #bda06b80; border-radius: 5px; color: #ffeac6; background: #1b1c25ec; font-size: 11px; line-height: 1.4; white-space: nowrap; pointer-events: none; z-index: 120; }
+.magic-room-item:hover .magic-room-item-name, .magic-room-item:focus-visible .magic-room-item-name { display: block; }
+.magic-room-empty { position: absolute; z-index: 80; bottom: 8%; left: 8%; right: 8%; padding: 17px 12px; border: 1px solid #d3b17b8c; border-radius: 9px; color: #fbe8c7; text-align: center; background: #211d25d9; box-shadow: 0 5px 20px #0004; pointer-events: none; }
+.magic-room-empty strong { display: block; margin-bottom: 8px; font: 700 18px/1.3 var(--herb-serif, serif); }
+.magic-room-empty span { color: #e2ceac; font-size: 13px; line-height: 1.6; }
+.magic-shop-enabled .magic-room-hint { position: absolute; z-index: 80; left: 50%; bottom: 3%; transform: translateX(-50%); padding: 6px 12px; margin: 0; border-radius: 20px; color: #f7e5c6; background: #201a25d9; font-size: 11px; white-space: nowrap; pointer-events: none; }
+.magic-shop-enabled .magic-live-message { margin: 0; min-height: 54px; padding: 13px 18px; color: #e4d4b5; background: #24212d; font-size: 13px; line-height: 1.6; border-top: 1px solid #b28c4c55; }
+.magic-collection { padding: 0 17px 18px; background: #24212d; }
+.magic-collection-toggle { display: flex; width: 100%; min-height: 48px; padding: 13px 2px; align-items: center; gap: 10px; color: #f1dfc2; background: transparent; border: 0; border-top: 1px solid #b28c4c45; font-size: 16px; text-align: left; }
+.magic-collection-toggle > span:nth-child(1) { color: #bfae92; font-size: 12px; }
+.magic-chevron { margin-left: auto; font-size: 21px; line-height: 16px; transition: transform .2s; }
+.magic-collection-toggle[aria-expanded="true"] .magic-chevron { transform: rotate(180deg); }
+.magic-shop-enabled .magic-collection-note { margin: 4px 0 11px; font-size: 12px; line-height: 1.5; color: #c9b89e; }
+.magic-collection-list { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 7px; }
+.magic-collection-item { display: flex; flex-direction: column; align-items: center; min-width: 0; min-height: 74px; padding: 5px 3px 7px; border: 1px solid #9f815e60; border-radius: 7px; color: #e6d7bd; background: #191c27; }
+.magic-collection-item .magic-item-art { position: relative; width: 58px; height: 58px; }
+.magic-collection-item > span:last-child { font-size: 11px; line-height: 1.3; }
+.magic-collection-item[aria-pressed="true"] { border-color: #e1be7c; background: #3a3040; }
+.magic-shop-enabled .magic-no-collection { grid-column: 1/-1; color: #d6c5a9; font-size: 13px; }
+.magic-room-inspector { margin-top: 13px; padding: 12px; border: 1px solid #a184585e; border-radius: 8px; background: #191c26; }
+.magic-inspector-main { display: grid; grid-template-columns: 105px 1fr; gap: 12px; align-items: center; }
+.magic-inspector-main h3 { margin: 0 0 6px; font: 700 18px/1.3 var(--herb-serif, serif); color: #f7e3bc; }
+.magic-shop-enabled .magic-inspector-main p { margin: 0 0 10px; font-size: 12px; line-height: 1.6; color: #d9c9af; }
+.magic-inspector-preview { position: relative; width: 105px; height: 120px; padding: 0; border: 1px solid #b0936050; border-radius: 7px; background: radial-gradient(ellipse at 50% 60%, #54415a60, #161a2600 75%); }
+.magic-place-options { display: flex; align-items: center; justify-content: flex-start; gap: 6px; margin-top: 14px; flex-wrap: wrap; }
+.magic-place-options > span { width: 100%; color: #d9c5a5; font-size: 12px; }
+.magic-place-button { min-height: 44px; padding: 7px 13px; border: 1px solid #8d7755; border-radius: 6px; color: #e2d5bb; background: #2c2937; font-size: 12px; }
+.magic-place-button[aria-pressed="true"] { color: #fff0c8; border-color: #d8b372; background: #55432e; }
+.magic-shop-enabled .magic-place-note { margin: 10px 0 0; color: #bba98f; font-size: 11px; line-height: 1.5; }
+.magic-shop-enabled .magic-place-note.is-error { color: #ffd2ac; }
+
+/* Shop shelves and a quiet, one-item confirmation view. */
+.magic-store-panel { padding: 12px 19px 26px; background: radial-gradient(ellipse at 50% 0%, #4a34444a, transparent 500px), #1b1d27; }
+.magic-store-intro { display: flex; align-items: center; gap: 10px; justify-content: space-between; }
+.magic-shop-enabled .magic-store-intro p { margin: 0; max-width: 70%; font-size: 12px; line-height: 1.5; color: #cdbb9f; text-align: right; }
+.magic-categories { display: flex; gap: 6px; flex-wrap: wrap; padding: 9px 0 10px; border-bottom: 1px solid #af915557; }
+.magic-categories button { min-height: 44px; padding: 8px 12px; border: 1px solid #9e82505c; border-radius: 6px; color: #d3c3aa; background: #252532; font-size: 12px; white-space: nowrap; }
+.magic-categories button[aria-pressed="true"] { color: #fbe7bf; background: #51402f; border-color: #c7a36a; box-shadow: inset 0 1px #e8c78924; }
+.magic-shop-enabled .magic-store-status { margin: 11px 0 14px; color: #c7b59a; font-size: 11px; line-height: 1.5; }
+.magic-product-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 15px 12px; }
+.magic-product { position: relative; display: flex; min-width: 0; flex-direction: column; padding: 0; border: 1px solid #90714d7a; border-radius: 9px; background: linear-gradient(#332b35 0%, #262430 75%); color: #f1dfbd; overflow: hidden; text-align: left; box-shadow: 0 4px 9px #0003; }
+.magic-product::after { content: ''; position: absolute; top: 0; left: 8px; right: 8px; height: 1px; background: linear-gradient(90deg, transparent, #f8d79c8c, transparent); pointer-events: none; }
+.magic-product:hover { border-color: #e1b976; background: linear-gradient(#40323e, #2d2937); }
+.magic-product-art { position: relative; width: 100%; aspect-ratio: 1; background: radial-gradient(ellipse at 50% 75%, #80633c42, transparent 68%); }
+.magic-product-art::before { content: ''; position: absolute; bottom: 8%; left: 8%; right: 8%; height: 6%; border-radius: 50%; background: #080b0e63; filter: blur(5px); }
+.magic-item-art { position: absolute; inset: 0; display: block; background-image: var(--shop-art); background-size: 200% 300%; background-repeat: no-repeat; background-position: calc(var(--shop-col)*100%) calc(var(--shop-row)*50%); pointer-events: none; }
+.magic-item-part { position: absolute; inset: 0; display: none; z-index: 5; background-image: var(--shop-art); background-size: 200% var(--shop-motion-sy,300%); background-repeat: no-repeat; background-position: calc(var(--shop-col)*100%) var(--shop-motion-y,calc(var(--shop-row)*50%)); pointer-events: none; }
+.is-playing > .magic-item-part { display: block; }
+.magic-product-copy { display: block; padding: 9px 10px 10px; width: 100%; border-top: 1px solid #cba06538; background: #181b24ab; }
+.magic-product-copy strong { display: block; min-height: 36px; color: #f1dfbf; font-size: 13px; font-weight: 650; line-height: 1.45; }
+.magic-product-bottom { display: flex; justify-content: space-between; align-items: center; gap: 4px; margin-top: 6px; }
+.magic-price { display: inline-flex; align-items: center; gap: 5px; color: #efd093; font-size: 14px; font-variant-numeric: tabular-nums; }
+.magic-price .magic-coin { width: 14px; height: 14px; border-width: 1px; box-shadow: inset 0 0 0 1px #796d53, inset 0 0 0 2px #bcb29a; }
+.magic-price .magic-coin::before { inset: 4px; }
+.magic-product-state { color: #c5b49d; font-size: 10px; white-space: nowrap; }
+.magic-product.is-owned { border-color: #8b9d805e; }
+.magic-product.is-owned .magic-product-state { color: #bdd1ac; }
+.magic-detail-panel { padding: 12px 24px 26px; background: radial-gradient(ellipse at 50% 34%, #4c34514a, transparent 70%), #1c1e29; }
+.magic-shop-enabled .magic-detail-kicker { margin: 9px 0 6px; color: #baa27d; text-align: center; font-size: 11px; letter-spacing: .08em; }
+.magic-detail-panel h3 { margin: 0; color: #fae9c6; font: 700 28px/1.3 var(--herb-serif, serif); text-align: center; }
+.magic-detail-art { position: relative; display: block; width: min(100%, 340px); aspect-ratio: 1; margin: 6px auto 14px; padding: 0; border: 0; border-radius: 15px; color: #f9d890; background: radial-gradient(ellipse at 50% 60%, #78513c40, transparent 67%); }
+.magic-detail-art::before { content: ''; position: absolute; left: 15%; right: 15%; bottom: 11%; height: 7%; border-radius: 50%; background: #05070b60; filter: blur(12px); }
+.magic-detail-art > .magic-item-art { filter: drop-shadow(4px 7px 6px #0005); }
+.magic-preview-label { position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); padding: 6px 13px; border-radius: 15px; color: #cfbc9d; background: #171a27ad; font-size: 11px; line-height: 1.5; white-space: nowrap; }
+.magic-shop-enabled .magic-detail-description { max-width: 480px; margin: 0 auto 10px; color: #e7d5b5; font-size: 14px; line-height: 1.7; text-align: center; }
+.magic-shop-enabled .magic-detail-magic { max-width: 480px; min-height: 40px; margin: 0 auto 14px; color: #c7b7a1; font-size: 12px; line-height: 1.65; text-align: center; }
+.magic-detail-price { display: flex; justify-content: space-between; align-items: center; max-width: 480px; margin: 0 auto; padding: 13px 0; border-top: 1px solid #a3865a4d; border-bottom: 1px solid #a3865a4d; }
+.magic-detail-price > span:first-child { display: inline-flex; align-items: center; gap: 7px; color: #f1d195; font: 700 24px/1.2 Georgia, serif; }
+.magic-detail-price small { font: 12px/1.4 sans-serif; color: #c5b397; }
+.magic-detail-price > span:last-child { font-size: 12px; color: #d6c4a7; }
+.magic-purchase-message { min-height: 53px; max-width: 480px; margin: 0 auto; padding: 13px 0 10px; color: #dcc8a7; font-size: 12px; line-height: 1.6; text-align: center; }
+.magic-purchase-message.is-error { color: #ffd2ac; }
+.magic-detail-actions { display: grid; gap: 9px; max-width: 480px; margin: 0 auto; }
+.magic-detail-actions .magic-text-button { justify-self: center; text-align: center; }
+.magic-shop-enabled .magic-earning-note { max-width: 480px; margin: 5px auto 0; text-align: center; font-size: 11px; line-height: 1.6; color: #bcac95; }
+
+/* The sprites stay still until tapped. Each effect has its own motion and overlay. */
+.magic-effect { position: absolute; inset: 0; z-index: 3; opacity: 0; pointer-events: none; color: #f7d58d; }
+.magic-effect svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; fill: currentColor; }
+.magic-item-aura { position: absolute; inset: 5%; z-index: -1; border-radius: 50%; background: radial-gradient(#f4d28a60, #b59bda22 40%, transparent 70%); opacity: 0; pointer-events: none; }
+.is-playing .magic-effect { animation: magic-effect-show 4s ease-in-out both; }
+.is-playing .magic-item-aura { animation: magic-aura 3.8s ease-in-out both; }
+.magic-sparks { position: absolute; inset: 0; }
+.magic-sparks i { position: absolute; left: 48%; top: 45%; width: 4%; aspect-ratio: 1; background: #ffe6a6; box-shadow: 0 0 8px #ffd69e; border-radius: 50%; opacity: 0; }
+.magic-sparks i:nth-child(1) { --spark-x: -30%; --spark-y: -45%; animation-delay: .2s; }
+.magic-sparks i:nth-child(2) { --spark-x: 40%; --spark-y: -32%; animation-delay: .4s; }
+.magic-sparks i:nth-child(3) { --spark-x: -37%; --spark-y: 17%; animation-delay: .6s; }
+.magic-sparks i:nth-child(4) { --spark-x: 32%; --spark-y: 25%; animation-delay: .8s; }
+.magic-sparks i:nth-child(5) { --spark-x: 2%; --spark-y: -52%; animation-delay: 1s; }
+.magic-sparks i:nth-child(6) { --spark-x: -20%; --spark-y: 33%; animation-delay: 1.2s; }
+.is-playing .magic-sparks i { animation-name: magic-spark; animation-duration: 1.6s; animation-fill-mode: both; }
+.magic-rune-line { position: absolute; left: 20%; right: 20%; top: 42%; font-size: clamp(9px, 3vw, 23px); text-shadow: 0 0 8px #ffd478; letter-spacing: .15em; color: #ffdc88; opacity: 0; }
+.magic-drawer-glow { position: absolute; left: 28%; right: 24%; top: 58%; height: 2%; background: #ffe2a2; box-shadow: 0 0 12px 3px #ffc979; opacity: 0; }
+.is-playing .magic-rune-line { animation: magic-runes 3.7s ease both; }
+.is-playing .magic-drawer-glow { animation: magic-late-glow 3.5s ease both; }
+.magic-star-mark { transform-origin: 50% 45%; filter: drop-shadow(0 0 4px #ffe3a0); }
+.is-playing[data-effect="chair"] > .magic-item-art { animation: magic-chair-pull 3.5s ease both; }
+.is-playing .magic-star-mark { animation: magic-star-mark 3.5s ease both; }
+.is-playing[data-effect="cushion"] > .magic-item-art { animation: magic-chair-float 3.8s ease both; }
+.magic-cushion-glow { position: absolute; left: 27%; right: 27%; top: 42%; height: 20%; border-radius: 30%; box-shadow: 0 0 10px #d4a6ed; background: #88659033; }
+.is-playing .magic-cushion-glow { animation: magic-cushion 3.5s ease both; }
+.magic-moon { fill: #fff0b5; filter: drop-shadow(0 0 6px #f4dca8); }
+.magic-moon-shadow { fill: #252633; }
+.is-playing .magic-moon-shadow { animation: magic-full-moon 3.8s ease both; }
+.magic-book-spines { position: absolute; inset: 20% 20% 25%; display: flex; gap: 6%; align-items: center; }
+.magic-book-spines i { width: 12%; height: 44%; border: 1px solid #ffe5a6; background: #c39c6944; opacity: .2; box-shadow: 0 0 7px #f8d69a; }
+.magic-book-spines i:nth-child(2) { height: 65%; }.magic-book-spines i:nth-child(3) { height: 52%; }.magic-book-spines i:nth-child(4) { height: 59%; }
+.is-playing .magic-book-spines i { animation: magic-book-glow 3.8s ease both; }
+.is-playing .magic-book-spines i:nth-child(2) { animation-delay: .15s; }.is-playing .magic-book-spines i:nth-child(3) { animation: magic-book-pull 3.5s ease .3s both; }.is-playing .magic-book-spines i:nth-child(4) { animation-delay: .45s; }.is-playing .magic-book-spines i:nth-child(5) { animation-delay: .6s; }
+.magic-turning-handle { transform-origin: 50% 46%; filter: drop-shadow(0 0 3px #ffd78b); }
+.is-playing .magic-turning-handle { animation: magic-handle-turn 3s ease both; }
+.magic-drawer-seam { fill: none; stroke: #ffdc97; stroke-width: 2; filter: drop-shadow(0 0 5px #ffdc97); }
+.is-playing[data-effect="rug"] > .magic-item-art { animation: magic-rug-ripple 3.5s ease both; transform-origin: 50% 80%; }
+.magic-constellation { stroke-dasharray: 150; stroke-dashoffset: 150; }
+.is-playing .magic-constellation { animation: magic-draw-stars 3.6s ease both; }
+.is-playing .magic-rug-stars { animation: magic-star-twinkle 3.5s ease both; }
+.magic-bed-stars { position: absolute; inset: 32% 18% 20%; }
+.magic-bed-stars i { position: absolute; top: 20%; left: 20%; width: 4%; aspect-ratio: 1; transform: rotate(45deg); background: #ffecb5; box-shadow: 0 0 8px #e8d8a3; }
+.magic-bed-stars i:nth-child(2) { top: 60%; left: 40%; }.magic-bed-stars i:nth-child(3) { top: 25%; left: 70%; }.magic-bed-stars i:nth-child(4) { top: 70%; left: 80%; }.magic-bed-stars i:nth-child(5) { top: 50%; left: 55%; }
+.is-playing .magic-bed-stars i { animation: magic-star-twinkle 2s ease both; }.is-playing .magic-bed-stars i:nth-child(even) { animation-delay: 1s; }
+.is-playing[data-effect="curtains"] > .magic-item-art { animation: magic-curtain-sway 3.8s ease both; transform-origin: 50% 5%; }
+.magic-curtain-silver { position: absolute; left: 24%; top: 12%; width: 2%; bottom: 12%; background: linear-gradient(transparent, #eeefff, transparent); box-shadow: 0 0 8px #cbd5f6; }
+.is-playing .magic-curtain-silver { animation: magic-silver-flow 3.7s ease both; }
+.magic-tapestry-bird { fill: none; stroke: #f9dfa5; stroke-width: 1.7; filter: drop-shadow(0 0 3px #e8d5aa); }
+.is-playing .magic-tapestry-bird { animation: magic-tapestry-bird 3.7s ease both; transform-origin: center; }
+.magic-mirror-forest { fill: #243b4d; stroke: #a9bfba; stroke-width: 1; }
+.magic-forest-trees { fill: #a5bcb7; opacity: .7; }
+.magic-forest-trees circle { fill: #ece7bf; }
+.is-playing .magic-forest-trees { animation: magic-forest 3.8s ease both; }
+.magic-fire-dragon { fill: #ffb85c; filter: drop-shadow(0 0 6px #ff8037); transform-origin: 50% 60%; }
+.is-playing .magic-fire-dragon { animation: magic-dragon-fire 3.8s ease both; }
+.magic-candle-flame { position: absolute; left: 43%; top: 13%; width: 13%; height: 23%; border-radius: 70% 30% 50% 50%; transform: rotate(10deg); background: radial-gradient(ellipse at 50% 80%, #fff5d1 0%, #f7bf5d 45%, #cf731900 73%); filter: drop-shadow(0 0 7px #ffc66f); }
+.is-playing .magic-candle-flame { animation: magic-blue-flame 3.8s ease both; }
+.is-playing[data-effect="quill"] > .magic-item-art { animation: magic-quill-write 3.8s ease both; transform-origin: 40% 75%; }
+.magic-written-runes { stroke-dasharray: 200; stroke-dashoffset: 200; filter: drop-shadow(0 0 4px #f8d7a0); }
+.is-playing .magic-written-runes { animation: magic-rune-write 3.8s ease both; }
+.magic-bubbles { position: absolute; inset: 0; }
+.magic-bubbles i { position: absolute; left: 30%; top: 58%; width: 7%; aspect-ratio: 1; border: 1px solid #d2eac5; border-radius: 50%; background: #94c69255; box-shadow: 0 0 6px #add5b77a; opacity: 0; }
+.magic-bubbles i:nth-child(2) { left: 50%; animation-delay: .45s; background: #bc9ddd55; }.magic-bubbles i:nth-child(3) { left: 65%; animation-delay: .9s; width: 5%; }.magic-bubbles i:nth-child(4) { left: 40%; animation-delay: 1.35s; width: 4%; }
+.is-playing .magic-bubbles i { animation-name: magic-bubble-rise; animation-duration: 2.2s; animation-fill-mode: both; }
+.is-playing[data-effect="bottles"] > .magic-item-art { animation: magic-liquid-sway 3.8s ease both; }
+.magic-effect-tea { background: none; }
+.magic-tea-pot-art { inset: 9% auto auto 20%; width: 83%; height: 72.625%; transform-origin: 35% 58%; }
+.magic-tea-cup-art { inset: 41% auto auto -6%; width: 64%; height: 56%; }
+.is-playing[data-effect="tea"] > .magic-item-art { opacity: 0; }
+.is-playing > .magic-tea-pot-art { animation: magic-painted-tea-pour 4s ease both; }
+.is-playing > .magic-tea-cup-art { animation: magic-painted-tea-cup 4s ease both; }
+.magic-tea-stream { stroke-dasharray: 40; stroke-dashoffset: 40; }
+.is-playing .magic-tea-stream { animation: magic-tea-stream 4s ease both; }
+.is-playing .magic-tea-steam { animation: magic-tea-steam 4s ease both; }
+.magic-turning-page { transform-origin: 48% 50%; }
+.is-playing .magic-turning-page { animation: magic-page-turn 3.8s ease both; }
+.is-playing .magic-atlas-lines { animation: magic-atlas-travel 3.7s ease both; }
+.magic-cauldron-moon { position: absolute; left: 40%; top: 45%; width: 13%; height: 13%; border-radius: 50%; background: #ffebb0; box-shadow: 4px -3px 0 #46445a inset, 0 0 5px #f4dca8; opacity: 0; }
+.magic-star-rise { position: absolute; left: 62%; top: 55%; width: 10%; height: 10%; color: #ffde8c; opacity: 0; }
+.is-playing .magic-cauldron-moon { animation: magic-moon-rise 3.6s .2s ease both; }.is-playing .magic-star-rise { animation: magic-moon-rise 3.6s .6s ease both; }
+.magic-crystal-nebula { fill: #6c6689aa; filter: drop-shadow(0 0 5px #c7bfe3); }
+.magic-crystal-castle { transform-origin: 50% 55%; }
+.is-playing .magic-crystal-nebula { animation: magic-nebula-clear 3.8s ease both; }.is-playing .magic-crystal-castle { animation: magic-castle-reveal 3.8s ease both; }
+.magic-portrait-nod-art, .magic-portrait-sip-art { inset: 1% auto auto 3%; width: 94%; height: 96%; opacity: 0; }
+.is-playing[data-effect="portrait"] > .magic-item-art { animation: magic-portrait-original-frame 4s ease both; }
+.is-playing > .magic-portrait-nod-art { animation: magic-portrait-nod-frame 4s ease both; }
+.is-playing > .magic-portrait-sip-art { animation: magic-portrait-sip-frame 4s ease both; }
+.is-playing[data-effect="broom"] > .magic-item-art { animation: magic-broom-circle 3.8s ease both; }
+.magic-broom-trail { position: absolute; inset: 20%; border: 2px dotted #e8d4a3; border-top-color: transparent; border-left-color: transparent; border-radius: 50%; filter: drop-shadow(0 0 3px #ebce8a); }
+.is-playing .magic-broom-trail { animation: magic-broom-trail 3.8s ease both; }
+.magic-trunk-sky { fill: #7773b91a; stroke: none; filter: drop-shadow(0 0 7px #9fabe7); }
+.magic-trunk-stars { fill: #f0e8ba; }.magic-trunk-cloud { fill: #8e9ab677; }
+.magic-trunk-lid { transform-origin: 50% 41%; }
+.magic-trunk-lid-art { clip-path: polygon(0% 8%,100% 8%,100% 31%,0% 42%); transform-origin: 50% 36%; }
+.is-playing[data-effect="trunk"] > .magic-item-art { clip-path: polygon(0% 42%,100% 31%,100% 100%,0% 100%); }
+.is-playing > .magic-trunk-lid-art { animation: magic-painted-trunk-open 4s ease both; }
+.is-playing .magic-trunk-lid { animation: magic-trunk-open 4s ease both; }.is-playing .magic-trunk-cloud { animation: magic-cloud-drift 4s ease both; }.is-playing .magic-trunk-stars { animation: magic-star-twinkle 4s ease both; }
+.is-playing[data-effect="bird"] { z-index: 100; }
+.magic-room-bird.is-playing { animation: magic-bird-room-flight 5.2s ease-in-out both; }
+.is-playing[data-effect="bird"] > .magic-item-art { opacity: 0; }
+.magic-bird-flight-art, .magic-cat-stretch-art { inset: -5% auto auto 0; width: 100%; height: 109.375%; }
+.is-playing > .magic-bird-flight-art { animation: magic-bird-wings .23s ease-in-out 22; transform-origin: 50% 50%; }
+.magic-bird-feather { position: absolute; top: 60%; left: 45%; width: 5%; height: 20%; border-radius: 90% 0 90% 0; background: linear-gradient(90deg, #a47630, #f3d58b, #a47630); transform: rotate(25deg); }
+.is-playing .magic-bird-feather { animation: magic-feather-fall 4s ease both; }
+.is-playing .magic-cat-sleep { animation: magic-cat-sleep 4s ease both; }
+.is-playing[data-effect="cat"] > .magic-item-art { animation: magic-cat-original-pose 4s ease both; }
+.is-playing > .magic-cat-stretch-art { animation: magic-cat-stretch-pose 4s ease both; transform-origin: 50% 75%; }
+/* Keep the original complete painting visible while optional action art loads. */
+.magic-shop-enabled:not(.magic-motion-ready) .is-playing[data-effect="tea"] > .magic-item-art,
+.magic-shop-enabled:not(.magic-motion-ready) .is-playing[data-effect="portrait"] > .magic-item-art,
+.magic-shop-enabled:not(.magic-motion-ready) .is-playing[data-effect="bird"] > .magic-item-art,
+.magic-shop-enabled:not(.magic-motion-ready) .is-playing[data-effect="cat"] > .magic-item-art { opacity: 1 !important; animation: none !important; }
+.magic-shop-enabled:not(.magic-motion-ready) .magic-tea-pot-art,
+.magic-shop-enabled:not(.magic-motion-ready) .magic-tea-cup-art,
+.magic-shop-enabled:not(.magic-motion-ready) .magic-portrait-nod-art,
+.magic-shop-enabled:not(.magic-motion-ready) .magic-portrait-sip-art,
+.magic-shop-enabled:not(.magic-motion-ready) .magic-bird-flight-art,
+.magic-shop-enabled:not(.magic-motion-ready) .magic-cat-stretch-art { display: none !important; }
+
+@keyframes magic-effect-show { 0%,100% { opacity: 0; } 12%,84% { opacity: 1; } }
+@keyframes magic-aura { 0%,100% { opacity: 0; transform: scale(.7); } 25%,70% { opacity: .7; transform: scale(1.2); } }
+@keyframes magic-spark { 0% { opacity: 0; transform: translate(0,0) scale(.3); } 25% { opacity: 1; } 100% { opacity: 0; left: calc(48% + var(--spark-x)); top: calc(45% + var(--spark-y)); transform: scale(.1); } }
+@keyframes magic-runes { 0%,100% { opacity: 0; clip-path: inset(0 100% 0 0); } 25%,75% { opacity: 1; clip-path: inset(0 0 0 0); } }
+@keyframes magic-late-glow { 0%,30%,100% { opacity: 0; } 50%,75% { opacity: 1; } }
+@keyframes magic-chair-pull { 0%,100% { transform: translate(0,0); } 35%,65% { transform: translate(9%,5%) rotate(-3deg); } }
+@keyframes magic-star-mark { 0%,100% { opacity: 0; transform: scale(.7); } 35%,70% { opacity: 1; transform: scale(1); } }
+@keyframes magic-chair-float { 0%,100% { transform: translateY(0) scaleY(1); } 20% { transform: translateY(0) scaleY(1.05); } 45%,70% { transform: translateY(-10%) scaleY(1.02); } 85% { transform: translateY(1%) scaleY(.98); } }
+@keyframes magic-cushion { 0%,100% { opacity: 0; transform: scale(1); } 20%,75% { opacity: 1; transform: scale(1.12,1.2); } }
+@keyframes magic-full-moon { 0%,100% { transform: translateX(0); } 45%,68% { transform: translateX(24%); } }
+@keyframes magic-book-glow { 0%,100% { opacity: 0; } 25%,60% { opacity: .9; } }
+@keyframes magic-book-pull { 0%,100% { opacity: 0; transform: translateX(0); } 35%,65% { opacity: 1; transform: translateX(-45%) rotate(-8deg); } }
+@keyframes magic-handle-turn { 0%,100% { transform: rotate(0); } 35%,60% { transform: rotate(100deg) scale(1.08); } }
+@keyframes magic-rug-ripple { 0%,100% { transform: scale(1) skewX(0); } 30% { transform: scale(1.015,.97) skewX(2deg); } 65% { transform: scale(1.02,1.025) skewX(-2deg); } }
+@keyframes magic-draw-stars { 0% { stroke-dashoffset: 150; } 60%,90% { stroke-dashoffset: 0; } 100% { opacity: 0; } }
+@keyframes magic-star-twinkle { 0%,100% { opacity: 0; } 25%,60% { opacity: 1; } 42%,75% { opacity: .3; } }
+@keyframes magic-curtain-sway { 0%,100% { transform: skewX(0); } 30% { transform: skewX(4deg); } 65% { transform: skewX(-3deg); } }
+@keyframes magic-silver-flow { 0%,100% { opacity: 0; left: 20%; } 25% { opacity: 1; } 75% { opacity: .7; left: 76%; } }
+@keyframes magic-tapestry-bird { 0% { opacity: 0; transform: translate(-12%,5%) scale(.5); } 40% { opacity: 1; transform: translate(0,0) scale(1); } 85%,100% { opacity: 0; transform: translate(15%,-10%) scale(.7); } }
+@keyframes magic-forest { 0%,100% { opacity: 0; transform: translateY(5%); } 30%,75% { opacity: .95; transform: translateY(0); } }
+@keyframes magic-dragon-fire { 0%,100% { opacity: 0; transform: scale(.2); } 35% { opacity: 1; transform: scale(1) rotate(-7deg); } 65% { opacity: .9; transform: scale(1.05) rotate(5deg); } }
+@keyframes magic-blue-flame { 0%,100% { filter: drop-shadow(0 0 7px #ffc66f); background: radial-gradient(ellipse at 50% 80%, #fff5d1, #f7bf5d 45%, #cf731900 73%); } 25%,75% { background: radial-gradient(ellipse at 50% 80%, #e9ffff, #88b7ec 45%, #386bc500 73%); filter: drop-shadow(0 0 13px #79bbff); transform: rotate(-5deg) scale(1.1); } }
+@keyframes magic-quill-write { 0%,100% { transform: rotate(0) translate(0,0); } 20% { transform: rotate(12deg) translate(0,-4%); } 35% { transform: rotate(5deg) translate(4%,0); } 50% { transform: rotate(14deg) translate(8%,-2%); } 70% { transform: rotate(7deg) translate(12%,1%); } }
+@keyframes magic-rune-write { 0%,15% { stroke-dashoffset: 200; } 75% { stroke-dashoffset: 0; opacity: 1; } 100% { stroke-dashoffset: 0; opacity: 0; } }
+@keyframes magic-bubble-rise { 0% { opacity: 0; transform: translateY(0) scale(.3); } 20% { opacity: .9; } 90% { opacity: .7; } 100% { opacity: 0; transform: translateY(-360%) scale(1); } }
+@keyframes magic-liquid-sway { 0%,100% { transform: rotate(0); } 25% { transform: rotate(3deg); } 50% { transform: rotate(-3deg); } 75% { transform: rotate(2deg); } }
+@keyframes magic-painted-tea-pour { 0%,100% { transform: translate(0,0) rotate(0); } 25% { transform: translate(0,-8%) rotate(0); } 42%,68% { transform: translate(-2%,-10%) rotate(-15deg); } 82% { transform: translate(0,-8%) rotate(0); } }
+@keyframes magic-painted-tea-cup { 0%,100% { transform: translateY(0); } 25%,80% { transform: translateY(-3%); } }
+@keyframes magic-tea-stream { 0%,32%,78%,100% { opacity: 0; stroke-dashoffset: 40; } 45%,68% { opacity: 1; stroke-dashoffset: 0; } }
+@keyframes magic-tea-steam { 0%,58%,100% { opacity: 0; transform: translateY(0); } 75% { opacity: .9; transform: translateY(-5%); } 90% { opacity: 0; transform: translateY(-9%); } }
+@keyframes magic-page-turn { 0%,100% { transform: scaleX(1); } 35% { transform: scaleX(.05); } 70% { transform: scaleX(-.9); } }
+@keyframes magic-atlas-travel { 0%,100% { opacity: 0; transform: translateX(-4%); } 35%,70% { opacity: 1; transform: translateX(4%); } }
+@keyframes magic-moon-rise { 0% { opacity: 0; transform: translateY(0) scale(.4); } 30% { opacity: 1; } 80% { opacity: .8; } 100% { opacity: 0; transform: translateY(-250%) scale(1); } }
+@keyframes magic-nebula-clear { 0%,100% { opacity: .9; } 45%,75% { opacity: .12; } }
+@keyframes magic-castle-reveal { 0%,100% { opacity: 0; transform: scale(.7) translateY(10%); } 40%,75% { opacity: .95; transform: scale(1) translateY(0); } }
+@keyframes magic-portrait-original-frame { 0%,9%,43%,49%,94%,100% { opacity: 1; } 17%,35%,59%,86% { opacity: 0; } }
+@keyframes magic-portrait-nod-frame { 0%,9%,43%,100% { opacity: 0; transform: translateY(0); } 17%,35% { opacity: 1; transform: translateY(.5%); } }
+@keyframes magic-portrait-sip-frame { 0%,49%,94%,100% { opacity: 0; } 59%,86% { opacity: 1; } }
+@keyframes magic-broom-circle { 0%,100% { transform: translate(0,0) rotate(0); } 25% { transform: translate(-10%,-14%) rotate(-14deg); } 50% { transform: translate(13%,-16%) rotate(11deg); } 75% { transform: translate(9%,1%) rotate(15deg); } }
+@keyframes magic-broom-trail { 0%,100% { opacity: 0; transform: rotate(0) scale(.7); } 45%,70% { opacity: .9; transform: rotate(220deg) scale(1.2); } }
+@keyframes magic-trunk-open { 0%,100% { transform: translateY(0) scaleY(1); } 30%,77% { transform: translateY(-14%) scaleY(.65); } }
+@keyframes magic-painted-trunk-open { 0%,100% { transform: translateY(0) rotate(0) scaleY(1); } 30%,77% { transform: translateY(-10%) rotate(-2deg) scaleY(.8); } }
+@keyframes magic-cloud-drift { 0% { transform: translateX(-6%); opacity: 0; } 30%,75% { opacity: .8; } 100% { transform: translateX(8%); opacity: 0; } }
+@keyframes magic-bird-room-flight { 0%,100% { transform: translate(-50%,-50%) rotate(0); } 18% { transform: translate(100%,10%) rotate(8deg); } 38% { transform: translate(330%,120%) rotate(15deg); } 60% { transform: translate(260%,280%) rotate(-10deg); } 78% { transform: translate(-100%,150%) rotate(-15deg); } }
+@keyframes magic-bird-wings { 0%,100% { transform: scaleX(1) rotate(-3deg); } 50% { transform: scaleX(.78) rotate(3deg); } }
+@keyframes magic-feather-fall { 0%,20% { opacity: 0; transform: translate(0,-20%) rotate(25deg); } 35% { opacity: .9; } 100% { opacity: 0; transform: translate(120%,160%) rotate(-35deg); } }
+@keyframes magic-cat-sleep { 0% { opacity: .8; transform: translateY(0); } 30% { opacity: 0; transform: translateY(-14%); } 100% { opacity: 0; } }
+@keyframes magic-cat-original-pose { 0%,10%,92%,100% { opacity: 1; } 25%,78% { opacity: 0; } }
+@keyframes magic-cat-stretch-pose { 0%,10%,92%,100% { opacity: 0; transform: scale(1); } 25%,78% { opacity: 1; transform: scale(1.025); } }
+
+@media (max-width: 560px) {
+  .herb-cottage.magic-shop-enabled { width: calc(100vw - 12px); height: calc(100dvh - 12px); max-height: calc(100dvh - 12px); border-radius: 12px; }
+  .magic-house-header { padding: 14px 15px 12px; gap: 8px; }
+  .magic-house-header h2 { font-size: 22px; }
+  .magic-house-header .magic-eyebrow { font-size: 10px; letter-spacing: .08em; }
+  .magic-wallet { min-width: 80px; gap: 7px; padding: 6px 8px; }
+  .magic-wallet strong { font-size: 21px; }
+  .magic-wallet > .magic-coin { width: 18px; height: 18px; }
+  .magic-room-toolbar { padding: 9px 11px; }
+  .magic-room-toolbar > span { font-size: 11px; }
+  .magic-room-toolbar .magic-button { padding: 8px 12px; font-size: 14px; }
+  .magic-house-footer { padding: 8px 11px; }
+  .magic-house-footer > span:first-child { max-width: 47%; font-size: 10px; }
+  .magic-store-panel { padding: 9px 11px 21px; }
+  .magic-product-grid { grid-template-columns: repeat(2, minmax(0,1fr)); gap: 12px 9px; }
+  .magic-product-copy { padding: 8px 10px 10px; }
+  .magic-product-copy strong { min-height: 20px; font-size: 13px; }
+  .magic-product-bottom { margin-top: 8px; }
+  .magic-categories { gap: 5px; }
+  .magic-categories button { padding: 7px 9px; font-size: 11px; }
+  .magic-shop-enabled .magic-store-intro p { font-size: 10px; }
+  .magic-detail-panel { padding: 9px 17px 21px; }
+  .magic-detail-panel h3 { font-size: 25px; }
+  .magic-detail-art { width: min(100%, 290px); }
+  .magic-detail-price > span:first-child { font-size: 22px; }
+  .magic-detail-price > span:last-child { font-size: 11px; }
+  .magic-inspector-main { grid-template-columns: 88px 1fr; gap: 10px; }
+  .magic-inspector-preview { width: 88px; height: 108px; }
+  .magic-inspector-main h3 { font-size: 16px; }
+  .magic-collection { padding: 0 11px 15px; }
+  .magic-collection-list { gap: 5px; }
+  .magic-collection-item .magic-item-art { width: 53px; height: 53px; }
+  .magic-collection-item > span:last-child { font-size: 10px; }
+  .magic-shop-enabled .magic-live-message { padding: 11px 13px; font-size: 12px; }
+}
+@media (orientation: landscape) and (max-height: 600px) {
+  .herb-cottage.magic-shop-enabled { width: min(760px, calc(100vw - 20px)); }
+  .magic-house-header { padding: 9px 18px; }
+  .magic-house-header .magic-eyebrow { display: none; }
+  .magic-house-header h2 { font-size: 23px; }
+  .magic-house-footer { padding: 5px 15px; }
+  .magic-room-stage { max-width: 500px; margin: auto; }
+  .magic-room-panel { background: #211f29; }
+  .magic-detail-art { width: min(42vw, 245px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .magic-shop-enabled *, .magic-shop-enabled *::before, .magic-shop-enabled *::after { scroll-behavior: auto !important; transition: none !important; }
+  .magic-shop-enabled .is-playing, .magic-shop-enabled .is-playing * { animation: none !important; }
+  .magic-shop-enabled .is-playing .magic-item-art { filter: drop-shadow(0 0 6px #e9cf8b); }
+  .magic-shop-enabled .is-playing .magic-effect { opacity: .8; }
+  .magic-shop-enabled .is-playing .magic-item-aura { opacity: .5; transform: none; }
+  .magic-shop-enabled .is-playing .magic-rune-line, .magic-shop-enabled .is-playing .magic-drawer-glow { opacity: 1; }
+  .magic-shop-enabled .is-playing .magic-constellation, .magic-shop-enabled .is-playing .magic-written-runes, .magic-shop-enabled .is-playing .magic-tea-stream { stroke-dashoffset: 0; }
+  .magic-shop-enabled .is-playing .magic-trunk-lid { transform: translateY(-14%) scaleY(.65); }
+  .magic-shop-enabled .is-playing > .magic-tea-pot-art { transform: translate(-2%,-10%) rotate(-15deg); }
+  .magic-shop-enabled .is-playing > .magic-trunk-lid-art { transform: translateY(-10%) scaleY(.8); }
+  .magic-shop-enabled .is-playing > .magic-portrait-nod-art { opacity: 0; }
+  .magic-shop-enabled .is-playing > .magic-portrait-sip-art { opacity: 1; }
+  .magic-shop-enabled .is-playing[data-effect="portrait"] > .magic-item-art { opacity: 0; }
+  .magic-shop-enabled .is-playing[data-effect="cat"] > .magic-item-art { opacity: 0; }
+  .magic-shop-enabled .is-playing > .magic-cat-stretch-art { opacity: 1; }
+  .magic-shop-enabled .is-playing .magic-moon-shadow { transform: translateX(24%); }
+  .magic-shop-enabled .is-playing .magic-cauldron-moon, .magic-shop-enabled .is-playing .magic-star-rise { opacity: 1; transform: translateY(-100%); }
+  .magic-shop-enabled .is-playing .magic-sparks i, .magic-shop-enabled .is-playing .magic-bubbles i { opacity: .7; }
+}

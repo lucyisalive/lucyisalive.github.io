@@ -12,6 +12,8 @@ const checks = [
   ['tests/feedback-integration.cjs'],
   ['tests/ipad-audio-integration.cjs'],
   ['tests/herbalist-room-integration.cjs'],
+  ['tests/magic-shop-catalog.cjs'],
+  ['tests/magic-shop-ledger.cjs'],
 ];
 
 for (const [file, ...args] of checks) {

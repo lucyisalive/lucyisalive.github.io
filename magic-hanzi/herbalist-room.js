@@ -13,6 +13,8 @@
     { threshold: 3000, title: '血袍', icon: 'assets/robes/blood.svg' },
   ];
   const WALLET_KEY = 'hanzi-herbalist-wallet-v1';
+  const PENDING_COINS_KEY = 'hanzi-magic-shop-pending-rewards-v1';
+  const PENDING_COINS_PREFIX = PENDING_COINS_KEY + ':';
   const HERB_COLORS = [
     '#a7d971', '#c69cf0', '#f0b758', '#63ccc8', '#ed938a',
     '#78cfa1', '#88a9ee', '#f3d478', '#dc9ecc', '#d9a773',
@@ -135,7 +137,7 @@
     },
   };
 
-  function create({ document: doc, onTap }) {
+  function create({ document: doc, onTap, rewardEvent }) {
     const body = doc.body;
     const page = doc.querySelector('.topbar');
     if (!page) return {};
@@ -234,6 +236,8 @@
     info.setAttribute('aria-labelledby', 'herbInfoTitle');
     info.innerHTML = `
       <h2 id="herbInfoTitle"></h2><p id="herbInfoCopy"></p>
+      <p id="herbCoinSaveStatus" class="herb-coin-save-status" role="status" hidden></p>
+      <button type="button" id="herbCoinRetry" class="herb-secondary" hidden>重试保存银币</button>
       <button type="button" id="herbInfoExit" class="herb-primary">好</button>`;
     body.appendChild(info);
 
@@ -276,6 +280,13 @@
     let autoPlaying = false;
     let writing = true;
     let storage;
+    let shopLedger;
+    let shop;
+    let savingCoins = false;
+    let coinJournalError = false;
+    let walletInfoOpen = false;
+    const pendingCoins = new Map();
+    const settledCoins = new Set();
 
     try {
       storage = doc.defaultView?.localStorage;
@@ -283,14 +294,133 @@
       if (Number.isSafeInteger(saved) && saved >= 0) coins = saved;
     } catch (_) { /* Preview remains playable. */ }
 
-    function updateCoins(increase) {
-      coins += increase;
-      if (increase) {
-        try { storage?.setItem(WALLET_KEY, String(coins)); }
-        catch (_) { /* Visual rewards stay available for this session. */ }
+    try { shopLedger = doc.defaultView?.HanziMagicShopLedger?.create({ window: doc.defaultView }); }
+    catch (_) { /* Optional room features cannot stop the lesson. */ }
+
+    function readPendingCoins() {
+      if (!storage) throw new Error('storage-unavailable');
+      const valid = entry => entry && typeof entry.id === 'string' && entry.id.length > 0 && entry.id.length <= 500
+        && [PASS_COIN, LEVEL_COIN].includes(entry.amount);
+      const merged = new Map();
+      // Read the initial aggregate format, but write each new event separately.
+      // Two tabs can then never overwrite one another's uncommitted reward.
+      const raw = storage.getItem(PENDING_COINS_KEY);
+      if (raw != null) {
+        const saved = JSON.parse(raw);
+        if (saved?.version !== 1 || !Array.isArray(saved.events) || saved.events.length > 5000
+          || !saved.events.every(valid)) throw new Error('invalid-pending-coins');
+        saved.events.forEach(entry => merged.set(entry.id, entry));
       }
+      const keys = Array.from({ length: storage.length }, (_, index) => storage.key(index))
+        .filter(key => typeof key === 'string' && key.startsWith(PENDING_COINS_PREFIX));
+      if (keys.length > 5000) throw new Error('invalid-pending-coins');
+      keys.forEach(key => {
+        const value = storage.getItem(key);
+        if (value == null) return; // Another tab may have just committed it.
+        const entry = JSON.parse(value);
+        if (entry.version !== 1 || !valid(entry) || key !== PENDING_COINS_PREFIX + encodeURIComponent(entry.id)) {
+          throw new Error('invalid-pending-coins');
+        }
+        merged.set(entry.id, { id: entry.id, amount: entry.amount });
+      });
+      return [...merged.values()];
+    }
+
+    function persistPendingCoins() {
+      try {
+        if (!storage) throw new Error('storage-unavailable');
+        pendingCoins.forEach((amount, id) => {
+          if (!settledCoins.has(id)) storage.setItem(PENDING_COINS_PREFIX + encodeURIComponent(id), JSON.stringify({ version: 1, id, amount }));
+        });
+        settledCoins.forEach(id => storage.removeItem(PENDING_COINS_PREFIX + encodeURIComponent(id)));
+        const legacy = storage.getItem(PENDING_COINS_KEY);
+        if (legacy != null) {
+          const saved = JSON.parse(legacy);
+          if (saved?.version === 1 && Array.isArray(saved.events)
+            && saved.events.every(entry => settledCoins.has(entry.id))) storage.removeItem(PENDING_COINS_KEY);
+        }
+        coinJournalError = false;
+      } catch (_) { coinJournalError = pendingCoins.size > 0; }
+    }
+
+    try { readPendingCoins().forEach(entry => pendingCoins.set(entry.id, entry.amount)); }
+    catch (_) { coinJournalError = true; }
+
+    function renderCoins() {
       get('herbCoins').textContent = String(coins);
       hudWallet.setAttribute('aria-label', '古银币 ' + coins + ' 枚');
+      const snapshot = shopLedger?.snapshot();
+      const failed = Boolean(snapshot?.error);
+      const pending = [...pendingCoins.values()].reduce((total, amount) => total + amount, 0);
+      hudWallet.classList.toggle('herb-coins-unsaved', failed || pending > 0 || coinJournalError);
+      hudWallet.title = failed ? '银币账本暂未保存，点此查看并重试'
+        : coinJournalError ? '待保存的银币记录暂未读取成功，点此重试'
+          : pending ? '有 ' + pending + ' 枚古银币正在保存' : '查看古银币';
+      if (walletInfoOpen && info.open) {
+        get('herbInfoTitle').textContent = '古银币 · ' + coins + ' 枚';
+        const status = get('herbCoinSaveStatus');
+        status.hidden = !failed && !pending && !coinJournalError;
+        status.textContent = failed ? '银币暂未保存成功。学习可以继续，点下面的按钮重试。'
+          : pending ? '还有 ' + pending + ' 枚古银币' + (coinJournalError ? '暂未保存，请保留此页面并点重试。' : '正在保存。')
+            : coinJournalError ? '银币待保存记录暂不可读，请保留此页面再重试。' : '';
+        get('herbCoinRetry').hidden = !failed && !pending && !coinJournalError;
+        get('herbCoinRetry').disabled = savingCoins;
+      }
+    }
+
+    async function savePendingCoins(retry = false) {
+      if (!shopLedger || savingCoins) return;
+      savingCoins = true;
+      renderCoins();
+      try {
+        try {
+          readPendingCoins().forEach(entry => { if (!settledCoins.has(entry.id)) pendingCoins.set(entry.id, entry.amount); });
+          coinJournalError = false;
+        } catch (_) { coinJournalError = true; }
+        if (retry) await shopLedger.retry?.();
+        await shopLedger.ready();
+        coins = shopLedger.snapshot().balance;
+        for (const [id, amount] of pendingCoins) {
+          const result = await shopLedger.credit(amount, id);
+          if (!result.ok) break;
+          settledCoins.add(id);
+          pendingCoins.delete(id);
+          coins = result.snapshot.balance;
+          persistPendingCoins();
+        }
+      } catch (_) { /* The uncommitted reward stays queued for a safe retry. */ }
+      finally { savingCoins = false; renderCoins(); }
+    }
+
+    function updateCoins(increase, eventId) {
+      if (!shopLedger) {
+        coins += increase;
+        if (increase) {
+          try { storage?.setItem(WALLET_KEY, String(coins)); }
+          catch (_) { /* The lesson remains independent of the optional shop. */ }
+        }
+      } else if (increase) {
+        const id = eventId || 'local:' + Date.now().toString(36) + ':' + Math.random().toString(36).slice(2);
+        if (!settledCoins.has(id)) pendingCoins.set(id, increase);
+        persistPendingCoins();
+        void savePendingCoins();
+      }
+      renderCoins();
+    }
+
+    shopLedger?.subscribe(snapshot => { coins = snapshot.balance; renderCoins(); });
+    if (shopLedger) {
+      shopLedger.ready().then(snapshot => { coins = snapshot.balance; renderCoins(); void savePendingCoins(); }).catch(() => {});
+      doc.defaultView?.addEventListener?.('focus', () => { void savePendingCoins(true); });
+      doc.defaultView?.addEventListener?.('storage', event => {
+        if (event.key !== PENDING_COINS_KEY && !event.key?.startsWith(PENDING_COINS_PREFIX)) return;
+        try { readPendingCoins().forEach(entry => { if (!settledCoins.has(entry.id)) pendingCoins.set(entry.id, entry.amount); }); }
+        catch (_) { coinJournalError = true; }
+        void savePendingCoins();
+      });
+      doc.addEventListener?.('visibilitychange', () => {
+        if (!doc.hidden) void savePendingCoins(true);
+      });
     }
 
     function rank() {
@@ -405,6 +535,9 @@
     }
 
     function showInfo(title, message) {
+      walletInfoOpen = false;
+      get('herbCoinSaveStatus').hidden = true;
+      get('herbCoinRetry').hidden = true;
       get('herbInfoTitle').textContent = title;
       get('herbInfoCopy').textContent = message;
       if (!info.open) info.showModal();
@@ -562,12 +695,23 @@
       transition(demoStage.value, 'demo', false);
     });
     setupButton('herbHome', () => {
+      if (!shop && shopLedger) {
+        try {
+          shop = doc.defaultView?.HanziMagicShop?.create({ document: doc, onTap, cottage,
+            ledger: shopLedger, catalog: doc.defaultView?.HanziMagicShopCatalog });
+        } catch (_) { /* Keep the original room and its exit usable. */ }
+      }
+      shop?.openRoom?.();
       if (!cottage.open) cottage.showModal();
     });
     setupButton('herbCottageExit', () => cottage.close());
     setupButton('herbInfoExit', () => info.close());
-    setupButton('herbWallet', () => showInfo('古银币 · ' + coins + ' 枚',
-      '每正式通过一个字得 1 枚，每完成一关再得 5 枚。'));
+    setupButton('herbWallet', () => {
+      showInfo('古银币 · ' + coins + ' 枚', '每正式通过一个字得 1 枚，每完成一关再得 5 枚。可以在巫师房间的午夜奇物铺兑换藏品。');
+      walletInfoOpen = true;
+      renderCoins();
+    });
+    setupButton('herbCoinRetry', () => { void savePendingCoins(true); });
     setupButton('herbRank', () => {
       const next = RANKS.find(entry => entry.threshold > mastered);
       showInfo(rank().title, '已掌握 ' + mastered + ' 个字。' + (next
@@ -588,7 +732,7 @@
     function pass(count, masteredCount) {
       updateMastered(masteredCount);
       actualFill = count;
-      updateCoins(PASS_COIN);
+      updateCoins(PASS_COIN, rewardEvent?.('pass', count));
       if (mode === 'playing') renderProgress(actualFill, true);
     }
 
@@ -597,7 +741,7 @@
       actualFill = count;
       const actualFinished = !bankEmpty && count >= ROOM_SIZE;
       get('restartBtn').textContent = actualFinished ? STAGES[stage].next : '继续练这一关';
-      if (actualFinished && newlyAwarded) updateCoins(LEVEL_COIN);
+      if (actualFinished && newlyAwarded) updateCoins(LEVEL_COIN, rewardEvent?.('complete', count));
       if (mode === 'playing' || mode === 'intro') renderProgress(actualFill);
     }
 
@@ -622,7 +766,8 @@
     updateCoins(0);
     restoreStage('herbs', 0, false);
     body.classList.add('has-herbalist');
-    return { showWriting, arrive, pass, finale, nextLevel, restoreStage, updateMastered, finishEnding, surface };
+    return { showWriting, arrive, pass, finale, nextLevel, restoreStage, updateMastered, finishEnding, surface,
+      shopLedger, get shop() { return shop; }, retryCoins: () => savePendingCoins(true) };
   }
 
   window.HanziStoryStages = STAGES;

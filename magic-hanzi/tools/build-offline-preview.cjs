@@ -7,6 +7,11 @@ const { buildPage } = require('./build-page.cjs');
 const root = path.resolve(__dirname, '..');
 const read = file => fs.readFileSync(path.join(root, file));
 const assets = [
+  'assets/shop/furniture-atlas.webp',
+  'assets/shop/room-atlas.webp',
+  'assets/shop/curios-atlas.webp',
+  'assets/shop/companions-atlas.webp',
+  'assets/shop/special-motion-atlas.webp',
   'assets/herbalist/apothecary.webp',
   'assets/herbalist/cottage.webp',
   'assets/herbalist/stone-wall.webp',

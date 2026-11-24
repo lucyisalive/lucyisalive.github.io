@@ -3,7 +3,7 @@
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
-<meta name="game-version" content="2026.11.24.2">
+<meta name="game-version" content="2026.11.24.3">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>魔法闯关汉字游戏</title>
 <style data-source="game-feedback.css">
@@ -1374,6 +1374,10 @@ body.journey-departing #mountainJourney .journey-background {
   font: 700 27px / 1.2 var(--herb-serif);
 }
 .herb-info { max-width: min(430px, 90vw); padding: 23px; background: #233229; }
+#herbCoinRetry[hidden], #herbCoinSaveStatus[hidden] { display: none !important; }
+.herb-coins-unsaved { border-color: #e5b56e !important; }
+.herb-coin-save-status { color: #ffe4ad; font-size: 14px; line-height: 1.6; }
+#herbCoinRetry { min-height: 44px; margin: 0 6px 8px; }
 
 @media (max-width: 739px) and (orientation: portrait), (max-width: 659px) {
   .has-herbalist {
@@ -4044,6 +4048,399 @@ body[data-herb-stage="sea"] .story-sea { display: block; }
 /* Missing/late pose artwork keeps a visible suit and working replay controls. */
 .story-armor:not(.has-kneel-art).is-complete .ia-armor-standing {
   opacity:1;transform:translateY(7%) scale(1.17);animation:none!important;
+}
+
+</style>
+<style data-source="magic-shop.css">
+/* A single native dialog holds room, shop and one-item confirmation. */
+.herb-cottage.magic-shop-enabled {
+  --shop-paper: #f6e4c5;
+  --shop-muted: #cdbb9c;
+  --shop-gold: #d7b16b;
+  --shop-brass: #a77d40;
+  --shop-ink: #171924;
+  --shop-purple: #302639;
+  width: min(760px, calc(100vw - 20px));
+  height: min(980px, calc(100dvh - 20px));
+  max-width: none;
+  max-height: calc(100dvh - 20px);
+  overflow: hidden;
+  padding: 0;
+  color: var(--shop-paper);
+  background: #1b1c25;
+  border: 1px solid #cda568a8;
+  border-radius: 17px;
+  text-align: left;
+  box-shadow: 0 25px 90px #000b, inset 0 0 0 4px #322936;
+}
+.herb-cottage.magic-shop-enabled[open] { display: block; background: #1b1c25; }
+.magic-shop-enabled *, .magic-shop-enabled *::before, .magic-shop-enabled *::after { box-sizing: border-box; }
+.magic-shop-enabled [hidden] { display: none !important; }
+.magic-shop-enabled button { font: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+.magic-shop-enabled button:focus-visible { outline: 3px solid #fce0a1; outline-offset: 3px; }
+.magic-shop-enabled button:disabled { cursor: default; opacity: .7; }
+.magic-house-shell { height: 100%; display: flex; flex-direction: column; }
+.magic-house-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  padding: 19px 24px 15px;
+  flex: 0 0 auto;
+  border-bottom: 1px solid #b38c4e4f;
+  background: radial-gradient(ellipse at 15% 0%, #57413970, transparent 75%), linear-gradient(100deg, #26222d, #1a1e28);
+}
+.magic-house-header .magic-eyebrow { margin: 0 0 5px; color: #c3ab82; font: 11px/1.2 var(--herb-serif, serif); letter-spacing: .16em; }
+.magic-house-header h2 { margin: 0; font: 700 26px/1.2 var(--herb-serif, serif); letter-spacing: .04em; color: #f9e6c3; }
+.magic-wallet { display: flex; align-items: center; gap: 10px; flex: 0 0 auto; min-width: 94px; padding: 7px 11px; border: 1px solid #b593575e; border-radius: 8px; background: #10151ca3; }
+.magic-wallet strong { display: block; font: 700 24px/1.1 Georgia, serif; color: #f3d899; font-variant-numeric: tabular-nums; }
+.magic-wallet small { display: block; margin-top: 2px; font-size: 10px; letter-spacing: .13em; color: var(--shop-muted); }
+.magic-coin { position: relative; display: inline-block; width: 20px; height: 20px; border: 2px solid #e0c082; border-radius: 50%; box-shadow: inset 0 0 0 2px #796d53, inset 0 0 0 4px #bcb29a, 0 2px 4px #0006; background: radial-gradient(circle at 32% 24%, #e5dfcc, #a89d82 61%, #686957); vertical-align: middle; flex: 0 0 auto; }
+.magic-coin::before { content: ''; position: absolute; inset: 5px; border: 1px solid #6b6855; transform: rotate(45deg); }
+.magic-house-content { flex: 1 1 auto; min-height: 0; overflow: auto; overscroll-behavior: contain; scrollbar-color: #847051 #1a1c25; scrollbar-width: thin; }
+.magic-storage-alert { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex: 0 0 auto; padding: 9px 15px; border-bottom: 1px solid #d2a26766; background: #503c2d; }
+.magic-shop-enabled .magic-storage-alert p { margin: 0; color: #ffdfba; font-size: 11px; line-height: 1.5; }
+.magic-storage-alert .magic-button { flex: 0 0 auto; color: #ffebca; font-size: 11px; }
+.magic-panel { width: 100%; }
+.magic-house-footer { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex: 0 0 auto; padding: 10px 17px; border-top: 1px solid #b38c4e4f; background: #1b1d27; }
+.magic-house-footer > span:first-child { color: #c5b398; font-size: 11px; line-height: 1.4; }
+.magic-house-footer .magic-exit { min-height: 44px; padding: 9px 15px; white-space: nowrap; font-size: 14px; color: #f7e7cc; background: #353044; border: 1px solid #a58b61; border-radius: 7px; box-shadow: none; }
+.magic-button { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 46px; padding: 10px 18px; border: 1px solid #9d835d; border-radius: 7px; color: #f4e3c7; background: linear-gradient(#443648, #2e293b); font-weight: 650; line-height: 1.3; text-decoration: none; }
+.magic-button:hover { filter: brightness(1.13); }
+.magic-button-primary { color: #fff0ce; border-color: #d3ad6e; background: linear-gradient(#665037, #493525); box-shadow: inset 0 1px 0 #f1dbac26, 0 3px 10px #0003; }
+.magic-button-primary:disabled { border-color: #776d61; color: #c9c0b2; background: #353339; box-shadow: none; }
+.magic-button-small { min-height: 44px; padding: 7px 13px; font-size: 13px; }
+.magic-text-button { min-height: 44px; padding: 9px 4px; color: #ead2a9; background: transparent; border: 0; font-size: 14px; text-align: left; }
+.magic-text-button:hover { color: #fff1cf; text-decoration: underline; text-underline-offset: 4px; }
+
+/* The room keeps the original portrait background. All positions share its coordinates. */
+.magic-room-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 18px; background: #252331; border-bottom: 1px solid #bb985b50; }
+.magic-room-toolbar > span { color: #d9c5a1; font-size: 13px; white-space: nowrap; }
+.magic-room-toolbar .magic-button { min-height: 44px; padding: 9px 17px; font-size: 15px; }
+.magic-room-panel { background: radial-gradient(ellipse at 50% 48%, #46372d, #211f29 78%); }
+.magic-room-stage { position: relative; width: min(100%,490px,max(280px,calc(75dvh - 247.5px))); aspect-ratio: 1086/1448; margin: 0 auto; overflow: hidden; isolation: isolate; background: #62442a; box-shadow: 0 0 22px #0006; }
+.magic-room-background { position: absolute; inset: 0; z-index: 0; background: #62442a url("assets/herbalist/cottage.webp") center/100% 100% no-repeat; }
+.magic-room-background::after { content: ''; position: absolute; inset: 0; background: linear-gradient(#1b112211, transparent 60%, #17101b22); pointer-events: none; }
+.magic-room-objects { position: absolute; inset: 0; }
+.magic-old-crate { position: absolute; left: 5%; top: 65%; width: 21%; height: 8%; z-index: 15; border: 2px solid #68452e; border-radius: 3px; background: repeating-linear-gradient(0deg, #805533 0 18%, #5f3d2c 19% 21%, #87613e 22% 40%); transform: perspective(300px) rotateY(7deg); box-shadow: inset 3px 0 #b1834a44, 3px 7px 7px #35241977; }
+.magic-old-crate::before, .magic-old-crate::after { content: ''; position: absolute; top: -2px; bottom: -2px; width: 9%; border: 1px solid #362b22; background: linear-gradient(90deg, #554c39, #8f7b51, #4c4436); }
+.magic-old-crate::before { left: 15%; }.magic-old-crate::after { right: 15%; }
+.magic-wall-shelf { position: absolute; top: 52%; left: 44%; width: 17%; height: 1.2%; z-index: 20; background: linear-gradient(#a57944, #543a2c); border-bottom: 3px solid #3e2c25; box-shadow: 0 5px 9px #39282088; }
+.magic-wall-shelf::before, .magic-wall-shelf::after { content: ''; position: absolute; top: 100%; width: 7%; height: 220%; background: #5d412d; transform: skewX(-20deg); }
+.magic-wall-shelf::before { left: 10%; }.magic-wall-shelf::after { right: 10%; }
+.magic-room-item { position: absolute; left: calc(var(--room-x)*1%); top: calc(var(--room-y)*1%); width: max(44px, calc(var(--room-w)*1%)); aspect-ratio: 1; min-height: 44px; z-index: var(--room-z, 30); transform: translate(-50%, -50%); padding: 0; border: 0; border-radius: 20%; color: #ffe7ad; background: transparent; }
+.magic-room-item .magic-item-art { filter: drop-shadow(2px 5px 3px #26152577); }
+.magic-room-item:focus-visible { outline-offset: -3px; border-radius: 10%; }
+.magic-room-item:hover > .magic-item-art { filter: drop-shadow(0 0 5px #ffdf8e99) drop-shadow(2px 5px 3px #26152577); }
+.magic-room-item-name { position: absolute; display: none; top: 87%; left: 50%; transform: translateX(-50%); max-width: 160px; min-width: 75px; padding: 5px 7px; border: 1px solid #bda06b80; border-radius: 5px; color: #ffeac6; background: #1b1c25ec; font-size: 11px; line-height: 1.4; white-space: nowrap; pointer-events: none; z-index: 120; }
+.magic-room-item:hover .magic-room-item-name, .magic-room-item:focus-visible .magic-room-item-name { display: block; }
+.magic-room-empty { position: absolute; z-index: 80; bottom: 8%; left: 8%; right: 8%; padding: 17px 12px; border: 1px solid #d3b17b8c; border-radius: 9px; color: #fbe8c7; text-align: center; background: #211d25d9; box-shadow: 0 5px 20px #0004; pointer-events: none; }
+.magic-room-empty strong { display: block; margin-bottom: 8px; font: 700 18px/1.3 var(--herb-serif, serif); }
+.magic-room-empty span { color: #e2ceac; font-size: 13px; line-height: 1.6; }
+.magic-shop-enabled .magic-room-hint { position: absolute; z-index: 80; left: 50%; bottom: 3%; transform: translateX(-50%); padding: 6px 12px; margin: 0; border-radius: 20px; color: #f7e5c6; background: #201a25d9; font-size: 11px; white-space: nowrap; pointer-events: none; }
+.magic-shop-enabled .magic-live-message { margin: 0; min-height: 54px; padding: 13px 18px; color: #e4d4b5; background: #24212d; font-size: 13px; line-height: 1.6; border-top: 1px solid #b28c4c55; }
+.magic-collection { padding: 0 17px 18px; background: #24212d; }
+.magic-collection-toggle { display: flex; width: 100%; min-height: 48px; padding: 13px 2px; align-items: center; gap: 10px; color: #f1dfc2; background: transparent; border: 0; border-top: 1px solid #b28c4c45; font-size: 16px; text-align: left; }
+.magic-collection-toggle > span:nth-child(1) { color: #bfae92; font-size: 12px; }
+.magic-chevron { margin-left: auto; font-size: 21px; line-height: 16px; transition: transform .2s; }
+.magic-collection-toggle[aria-expanded="true"] .magic-chevron { transform: rotate(180deg); }
+.magic-shop-enabled .magic-collection-note { margin: 4px 0 11px; font-size: 12px; line-height: 1.5; color: #c9b89e; }
+.magic-collection-list { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 7px; }
+.magic-collection-item { display: flex; flex-direction: column; align-items: center; min-width: 0; min-height: 74px; padding: 5px 3px 7px; border: 1px solid #9f815e60; border-radius: 7px; color: #e6d7bd; background: #191c27; }
+.magic-collection-item .magic-item-art { position: relative; width: 58px; height: 58px; }
+.magic-collection-item > span:last-child { font-size: 11px; line-height: 1.3; }
+.magic-collection-item[aria-pressed="true"] { border-color: #e1be7c; background: #3a3040; }
+.magic-shop-enabled .magic-no-collection { grid-column: 1/-1; color: #d6c5a9; font-size: 13px; }
+.magic-room-inspector { margin-top: 13px; padding: 12px; border: 1px solid #a184585e; border-radius: 8px; background: #191c26; }
+.magic-inspector-main { display: grid; grid-template-columns: 105px 1fr; gap: 12px; align-items: center; }
+.magic-inspector-main h3 { margin: 0 0 6px; font: 700 18px/1.3 var(--herb-serif, serif); color: #f7e3bc; }
+.magic-shop-enabled .magic-inspector-main p { margin: 0 0 10px; font-size: 12px; line-height: 1.6; color: #d9c9af; }
+.magic-inspector-preview { position: relative; width: 105px; height: 120px; padding: 0; border: 1px solid #b0936050; border-radius: 7px; background: radial-gradient(ellipse at 50% 60%, #54415a60, #161a2600 75%); }
+.magic-place-options { display: flex; align-items: center; justify-content: flex-start; gap: 6px; margin-top: 14px; flex-wrap: wrap; }
+.magic-place-options > span { width: 100%; color: #d9c5a5; font-size: 12px; }
+.magic-place-button { min-height: 44px; padding: 7px 13px; border: 1px solid #8d7755; border-radius: 6px; color: #e2d5bb; background: #2c2937; font-size: 12px; }
+.magic-place-button[aria-pressed="true"] { color: #fff0c8; border-color: #d8b372; background: #55432e; }
+.magic-shop-enabled .magic-place-note { margin: 10px 0 0; color: #bba98f; font-size: 11px; line-height: 1.5; }
+.magic-shop-enabled .magic-place-note.is-error { color: #ffd2ac; }
+
+/* Shop shelves and a quiet, one-item confirmation view. */
+.magic-store-panel { padding: 12px 19px 26px; background: radial-gradient(ellipse at 50% 0%, #4a34444a, transparent 500px), #1b1d27; }
+.magic-store-intro { display: flex; align-items: center; gap: 10px; justify-content: space-between; }
+.magic-shop-enabled .magic-store-intro p { margin: 0; max-width: 70%; font-size: 12px; line-height: 1.5; color: #cdbb9f; text-align: right; }
+.magic-categories { display: flex; gap: 6px; flex-wrap: wrap; padding: 9px 0 10px; border-bottom: 1px solid #af915557; }
+.magic-categories button { min-height: 44px; padding: 8px 12px; border: 1px solid #9e82505c; border-radius: 6px; color: #d3c3aa; background: #252532; font-size: 12px; white-space: nowrap; }
+.magic-categories button[aria-pressed="true"] { color: #fbe7bf; background: #51402f; border-color: #c7a36a; box-shadow: inset 0 1px #e8c78924; }
+.magic-shop-enabled .magic-store-status { margin: 11px 0 14px; color: #c7b59a; font-size: 11px; line-height: 1.5; }
+.magic-product-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 15px 12px; }
+.magic-product { position: relative; display: flex; min-width: 0; flex-direction: column; padding: 0; border: 1px solid #90714d7a; border-radius: 9px; background: linear-gradient(#332b35 0%, #262430 75%); color: #f1dfbd; overflow: hidden; text-align: left; box-shadow: 0 4px 9px #0003; }
+.magic-product::after { content: ''; position: absolute; top: 0; left: 8px; right: 8px; height: 1px; background: linear-gradient(90deg, transparent, #f8d79c8c, transparent); pointer-events: none; }
+.magic-product:hover { border-color: #e1b976; background: linear-gradient(#40323e, #2d2937); }
+.magic-product-art { position: relative; width: 100%; aspect-ratio: 1; background: radial-gradient(ellipse at 50% 75%, #80633c42, transparent 68%); }
+.magic-product-art::before { content: ''; position: absolute; bottom: 8%; left: 8%; right: 8%; height: 6%; border-radius: 50%; background: #080b0e63; filter: blur(5px); }
+.magic-item-art { position: absolute; inset: 0; display: block; background-image: var(--shop-art); background-size: 200% 300%; background-repeat: no-repeat; background-position: calc(var(--shop-col)*100%) calc(var(--shop-row)*50%); pointer-events: none; }
+.magic-item-part { position: absolute; inset: 0; display: none; z-index: 5; background-image: var(--shop-art); background-size: 200% var(--shop-motion-sy,300%); background-repeat: no-repeat; background-position: calc(var(--shop-col)*100%) var(--shop-motion-y,calc(var(--shop-row)*50%)); pointer-events: none; }
+.is-playing > .magic-item-part { display: block; }
+.magic-product-copy { display: block; padding: 9px 10px 10px; width: 100%; border-top: 1px solid #cba06538; background: #181b24ab; }
+.magic-product-copy strong { display: block; min-height: 36px; color: #f1dfbf; font-size: 13px; font-weight: 650; line-height: 1.45; }
+.magic-product-bottom { display: flex; justify-content: space-between; align-items: center; gap: 4px; margin-top: 6px; }
+.magic-price { display: inline-flex; align-items: center; gap: 5px; color: #efd093; font-size: 14px; font-variant-numeric: tabular-nums; }
+.magic-price .magic-coin { width: 14px; height: 14px; border-width: 1px; box-shadow: inset 0 0 0 1px #796d53, inset 0 0 0 2px #bcb29a; }
+.magic-price .magic-coin::before { inset: 4px; }
+.magic-product-state { color: #c5b49d; font-size: 10px; white-space: nowrap; }
+.magic-product.is-owned { border-color: #8b9d805e; }
+.magic-product.is-owned .magic-product-state { color: #bdd1ac; }
+.magic-detail-panel { padding: 12px 24px 26px; background: radial-gradient(ellipse at 50% 34%, #4c34514a, transparent 70%), #1c1e29; }
+.magic-shop-enabled .magic-detail-kicker { margin: 9px 0 6px; color: #baa27d; text-align: center; font-size: 11px; letter-spacing: .08em; }
+.magic-detail-panel h3 { margin: 0; color: #fae9c6; font: 700 28px/1.3 var(--herb-serif, serif); text-align: center; }
+.magic-detail-art { position: relative; display: block; width: min(100%, 340px); aspect-ratio: 1; margin: 6px auto 14px; padding: 0; border: 0; border-radius: 15px; color: #f9d890; background: radial-gradient(ellipse at 50% 60%, #78513c40, transparent 67%); }
+.magic-detail-art::before { content: ''; position: absolute; left: 15%; right: 15%; bottom: 11%; height: 7%; border-radius: 50%; background: #05070b60; filter: blur(12px); }
+.magic-detail-art > .magic-item-art { filter: drop-shadow(4px 7px 6px #0005); }
+.magic-preview-label { position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); padding: 6px 13px; border-radius: 15px; color: #cfbc9d; background: #171a27ad; font-size: 11px; line-height: 1.5; white-space: nowrap; }
+.magic-shop-enabled .magic-detail-description { max-width: 480px; margin: 0 auto 10px; color: #e7d5b5; font-size: 14px; line-height: 1.7; text-align: center; }
+.magic-shop-enabled .magic-detail-magic { max-width: 480px; min-height: 40px; margin: 0 auto 14px; color: #c7b7a1; font-size: 12px; line-height: 1.65; text-align: center; }
+.magic-detail-price { display: flex; justify-content: space-between; align-items: center; max-width: 480px; margin: 0 auto; padding: 13px 0; border-top: 1px solid #a3865a4d; border-bottom: 1px solid #a3865a4d; }
+.magic-detail-price > span:first-child { display: inline-flex; align-items: center; gap: 7px; color: #f1d195; font: 700 24px/1.2 Georgia, serif; }
+.magic-detail-price small { font: 12px/1.4 sans-serif; color: #c5b397; }
+.magic-detail-price > span:last-child { font-size: 12px; color: #d6c4a7; }
+.magic-purchase-message { min-height: 53px; max-width: 480px; margin: 0 auto; padding: 13px 0 10px; color: #dcc8a7; font-size: 12px; line-height: 1.6; text-align: center; }
+.magic-purchase-message.is-error { color: #ffd2ac; }
+.magic-detail-actions { display: grid; gap: 9px; max-width: 480px; margin: 0 auto; }
+.magic-detail-actions .magic-text-button { justify-self: center; text-align: center; }
+.magic-shop-enabled .magic-earning-note { max-width: 480px; margin: 5px auto 0; text-align: center; font-size: 11px; line-height: 1.6; color: #bcac95; }
+
+/* The sprites stay still until tapped. Each effect has its own motion and overlay. */
+.magic-effect { position: absolute; inset: 0; z-index: 3; opacity: 0; pointer-events: none; color: #f7d58d; }
+.magic-effect svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; fill: currentColor; }
+.magic-item-aura { position: absolute; inset: 5%; z-index: -1; border-radius: 50%; background: radial-gradient(#f4d28a60, #b59bda22 40%, transparent 70%); opacity: 0; pointer-events: none; }
+.is-playing .magic-effect { animation: magic-effect-show 4s ease-in-out both; }
+.is-playing .magic-item-aura { animation: magic-aura 3.8s ease-in-out both; }
+.magic-sparks { position: absolute; inset: 0; }
+.magic-sparks i { position: absolute; left: 48%; top: 45%; width: 4%; aspect-ratio: 1; background: #ffe6a6; box-shadow: 0 0 8px #ffd69e; border-radius: 50%; opacity: 0; }
+.magic-sparks i:nth-child(1) { --spark-x: -30%; --spark-y: -45%; animation-delay: .2s; }
+.magic-sparks i:nth-child(2) { --spark-x: 40%; --spark-y: -32%; animation-delay: .4s; }
+.magic-sparks i:nth-child(3) { --spark-x: -37%; --spark-y: 17%; animation-delay: .6s; }
+.magic-sparks i:nth-child(4) { --spark-x: 32%; --spark-y: 25%; animation-delay: .8s; }
+.magic-sparks i:nth-child(5) { --spark-x: 2%; --spark-y: -52%; animation-delay: 1s; }
+.magic-sparks i:nth-child(6) { --spark-x: -20%; --spark-y: 33%; animation-delay: 1.2s; }
+.is-playing .magic-sparks i { animation-name: magic-spark; animation-duration: 1.6s; animation-fill-mode: both; }
+.magic-rune-line { position: absolute; left: 20%; right: 20%; top: 42%; font-size: clamp(9px, 3vw, 23px); text-shadow: 0 0 8px #ffd478; letter-spacing: .15em; color: #ffdc88; opacity: 0; }
+.magic-drawer-glow { position: absolute; left: 28%; right: 24%; top: 58%; height: 2%; background: #ffe2a2; box-shadow: 0 0 12px 3px #ffc979; opacity: 0; }
+.is-playing .magic-rune-line { animation: magic-runes 3.7s ease both; }
+.is-playing .magic-drawer-glow { animation: magic-late-glow 3.5s ease both; }
+.magic-star-mark { transform-origin: 50% 45%; filter: drop-shadow(0 0 4px #ffe3a0); }
+.is-playing[data-effect="chair"] > .magic-item-art { animation: magic-chair-pull 3.5s ease both; }
+.is-playing .magic-star-mark { animation: magic-star-mark 3.5s ease both; }
+.is-playing[data-effect="cushion"] > .magic-item-art { animation: magic-chair-float 3.8s ease both; }
+.magic-cushion-glow { position: absolute; left: 27%; right: 27%; top: 42%; height: 20%; border-radius: 30%; box-shadow: 0 0 10px #d4a6ed; background: #88659033; }
+.is-playing .magic-cushion-glow { animation: magic-cushion 3.5s ease both; }
+.magic-moon { fill: #fff0b5; filter: drop-shadow(0 0 6px #f4dca8); }
+.magic-moon-shadow { fill: #252633; }
+.is-playing .magic-moon-shadow { animation: magic-full-moon 3.8s ease both; }
+.magic-book-spines { position: absolute; inset: 20% 20% 25%; display: flex; gap: 6%; align-items: center; }
+.magic-book-spines i { width: 12%; height: 44%; border: 1px solid #ffe5a6; background: #c39c6944; opacity: .2; box-shadow: 0 0 7px #f8d69a; }
+.magic-book-spines i:nth-child(2) { height: 65%; }.magic-book-spines i:nth-child(3) { height: 52%; }.magic-book-spines i:nth-child(4) { height: 59%; }
+.is-playing .magic-book-spines i { animation: magic-book-glow 3.8s ease both; }
+.is-playing .magic-book-spines i:nth-child(2) { animation-delay: .15s; }.is-playing .magic-book-spines i:nth-child(3) { animation: magic-book-pull 3.5s ease .3s both; }.is-playing .magic-book-spines i:nth-child(4) { animation-delay: .45s; }.is-playing .magic-book-spines i:nth-child(5) { animation-delay: .6s; }
+.magic-turning-handle { transform-origin: 50% 46%; filter: drop-shadow(0 0 3px #ffd78b); }
+.is-playing .magic-turning-handle { animation: magic-handle-turn 3s ease both; }
+.magic-drawer-seam { fill: none; stroke: #ffdc97; stroke-width: 2; filter: drop-shadow(0 0 5px #ffdc97); }
+.is-playing[data-effect="rug"] > .magic-item-art { animation: magic-rug-ripple 3.5s ease both; transform-origin: 50% 80%; }
+.magic-constellation { stroke-dasharray: 150; stroke-dashoffset: 150; }
+.is-playing .magic-constellation { animation: magic-draw-stars 3.6s ease both; }
+.is-playing .magic-rug-stars { animation: magic-star-twinkle 3.5s ease both; }
+.magic-bed-stars { position: absolute; inset: 32% 18% 20%; }
+.magic-bed-stars i { position: absolute; top: 20%; left: 20%; width: 4%; aspect-ratio: 1; transform: rotate(45deg); background: #ffecb5; box-shadow: 0 0 8px #e8d8a3; }
+.magic-bed-stars i:nth-child(2) { top: 60%; left: 40%; }.magic-bed-stars i:nth-child(3) { top: 25%; left: 70%; }.magic-bed-stars i:nth-child(4) { top: 70%; left: 80%; }.magic-bed-stars i:nth-child(5) { top: 50%; left: 55%; }
+.is-playing .magic-bed-stars i { animation: magic-star-twinkle 2s ease both; }.is-playing .magic-bed-stars i:nth-child(even) { animation-delay: 1s; }
+.is-playing[data-effect="curtains"] > .magic-item-art { animation: magic-curtain-sway 3.8s ease both; transform-origin: 50% 5%; }
+.magic-curtain-silver { position: absolute; left: 24%; top: 12%; width: 2%; bottom: 12%; background: linear-gradient(transparent, #eeefff, transparent); box-shadow: 0 0 8px #cbd5f6; }
+.is-playing .magic-curtain-silver { animation: magic-silver-flow 3.7s ease both; }
+.magic-tapestry-bird { fill: none; stroke: #f9dfa5; stroke-width: 1.7; filter: drop-shadow(0 0 3px #e8d5aa); }
+.is-playing .magic-tapestry-bird { animation: magic-tapestry-bird 3.7s ease both; transform-origin: center; }
+.magic-mirror-forest { fill: #243b4d; stroke: #a9bfba; stroke-width: 1; }
+.magic-forest-trees { fill: #a5bcb7; opacity: .7; }
+.magic-forest-trees circle { fill: #ece7bf; }
+.is-playing .magic-forest-trees { animation: magic-forest 3.8s ease both; }
+.magic-fire-dragon { fill: #ffb85c; filter: drop-shadow(0 0 6px #ff8037); transform-origin: 50% 60%; }
+.is-playing .magic-fire-dragon { animation: magic-dragon-fire 3.8s ease both; }
+.magic-candle-flame { position: absolute; left: 43%; top: 13%; width: 13%; height: 23%; border-radius: 70% 30% 50% 50%; transform: rotate(10deg); background: radial-gradient(ellipse at 50% 80%, #fff5d1 0%, #f7bf5d 45%, #cf731900 73%); filter: drop-shadow(0 0 7px #ffc66f); }
+.is-playing .magic-candle-flame { animation: magic-blue-flame 3.8s ease both; }
+.is-playing[data-effect="quill"] > .magic-item-art { animation: magic-quill-write 3.8s ease both; transform-origin: 40% 75%; }
+.magic-written-runes { stroke-dasharray: 200; stroke-dashoffset: 200; filter: drop-shadow(0 0 4px #f8d7a0); }
+.is-playing .magic-written-runes { animation: magic-rune-write 3.8s ease both; }
+.magic-bubbles { position: absolute; inset: 0; }
+.magic-bubbles i { position: absolute; left: 30%; top: 58%; width: 7%; aspect-ratio: 1; border: 1px solid #d2eac5; border-radius: 50%; background: #94c69255; box-shadow: 0 0 6px #add5b77a; opacity: 0; }
+.magic-bubbles i:nth-child(2) { left: 50%; animation-delay: .45s; background: #bc9ddd55; }.magic-bubbles i:nth-child(3) { left: 65%; animation-delay: .9s; width: 5%; }.magic-bubbles i:nth-child(4) { left: 40%; animation-delay: 1.35s; width: 4%; }
+.is-playing .magic-bubbles i { animation-name: magic-bubble-rise; animation-duration: 2.2s; animation-fill-mode: both; }
+.is-playing[data-effect="bottles"] > .magic-item-art { animation: magic-liquid-sway 3.8s ease both; }
+.magic-effect-tea { background: none; }
+.magic-tea-pot-art { inset: 9% auto auto 20%; width: 83%; height: 72.625%; transform-origin: 35% 58%; }
+.magic-tea-cup-art { inset: 41% auto auto -6%; width: 64%; height: 56%; }
+.is-playing[data-effect="tea"] > .magic-item-art { opacity: 0; }
+.is-playing > .magic-tea-pot-art { animation: magic-painted-tea-pour 4s ease both; }
+.is-playing > .magic-tea-cup-art { animation: magic-painted-tea-cup 4s ease both; }
+.magic-tea-stream { stroke-dasharray: 40; stroke-dashoffset: 40; }
+.is-playing .magic-tea-stream { animation: magic-tea-stream 4s ease both; }
+.is-playing .magic-tea-steam { animation: magic-tea-steam 4s ease both; }
+.magic-turning-page { transform-origin: 48% 50%; }
+.is-playing .magic-turning-page { animation: magic-page-turn 3.8s ease both; }
+.is-playing .magic-atlas-lines { animation: magic-atlas-travel 3.7s ease both; }
+.magic-cauldron-moon { position: absolute; left: 40%; top: 45%; width: 13%; height: 13%; border-radius: 50%; background: #ffebb0; box-shadow: 4px -3px 0 #46445a inset, 0 0 5px #f4dca8; opacity: 0; }
+.magic-star-rise { position: absolute; left: 62%; top: 55%; width: 10%; height: 10%; color: #ffde8c; opacity: 0; }
+.is-playing .magic-cauldron-moon { animation: magic-moon-rise 3.6s .2s ease both; }.is-playing .magic-star-rise { animation: magic-moon-rise 3.6s .6s ease both; }
+.magic-crystal-nebula { fill: #6c6689aa; filter: drop-shadow(0 0 5px #c7bfe3); }
+.magic-crystal-castle { transform-origin: 50% 55%; }
+.is-playing .magic-crystal-nebula { animation: magic-nebula-clear 3.8s ease both; }.is-playing .magic-crystal-castle { animation: magic-castle-reveal 3.8s ease both; }
+.magic-portrait-nod-art, .magic-portrait-sip-art { inset: 1% auto auto 3%; width: 94%; height: 96%; opacity: 0; }
+.is-playing[data-effect="portrait"] > .magic-item-art { animation: magic-portrait-original-frame 4s ease both; }
+.is-playing > .magic-portrait-nod-art { animation: magic-portrait-nod-frame 4s ease both; }
+.is-playing > .magic-portrait-sip-art { animation: magic-portrait-sip-frame 4s ease both; }
+.is-playing[data-effect="broom"] > .magic-item-art { animation: magic-broom-circle 3.8s ease both; }
+.magic-broom-trail { position: absolute; inset: 20%; border: 2px dotted #e8d4a3; border-top-color: transparent; border-left-color: transparent; border-radius: 50%; filter: drop-shadow(0 0 3px #ebce8a); }
+.is-playing .magic-broom-trail { animation: magic-broom-trail 3.8s ease both; }
+.magic-trunk-sky { fill: #7773b91a; stroke: none; filter: drop-shadow(0 0 7px #9fabe7); }
+.magic-trunk-stars { fill: #f0e8ba; }.magic-trunk-cloud { fill: #8e9ab677; }
+.magic-trunk-lid { transform-origin: 50% 41%; }
+.magic-trunk-lid-art { clip-path: polygon(0% 8%,100% 8%,100% 31%,0% 42%); transform-origin: 50% 36%; }
+.is-playing[data-effect="trunk"] > .magic-item-art { clip-path: polygon(0% 42%,100% 31%,100% 100%,0% 100%); }
+.is-playing > .magic-trunk-lid-art { animation: magic-painted-trunk-open 4s ease both; }
+.is-playing .magic-trunk-lid { animation: magic-trunk-open 4s ease both; }.is-playing .magic-trunk-cloud { animation: magic-cloud-drift 4s ease both; }.is-playing .magic-trunk-stars { animation: magic-star-twinkle 4s ease both; }
+.is-playing[data-effect="bird"] { z-index: 100; }
+.magic-room-bird.is-playing { animation: magic-bird-room-flight 5.2s ease-in-out both; }
+.is-playing[data-effect="bird"] > .magic-item-art { opacity: 0; }
+.magic-bird-flight-art, .magic-cat-stretch-art { inset: -5% auto auto 0; width: 100%; height: 109.375%; }
+.is-playing > .magic-bird-flight-art { animation: magic-bird-wings .23s ease-in-out 22; transform-origin: 50% 50%; }
+.magic-bird-feather { position: absolute; top: 60%; left: 45%; width: 5%; height: 20%; border-radius: 90% 0 90% 0; background: linear-gradient(90deg, #a47630, #f3d58b, #a47630); transform: rotate(25deg); }
+.is-playing .magic-bird-feather { animation: magic-feather-fall 4s ease both; }
+.is-playing .magic-cat-sleep { animation: magic-cat-sleep 4s ease both; }
+.is-playing[data-effect="cat"] > .magic-item-art { animation: magic-cat-original-pose 4s ease both; }
+.is-playing > .magic-cat-stretch-art { animation: magic-cat-stretch-pose 4s ease both; transform-origin: 50% 75%; }
+/* Keep the original complete painting visible while optional action art loads. */
+.magic-shop-enabled:not(.magic-motion-ready) .is-playing[data-effect="tea"] > .magic-item-art,
+.magic-shop-enabled:not(.magic-motion-ready) .is-playing[data-effect="portrait"] > .magic-item-art,
+.magic-shop-enabled:not(.magic-motion-ready) .is-playing[data-effect="bird"] > .magic-item-art,
+.magic-shop-enabled:not(.magic-motion-ready) .is-playing[data-effect="cat"] > .magic-item-art { opacity: 1 !important; animation: none !important; }
+.magic-shop-enabled:not(.magic-motion-ready) .magic-tea-pot-art,
+.magic-shop-enabled:not(.magic-motion-ready) .magic-tea-cup-art,
+.magic-shop-enabled:not(.magic-motion-ready) .magic-portrait-nod-art,
+.magic-shop-enabled:not(.magic-motion-ready) .magic-portrait-sip-art,
+.magic-shop-enabled:not(.magic-motion-ready) .magic-bird-flight-art,
+.magic-shop-enabled:not(.magic-motion-ready) .magic-cat-stretch-art { display: none !important; }
+
+@keyframes magic-effect-show { 0%,100% { opacity: 0; } 12%,84% { opacity: 1; } }
+@keyframes magic-aura { 0%,100% { opacity: 0; transform: scale(.7); } 25%,70% { opacity: .7; transform: scale(1.2); } }
+@keyframes magic-spark { 0% { opacity: 0; transform: translate(0,0) scale(.3); } 25% { opacity: 1; } 100% { opacity: 0; left: calc(48% + var(--spark-x)); top: calc(45% + var(--spark-y)); transform: scale(.1); } }
+@keyframes magic-runes { 0%,100% { opacity: 0; clip-path: inset(0 100% 0 0); } 25%,75% { opacity: 1; clip-path: inset(0 0 0 0); } }
+@keyframes magic-late-glow { 0%,30%,100% { opacity: 0; } 50%,75% { opacity: 1; } }
+@keyframes magic-chair-pull { 0%,100% { transform: translate(0,0); } 35%,65% { transform: translate(9%,5%) rotate(-3deg); } }
+@keyframes magic-star-mark { 0%,100% { opacity: 0; transform: scale(.7); } 35%,70% { opacity: 1; transform: scale(1); } }
+@keyframes magic-chair-float { 0%,100% { transform: translateY(0) scaleY(1); } 20% { transform: translateY(0) scaleY(1.05); } 45%,70% { transform: translateY(-10%) scaleY(1.02); } 85% { transform: translateY(1%) scaleY(.98); } }
+@keyframes magic-cushion { 0%,100% { opacity: 0; transform: scale(1); } 20%,75% { opacity: 1; transform: scale(1.12,1.2); } }
+@keyframes magic-full-moon { 0%,100% { transform: translateX(0); } 45%,68% { transform: translateX(24%); } }
+@keyframes magic-book-glow { 0%,100% { opacity: 0; } 25%,60% { opacity: .9; } }
+@keyframes magic-book-pull { 0%,100% { opacity: 0; transform: translateX(0); } 35%,65% { opacity: 1; transform: translateX(-45%) rotate(-8deg); } }
+@keyframes magic-handle-turn { 0%,100% { transform: rotate(0); } 35%,60% { transform: rotate(100deg) scale(1.08); } }
+@keyframes magic-rug-ripple { 0%,100% { transform: scale(1) skewX(0); } 30% { transform: scale(1.015,.97) skewX(2deg); } 65% { transform: scale(1.02,1.025) skewX(-2deg); } }
+@keyframes magic-draw-stars { 0% { stroke-dashoffset: 150; } 60%,90% { stroke-dashoffset: 0; } 100% { opacity: 0; } }
+@keyframes magic-star-twinkle { 0%,100% { opacity: 0; } 25%,60% { opacity: 1; } 42%,75% { opacity: .3; } }
+@keyframes magic-curtain-sway { 0%,100% { transform: skewX(0); } 30% { transform: skewX(4deg); } 65% { transform: skewX(-3deg); } }
+@keyframes magic-silver-flow { 0%,100% { opacity: 0; left: 20%; } 25% { opacity: 1; } 75% { opacity: .7; left: 76%; } }
+@keyframes magic-tapestry-bird { 0% { opacity: 0; transform: translate(-12%,5%) scale(.5); } 40% { opacity: 1; transform: translate(0,0) scale(1); } 85%,100% { opacity: 0; transform: translate(15%,-10%) scale(.7); } }
+@keyframes magic-forest { 0%,100% { opacity: 0; transform: translateY(5%); } 30%,75% { opacity: .95; transform: translateY(0); } }
+@keyframes magic-dragon-fire { 0%,100% { opacity: 0; transform: scale(.2); } 35% { opacity: 1; transform: scale(1) rotate(-7deg); } 65% { opacity: .9; transform: scale(1.05) rotate(5deg); } }
+@keyframes magic-blue-flame { 0%,100% { filter: drop-shadow(0 0 7px #ffc66f); background: radial-gradient(ellipse at 50% 80%, #fff5d1, #f7bf5d 45%, #cf731900 73%); } 25%,75% { background: radial-gradient(ellipse at 50% 80%, #e9ffff, #88b7ec 45%, #386bc500 73%); filter: drop-shadow(0 0 13px #79bbff); transform: rotate(-5deg) scale(1.1); } }
+@keyframes magic-quill-write { 0%,100% { transform: rotate(0) translate(0,0); } 20% { transform: rotate(12deg) translate(0,-4%); } 35% { transform: rotate(5deg) translate(4%,0); } 50% { transform: rotate(14deg) translate(8%,-2%); } 70% { transform: rotate(7deg) translate(12%,1%); } }
+@keyframes magic-rune-write { 0%,15% { stroke-dashoffset: 200; } 75% { stroke-dashoffset: 0; opacity: 1; } 100% { stroke-dashoffset: 0; opacity: 0; } }
+@keyframes magic-bubble-rise { 0% { opacity: 0; transform: translateY(0) scale(.3); } 20% { opacity: .9; } 90% { opacity: .7; } 100% { opacity: 0; transform: translateY(-360%) scale(1); } }
+@keyframes magic-liquid-sway { 0%,100% { transform: rotate(0); } 25% { transform: rotate(3deg); } 50% { transform: rotate(-3deg); } 75% { transform: rotate(2deg); } }
+@keyframes magic-painted-tea-pour { 0%,100% { transform: translate(0,0) rotate(0); } 25% { transform: translate(0,-8%) rotate(0); } 42%,68% { transform: translate(-2%,-10%) rotate(-15deg); } 82% { transform: translate(0,-8%) rotate(0); } }
+@keyframes magic-painted-tea-cup { 0%,100% { transform: translateY(0); } 25%,80% { transform: translateY(-3%); } }
+@keyframes magic-tea-stream { 0%,32%,78%,100% { opacity: 0; stroke-dashoffset: 40; } 45%,68% { opacity: 1; stroke-dashoffset: 0; } }
+@keyframes magic-tea-steam { 0%,58%,100% { opacity: 0; transform: translateY(0); } 75% { opacity: .9; transform: translateY(-5%); } 90% { opacity: 0; transform: translateY(-9%); } }
+@keyframes magic-page-turn { 0%,100% { transform: scaleX(1); } 35% { transform: scaleX(.05); } 70% { transform: scaleX(-.9); } }
+@keyframes magic-atlas-travel { 0%,100% { opacity: 0; transform: translateX(-4%); } 35%,70% { opacity: 1; transform: translateX(4%); } }
+@keyframes magic-moon-rise { 0% { opacity: 0; transform: translateY(0) scale(.4); } 30% { opacity: 1; } 80% { opacity: .8; } 100% { opacity: 0; transform: translateY(-250%) scale(1); } }
+@keyframes magic-nebula-clear { 0%,100% { opacity: .9; } 45%,75% { opacity: .12; } }
+@keyframes magic-castle-reveal { 0%,100% { opacity: 0; transform: scale(.7) translateY(10%); } 40%,75% { opacity: .95; transform: scale(1) translateY(0); } }
+@keyframes magic-portrait-original-frame { 0%,9%,43%,49%,94%,100% { opacity: 1; } 17%,35%,59%,86% { opacity: 0; } }
+@keyframes magic-portrait-nod-frame { 0%,9%,43%,100% { opacity: 0; transform: translateY(0); } 17%,35% { opacity: 1; transform: translateY(.5%); } }
+@keyframes magic-portrait-sip-frame { 0%,49%,94%,100% { opacity: 0; } 59%,86% { opacity: 1; } }
+@keyframes magic-broom-circle { 0%,100% { transform: translate(0,0) rotate(0); } 25% { transform: translate(-10%,-14%) rotate(-14deg); } 50% { transform: translate(13%,-16%) rotate(11deg); } 75% { transform: translate(9%,1%) rotate(15deg); } }
+@keyframes magic-broom-trail { 0%,100% { opacity: 0; transform: rotate(0) scale(.7); } 45%,70% { opacity: .9; transform: rotate(220deg) scale(1.2); } }
+@keyframes magic-trunk-open { 0%,100% { transform: translateY(0) scaleY(1); } 30%,77% { transform: translateY(-14%) scaleY(.65); } }
+@keyframes magic-painted-trunk-open { 0%,100% { transform: translateY(0) rotate(0) scaleY(1); } 30%,77% { transform: translateY(-10%) rotate(-2deg) scaleY(.8); } }
+@keyframes magic-cloud-drift { 0% { transform: translateX(-6%); opacity: 0; } 30%,75% { opacity: .8; } 100% { transform: translateX(8%); opacity: 0; } }
+@keyframes magic-bird-room-flight { 0%,100% { transform: translate(-50%,-50%) rotate(0); } 18% { transform: translate(100%,10%) rotate(8deg); } 38% { transform: translate(330%,120%) rotate(15deg); } 60% { transform: translate(260%,280%) rotate(-10deg); } 78% { transform: translate(-100%,150%) rotate(-15deg); } }
+@keyframes magic-bird-wings { 0%,100% { transform: scaleX(1) rotate(-3deg); } 50% { transform: scaleX(.78) rotate(3deg); } }
+@keyframes magic-feather-fall { 0%,20% { opacity: 0; transform: translate(0,-20%) rotate(25deg); } 35% { opacity: .9; } 100% { opacity: 0; transform: translate(120%,160%) rotate(-35deg); } }
+@keyframes magic-cat-sleep { 0% { opacity: .8; transform: translateY(0); } 30% { opacity: 0; transform: translateY(-14%); } 100% { opacity: 0; } }
+@keyframes magic-cat-original-pose { 0%,10%,92%,100% { opacity: 1; } 25%,78% { opacity: 0; } }
+@keyframes magic-cat-stretch-pose { 0%,10%,92%,100% { opacity: 0; transform: scale(1); } 25%,78% { opacity: 1; transform: scale(1.025); } }
+
+@media (max-width: 560px) {
+  .herb-cottage.magic-shop-enabled { width: calc(100vw - 12px); height: calc(100dvh - 12px); max-height: calc(100dvh - 12px); border-radius: 12px; }
+  .magic-house-header { padding: 14px 15px 12px; gap: 8px; }
+  .magic-house-header h2 { font-size: 22px; }
+  .magic-house-header .magic-eyebrow { font-size: 10px; letter-spacing: .08em; }
+  .magic-wallet { min-width: 80px; gap: 7px; padding: 6px 8px; }
+  .magic-wallet strong { font-size: 21px; }
+  .magic-wallet > .magic-coin { width: 18px; height: 18px; }
+  .magic-room-toolbar { padding: 9px 11px; }
+  .magic-room-toolbar > span { font-size: 11px; }
+  .magic-room-toolbar .magic-button { padding: 8px 12px; font-size: 14px; }
+  .magic-house-footer { padding: 8px 11px; }
+  .magic-house-footer > span:first-child { max-width: 47%; font-size: 10px; }
+  .magic-store-panel { padding: 9px 11px 21px; }
+  .magic-product-grid { grid-template-columns: repeat(2, minmax(0,1fr)); gap: 12px 9px; }
+  .magic-product-copy { padding: 8px 10px 10px; }
+  .magic-product-copy strong { min-height: 20px; font-size: 13px; }
+  .magic-product-bottom { margin-top: 8px; }
+  .magic-categories { gap: 5px; }
+  .magic-categories button { padding: 7px 9px; font-size: 11px; }
+  .magic-shop-enabled .magic-store-intro p { font-size: 10px; }
+  .magic-detail-panel { padding: 9px 17px 21px; }
+  .magic-detail-panel h3 { font-size: 25px; }
+  .magic-detail-art { width: min(100%, 290px); }
+  .magic-detail-price > span:first-child { font-size: 22px; }
+  .magic-detail-price > span:last-child { font-size: 11px; }
+  .magic-inspector-main { grid-template-columns: 88px 1fr; gap: 10px; }
+  .magic-inspector-preview { width: 88px; height: 108px; }
+  .magic-inspector-main h3 { font-size: 16px; }
+  .magic-collection { padding: 0 11px 15px; }
+  .magic-collection-list { gap: 5px; }
+  .magic-collection-item .magic-item-art { width: 53px; height: 53px; }
+  .magic-collection-item > span:last-child { font-size: 10px; }
+  .magic-shop-enabled .magic-live-message { padding: 11px 13px; font-size: 12px; }
+}
+@media (orientation: landscape) and (max-height: 600px) {
+  .herb-cottage.magic-shop-enabled { width: min(760px, calc(100vw - 20px)); }
+  .magic-house-header { padding: 9px 18px; }
+  .magic-house-header .magic-eyebrow { display: none; }
+  .magic-house-header h2 { font-size: 23px; }
+  .magic-house-footer { padding: 5px 15px; }
+  .magic-room-stage { max-width: 500px; margin: auto; }
+  .magic-room-panel { background: #211f29; }
+  .magic-detail-art { width: min(42vw, 245px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .magic-shop-enabled *, .magic-shop-enabled *::before, .magic-shop-enabled *::after { scroll-behavior: auto !important; transition: none !important; }
+  .magic-shop-enabled .is-playing, .magic-shop-enabled .is-playing * { animation: none !important; }
+  .magic-shop-enabled .is-playing .magic-item-art { filter: drop-shadow(0 0 6px #e9cf8b); }
+  .magic-shop-enabled .is-playing .magic-effect { opacity: .8; }
+  .magic-shop-enabled .is-playing .magic-item-aura { opacity: .5; transform: none; }
+  .magic-shop-enabled .is-playing .magic-rune-line, .magic-shop-enabled .is-playing .magic-drawer-glow { opacity: 1; }
+  .magic-shop-enabled .is-playing .magic-constellation, .magic-shop-enabled .is-playing .magic-written-runes, .magic-shop-enabled .is-playing .magic-tea-stream { stroke-dashoffset: 0; }
+  .magic-shop-enabled .is-playing .magic-trunk-lid { transform: translateY(-14%) scaleY(.65); }
+  .magic-shop-enabled .is-playing > .magic-tea-pot-art { transform: translate(-2%,-10%) rotate(-15deg); }
+  .magic-shop-enabled .is-playing > .magic-trunk-lid-art { transform: translateY(-10%) scaleY(.8); }
+  .magic-shop-enabled .is-playing > .magic-portrait-nod-art { opacity: 0; }
+  .magic-shop-enabled .is-playing > .magic-portrait-sip-art { opacity: 1; }
+  .magic-shop-enabled .is-playing[data-effect="portrait"] > .magic-item-art { opacity: 0; }
+  .magic-shop-enabled .is-playing[data-effect="cat"] > .magic-item-art { opacity: 0; }
+  .magic-shop-enabled .is-playing > .magic-cat-stretch-art { opacity: 1; }
+  .magic-shop-enabled .is-playing .magic-moon-shadow { transform: translateX(24%); }
+  .magic-shop-enabled .is-playing .magic-cauldron-moon, .magic-shop-enabled .is-playing .magic-star-rise { opacity: 1; transform: translateY(-100%); }
+  .magic-shop-enabled .is-playing .magic-sparks i, .magic-shop-enabled .is-playing .magic-bubbles i { opacity: .7; }
 }
 
 </style>
@@ -10302,6 +10699,958 @@ function updateArmorBindings(chains,count,changed) {
 })(window);
 
 </script>
+<script data-source="magic-shop-catalog.js">
+(function (root) {
+  'use strict';
+
+  // The approved 2026-11-24 list. Art cells follow this order, six per atlas.
+  const rows = [
+    ['oak-desk', '橡木书桌', 60, '家具', '书桌', '厚实橡木桌面，桌沿刻着古老符纹。', '桌沿的古老符纹依次亮起，抽屉缝透出金光。'],
+    ['star-chair', '星纹木椅', 30, '家具', '木椅', '椅背刻着一颗小星星的木椅。', '椅背星纹微亮，椅子自己轻轻拉开一点。'],
+    ['velvet-armchair', '暗紫丝绒软椅', 120, '家具', '软椅', '独立出售的暗紫软椅，带着柔软靠枕。', '靠枕轻轻鼓起，椅脚短暂离地，再缓缓落下。'],
+    ['moon-tea-table', '月纹小茶桌', 45, '家具', '茶桌', '桌面嵌着月亮纹样的小圆桌。', '桌面上的月亮从弯月慢慢变成满月。'],
+    ['whisper-bookshelf', '低语书架', 90, '家具', '书架', '摆满旧书的木书架，书脊藏着微光。', '书脊轮流发光，一本书自行抽出，再回到原位。'],
+    ['brass-bedside-cabinet', '铜把手床头柜', 45, '家具', '床头柜', '带着黄铜把手的床边小柜。', '把手自己转动，柜缝逸出几粒萤光。'],
+    ['star-rug', '星纹地毯', 60, '布置', '地毯', '铺在地板上的柔软星纹地毯。', '星星连成图案，地毯边角轻轻浮动。'],
+    ['star-moon-bedding', '星月床品', 75, '布置', '床品', '给原有木床铺上一片星月夜空。', '被面星星明暗变化，像把夜空盖在床上。'],
+    ['blue-velvet-curtains', '墨蓝丝绒窗帘', 60, '布置', '窗帘', '挂在窗边的墨蓝丝绒窗帘。', '无风轻摆，帘边流过一线银光。'],
+    ['moving-star-tapestry', '流动星空挂毯', 90, '布置', '挂毯', '织着深蓝夜空与星座的挂毯。', '星座缓缓移动，偶尔连成一只飞鸟。'],
+    ['rose-copper-mirror', '玫瑰铜镜', 90, '布置', '铜镜', '玫瑰花纹环绕着一面古老铜镜。', '镜中短暂浮现一片月下森林。'],
+    ['little-fireplace', '小壁炉', 150, '布置', '壁炉', '一座给小屋添上暖光的小壁炉。', '炉火偶尔卷成一条小火龙，再散回火星。'],
+    ['brass-candlestick', '黄铜烛台', 15, '奇物', '烛台', '一支点着暖金烛火的黄铜烛台。', '点一下，烛火由暖金变成幽蓝，再变回来。'],
+    ['rune-quill', '会写符文的羽毛笔', 15, '奇物', '羽毛笔', '一支会自己写下魔法符号的羽毛笔。', '羽毛笔自己立起，写下几个发光符号。'],
+    ['glowing-potions', '幽光药瓶组', 30, '奇物', '药瓶', '装着暗绿与深紫药液的小玻璃瓶。', '暗绿、深紫的药液缓缓流动，冒出小光泡。'],
+    ['floating-tea-set', '悬浮茶具', 45, '奇物', '茶具', '一把茶壶和配套茶杯，静静等着开茶会。', '茶壶自己升起，往配套茶杯里倒茶。'],
+    ['blue-star-atlas', '深蓝星图册', 45, '奇物', '星图册', '深蓝封面里收藏着一页页星图。', '书页自行翻动，纸上的星图缓缓移动。'],
+    ['copper-cauldron', '小铜坩埚', 60, '奇物', '坩埚', '一只冒着轻盈小泡泡的铜坩埚。', '泡泡升起来，变成小星星或弯月后消失。'],
+    ['crystal-ball', '水晶球', 75, '奇物', '水晶球', '透明水晶里藏着朦胧星云。', '星云散开，短暂显出一座远方城堡。'],
+    ['answering-portrait', '会回应的画像', 120, '奇物', '画像', '画着一位捧茶老巫师的画像。', '画里的老巫师抬眼看你，点头，喝一口茶。'],
+    ['floating-broom', '悬浮扫帚', 45, '奇物', '扫帚', '一把会轻轻浮起的旧木扫帚。', '离地转一圈，扫出一道短暂的星尘。'],
+    ['star-travel-trunk', '星空旅行箱', 75, '奇物', '旅行箱', '一只收藏着夜空的古老旅行箱。', '打开箱盖，里面是一片有云缓缓飘过的夜空。'],
+    ['golden-bird', '金羽小鸟', 300, '伙伴', '小鸟', '独立出售的金羽小伙伴，会停在窗边。', '窗边歪头、梳羽；点它会绕房间飞一圈。'],
+    ['wizard-cat', '巫师猫', 1000, '伙伴', '猫咪', '独立出售的小屋伙伴，不需要购买其他家具。', '打盹、摇尾巴、伸懒腰，偶尔走到孩子眼前。'],
+  ];
+  // Literal paths let the offline builder embed the same artwork in one file.
+  const atlases = ['assets/shop/furniture-atlas.webp', 'assets/shop/room-atlas.webp',
+    'assets/shop/curios-atlas.webp', 'assets/shop/companions-atlas.webp'];
+  const items = Object.freeze(rows.map((row, index) => Object.freeze({
+    id: row[0], name: row[1], price: row[2], category: row[3], slot: row[4],
+    description: row[5], effect: row[6], magic: row[6], artIndex: index,
+    art: Object.freeze({ src: atlases[Math.floor(index / 6)], col: index % 2, row: Math.floor(index % 6 / 2) }),
+  })));
+  const byId = Object.freeze(Object.fromEntries(items.map(item => [item.id, item])));
+  root.HanziMagicShopCatalog = Object.freeze({ items, byId, get: id => Object.prototype.hasOwnProperty.call(byId, id) ? byId[id] : null });
+})(typeof window !== 'undefined' ? window : globalThis);
+
+</script>
+<script data-source="magic-shop-ledger.js">
+(function (root) {
+  'use strict';
+
+  const DB_NAME = 'hanzi-magic-shop-v1';
+  const STORE = 'wallets';
+  const KEY = 'hanzi-magic-shop-ledger-v1';
+  const LEGACY_KEY = 'hanzi-herbalist-wallet-v1';
+  const LOCK = 'hanzi-magic-shop-ledger-write-v1';
+  const CHANNEL = 'hanzi-magic-shop-ledger-v1';
+  const DISPLAY_PLACES = ['window', 'crate', 'shelf'];
+  const clone = value => JSON.parse(JSON.stringify(value));
+
+  function fail(reason) {
+    const error = new Error(reason);
+    error.reason = reason;
+    return error;
+  }
+
+  function validate(record) {
+    const integer = value => Number.isSafeInteger(value) && value >= 0;
+    if (!record || record.schema !== 1 || !integer(record.balance) || !integer(record.revision)
+      || !Array.isArray(record.owned) || !Array.isArray(record.events)) throw fail('corrupt-record');
+    const ids = new Set();
+    record.owned.forEach(entry => {
+      if (!entry || typeof entry.itemId !== 'string' || !entry.itemId || ids.has(entry.itemId)
+        || !integer(entry.price) || !Number.isFinite(entry.purchasedAt) || entry.purchasedAt <= 0
+        || typeof entry.purchaseId !== 'string' || !entry.purchaseId) throw fail('corrupt-record');
+      ids.add(entry.itemId);
+    });
+    const events = new Set();
+    record.events.forEach(id => {
+      if (typeof id !== 'string' || !id || events.has(id)) throw fail('corrupt-record');
+      events.add(id);
+    });
+    const displayPlaces = record.displayPlaces === undefined ? {} : record.displayPlaces;
+    if (!displayPlaces || typeof displayPlaces !== 'object' || Array.isArray(displayPlaces)) throw fail('corrupt-record');
+    const displayed = new Set();
+    Object.entries(displayPlaces).forEach(([place, id]) => {
+      if (!DISPLAY_PLACES.includes(place) || typeof id !== 'string' || !ids.has(id) || displayed.has(id)) throw fail('corrupt-record');
+      displayed.add(id);
+    });
+    return { ...clone(record), displayPlaces: clone(displayPlaces) };
+  }
+
+  function create(options) {
+    const win = options?.window || root;
+    const catalog = win.HanziMagicShopCatalog || root.HanziMagicShopCatalog;
+    const listeners = new Set();
+    let db, channel, backend, record, error, initialized = false, disposed = false;
+    let authoritativeRecordSeen = false;
+    let queue = Promise.resolve();
+    let refreshQueued = false;
+
+    function legacyBalance() {
+      const raw = win.localStorage?.getItem(LEGACY_KEY);
+      if (raw == null) return 0;
+      if (!/^\d+$/.test(raw) || !Number.isSafeInteger(Number(raw))) throw fail('corrupt-legacy-wallet');
+      return Number(raw);
+    }
+
+    // This read-only preview lets the HUD show saved coins while IndexedDB opens.
+    let previewBalance = 0;
+    try { previewBalance = legacyBalance(); } catch (_) { /* ready() reports storage failures. */ }
+
+    function snapshot() {
+      return {
+        balance: record ? record.balance : previewBalance,
+        owned: record ? clone(record.owned) : [],
+        displayPlaces: record ? clone(record.displayPlaces || {}) : {},
+        revision: record ? record.revision : 0,
+        storage: backend || null, ready: initialized && !error,
+        error: error || null,
+      };
+    }
+
+    function notify() {
+      const current = snapshot();
+      listeners.forEach(fn => { try { fn(current); } catch (_) { /* A view must not cancel a committed transaction. */ } });
+    }
+
+    function storageError(cause) {
+      return cause?.reason || 'storage-unavailable';
+    }
+
+    function importRecord() {
+      const storage = win.localStorage;
+      if (!storage) throw fail('storage-unavailable');
+      const saved = storage.getItem(KEY);
+      if (saved != null) {
+        try { return validate(JSON.parse(saved)); }
+        catch (cause) { throw cause.reason ? cause : fail('corrupt-record'); }
+      }
+      const balance = legacyBalance();
+      const now = Date.now();
+      return { schema: 1, balance, owned: [], events: [], displayPlaces: {}, revision: 0,
+        migratedLegacyBalance: balance, createdAt: now, updatedAt: now };
+    }
+
+    function openDatabase() {
+      return new Promise((resolve, reject) => {
+        let request, ended = false;
+        // Opening the current database version also permits reconnecting after
+        // another tab upgrades it; record schema validation still protects data.
+        try { request = win.indexedDB.open(DB_NAME); }
+        catch (cause) { reject(cause); return; }
+        request.onupgradeneeded = () => {
+          if (!request.result.objectStoreNames.contains(STORE)) request.result.createObjectStore(STORE);
+        };
+        request.onsuccess = () => {
+          if (ended || disposed) { request.result.close(); reject(fail('storage-unavailable')); return; }
+          ended = true;
+          const connection = request.result;
+          connection.onversionchange = () => {
+            connection.close();
+            if (db === connection) db = null;
+            error = 'storage-unavailable';
+            notify();
+          };
+          resolve(connection);
+        };
+        request.onerror = () => { ended = true; reject(request.error || fail('storage-unavailable')); };
+        request.onblocked = () => { ended = true; reject(fail('storage-unavailable')); };
+      });
+    }
+
+    // All decisions and writes happen in the same read/write transaction. A
+    // second tab cannot observe the old balance while the first purchase writes.
+    function idbTransaction(change, initializing) {
+      return new Promise((resolve, reject) => {
+        let tx, result, next, cause;
+        try { tx = db.transaction(STORE, 'readwrite'); }
+        catch (failure) { reject(failure); return; }
+        tx.oncomplete = () => resolve({ record: next, result });
+        tx.onerror = () => { cause = cause || tx.error; };
+        tx.onabort = () => reject(cause || tx.error || fail('storage-unavailable'));
+        const store = tx.objectStore(STORE);
+        const request = store.get('main');
+        request.onsuccess = () => {
+          try {
+            const missing = request.result === undefined;
+            if (!missing) authoritativeRecordSeen = true;
+            if (missing && !initializing) throw fail('missing-record');
+            next = missing ? importRecord() : validate(request.result);
+            const outcome = change ? change(next) : { changed: false, result: { ok: true } };
+            result = outcome.result;
+            if (missing || outcome.changed) store.put(next, 'main');
+          } catch (failure) { cause = failure; tx.abort(); }
+        };
+      });
+    }
+
+    async function localTransaction(change, initializing) {
+      const locks = win.navigator?.locks;
+      if (!locks || typeof locks.request !== 'function') throw fail('storage-lock-unavailable');
+      return locks.request(LOCK, async () => {
+        const storage = win.localStorage;
+        if (!storage) throw fail('storage-unavailable');
+        const raw = storage.getItem(KEY);
+        let next;
+        if (raw == null) {
+          if (!initializing) throw fail('missing-record');
+          next = importRecord();
+        } else {
+          authoritativeRecordSeen = true;
+          try { next = validate(JSON.parse(raw)); }
+          catch (cause) { throw cause.reason ? cause : fail('corrupt-record'); }
+        }
+        const outcome = change ? change(next) : { changed: false, result: { ok: true } };
+        // SetItem is atomic; do not publish in-memory success before it returns.
+        if (raw == null || outcome.changed) storage.setItem(KEY, JSON.stringify(next));
+        return { record: next, result: outcome.result };
+      });
+    }
+
+    function transaction(change, initializing) {
+      return backend === 'indexeddb' ? idbTransaction(change, initializing) : localTransaction(change, initializing);
+    }
+
+    function accept(value, broadcast) {
+      record = value.record;
+      authoritativeRecordSeen = true;
+      // A transaction already in flight may finish after versionchange closes
+      // this connection. Keep the reconnect notice even though its write saved.
+      error = backend === 'indexeddb' && !db ? 'storage-unavailable' : null;
+      notify();
+      if (broadcast) { try { channel?.postMessage({ revision: record.revision }); } catch (_) { /* Storage remains authoritative. */ } }
+      return { ...value.result, snapshot: snapshot() };
+    }
+
+    function refresh() {
+      if (disposed || refreshQueued) return;
+      refreshQueued = true;
+      const task = queue.then(async () => {
+        refreshQueued = false;
+        await readyPromise;
+        if (!initialized || !backend || disposed) return;
+        try { accept(await transaction(null, false), false); }
+        catch (cause) { error = storageError(cause); notify(); }
+      });
+      queue = task.catch(() => {});
+    }
+
+    const onStorage = event => { if (event.key === KEY) refresh(); };
+    const onFocus = () => refresh();
+    const onVisibility = () => { if (!win.document || win.document.visibilityState === 'visible') refresh(); };
+    win.addEventListener?.('storage', onStorage);
+    win.addEventListener?.('focus', onFocus);
+    win.document?.addEventListener?.('visibilitychange', onVisibility);
+    try {
+      if (typeof win.BroadcastChannel === 'function') {
+        channel = new win.BroadcastChannel(CHANNEL);
+        channel.onmessage = () => refresh();
+      }
+    } catch (_) { /* Focus and storage events still refresh views. */ }
+
+    const readyPromise = (async () => {
+      try {
+        if (win.indexedDB && typeof win.indexedDB.open === 'function') {
+          backend = 'indexeddb';
+          db = await openDatabase();
+        } else backend = 'localstorage';
+        const value = await transaction(null, true);
+        initialized = true;
+        accept(value, false);
+      } catch (cause) { initialized = true; error = storageError(cause); notify(); }
+      return snapshot();
+    })();
+
+    function enqueue(change) {
+      const task = queue.then(async () => {
+        await readyPromise;
+        if (disposed) return { ok: false, reason: 'storage-unavailable', snapshot: snapshot() };
+        // A valid connection can recover from a transient failed write. A failed
+        // migration/open is never replaced with a fresh wallet or legacy money.
+        if (!record) return { ok: false, reason: error || 'storage-unavailable', snapshot: snapshot() };
+        try {
+          const value = await transaction(change, false);
+          return accept(value, !!value.result.ok);
+        } catch (cause) {
+          error = storageError(cause);
+          notify();
+          return { ok: false, reason: error, snapshot: snapshot() };
+        }
+      });
+      queue = task.catch(() => {});
+      return task;
+    }
+
+    function retry() {
+      const task = queue.then(async () => {
+        await readyPromise;
+        if (disposed) return snapshot();
+        try {
+          // Stay on the selected authority. An unavailable IndexedDB wallet is
+          // never replaced with the old localStorage balance on recovery.
+          if (backend === 'indexeddb') {
+            db?.close();
+            db = null;
+            db = await openDatabase();
+          }
+          const value = await transaction(null, !authoritativeRecordSeen);
+          initialized = true;
+          accept(value, false);
+        } catch (cause) { error = storageError(cause); notify(); }
+        return snapshot();
+      });
+      queue = task.catch(() => {});
+      return task;
+    }
+
+    function touch(next) {
+      if (!Number.isSafeInteger(next.revision + 1)) throw fail('balance-overflow');
+      next.revision += 1;
+      next.updatedAt = Date.now();
+    }
+
+    function credit(amount, eventId) {
+      if (!Number.isSafeInteger(amount) || amount <= 0
+        || (eventId !== undefined && (typeof eventId !== 'string' || !eventId))) {
+        return Promise.resolve({ ok: false, reason: 'invalid-credit', snapshot: snapshot() });
+      }
+      return enqueue(next => {
+        if (eventId !== undefined && next.events.includes(eventId)) {
+          return { changed: false, result: { ok: true, reason: 'duplicate-event', credited: 0 } };
+        }
+        if (!Number.isSafeInteger(next.balance + amount)) throw fail('balance-overflow');
+        next.balance += amount;
+        if (eventId !== undefined) next.events.push(eventId);
+        touch(next);
+        return { changed: true, result: { ok: true, credited: amount } };
+      });
+    }
+
+    function purchase(itemId) {
+      const item = catalog?.get ? catalog.get(itemId) : catalog?.byId?.[itemId];
+      if (!item || !Number.isSafeInteger(item.price) || item.price <= 0) {
+        return Promise.resolve({ ok: false, reason: 'invalid-item', snapshot: snapshot() });
+      }
+      return enqueue(next => {
+        const previous = next.owned.find(entry => entry.itemId === item.id);
+        if (previous) return { changed: false, result: { ok: false, reason: 'already-owned', item, purchase: clone(previous) } };
+        if (next.balance < item.price) return { changed: false, result: { ok: false, reason: 'insufficient-balance', item } };
+        const purchase = { itemId: item.id, price: item.price, purchasedAt: Date.now(),
+          purchaseId: typeof win.crypto?.randomUUID === 'function' ? win.crypto.randomUUID() : Date.now().toString(36) + '-' + Math.random().toString(36).slice(2) };
+        next.balance -= item.price;
+        next.owned.push(purchase);
+        if (smallItem(item)) {
+          const place = DISPLAY_PLACES.find(id => !next.displayPlaces[id]) || 'crate';
+          next.displayPlaces[place] = item.id;
+        }
+        touch(next);
+        return { changed: true, result: { ok: true, item, purchase: clone(purchase) } };
+      });
+    }
+
+    function smallItem(item) {
+      return item && Number.isInteger(item.artIndex) && item.artIndex >= 12 && item.artIndex <= 21;
+    }
+
+    function setDisplayPlace(placeId, itemId) {
+      if (!DISPLAY_PLACES.includes(placeId)) {
+        return Promise.resolve({ ok: false, reason: 'invalid-display-place', snapshot: snapshot() });
+      }
+      const item = catalog?.get ? catalog.get(itemId) : catalog?.byId?.[itemId];
+      if (!smallItem(item)) {
+        return Promise.resolve({ ok: false, reason: 'invalid-display-item', snapshot: snapshot() });
+      }
+      return enqueue(next => {
+        if (!next.owned.some(entry => entry.itemId === item.id)) {
+          return { changed: false, result: { ok: false, reason: 'not-owned' } };
+        }
+        if (next.displayPlaces[placeId] === item.id) return { changed: false, result: { ok: true } };
+        Object.keys(next.displayPlaces).forEach(place => {
+          if (next.displayPlaces[place] === item.id) delete next.displayPlaces[place];
+        });
+        next.displayPlaces[placeId] = item.id;
+        touch(next);
+        return { changed: true, result: { ok: true } };
+      });
+    }
+
+    return Object.freeze({
+      ready: () => readyPromise.then(() => snapshot()), retry, snapshot, credit, purchase, setDisplayPlace,
+      subscribe(fn) { listeners.add(fn); return () => listeners.delete(fn); },
+      dispose() {
+        disposed = true;
+        channel?.close();
+        db?.close();
+        listeners.clear();
+        win.removeEventListener?.('storage', onStorage);
+        win.removeEventListener?.('focus', onFocus);
+        win.document?.removeEventListener?.('visibilitychange', onVisibility);
+      },
+    });
+  }
+
+  root.HanziMagicShopLedger = Object.freeze({ create });
+})(typeof window !== 'undefined' ? window : globalThis);
+
+</script>
+<script data-source="magic-shop.js">
+(function (global) {
+  'use strict';
+
+  // This module only presents the room and purchases. The ledger owns persistence;
+  // it never reads or changes lessons, handwriting, teaching or cloud progress.
+  const EFFECTS = ['runes', 'chair', 'cushion', 'moon', 'books', 'cupboard',
+    'rug', 'bedding', 'curtains', 'tapestry', 'mirror', 'hearth',
+    'candle', 'quill', 'bottles', 'tea', 'atlas', 'cauldron',
+    'crystal', 'portrait', 'broom', 'trunk', 'bird', 'cat'];
+  const GROUPS = [
+    { id: 'furniture', name: '家具' },
+    { id: 'room', name: '房间布置' },
+    { id: 'curios', name: '神奇物件' },
+    { id: 'companions', name: '小伙伴' }
+  ];
+  const POSITIONS = [
+    [30, 54, 34, 30], [40, 63, 19, 34], [69, 76, 29, 43], [47, 76, 23, 42],
+    [56, 40, 28, 18], [65, 52, 15, 28], [45, 86, 59, 3], [85, 44, 32, 12],
+    [24, 30, 38, 8], [51, 22, 24, 7], [74, 24, 17, 9], [85, 66, 25, 24]
+  ];
+  const PLACES = [
+    { id: 'window', name: '窗台', x: 30, y: 39, width: 11 },
+    { id: 'crate', name: '旧木箱', x: 15, y: 66, width: 16 },
+    { id: 'shelf', name: '墙边架', x: 51, y: 50, width: 11 }
+  ];
+  const ART = ['furniture-atlas.webp', 'room-atlas.webp', 'curios-atlas.webp', 'companions-atlas.webp'];
+  const SVG_START = '<svg viewBox="0 0 100 100" aria-hidden="true" focusable="false">';
+  const STAR = '<path d="m50 8 9 29 30 1-24 18 8 29-23-17-24 17 9-29-24-18 30-1Z"/>';
+
+  function escapeHtml(value) {
+    return String(value == null ? '' : value).replace(/[&<>"']/g, char =>
+      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
+  }
+
+  function magicMarkup(effect) {
+    const sparks = '<span class="magic-sparks"><i></i><i></i><i></i><i></i><i></i><i></i></span>';
+    const forms = {
+      runes: '<span class="magic-rune-line">ᛁ ᚷ ᛉ ᚨ</span><span class="magic-drawer-glow"></span>',
+      chair: SVG_START + '<path class="magic-star-mark" d="m50 20 6 18 19 1-15 12 5 18-15-11-15 11 5-18-15-12 19-1Z"/></svg>',
+      cushion: '<span class="magic-cushion-glow"></span>',
+      moon: SVG_START + '<circle class="magic-moon" cx="50" cy="49" r="19"/><circle class="magic-moon-shadow" cx="61" cy="43" r="19"/></svg>',
+      books: '<span class="magic-book-spines"><i></i><i></i><i></i><i></i><i></i></span>',
+      cupboard: SVG_START + '<circle class="magic-turning-handle" cx="50" cy="46" r="8" fill="none" stroke="currentColor" stroke-width="3"/><path class="magic-drawer-seam" d="M23 58h54"/></svg>' + sparks,
+      rug: SVG_START + '<path class="magic-constellation" d="m17 62 19-25 20 19 24-23M36 37l15-15" fill="none" stroke="currentColor" stroke-width="1.6"/><g class="magic-rug-stars"><circle cx="17" cy="62" r="2"/><circle cx="36" cy="37" r="2"/><circle cx="56" cy="56" r="2"/><circle cx="80" cy="33" r="2"/><circle cx="51" cy="22" r="2"/></g></svg>',
+      bedding: '<span class="magic-bed-stars"><i></i><i></i><i></i><i></i><i></i></span>',
+      curtains: '<span class="magic-curtain-silver"></span>',
+      tapestry: SVG_START + '<path class="magic-tapestry-bird" d="M15 54q18-27 35 0 17-27 35 0-18-9-35 12-17-21-35-12Z"/></svg>' + sparks,
+      mirror: SVG_START + '<ellipse class="magic-mirror-forest" cx="50" cy="45" rx="22" ry="30"/><g class="magic-forest-trees"><path d="m31 63 8-24 8 24Zm13 1 9-34 10 34Zm14 1 8-22 7 22Z"/><circle cx="58" cy="25" r="6"/></g></svg>',
+      hearth: SVG_START + '<path class="magic-fire-dragon" d="M19 70q8-26 32-20l9-16 15 3-9 8 15 12-18-3q-9 29-29 14 12 2 14-7-17-5-29 9Z"/></svg>' + sparks,
+      candle: '<span class="magic-candle-flame"></span>',
+      quill: SVG_START + '<path class="magic-written-runes" d="m19 69 10-22 10 22m-15-8h11m13 8V46l17 23V46m9 1h12L74 69h12" fill="none" stroke="currentColor" stroke-width="2"/></svg>',
+      bottles: '<span class="magic-bubbles"><i></i><i></i><i></i><i></i></span>',
+      tea: SVG_START + '<path class="magic-tea-stream" d="M23 31q-3 16-1 33" fill="none" stroke="#edc783" stroke-width="1.2"/><path class="magic-tea-steam" d="M23 61q-5-6 0-11m6 11q-4-5 0-9" fill="none" stroke="#fff1c8" stroke-width="1"/></svg>',
+      atlas: SVG_START + '<path class="magic-turning-page" d="M48 31q21-9 32 1v39q-15-6-32 0Z" fill="#d5c099" stroke="#997445"/><path class="magic-atlas-lines" d="m25 50 15-9 20 18 15-11m-35-7 7 23" fill="none" stroke="#fff0b6" stroke-width="2"/></svg>',
+      cauldron: '<span class="magic-cauldron-moon"></span>' + '<span class="magic-star-rise">' + SVG_START + STAR + '</svg></span>' + '<span class="magic-bubbles"><i></i><i></i><i></i><i></i></span>',
+      crystal: SVG_START + '<circle class="magic-crystal-nebula" cx="50" cy="43" r="25"/><path class="magic-crystal-castle" d="M33 62V40h7v-8h8v13h8V35h7v27Zm-2-22 6-10 5 10m12-5 6-11 6 11" fill="#d5d9e8"/></svg>',
+      portrait: sparks,
+      broom: '<span class="magic-broom-trail"></span>' + sparks,
+      trunk: SVG_START + '<ellipse class="magic-trunk-sky" cx="50" cy="38" rx="43" ry="11"/><g class="magic-trunk-stars"><circle cx="29" cy="36" r="1.1"/><circle cx="45" cy="31" r="1.5"/><circle cx="67" cy="38" r="1.2"/><path d="m56 35 1 3 3 1-3 1-1 3-1-3-3-1 3-1Z"/></g><path class="magic-trunk-cloud" d="M19 43q6-5 13-2 7-6 16-1 9-3 16 3Z"/></svg>',
+      bird: '<span class="magic-bird-feather"></span>' + sparks,
+      cat: SVG_START + '<g class="magic-cat-sleep"><path d="m21 20 8-4-4 11 9-3m3-16 8-4-4 11 9-3" fill="none" stroke="#e3d4b2" stroke-width="1.4"/></g></svg>'
+    };
+    return '<span class="magic-effect magic-effect-' + effect + '" aria-hidden="true">' +
+      (forms[effect] || sparks) + '</span><span class="magic-item-aura" aria-hidden="true"></span>';
+  }
+
+  function create(options) {
+    const doc = options && options.document;
+    const cottage = options && options.cottage;
+    const ledger = options && options.ledger;
+    const sourceCatalog = options && options.catalog;
+    if (!doc || !cottage || !ledger || !sourceCatalog) return {};
+    const source = Array.isArray(sourceCatalog) ? sourceCatalog : sourceCatalog.items;
+    if (!Array.isArray(source) || !source.length) return {};
+    const items = source.map((item, index) => ({ ...item, _index: index,
+      _effect: EFFECTS[index] || item.effect || 'runes',
+      _group: ({ '家具': 'furniture', '布置': 'room', '奇物': 'curios', '伙伴': 'companions' })[item.category] ||
+        (index < 6 ? 'furniture' : index < 12 ? 'room' : index < 22 ? 'curios' : 'companions') }));
+    const byId = new Map(items.map(item => [String(item.id), item]));
+    const exit = cottage.querySelector('#herbCottageExit');
+    let panel = 'room';
+    let category = 'all';
+    let selected = null;
+    let inspected = null;
+    let buying = false;
+    let recovering = false;
+    let ready = false;
+    let destroyed = false;
+    let successful = null;
+    let detailNotice = null;
+    let placing = false;
+    let placementNotice = null;
+    let displayIsAuthoritative = false;
+    let state = { balance: 0, owned: [] };
+    let unsubscribe;
+    let openCollection = false;
+    let animationTimers = [];
+    const displayed = Object.create(null);
+    const artBlobUrls = new Map();
+    const view = doc.defaultView || global;
+    const objectUrls = view.URL || global.URL;
+
+    function artUrl(source) {
+      const src = String(source);
+      const comma = src.indexOf(',');
+      const header = comma < 0 ? '' : src.slice(0, comma);
+      if (!/^data:image\/[^,]+;base64$/i.test(header)) return src;
+      if (artBlobUrls.has(src)) return artBlobUrls.get(src);
+      try {
+        const decode = view.atob || global.atob;
+        const BlobType = view.Blob || global.Blob;
+        if (typeof decode !== 'function' || typeof BlobType !== 'function' || typeof objectUrls?.createObjectURL !== 'function') return src;
+        const binary = decode.call(view, src.slice(comma + 1));
+        const bytes = new Uint8Array(binary.length);
+        for (let index = 0; index < binary.length; index++) bytes[index] = binary.charCodeAt(index);
+        const blob = new BlobType([bytes], { type: header.slice(5).split(';')[0] });
+        const url = objectUrls.createObjectURL(blob);
+        artBlobUrls.set(src, url);
+        return url;
+      } catch (_) { return src; }
+    }
+
+    const motionArtUrl = artUrl('assets/shop/special-motion-atlas.webp');
+
+    cottage.classList.add('magic-shop-enabled');
+    cottage.dataset.shopReady = 'false';
+    const motionPreload = doc.createElement('img');
+    motionPreload.addEventListener('load', () => { if (!destroyed) cottage.classList.add('magic-motion-ready'); });
+    motionPreload.src = motionArtUrl;
+    cottage.innerHTML = `
+      <div class="magic-house-shell">
+        <header class="magic-house-header">
+          <div><p class="magic-eyebrow" id="magicShopEyebrow">旅途中的归处</p>
+            <h2 id="herbCottageName">我的巫师房间</h2></div>
+          <div class="magic-wallet"><span class="magic-coin" aria-hidden="true"></span>
+            <span><strong id="magicShopBalance">—</strong><small>古银币</small></span></div>
+        </header>
+        <div class="magic-storage-alert" id="magicShopStorageAlert" hidden><p id="magicShopStorageCopy">藏品账本暂时无法保存。你的学习可以继续。</p><button type="button" class="magic-button magic-button-small" id="magicShopRetryStorage">重新读取账本</button></div>
+        <div class="magic-house-content">
+          <section class="magic-panel magic-room-panel" data-shop-panel="room" aria-label="我的巫师房间">
+            <div class="magic-room-toolbar"><span id="magicShopOwnedCount">已收藏 0 / ${items.length}</span>
+              <button id="magicShopEntry" class="magic-button magic-button-primary" type="button">去商店选购 <span aria-hidden="true">→</span></button></div>
+            <div class="magic-room-stage" id="magicRoomStage" aria-label="可点按藏品的巫师房间">
+              <div class="magic-room-background" aria-hidden="true"></div>
+              <div class="magic-old-crate" aria-hidden="true"></div>
+              <div class="magic-wall-shelf" aria-hidden="true"></div>
+              <div class="magic-room-objects" id="magicRoomObjects"></div>
+              <div class="magic-room-empty" id="magicRoomEmpty"><strong>小屋等着你的第一件藏品</strong><span>攒下古银币，挑一件喜欢的奇物。<br>小物可以直接摆在窗台或旧木箱上。</span></div>
+              <p class="magic-room-hint" id="magicRoomHint" hidden>点一下藏品，看看它的小魔法</p>
+            </div>
+            <p class="magic-live-message" id="magicRoomMagicStatus" aria-live="polite">这里是你的房间，原来的床、木凳和窗户一直都在。</p>
+            <div class="magic-collection">
+              <button class="magic-collection-toggle" id="magicCollectionToggle" type="button" aria-expanded="false" aria-controls="magicCollectionBody">我的藏品 <span id="magicCollectionCount">0 件</span><span class="magic-chevron" aria-hidden="true">⌄</span></button>
+              <div id="magicCollectionBody" hidden>
+                <p class="magic-collection-note">选一件查看、点按施展魔法。桌上小物可以换个陈列位置。</p>
+                <div class="magic-collection-list" id="magicCollectionList"></div>
+                <div id="magicRoomInspector" class="magic-room-inspector" hidden></div>
+              </div>
+            </div>
+          </section>
+          <section class="magic-panel magic-store-panel" data-shop-panel="shop" aria-label="午夜奇物铺" hidden>
+            <div class="magic-store-intro"><button id="magicShopBackRoom" class="magic-text-button" type="button">← 回房间</button><p>旧木架上，每件奇物都藏着一点小魔法。</p></div>
+            <nav class="magic-categories" aria-label="商品分类"><button type="button" data-shop-category="all" aria-pressed="true">全部 ${items.length} 件</button>${GROUPS.map(group => '<button type="button" data-shop-category="' + group.id + '" aria-pressed="false">' + group.name + '</button>').join('')}</nav>
+            <p id="magicShopStoreStatus" class="magic-store-status" aria-live="polite">每件只收藏一次，买下就会摆进房间。</p>
+            <div class="magic-product-grid" id="magicShopProducts"></div>
+          </section>
+          <section class="magic-panel magic-detail-panel" data-shop-panel="detail" aria-label="查看一件商品" hidden>
+            <button id="magicShopBackStore" class="magic-text-button" type="button">← 继续逛商店</button>
+            <div id="magicShopDetail"></div>
+          </section>
+        </div>
+        <footer class="magic-house-footer"><span>古银币来自每一次正式通过</span><span id="magicShopExitSlot"></span></footer>
+      </div>`;
+    if (exit) {
+      cottage.querySelector('#magicShopExitSlot').appendChild(exit);
+      exit.classList.add('magic-button', 'magic-exit');
+    }
+
+    const el = id => cottage.querySelector('#' + id);
+    const tap = (element, handler) => {
+      if (!element) return;
+      if (typeof options.onTap === 'function') options.onTap(element, handler);
+      else element.addEventListener('click', handler);
+    };
+    const ownedIds = () => new Set((Array.isArray(state.owned) ? state.owned : []).map(record =>
+      String(typeof record === 'string' ? record : record.itemId || record.id)));
+    const owns = item => ownedIds().has(String(item.id));
+    const balance = () => Math.max(0, Number(state.balance) || 0);
+    const healthy = () => ready && state.ready !== false && !state.error;
+    const smallItem = item => item._index >= 12 && item._index <= 21;
+    const format = number => Number(number).toLocaleString('zh-CN');
+
+    function artStyle(item) {
+      const art = item.art || {};
+      const src = artUrl(art.src || 'assets/shop/' + ART[Math.floor(item._index / 6)]).replace(/["\\\n\r]/g, '');
+      const col = Number.isFinite(art.col) ? art.col : item._index % 2;
+      const row = Number.isFinite(art.row) ? art.row : Math.floor(item._index % 6 / 2);
+      return '--shop-art:url(&quot;' + escapeHtml(src) + '&quot;);--shop-col:' + col + ';--shop-row:' + row;
+    }
+
+    function artMarkup(item, interactive) {
+      const style = artStyle(item);
+      const motionStyle = (col, row) => {
+        // The action painting uses complete, uneven-height rows. Crop only the
+        // transparent atlas windows; never cut into a kettle, frame or wing.
+        const crop = [{ y: 0, height: 448 }, { y: 452, height: 524 }, { y: 976, height: 560 }][row];
+        return '--shop-art:url(&quot;' + escapeHtml(motionArtUrl) + '&quot;);--shop-col:' + col +
+          ';--shop-row:' + row + ';--shop-motion-sy:' + (1536 / crop.height * 100) +
+          '%;--shop-motion-y:' + (crop.y / (1536 - crop.height) * 100) + '%';
+      };
+      let parts = '';
+      if (interactive && item._effect === 'tea') parts = '<span class="magic-item-part magic-tea-pot-art" style="' + motionStyle(0, 0) + '" aria-hidden="true"></span><span class="magic-item-part magic-tea-cup-art" style="' + motionStyle(1, 0) + '" aria-hidden="true"></span>';
+      if (interactive && item._effect === 'portrait') parts = '<span class="magic-item-part magic-portrait-nod-art" style="' + motionStyle(1, 1) + '" aria-hidden="true"></span><span class="magic-item-part magic-portrait-sip-art" style="' + motionStyle(0, 1) + '" aria-hidden="true"></span>';
+      if (interactive && item._effect === 'trunk') parts = '<span class="magic-item-part magic-trunk-lid-art" style="' + style + '" aria-hidden="true"></span>';
+      if (interactive && item._effect === 'bird') parts = '<span class="magic-item-part magic-bird-flight-art" style="' + motionStyle(0, 2) + '" aria-hidden="true"></span>';
+      if (interactive && item._effect === 'cat') parts = '<span class="magic-item-part magic-cat-stretch-art" style="' + motionStyle(1, 2) + '" aria-hidden="true"></span>';
+      return '<span class="magic-item-art" style="' + style + '" aria-hidden="true"></span>' +
+        (interactive ? magicMarkup(item._effect) + parts : '');
+    }
+
+    function takeSnapshot(snapshot) {
+      try {
+        state = snapshot && typeof snapshot === 'object' && 'balance' in snapshot ? snapshot : ledger.snapshot();
+      } catch (_) { /* Keep the last known state so the current lesson is untouched. */ }
+      if (!state || typeof state !== 'object') state = { balance: 0, owned: [] };
+      const savedPlaces = state.displayPlaces;
+      displayIsAuthoritative = Boolean(savedPlaces && typeof savedPlaces === 'object' && Object.keys(savedPlaces).length);
+      Object.keys(displayed).forEach(key => { delete displayed[key]; });
+      if (displayIsAuthoritative) PLACES.forEach(place => {
+        const id = savedPlaces[place.id];
+        const item = byId.get(String(id));
+        if (item && smallItem(item) && owns(item)) displayed[place.id] = String(id);
+      });
+    }
+
+    function syncHeader() {
+      const count = items.filter(owns).length;
+      el('magicShopBalance').textContent = ready ? format(balance()) : '—';
+      el('magicShopOwnedCount').textContent = '已收藏 ' + count + ' / ' + items.length;
+      el('magicCollectionCount').textContent = count + ' 件';
+      el('magicShopStorageAlert').hidden = !ready || healthy();
+      el('magicShopStorageCopy').textContent = recovering ? '正在重新读取藏品账本……' : '藏品账本暂时无法保存。重新读取后，还需再次确认兑换。';
+      el('magicShopRetryStorage').disabled = recovering;
+      if (typeof options.onBalance === 'function') options.onBalance(balance(), state);
+    }
+
+    function playMagic(target, item) {
+      if (!target || !item) return;
+      target.classList.remove('is-playing');
+      // Restart even if the child taps an item twice in succession.
+      void target.offsetWidth;
+      target.classList.add('is-playing');
+      target.dataset.magicPlayed = String(Date.now());
+      el('magicRoomMagicStatus').textContent = item.name + '：' + (item.magic || item.description || '小魔法在柔光中醒来。');
+      const message = cottage.querySelector('#magicDetailMagicStatus');
+      if (message) message.textContent = item.magic || item.description || '小魔法在柔光中醒来。';
+      animationTimers.push(setTimeout(() => target.classList.remove('is-playing'), item._effect === 'bird' ? 5400 : 4200));
+    }
+
+    function chooseDisplayDefaults() {
+      if (displayIsAuthoritative) return;
+      const owned = items.filter(item => owns(item) && smallItem(item));
+      PLACES.forEach(place => { if (displayed[place.id] && !owns(byId.get(displayed[place.id]) || {})) delete displayed[place.id]; });
+      const shown = new Set(Object.values(displayed));
+      PLACES.forEach(place => {
+        if (displayed[place.id]) return;
+        const next = owned.find(item => !shown.has(String(item.id)));
+        if (next) { displayed[place.id] = String(next.id); shown.add(String(next.id)); }
+      });
+    }
+
+    function roomButton(item, position, place) {
+      return '<button type="button" class="magic-room-item magic-room-' + item._effect + '" data-item-id="' + escapeHtml(item.id) + '" data-effect="' + item._effect + '"' +
+        (place ? ' data-display-place="' + place + '"' : '') +
+        ' aria-label="' + escapeHtml(item.name) + '，点按施展魔法" style="--room-x:' + position[0] + ';--room-y:' + position[1] + ';--room-w:' + position[2] + ';--room-z:' + position[3] + '">' +
+        artMarkup(item, true) + '<span class="magic-room-item-name">' + escapeHtml(item.name) + '</span></button>';
+    }
+
+    function renderRoom() {
+      chooseDisplayDefaults();
+      const owned = items.filter(owns);
+      const room = owned.filter(item => item._index < 12 || item._index >= 22).map(item => {
+        const position = POSITIONS[item._index] || (item._effect === 'bird' ? [17, 36, 12, 50] : [67, 88, 21, 55]);
+        return roomButton(item, position);
+      });
+      PLACES.forEach(place => {
+        const item = byId.get(displayed[place.id]);
+        if (item && owns(item)) room.push(roomButton(item, [place.x, place.y, place.width, 60], place.id));
+      });
+      el('magicRoomObjects').innerHTML = room.join('');
+      cottage.querySelectorAll('.magic-room-item').forEach(button => tap(button, () => playMagic(button, byId.get(button.dataset.itemId))));
+      el('magicRoomEmpty').hidden = owned.length > 0;
+      el('magicRoomHint').hidden = owned.length === 0;
+      el('magicCollectionList').innerHTML = owned.map(item => '<button type="button" class="magic-collection-item" data-item-id="' + escapeHtml(item.id) + '" aria-pressed="' + (inspected === String(item.id)) + '">' + artMarkup(item, false) + '<span>' + escapeHtml(item.name) + '</span></button>').join('') || '<p class="magic-no-collection">还没有藏品。去商店看看，15 枚就能挑第一件奇物。</p>';
+      cottage.querySelectorAll('.magic-collection-item').forEach(button => tap(button, () => {
+        inspected = button.dataset.itemId;
+        placementNotice = null;
+        renderInspector();
+        cottage.querySelectorAll('.magic-collection-item').forEach(candidate => candidate.setAttribute('aria-pressed', String(candidate === button)));
+        const reduced = doc.defaultView && typeof doc.defaultView.matchMedia === 'function' && doc.defaultView.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        el('magicRoomInspector').scrollIntoView({ block: 'nearest', behavior: reduced ? 'auto' : 'smooth' });
+      }));
+      renderInspector();
+    }
+
+    function renderInspector() {
+      const item = byId.get(inspected);
+      const inspector = el('magicRoomInspector');
+      inspector.hidden = !item || !owns(item);
+      if (inspector.hidden) { inspector.innerHTML = ''; return; }
+      const place = PLACES.find(place => displayed[place.id] === String(item.id));
+      const notice = placementNotice && placementNotice.itemId === String(item.id) ? placementNotice : null;
+      inspector.innerHTML = '<div class="magic-inspector-main"><button type="button" class="magic-inspector-preview magic-interactive-preview" data-item-id="' + escapeHtml(item.id) + '" data-effect="' + item._effect + '" aria-label="点按' + escapeHtml(item.name) + '施展魔法">' + artMarkup(item, true) + '</button><div><h3>' + escapeHtml(item.name) + '</h3><p>' + escapeHtml(item.magic || item.description || '点按藏品，唤醒它的小魔法。') + '</p><button type="button" class="magic-button magic-button-small" id="magicInspectorPlay">看看小魔法</button></div></div>' +
+        (smallItem(item) ? '<div class="magic-place-options" aria-label="选择陈列位置"><span>摆在' + (place ? '（现在：' + place.name + '）' : '房间里') + '</span>' + PLACES.map(target => '<button type="button" class="magic-place-button" data-place="' + target.id + '" aria-pressed="' + (place && place.id === target.id ? 'true' : 'false') + '"' + (placing || !healthy() ? ' disabled' : '') + '>' + target.name + '</button>').join('') + '</div><p class="magic-place-note' + (notice && notice.error ? ' is-error' : '') + '" id="magicPlacementStatus" aria-live="polite">' + escapeHtml(notice && notice.message || '换位置会保存到房间，并把原来那件收回藏品柜；随时可以再拿出来。') + '</p>' : '<p class="magic-place-note">已经摆在房间的固定位置，点它就会回应你。</p>');
+      const preview = inspector.querySelector('.magic-inspector-preview');
+      tap(preview, () => playMagic(preview, item));
+      tap(el('magicInspectorPlay'), () => playMagic(preview, item));
+      inspector.querySelectorAll('[data-place]').forEach(button => tap(button, async () => {
+        if (placing || !healthy()) return;
+        const destination = PLACES.find(place => place.id === button.dataset.place);
+        placing = true;
+        placementNotice = { itemId: String(item.id), message: '正在保存陈列位置……', error: false };
+        renderInspector();
+        try {
+          const result = typeof ledger.setDisplayPlace === 'function' ? await ledger.setDisplayPlace(destination.id, item.id) : null;
+          if (destroyed) return;
+          placing = false;
+          takeSnapshot(result && result.snapshot);
+          placementNotice = { itemId: String(item.id), message: result && result.ok ? '位置已保存。' + item.name + '摆在' + destination.name + '。' : '摆放没有保存，原位置保留。可以重新读取账本后重试，不会扣币。', error: !(result && result.ok) };
+          syncHeader();
+          renderRoom();
+          if (result && result.ok) el('magicRoomMagicStatus').textContent = item.name + '已经摆在' + destination.name + '，位置已保存。';
+        } catch (_) {
+          if (destroyed) return;
+          placing = false;
+          takeSnapshot();
+          placementNotice = { itemId: String(item.id), message: '摆放没有保存，原位置保留。可以重新读取账本后重试，不会扣币。', error: true };
+          syncHeader();
+          renderRoom();
+        }
+      }));
+    }
+
+    function renderStore() {
+      const filtered = items.filter(item => category === 'all' || item._group === category);
+      cottage.querySelectorAll('[data-shop-category]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.shopCategory === category)));
+      el('magicShopProducts').innerHTML = filtered.map(item => {
+        const owned = owns(item);
+        return '<button type="button" class="magic-product' + (owned ? ' is-owned' : '') + '" data-item-id="' + escapeHtml(item.id) + '" aria-label="' + escapeHtml(item.name) + '，' + (owned ? '已拥有' : item.price + '枚古银币，查看详情') + '"><span class="magic-product-art">' + artMarkup(item, false) + '</span><span class="magic-product-copy"><strong>' + escapeHtml(item.name) + '</strong><span class="magic-product-bottom"><span class="magic-price"><i class="magic-coin" aria-hidden="true"></i>' + format(item.price) + '</span><span class="magic-product-state">' + (owned ? '已拥有' : '看看 →') + '</span></span></span></button>';
+      }).join('');
+      cottage.querySelectorAll('.magic-product').forEach(button => tap(button, () => openDetail(button.dataset.itemId)));
+      el('magicShopStoreStatus').textContent = !ready ? '正在打开藏品账本……' : state.error ? '暂时读不到本机藏品账本。已有学习仍可继续，稍后可重试购买。' :
+        (category === 'all' ? '共 ' + items.length + ' 件奇物。' : '本架 ' + filtered.length + ' 件奇物。') + '每件只收藏一次，买下就会摆进房间。';
+    }
+
+    function purchaseCopy(item) {
+      if (!ready) return '正在打开账本……';
+      if (!healthy()) return '请先重新读取账本';
+      if (owns(item)) return '已拥有';
+      if (balance() < Number(item.price)) return '还差 ' + format(Number(item.price) - balance()) + ' 枚古银币';
+      return '用 ' + format(item.price) + ' 枚古银币兑换';
+    }
+
+    function renderDetail(message, error) {
+      const item = byId.get(selected);
+      if (!item) return;
+      const owned = owns(item);
+      const isSuccess = successful === String(item.id);
+      if (message) detailNotice = { message, error: Boolean(error) };
+      const notice = detailNotice;
+      const disabled = buying || !healthy() || owned || balance() < Number(item.price);
+      el('magicShopDetail').innerHTML = '<p class="magic-detail-kicker">' + GROUPS.find(group => group.id === item._group).name + ' · 第 ' + (item._index + 1) + ' 件奇物</p><h3 id="magicShopItemTitle">' + escapeHtml(item.name) + '</h3>' +
+        '<button type="button" class="magic-detail-art magic-interactive-preview" data-item-id="' + escapeHtml(item.id) + '" data-effect="' + item._effect + '" aria-label="点按预览' + escapeHtml(item.name) + '的小魔法">' + artMarkup(item, true) + '<span class="magic-preview-label">点一下，看看小魔法</span></button>' +
+        '<p class="magic-detail-description">' + escapeHtml(item.description || item.magic || '') + '</p><p id="magicDetailMagicStatus" class="magic-detail-magic" aria-live="polite">' + escapeHtml(item.magic || '每一件藏品都有自己的小魔法。') + '</p>' +
+        '<div class="magic-detail-price"><span><i class="magic-coin" aria-hidden="true"></i>' + format(item.price) + '<small> 古银币</small></span><span>你有 ' + format(balance()) + ' 枚</span></div>' +
+        '<div class="magic-purchase-message' + (notice && notice.error ? ' is-error' : '') + '" id="magicShopPurchaseStatus" role="status" aria-live="polite">' + escapeHtml(notice && notice.message || (isSuccess ? '已摆进你的房间。点它，就有小魔法回应你。' : owned ? '这件奇物已经属于你，可以回房间找它。' : '兑换后会保存到这台设备的房间里。')) + '</div>' +
+        '<div class="magic-detail-actions">' + (isSuccess || owned ? '<button type="button" class="magic-button magic-button-primary" id="magicShopViewRoom">回房间看看</button><button type="button" class="magic-button" id="magicShopKeepShopping">留在商店继续选</button>' : '<button type="button" class="magic-button magic-button-primary" id="magicShopPurchase"' + (disabled ? ' disabled' : '') + '>' + (buying ? '正在记入藏品账本……' : purchaseCopy(item)) + '</button>') +
+        '<button type="button" class="magic-text-button" id="magicShopCancel"' + (buying ? ' disabled' : '') + '>' + (isSuccess || owned ? '返回商品列表' : '先不兑换，继续逛') + '</button></div>' +
+        (!owned && balance() < Number(item.price) ? '<p class="magic-earning-note">每正式通过一个字得 1 枚，完整走完一关再得 5 枚。攒够再来，奇物会等你。</p>' : '');
+      const preview = el('magicShopDetail').querySelector('.magic-detail-art');
+      tap(preview, () => playMagic(preview, item));
+      tap(el('magicShopPurchase'), buySelected);
+      tap(el('magicShopCancel'), () => showPanel('shop', '#magicShopBackRoom'));
+      tap(el('magicShopViewRoom'), () => { inspected = String(item.id); openRoom(); });
+      tap(el('magicShopKeepShopping'), () => showPanel('shop', '#magicShopBackRoom'));
+    }
+
+    async function buySelected() {
+      const item = byId.get(selected);
+      if (!item || buying || !healthy()) return;
+      takeSnapshot();
+      if (owns(item)) { renderDetail('你已经拥有这件奇物，不会再次扣币。'); return; }
+      if (balance() < Number(item.price)) { renderDetail('古银币还没攒够，先去继续探险吧。'); return; }
+      buying = true;
+      detailNotice = null;
+      renderDetail();
+      try {
+        const result = await ledger.purchase(item.id);
+        takeSnapshot(result && (result.snapshot || result.state));
+        if (destroyed) return;
+        buying = false;
+        syncHeader();
+        if (result && result.ok) {
+          successful = String(item.id);
+          renderRoom();
+          renderStore();
+          renderDetail('已摆进你的房间。点它，就有小魔法回应你。');
+          el('magicShopViewRoom').focus({ preventScroll: true });
+        } else if (result && result.reason === 'already-owned') {
+          renderDetail('你已经拥有这件奇物，不会再次扣币。');
+        } else if (result && result.reason === 'insufficient-balance') {
+          renderDetail('古银币还不够，账本没有扣币。');
+        } else {
+          renderDetail('这次没能保存，古银币没有扣除。请先点上方「重新读取账本」，再确认兑换。', true);
+        }
+      } catch (_) {
+        if (destroyed) return;
+        buying = false;
+        takeSnapshot();
+        syncHeader();
+        renderDetail('这次没能保存，请先点上方「重新读取账本」。账本会核对这件藏品，避免重复扣币。', true);
+      }
+    }
+
+    function showPanel(next, focusSelector) {
+      if (buying && next !== panel) return;
+      panel = next;
+      cottage.dataset.shopPanel = next;
+      cottage.querySelectorAll('[data-shop-panel]').forEach(section => { section.hidden = section.dataset.shopPanel !== next; });
+      el('herbCottageName').textContent = next === 'room' ? '我的巫师房间' : '午夜奇物铺';
+      el('magicShopEyebrow').textContent = next === 'room' ? '旅途中的归处' : '为你的小屋挑一件奇物';
+      if (next === 'room') renderRoom();
+      if (next === 'shop') renderStore();
+      const content = cottage.querySelector('.magic-house-content');
+      if (content) content.scrollTop = 0;
+      if (focusSelector) {
+        const focusTarget = cottage.querySelector(focusSelector);
+        if (focusTarget) focusTarget.focus({ preventScroll: true });
+      }
+    }
+
+    function openDetail(id) {
+      if (!byId.has(String(id))) return;
+      selected = String(id);
+      successful = null;
+      detailNotice = null;
+      renderDetail();
+      showPanel('detail', '#magicShopBackStore');
+    }
+
+    function openRoom() {
+      refresh();
+      showPanel('room', '#magicShopEntry');
+      if (!cottage.open && typeof cottage.showModal === 'function') cottage.showModal();
+    }
+
+    function openShop() {
+      refresh();
+      showPanel('shop', '#magicShopBackRoom');
+      if (!cottage.open && typeof cottage.showModal === 'function') cottage.showModal();
+    }
+
+    function refresh(snapshot) {
+      if (destroyed) return;
+      takeSnapshot(snapshot);
+      syncHeader();
+      renderRoom();
+      renderStore();
+      if (selected && panel === 'detail') renderDetail();
+    }
+
+    function onCancel(event) {
+      if (buying) { event.preventDefault(); return; }
+      if (panel !== 'room') {
+        event.preventDefault();
+        showPanel(panel === 'detail' ? 'shop' : 'room', panel === 'detail' ? '#magicShopBackRoom' : '#magicShopEntry');
+      }
+    }
+
+    tap(el('magicShopEntry'), openShop);
+    tap(el('magicShopBackRoom'), openRoom);
+    tap(el('magicShopBackStore'), () => showPanel('shop', '#magicShopBackRoom'));
+    tap(el('magicShopRetryStorage'), async () => {
+      if (recovering || buying) return;
+      recovering = true;
+      syncHeader();
+      try {
+        const snapshot = await (typeof ledger.retry === 'function' ? ledger.retry() : ledger.ready());
+        if (destroyed) return;
+        recovering = false;
+        takeSnapshot(snapshot);
+        detailNotice = { message: healthy() ? '账本已重新读取。看看余额，再确认是否兑换这件奇物。' : '账本还没有恢复。可以继续探险，稍后再来重新读取。', error: !healthy() };
+        refresh();
+      } catch (_) {
+        if (destroyed) return;
+        recovering = false;
+        syncHeader();
+        el('magicShopStorageCopy').textContent = '账本还没有恢复。可以继续探险，稍后再来重新读取。';
+      }
+    });
+    tap(el('magicCollectionToggle'), () => {
+      openCollection = !openCollection;
+      el('magicCollectionBody').hidden = !openCollection;
+      el('magicCollectionToggle').setAttribute('aria-expanded', String(openCollection));
+    });
+    cottage.querySelectorAll('[data-shop-category]').forEach(button => tap(button, () => {
+      category = button.dataset.shopCategory;
+      renderStore();
+    }));
+    cottage.addEventListener('cancel', onCancel);
+    takeSnapshot();
+    refresh();
+    showPanel('room');
+    if (typeof ledger.subscribe === 'function') unsubscribe = ledger.subscribe(snapshot => refresh(snapshot));
+    Promise.resolve(typeof ledger.ready === 'function' ? ledger.ready() : null).then(snapshot => {
+      if (destroyed) return;
+      ready = true;
+      cottage.dataset.shopReady = 'true';
+      refresh(snapshot);
+    }).catch(() => {
+      if (destroyed) return;
+      ready = true;
+      cottage.dataset.shopReady = 'true';
+      refresh();
+      el('magicShopStoreStatus').textContent = '藏品账本暂时没有打开。你可以继续探险，稍后再来重试。';
+    });
+
+    return {
+      openRoom, openShop, refresh,
+      getPanel: () => panel,
+      destroy() {
+        destroyed = true;
+        animationTimers.forEach(timer => clearTimeout(timer));
+        animationTimers = [];
+        if (typeof unsubscribe === 'function') unsubscribe();
+        cottage.removeEventListener('cancel', onCancel);
+        artBlobUrls.forEach(url => { try { objectUrls.revokeObjectURL(url); } catch (_) {} });
+        artBlobUrls.clear();
+      }
+    };
+  }
+
+  global.HanziMagicShop = Object.freeze({ create });
+})(typeof window !== 'undefined' ? window : globalThis);
+
+</script>
 <script data-source="herbalist-room.js">
 (function () {
   'use strict';
@@ -10318,6 +11667,8 @@ function updateArmorBindings(chains,count,changed) {
     { threshold: 3000, title: '血袍', icon: 'assets/robes/blood.svg' },
   ];
   const WALLET_KEY = 'hanzi-herbalist-wallet-v1';
+  const PENDING_COINS_KEY = 'hanzi-magic-shop-pending-rewards-v1';
+  const PENDING_COINS_PREFIX = PENDING_COINS_KEY + ':';
   const HERB_COLORS = [
     '#a7d971', '#c69cf0', '#f0b758', '#63ccc8', '#ed938a',
     '#78cfa1', '#88a9ee', '#f3d478', '#dc9ecc', '#d9a773',
@@ -10440,7 +11791,7 @@ function updateArmorBindings(chains,count,changed) {
     },
   };
 
-  function create({ document: doc, onTap }) {
+  function create({ document: doc, onTap, rewardEvent }) {
     const body = doc.body;
     const page = doc.querySelector('.topbar');
     if (!page) return {};
@@ -10539,6 +11890,8 @@ function updateArmorBindings(chains,count,changed) {
     info.setAttribute('aria-labelledby', 'herbInfoTitle');
     info.innerHTML = `
       <h2 id="herbInfoTitle"></h2><p id="herbInfoCopy"></p>
+      <p id="herbCoinSaveStatus" class="herb-coin-save-status" role="status" hidden></p>
+      <button type="button" id="herbCoinRetry" class="herb-secondary" hidden>重试保存银币</button>
       <button type="button" id="herbInfoExit" class="herb-primary">好</button>`;
     body.appendChild(info);
 
@@ -10581,6 +11934,13 @@ function updateArmorBindings(chains,count,changed) {
     let autoPlaying = false;
     let writing = true;
     let storage;
+    let shopLedger;
+    let shop;
+    let savingCoins = false;
+    let coinJournalError = false;
+    let walletInfoOpen = false;
+    const pendingCoins = new Map();
+    const settledCoins = new Set();
 
     try {
       storage = doc.defaultView?.localStorage;
@@ -10588,14 +11948,133 @@ function updateArmorBindings(chains,count,changed) {
       if (Number.isSafeInteger(saved) && saved >= 0) coins = saved;
     } catch (_) { /* Preview remains playable. */ }
 
-    function updateCoins(increase) {
-      coins += increase;
-      if (increase) {
-        try { storage?.setItem(WALLET_KEY, String(coins)); }
-        catch (_) { /* Visual rewards stay available for this session. */ }
+    try { shopLedger = doc.defaultView?.HanziMagicShopLedger?.create({ window: doc.defaultView }); }
+    catch (_) { /* Optional room features cannot stop the lesson. */ }
+
+    function readPendingCoins() {
+      if (!storage) throw new Error('storage-unavailable');
+      const valid = entry => entry && typeof entry.id === 'string' && entry.id.length > 0 && entry.id.length <= 500
+        && [PASS_COIN, LEVEL_COIN].includes(entry.amount);
+      const merged = new Map();
+      // Read the initial aggregate format, but write each new event separately.
+      // Two tabs can then never overwrite one another's uncommitted reward.
+      const raw = storage.getItem(PENDING_COINS_KEY);
+      if (raw != null) {
+        const saved = JSON.parse(raw);
+        if (saved?.version !== 1 || !Array.isArray(saved.events) || saved.events.length > 5000
+          || !saved.events.every(valid)) throw new Error('invalid-pending-coins');
+        saved.events.forEach(entry => merged.set(entry.id, entry));
       }
+      const keys = Array.from({ length: storage.length }, (_, index) => storage.key(index))
+        .filter(key => typeof key === 'string' && key.startsWith(PENDING_COINS_PREFIX));
+      if (keys.length > 5000) throw new Error('invalid-pending-coins');
+      keys.forEach(key => {
+        const value = storage.getItem(key);
+        if (value == null) return; // Another tab may have just committed it.
+        const entry = JSON.parse(value);
+        if (entry.version !== 1 || !valid(entry) || key !== PENDING_COINS_PREFIX + encodeURIComponent(entry.id)) {
+          throw new Error('invalid-pending-coins');
+        }
+        merged.set(entry.id, { id: entry.id, amount: entry.amount });
+      });
+      return [...merged.values()];
+    }
+
+    function persistPendingCoins() {
+      try {
+        if (!storage) throw new Error('storage-unavailable');
+        pendingCoins.forEach((amount, id) => {
+          if (!settledCoins.has(id)) storage.setItem(PENDING_COINS_PREFIX + encodeURIComponent(id), JSON.stringify({ version: 1, id, amount }));
+        });
+        settledCoins.forEach(id => storage.removeItem(PENDING_COINS_PREFIX + encodeURIComponent(id)));
+        const legacy = storage.getItem(PENDING_COINS_KEY);
+        if (legacy != null) {
+          const saved = JSON.parse(legacy);
+          if (saved?.version === 1 && Array.isArray(saved.events)
+            && saved.events.every(entry => settledCoins.has(entry.id))) storage.removeItem(PENDING_COINS_KEY);
+        }
+        coinJournalError = false;
+      } catch (_) { coinJournalError = pendingCoins.size > 0; }
+    }
+
+    try { readPendingCoins().forEach(entry => pendingCoins.set(entry.id, entry.amount)); }
+    catch (_) { coinJournalError = true; }
+
+    function renderCoins() {
       get('herbCoins').textContent = String(coins);
       hudWallet.setAttribute('aria-label', '古银币 ' + coins + ' 枚');
+      const snapshot = shopLedger?.snapshot();
+      const failed = Boolean(snapshot?.error);
+      const pending = [...pendingCoins.values()].reduce((total, amount) => total + amount, 0);
+      hudWallet.classList.toggle('herb-coins-unsaved', failed || pending > 0 || coinJournalError);
+      hudWallet.title = failed ? '银币账本暂未保存，点此查看并重试'
+        : coinJournalError ? '待保存的银币记录暂未读取成功，点此重试'
+          : pending ? '有 ' + pending + ' 枚古银币正在保存' : '查看古银币';
+      if (walletInfoOpen && info.open) {
+        get('herbInfoTitle').textContent = '古银币 · ' + coins + ' 枚';
+        const status = get('herbCoinSaveStatus');
+        status.hidden = !failed && !pending && !coinJournalError;
+        status.textContent = failed ? '银币暂未保存成功。学习可以继续，点下面的按钮重试。'
+          : pending ? '还有 ' + pending + ' 枚古银币' + (coinJournalError ? '暂未保存，请保留此页面并点重试。' : '正在保存。')
+            : coinJournalError ? '银币待保存记录暂不可读，请保留此页面再重试。' : '';
+        get('herbCoinRetry').hidden = !failed && !pending && !coinJournalError;
+        get('herbCoinRetry').disabled = savingCoins;
+      }
+    }
+
+    async function savePendingCoins(retry = false) {
+      if (!shopLedger || savingCoins) return;
+      savingCoins = true;
+      renderCoins();
+      try {
+        try {
+          readPendingCoins().forEach(entry => { if (!settledCoins.has(entry.id)) pendingCoins.set(entry.id, entry.amount); });
+          coinJournalError = false;
+        } catch (_) { coinJournalError = true; }
+        if (retry) await shopLedger.retry?.();
+        await shopLedger.ready();
+        coins = shopLedger.snapshot().balance;
+        for (const [id, amount] of pendingCoins) {
+          const result = await shopLedger.credit(amount, id);
+          if (!result.ok) break;
+          settledCoins.add(id);
+          pendingCoins.delete(id);
+          coins = result.snapshot.balance;
+          persistPendingCoins();
+        }
+      } catch (_) { /* The uncommitted reward stays queued for a safe retry. */ }
+      finally { savingCoins = false; renderCoins(); }
+    }
+
+    function updateCoins(increase, eventId) {
+      if (!shopLedger) {
+        coins += increase;
+        if (increase) {
+          try { storage?.setItem(WALLET_KEY, String(coins)); }
+          catch (_) { /* The lesson remains independent of the optional shop. */ }
+        }
+      } else if (increase) {
+        const id = eventId || 'local:' + Date.now().toString(36) + ':' + Math.random().toString(36).slice(2);
+        if (!settledCoins.has(id)) pendingCoins.set(id, increase);
+        persistPendingCoins();
+        void savePendingCoins();
+      }
+      renderCoins();
+    }
+
+    shopLedger?.subscribe(snapshot => { coins = snapshot.balance; renderCoins(); });
+    if (shopLedger) {
+      shopLedger.ready().then(snapshot => { coins = snapshot.balance; renderCoins(); void savePendingCoins(); }).catch(() => {});
+      doc.defaultView?.addEventListener?.('focus', () => { void savePendingCoins(true); });
+      doc.defaultView?.addEventListener?.('storage', event => {
+        if (event.key !== PENDING_COINS_KEY && !event.key?.startsWith(PENDING_COINS_PREFIX)) return;
+        try { readPendingCoins().forEach(entry => { if (!settledCoins.has(entry.id)) pendingCoins.set(entry.id, entry.amount); }); }
+        catch (_) { coinJournalError = true; }
+        void savePendingCoins();
+      });
+      doc.addEventListener?.('visibilitychange', () => {
+        if (!doc.hidden) void savePendingCoins(true);
+      });
     }
 
     function rank() {
@@ -10710,6 +12189,9 @@ function updateArmorBindings(chains,count,changed) {
     }
 
     function showInfo(title, message) {
+      walletInfoOpen = false;
+      get('herbCoinSaveStatus').hidden = true;
+      get('herbCoinRetry').hidden = true;
       get('herbInfoTitle').textContent = title;
       get('herbInfoCopy').textContent = message;
       if (!info.open) info.showModal();
@@ -10867,12 +12349,23 @@ function updateArmorBindings(chains,count,changed) {
       transition(demoStage.value, 'demo', false);
     });
     setupButton('herbHome', () => {
+      if (!shop && shopLedger) {
+        try {
+          shop = doc.defaultView?.HanziMagicShop?.create({ document: doc, onTap, cottage,
+            ledger: shopLedger, catalog: doc.defaultView?.HanziMagicShopCatalog });
+        } catch (_) { /* Keep the original room and its exit usable. */ }
+      }
+      shop?.openRoom?.();
       if (!cottage.open) cottage.showModal();
     });
     setupButton('herbCottageExit', () => cottage.close());
     setupButton('herbInfoExit', () => info.close());
-    setupButton('herbWallet', () => showInfo('古银币 · ' + coins + ' 枚',
-      '每正式通过一个字得 1 枚，每完成一关再得 5 枚。'));
+    setupButton('herbWallet', () => {
+      showInfo('古银币 · ' + coins + ' 枚', '每正式通过一个字得 1 枚，每完成一关再得 5 枚。可以在巫师房间的午夜奇物铺兑换藏品。');
+      walletInfoOpen = true;
+      renderCoins();
+    });
+    setupButton('herbCoinRetry', () => { void savePendingCoins(true); });
     setupButton('herbRank', () => {
       const next = RANKS.find(entry => entry.threshold > mastered);
       showInfo(rank().title, '已掌握 ' + mastered + ' 个字。' + (next
@@ -10893,7 +12386,7 @@ function updateArmorBindings(chains,count,changed) {
     function pass(count, masteredCount) {
       updateMastered(masteredCount);
       actualFill = count;
-      updateCoins(PASS_COIN);
+      updateCoins(PASS_COIN, rewardEvent?.('pass', count));
       if (mode === 'playing') renderProgress(actualFill, true);
     }
 
@@ -10902,7 +12395,7 @@ function updateArmorBindings(chains,count,changed) {
       actualFill = count;
       const actualFinished = !bankEmpty && count >= ROOM_SIZE;
       get('restartBtn').textContent = actualFinished ? STAGES[stage].next : '继续练这一关';
-      if (actualFinished && newlyAwarded) updateCoins(LEVEL_COIN);
+      if (actualFinished && newlyAwarded) updateCoins(LEVEL_COIN, rewardEvent?.('complete', count));
       if (mode === 'playing' || mode === 'intro') renderProgress(actualFill);
     }
 
@@ -10927,7 +12420,8 @@ function updateArmorBindings(chains,count,changed) {
     updateCoins(0);
     restoreStage('herbs', 0, false);
     body.classList.add('has-herbalist');
-    return { showWriting, arrive, pass, finale, nextLevel, restoreStage, updateMastered, finishEnding, surface };
+    return { showWriting, arrive, pass, finale, nextLevel, restoreStage, updateMastered, finishEnding, surface,
+      shopLedger, get shop() { return shop; }, retryCoins: () => savePendingCoins(true) };
   }
 
   window.HanziStoryStages = STAGES;
@@ -10999,7 +12493,7 @@ function defaultBank(){
 // set — the change would reach nobody who actually uses the game.
 const BANK_VERSION = 5;
 const ROUND_GOAL = 10;
-const GAME_VERSION = '2026.11.24.2';
+const GAME_VERSION = '2026.11.24.3';
 
 let state = {
   bank: defaultBank(),
@@ -14386,7 +15880,9 @@ let herbalistRoom = null;
 const HERBALIST_STAGES = window.HanziStoryStages || {};
 function initHerbalistRoom(){
   try{
-    herbalistRoom = window.HanziHerbalist?.create({document, onTap}) || null;
+    herbalistRoom = window.HanziHerbalist?.create({document, onTap,
+      rewardEvent: (kind, count) => 'round:' + syncSessionSnapshot().roundId + ':' + kind + ':' + count,
+    }) || null;
     if(herbalistRoom) document.body.classList.add('has-herbalist');
   }catch(_){ herbalistRoom = null; }
 }

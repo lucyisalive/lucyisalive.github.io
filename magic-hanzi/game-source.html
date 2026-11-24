@@ -2,7 +2,7 @@
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
-<meta name="game-version" content="2026.11.24.2">
+<meta name="game-version" content="2026.11.24.3">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>魔法闯关汉字游戏</title>
 <link rel="stylesheet" href="game-feedback.css?v=2026.11.02.4">
@@ -484,6 +484,7 @@
 <link rel="stylesheet" href="dune-story.css">
 <link rel="stylesheet" href="library-story.css">
 <link rel="stylesheet" href="ice-armor-story.css">
+<link rel="stylesheet" href="magic-shop.css">
 </head>
 <body>
 <div class="startup-notice" id="startupNotice" role="status">正在准备汉字，马上就能开始…</div>
@@ -771,6 +772,9 @@
 <script src="dune-story.js"></script>
 <script src="library-story.js"></script>
 <script src="ice-armor-story.js"></script>
+<script src="magic-shop-catalog.js"></script>
+<script src="magic-shop-ledger.js"></script>
+<script src="magic-shop.js"></script>
 <script src="herbalist-room.js"></script>
 <script>
 /* ============================================================
@@ -836,7 +840,7 @@ function defaultBank(){
 // set — the change would reach nobody who actually uses the game.
 const BANK_VERSION = 5;
 const ROUND_GOAL = 10;
-const GAME_VERSION = '2026.11.24.2';
+const GAME_VERSION = '2026.11.24.3';
 
 let state = {
   bank: defaultBank(),
@@ -4223,7 +4227,9 @@ let herbalistRoom = null;
 const HERBALIST_STAGES = window.HanziStoryStages || {};
 function initHerbalistRoom(){
   try{
-    herbalistRoom = window.HanziHerbalist?.create({document, onTap}) || null;
+    herbalistRoom = window.HanziHerbalist?.create({document, onTap,
+      rewardEvent: (kind, count) => 'round:' + syncSessionSnapshot().roundId + ':' + kind + ':' + count,
+    }) || null;
     if(herbalistRoom) document.body.classList.add('has-herbalist');
   }catch(_){ herbalistRoom = null; }
 }
