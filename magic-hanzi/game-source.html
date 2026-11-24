@@ -2,7 +2,7 @@
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
-<meta name="game-version" content="2026.11.23.1">
+<meta name="game-version" content="2026.11.23.2">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>魔法闯关汉字游戏</title>
 <link rel="stylesheet" href="game-feedback.css?v=2026.11.02.4">
@@ -736,7 +736,7 @@
         </details>
       </div>
     </section>
-    <p class="hint-text" id="gameVersion">版本 2026.11.23.1</p>
+    <p class="hint-text" id="gameVersion">版本 2026.11.23.2</p>
   </div>
 </div>
 
@@ -829,7 +829,7 @@ function defaultBank(){
 // set — the change would reach nobody who actually uses the game.
 const BANK_VERSION = 5;
 const ROUND_GOAL = 10;
-const GAME_VERSION = '2026.11.23.1';
+const GAME_VERSION = '2026.11.23.2';
 
 let state = {
   bank: defaultBank(),
@@ -2346,11 +2346,28 @@ function matchComponent(officialStrokes, userStrokesIn, label, charDiag, diag, s
           const qDot=clamp01(1-Math.max(0,qq.posDist-0.15)/0.5)*clamp01(1-Math.max(0,markFraction-0.35)/0.25);
           qq={...qq,q:qDot,qPair:qDot};
         }
-        // The reviewed 米 point can be a short dash in a complete six-mark region.
-        // It must stay short and nearest its own reference location. The other
-        // five marks, including the short 撇, keep all original shape checks.
+        // In a complete 木, its final right-side point can be written as a
+        // longer down-right sweep. Keep the original direction and shape tests;
+        // only compare length at the reference size, in the same local position.
+        // This option belongs to the left 木 inside 麻, not to arbitrary dots.
+        if(strictMerges && options.woodSweep && k===4 && users.length===4 &&
+          o.label==='3' && !o.merged && !u.id.includes('+')){
+          const length=strokeLength(u.pts),referenceLength=strokeLength(o.pts);
+          const first=u.pts[0],last=u.pts.at(-1);
+          const [top,bottom]=first.y<last.y?[first,last]:[last,first];
+          if(length>referenceLength && qq.posDist<.25 && bottom.x>top.x &&
+            bottom.y>top.y && ptDist(top,bottom)>length*.7){
+            const mid=centroidOf(resample(u.pts,16)),scale=referenceLength/length;
+            const sameSize=u.pts.map(point=>({x:mid.x+(point.x-mid.x)*scale,y:mid.y+(point.y-mid.y)*scale}));
+            const sweep=strokeQuality(sameSize,o.pts,compDiag,false);
+            if(sweep.q>qq.q)qq={...sweep,lenRatio:qq.lenRatio,posDist:qq.posDist};
+          }
+        }
+        // Explicit point roles may be short dashes in a complete region. Each
+        // stays short and nearest its own reference slot. Long stems and the
+        // other strokes retain all original shape, direction, and hook checks.
         const pointRoles=options.semanticDots;
-        if(strictMerges && pointRoles && k===6 && users.length===6 && !o.merged && !u.id.includes('+') && pointRoles.includes(Number(o.label))){
+        if(strictMerges && pointRoles && k>=3 && users.length===k && !o.merged && !u.id.includes('+') && pointRoles.includes(Number(o.label))){
           const here=centroidOf(resample(u.pts,16));
           const own=centroidOf(resample(o.pts,16));
           const owned=officialStrokes.every((reference,index)=>index===Number(o.label)||ptDist(here,own)<ptDist(here,centroidOf(resample(reference,16))));
@@ -2478,8 +2495,9 @@ const regionLeaf = (name, start, end) => ({
 });
 const regionSplit = (axis, a, b) => ({ axis, a, b });
 const RECURSIVE_REGION_TREES = {
-  // 米's first mark is a point. Its second, short 撇 retains shape/direction tests.
-  '类': regionSplit('y', {...regionLeaf('米', 0, 6), semanticDots:[0]}, regionLeaf('大', 6, 9)),
+  // The two separate short marks at the top of 米 may be point-like. The long
+  // central strokes and two lower branches still have to explain themselves.
+  '类': regionSplit('y', {...regionLeaf('米', 0, 6), semanticDots:[0,1]}, regionLeaf('大', 6, 9)),
   // These three additions reuse existing geometry; no extra glyph file is needed.
   '历': {...regionSplit('y',regionLeaf('厂横',0,1),regionSplit('x',regionLeaf('厂撇',1,2),regionLeaf('力',2,4))), recoverPenLifts:true},
   '收': regionSplit('x',regionLeaf('丩',0,2),regionLeaf('攵',2,6)),
@@ -2503,6 +2521,18 @@ const RECURSIVE_REGION_TREES = {
 };
 // Keep the older, extensively tuned merge checks for all other characters.
 const STRICT_MERGE_CHARACTERS = new Set(['慧', '警', '藏', '器', '燃', '澡', '霎', '薄']);
+
+// Extra structural explanations for reviewed handwriting. Try these only after
+// the established matcher fails, so this does not reject an existing valid form.
+// Strokes stay within their spatial components; each component preserves angles.
+const APPROVED_REGION_RESCUES = {
+  '耸': regionSplit('y',regionSplit('x',regionLeaf('左人',0,2),regionLeaf('右人',2,4)),regionLeaf('耳',4,10)),
+  '念': {...regionSplit('y',regionLeaf('今',0,4),regionLeaf('心',4,8)),recoverPenLifts:true},
+  '麻': regionSplit('x',regionLeaf('广撇',2,3),regionSplit('y',regionLeaf('广头',0,2),
+    regionSplit('x',{...regionLeaf('左木',3,7),woodSweep:true},regionLeaf('右木',7,11)))),
+  '悄': regionSplit('x',regionLeaf('忄',0,3),
+    regionSplit('y',{...regionLeaf('肖头',3,6),semanticDots:[1,2]},regionLeaf('月',6,10))),
+};
 
 function recursiveRegionGrade(tree, officialAll, user, charDiag) {
   const cache = new Map(), nodeKeys = new Map(), countCache = new Map();
@@ -2529,11 +2559,18 @@ function recursiveRegionGrade(tree, officialAll, user, charDiag) {
         // Uniform scaling preserves angles. Uneven proportions between regions
         // are allowed; stretching a wrong stroke into another kind is not.
         const aligned = alignClusterUniform(cluster, bboxOf(reference));
-        const result = matchComponent(reference, aligned, node.name, charDiag, diag, true, !!tree.recoverPenLifts, {semanticDots:node.semanticDots});
+        const result = matchComponent(reference, aligned, node.name, charDiag, diag, true, !!tree.recoverPenLifts,
+          {semanticDots:node.semanticDots,woodSweep:node.woodSweep});
         if (result.rows.length) {
           const bad = result.rows.filter(row => row.c.veto || row.c.q < Q_FLOOR).length;
           const sum = result.rows.reduce((total, row) => total + row.c.q, 0);
-          answer = { rows: result.rows, diag, bad, sum, rank: bad * 100 + result.rows.length - sum };
+          // Expose full-character roles to later structure confirmations. Local
+          // component u0/official#0 must not be mistaken for the first stroke of
+          // the whole character, including when a genuine pen lift was joined.
+          const rows=result.rows.map(row=>({...row,
+            u:row.u.split('+').map(id=>'u'+ids[Number(id.slice(1))]).join('+'),
+            o:row.o.split('..').map(index=>node.indices[Number(index)]).join('..')}));
+          answer = { rows, diag, bad, sum, rank: bad * 100 + result.rows.length - sum };
         }
       }
     } else {
@@ -2577,7 +2614,7 @@ function recursiveRegionGrade(tree, officialAll, user, charDiag) {
   const mean = result.sum / result.rows.length;
   const pass = result.bad === 0 && mean >= Q_BAR;
   result.diag.push('recursive regions ' + (pass ? 'PASS' : 'FAIL') + ' avgQ=' + mean.toFixed(2) + ' bad=' + result.bad);
-  return { pass, diag: result.diag };
+  return { pass, rows:result.rows, diag: result.diag };
 }
 
 
@@ -2913,6 +2950,50 @@ function borrowedComponentStroke(char, rows, user){
   return borrowed.length>=2 && !hasVerticalStem(user,box,'right',.28,.67,.51);
 }
 
+// A whole-character match may explain one component with its neighbour's ink.
+// The reviewed errors in 确 and 鼓 require a second, spatially separate
+// explanation. This is an AND check of an already passing grade, never a rescue.
+function confirmReviewedStructure(char, official, user, charDiag, rows){
+  const roles={确:{left:5,right:7,names:['石','角']},鼓:{left:9,right:4,names:['壴','支']}}[char];
+  if(roles && official.length===roles.left+roles.right){
+    const tree={...regionSplit('x',
+      regionLeaf(roles.names[0],0,roles.left),
+      regionLeaf(roles.names[1],roles.left,official.length)),recoverPenLifts:true};
+    const confirmation=recursiveRegionGrade(tree,official,user,charDiag);
+    return {pass:confirmation.pass,diag:[...confirmation.diag,
+      char+' independently bounded components '+(confirmation.pass?'confirmed':'failed')]};
+  }
+  if(char!=='悄' || official.length!==10 || !Array.isArray(rows))return null;
+
+  // These two bars belong inside 肖's lower 月. Shape/length similarity alone
+  // cannot distinguish an interior bar from one written below the frame.
+  // Resolve already verified roles, preserving original coordinates and actual
+  // pen lifts. Ambiguous merged roles remain with the ordinary merge checks.
+  const pointsForRole=role=>{
+    const matches=rows.filter(row=>row.o===String(role));
+    if(matches.length!==1 || !/^u\d+(?:\+u\d+)*$/.test(matches[0].u))return null;
+    const ids=matches[0].u.split('+').map(id=>Number(id.slice(1)));
+    if(ids.some(id=>!user[id]))return null;
+    return ids.flatMap(id=>user[id]);
+  };
+  const left=pointsForRole(6), fold=pointsForRole(7);
+  const bars=[pointsForRole(8),pointsForRole(9)];
+  if(!left || !fold || bars.some(stroke=>!stroke))return null;
+  const leftBox=bboxOf([left]),foldBox=bboxOf([fold]);
+  const top=Math.max(leftBox.minY,foldBox.minY);
+  const bottom=Math.min(leftBox.maxY,foldBox.maxY);
+  const height=bottom-top;
+  if(height<=charDiag*.06)return null;
+  // Small endpoint/hook differences are penmanship. A whole horizontal tier
+  // below either side of the frame is a different structural relationship.
+  const margin=height*.06;
+  const outside=bars.some(stroke=>{
+    const center=centroidOf(resample(stroke,24));
+    return center.y<top-margin || center.y>bottom+margin;
+  });
+  return {pass:!outside,diag:['悄 interior 月 bars '+(outside?'outside frame':'confirmed')]};
+}
+
 function retainShortDots(drawn, retained, official, inkDiag){
   if(!retained.size || retained.size>=official.length || retained.size===drawn.length)return;
   const userBox=bboxOf([...retained]), refBox=bboxOf(official);
@@ -3166,15 +3247,19 @@ async function gradeDrawing(char, reportHint){
     if(rescued)result=rescued;
   }
 
+  if(!result.pass && APPROVED_REGION_RESCUES[char]){
+    const rescued=recursiveRegionGrade(APPROVED_REGION_RESCUES[char],officialAll,user,charDiag);
+    if(rescued.pass){result=rescued;flipNote+=' (validated component proportions)';}
+  }
+
   if(result.pass && !parts && ((char==='侧' && officialAll.length===8) || (char==='舒' && officialAll.length===12))
      && borrowedComponentStroke(char,result.rows,user)){
     result={...result,pass:false,diag:[...result.diag,'component stem confirmation failed']};
   }
-  if(result.pass && char==='确' && officialAll.length===12 && borrowedComponentStroke(char,result.rows,user)){
-    const tree={...regionSplit('x',regionLeaf('石',0,5),regionLeaf('角',5,12)),recoverPenLifts:true};
-    const confirmation=recursiveRegionGrade(tree,officialAll,user,charDiag);
-    if(!confirmation.pass){
-      result={...result,pass:false,diag:[...result.diag,...confirmation.diag,'确 component confirmation failed']};
+  if(result.pass){
+    const confirmation=confirmReviewedStructure(char,officialAll,user,charDiag,result.rows);
+    if(confirmation){
+      result={...result,pass:confirmation.pass,diag:[...result.diag,...confirmation.diag]};
     }
   }
 
