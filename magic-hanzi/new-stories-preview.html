@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>魔法闯关汉字游戏 · 四关画面预览</title>
+  <link rel="stylesheet" href="dune-story.css">
+  <link rel="stylesheet" href="library-story.css">
+  <link rel="stylesheet" href="ice-armor-story.css">
+  <link rel="stylesheet" href="new-stories-preview.css">
+</head>
+<body>
+  <aside class="preview-panel" aria-label="画面预览控制">
+    <p class="preview-label">魔法闯关汉字游戏 · 画面预览</p>
+    <nav class="preview-scenes" aria-label="选择关卡">
+      <button type="button" data-stage="dunes" aria-pressed="true">沙丘寻龙</button>
+      <button type="button" data-stage="library" aria-pressed="false">高塔禁书</button>
+      <button type="button" data-stage="ice" aria-pressed="false">冰雪庭院</button>
+      <button type="button" data-stage="armor" aria-pressed="false">沉睡的盔甲</button>
+    </nav>
+    <div class="preview-story">
+      <h1 id="previewTitle">沙丘寻龙</h1>
+      <p id="previewDescription"></p>
+    </div>
+    <div class="preview-progress">
+      <span id="previewCount">0 / 10 个脚印</span>
+      <div id="previewBeads" aria-hidden="true"></div>
+    </div>
+    <p class="preview-status" id="previewStatus" role="status" aria-live="polite"></p>
+    <div class="preview-actions">
+      <button type="button" class="preview-primary" id="previewStep">通过一个字</button>
+      <button type="button" class="preview-secondary" id="previewAuto">播放整关</button>
+      <button type="button" class="preview-primary" id="previewEnding" hidden></button>
+      <button type="button" class="preview-reset" id="previewReset">重看本关</button>
+    </div>
+  </aside>
+  <script src="dune-sand.js"></script>
+  <script src="dune-story.js"></script>
+  <script src="library-story.js"></script>
+  <script src="ice-armor-story.js"></script>
+  <script src="new-stories-preview.js"></script>
+</body>
+</html>

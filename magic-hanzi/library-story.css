@@ -1,0 +1,286 @@
+.story-library {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  isolation: isolate;
+  overflow: hidden;
+  pointer-events: none;
+  background: #0b100c;
+}
+.story-library[hidden] { display: none !important; }
+.story-library:not([hidden]) { display: block; }
+.library-frame {
+  position: absolute;
+  inset: 0;
+  width: min(100%, 88dvh, 1000px);
+  margin-inline: auto;
+  overflow: hidden;
+  background: #171611;
+  box-shadow: 0 0 95px 30px #0b0b09;
+}
+.library-frame::after {
+  content: '';
+  position: absolute;
+  z-index: 9;
+  inset: 0;
+  background: linear-gradient(#080d0f96, transparent 23% 78%, #090d0abd);
+}
+.library-world {
+  position: absolute;
+  width: max(100%, 75dvh);
+  aspect-ratio: 3 / 4;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  transform-origin: 67% 27%;
+}
+.library-art {
+  position: absolute;
+  inset: 0;
+  background: url("assets/story/forbidden-library-v2.webp") center / 100% 100% no-repeat,
+    radial-gradient(ellipse at 67% 24%, #535039, #272b22 52%, #111811 85%);
+}
+.library-steps { position: absolute; inset: 0; z-index: 4; }
+.library-step {
+  position: absolute;
+  left: var(--step-x);
+  top: var(--step-y);
+  width: var(--step-size);
+  aspect-ratio: 3 / 2;
+  z-index: calc(11 - var(--step-i));
+  opacity: 0;
+  transform: translate(-50%, -50%);
+  transition: opacity .25s ease;
+}
+.library-step.is-visible { opacity: 1; }
+.library-step-tome {
+  position: absolute;
+  inset: 0;
+  background: url("assets/story/book-step-plain-v2.webp") center / contain no-repeat;
+  filter: drop-shadow(0 7px 5px #020703ad);
+}
+.library-step:nth-child(3n + 2) .library-step-tome { filter: brightness(.96) drop-shadow(0 7px 5px #020703ad); }
+.library-step:nth-child(3n + 3) .library-step-tome { filter: brightness(.89) drop-shadow(0 7px 5px #020703ad); }
+.library-step-shadow {
+  position: absolute;
+  left: 6%;
+  right: 4%;
+  top: 71%;
+  height: 22%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, #000b, transparent 72%);
+  filter: blur(6px);
+}
+.library-step.is-arriving { animation: library-book-arrive .85s cubic-bezier(.17, .65, .24, 1) both; }
+@keyframes library-book-arrive {
+  0% { opacity: 0; transform: translate(-300%, -135%) rotate(-28deg) scale(.72); }
+  25% { opacity: 1; }
+  72% { transform: translate(-50%, -57%) rotate(2deg) scale(1.02); }
+  100% { transform: translate(-50%, -50%) rotate(0) scale(1); }
+}
+.library-forbidden-book {
+  position: absolute;
+  z-index: 5;
+  left: 67%;
+  top: 15%;
+  width: 12%;
+  height: 12%;
+  background: url("assets/story/forbidden-book.webp") center bottom / contain no-repeat;
+  transform: translateX(-50%) rotate(-2deg);
+  transform-origin: center bottom;
+  filter: drop-shadow(0 5px 3px #050904af);
+  animation: library-book-tremble 3.5s ease-in-out infinite;
+}
+@keyframes library-book-tremble {
+  0%, 74%, 100% { transform: translateX(-50%) rotate(-2deg); }
+  80% { transform: translateX(-51%) rotate(-3deg); }
+  86% { transform: translateX(-49%) rotate(0); }
+  92% { transform: translateX(-50%) rotate(-2deg); }
+}
+.library-seal {
+  position: absolute;
+  z-index: 6;
+  left: 67%;
+  top: 12.5%;
+  width: 20%;
+  height: 17%;
+  transform: translateX(-50%);
+  border: 2px solid #65d994c9;
+  box-shadow: 0 0 6px #59de8d9e, inset 0 0 9px #46c27b47, 0 0 21px #3dc47444;
+  background: linear-gradient(110deg, #5ee7910a, transparent 50%, #4fdb910b);
+  transition: opacity 1s ease, transform 1s ease;
+}
+.library-seal::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translate(13%, -8%);
+  border: 1px solid #58cc8b85;
+  box-shadow: 0 0 7px #4edb8577;
+}
+.library-seal > i {
+  position: absolute;
+  width: 18%;
+  height: 1px;
+  transform: rotate(-28deg);
+  transform-origin: left center;
+  background: #89e9aabf;
+  box-shadow: 0 0 5px #50e485;
+}
+.library-seal > i:nth-child(1) { top: 0; left: 0; }
+.library-seal > i:nth-child(2) { top: 0; left: 100%; }
+.library-seal > i:nth-child(3) { top: 100%; left: 0; }
+.library-seal > i:nth-child(4) { top: 100%; left: 100%; }
+.library-seal > b {
+  position: absolute;
+  inset: 14% 9%;
+  border: 1px solid #77e9a44a;
+  background: repeating-linear-gradient(0deg, transparent 0 19%, #74d9a01c 19.5% 20%);
+  animation: library-seal-breathe 3s ease-in-out infinite alternate;
+}
+@keyframes library-seal-breathe {
+  to { opacity: .35; filter: brightness(1.3); }
+}
+.library-shelf-glow {
+  position: absolute;
+  z-index: 2;
+  top: 15%;
+  left: 47%;
+  width: 40%;
+  height: 26%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, #4dda713d, transparent 68%);
+  filter: blur(10px);
+  transition: opacity 1s ease;
+}
+.library-ready .library-seal { opacity: 0; transform: translateX(-50%) scale(1.35); }
+.library-ready .library-forbidden-book { animation: none; transform: translateX(-50%); }
+.library-ready .library-shelf-glow { opacity: .25; }
+.library-reading-book {
+  position: absolute;
+  z-index: 12;
+  top: 64%;
+  left: 50%;
+  width: 68%;
+  aspect-ratio: 12 / 7;
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(.4);
+  perspective: 700px;
+  filter: drop-shadow(0 12px 12px #020503bd);
+}
+.library-reading-cover {
+  position: absolute;
+  top: 10%;
+  left: 25%;
+  width: 50%;
+  height: 84%;
+  background: url("assets/story/forbidden-book.webp") center / contain no-repeat;
+  transform: rotateX(28deg);
+  transform-origin: left center;
+}
+.library-reading-pages { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; }
+.library-page-edge { fill: #604526; stroke: #d7bc80; stroke-width: 3; }
+.library-page-left { fill: url(#libraryPaperLeft); stroke: #ac9364; stroke-width: 1.5; }
+.library-page-right { fill: url(#libraryPaperRight); stroke: #ac9364; stroke-width: 1.5; }
+.library-page-gutter { fill: none; stroke: #705232; stroke-width: 4; opacity: .7; }
+.library-page-ornament { fill: none; stroke: #6b613b; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.library-rising-runes { position: absolute; z-index: 13; inset: 29% 27% 17%; opacity: 0; }
+.library-rising-runes > svg {
+  position: absolute;
+  bottom: 3%;
+  left: calc(7% + var(--rune-i) * 16%);
+  width: 8%;
+  height: 12%;
+  fill: none;
+  stroke: #a7f6bf;
+  stroke-width: 1.3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 4px #59e69c);
+}
+.library-ghost-mist { position: absolute; z-index: 10; top: 48%; left: 15%; width: 70%; height: 37%; opacity: 0; }
+.library-ghost-mist i {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, #a4cfaf6b, #6b987d26 35%, transparent 69%);
+  filter: blur(12px);
+  animation: library-mist 4s ease-in-out infinite alternate;
+}
+.library-ghost-mist i:nth-child(2) { left: -20%; animation-delay: -1s; }
+.library-ghost-mist i:nth-child(3) { left: 20%; animation-delay: -2.4s; }
+@keyframes library-mist { to { transform: translate(8%, -20%) scale(1.1, .8); opacity: .4; } }
+.library-ghost-knight {
+  position: absolute;
+  z-index: 11;
+  top: 21%;
+  left: 50%;
+  width: 43%;
+  height: 57%;
+  opacity: 0;
+  background: url("assets/story/ghost-knight.webp") center bottom / contain no-repeat;
+  transform: translate(-50%, 20%) scale(.8);
+  filter: drop-shadow(0 0 13px #9ce1b264);
+  transform-origin: center bottom;
+}
+.library-motes { position: absolute; z-index: 7; inset: 12% 0 21%; overflow: hidden; }
+.library-motes > i {
+  position: absolute;
+  left: var(--mote-x);
+  top: 63%;
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background: #e2d5ab;
+  box-shadow: 0 0 5px #d3ae6a;
+  opacity: 0;
+  animation: library-mote calc(5s + var(--mote-i) * .2s) linear calc(var(--mote-i) * -.7s) infinite;
+}
+@keyframes library-mote {
+  10% { opacity: .4; }
+  80% { opacity: .3; }
+  100% { transform: translate(-15px, -160px); opacity: 0; }
+}
+.library-exiting .library-world { animation: library-ascend 6s cubic-bezier(.4, 0, .3, 1) both; }
+.library-exiting .library-forbidden-book { animation: library-take-book 6s ease-in-out both; }
+.library-exiting .library-reading-book { animation: library-present-book 6s ease-in-out both; }
+.library-exiting .library-reading-cover { animation: library-open-cover 6s ease-in-out both; }
+.library-exiting .library-reading-pages { animation: library-open-pages 6s ease-in-out both; }
+.library-exiting .library-rising-runes { animation: library-spell-appear 6s ease-in-out both; }
+.library-exiting .library-rising-runes > svg { animation: library-rune-rise 2.4s ease-out calc(3.15s + var(--rune-i) * .1s) both; }
+.library-exiting .library-ghost-mist { animation: library-mist-appear 6s ease-in-out both; }
+.library-exiting .library-ghost-knight { animation: library-knight-awaken 6s ease-in-out both; }
+@keyframes library-ascend {
+  0% { transform: translate(-50%, -50%) scale(1); filter: brightness(1); }
+  15% { transform: translate(-53%, -42%) scale(1.2); }
+  34% { transform: translate(-57%, -31%) scale(1.75); filter: brightness(1); }
+  45%, 100% { transform: translate(-57%, -31%) scale(1.75); filter: brightness(.55); }
+}
+@keyframes library-take-book { 0%, 31% { opacity: 1; } 42%, 100% { opacity: 0; } }
+@keyframes library-present-book {
+  0%, 30% { opacity: 0; transform: translate(-50%, 5%) scale(.4) rotateX(35deg); }
+  40% { opacity: 1; transform: translate(-50%, -50%) scale(.8) rotateX(18deg); }
+  54%, 77% { opacity: 1; transform: translate(-50%, -50%) scale(1) rotateX(12deg); }
+  100% { opacity: .86; transform: translate(-50%, -43%) scale(.93) rotateX(12deg); }
+}
+@keyframes library-open-cover { 0%, 40% { opacity: 1; transform: rotateY(0); } 56%, 100% { opacity: 0; transform: rotateY(-155deg); } }
+@keyframes library-open-pages { 0%, 44% { opacity: 0; transform: scaleX(.3); } 56%, 100% { opacity: 1; transform: scaleX(1); } }
+@keyframes library-spell-appear { 0%, 53% { opacity: 0; } 59%, 82% { opacity: 1; } 100% { opacity: .2; } }
+@keyframes library-rune-rise { 0% { opacity: 0; transform: translateY(15px) scale(.7); } 20% { opacity: 1; } 100% { opacity: 0; transform: translateY(-220px) scale(1.25); } }
+@keyframes library-mist-appear { 0%, 65% { opacity: 0; } 82%, 100% { opacity: 1; } }
+@keyframes library-knight-awaken {
+  0%, 68% { opacity: 0; transform: translate(-50%, 20%) scale(.8); }
+  91% { opacity: .9; transform: translate(-50%, 0) scale(1); }
+  97% { opacity: .94; transform: translate(-50%, 1%) scale(1) rotate(-2deg); }
+  100% { opacity: .94; transform: translate(-50%, 0) scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .story-library *, .story-library *::before, .story-library *::after {
+    animation-duration: .001ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+    transition-delay: 0ms !important;
+  }
+  .library-ready .library-seal { opacity: 0; }
+}

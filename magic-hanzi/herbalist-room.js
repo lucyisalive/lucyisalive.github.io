@@ -81,13 +81,57 @@
     },
     sea: {
       number: '第七关', title: '水底人鱼', unit: '个音符',
-      intro: '门后的石阶没入水中。水底飘着十个音符。',
-      task: '每通过一个字，就点亮并奏响一个音。把十个音连起来，人鱼会循声而来。',
+      intro: '门后的石阶没入水中。四周只有幽蓝的水光。',
+      task: '每通过一个字，就出现并奏响一个音符。十个音连成曲子，人鱼会循声而来。',
       start: '奏响水底音符', step: '奏响一个音符', auto: '播放到十音成曲', retry: '重新奏响',
       demoHint: '点亮第一个音符，听它在水底响起来。',
       demoFinished: '人鱼游来了。跟上她，一起浮出海面。',
       reward: '一个水底音符亮了起来。', completion: '十个音符连成了曲子。人鱼循着歌声游来了。',
-      next: '跟人鱼浮出海面', nextStage: 'herbs', interval: 590,
+      next: '跟人鱼浮出海面', nextStage: 'dunes', interval: 590,
+      endingNext: '前往沙丘寻龙', endingDetail: '你和人鱼一起浮出了海面。',
+    },
+    dunes: {
+      number: '第八关', title: '沙丘寻龙', unit: '个脚印',
+      intro: '眼前是一望无际的沙丘，沙面上还没有脚印。',
+      task: '每通过一个字，沙子扬起，露出一个脚印。第十枚脚印会唤起沙丘中的龙。',
+      start: '寻找龙的足迹', step: '留下一枚脚印', auto: '播放到龙出现', retry: '重新寻找脚印',
+      demoHint: '沿着弯曲的足迹，看看沙丘中藏着什么。',
+      demoFinished: '龙掀起沙浪、破沙腾起，落在你面前，伏下身子。',
+      reward: '沙子扬起，留下了一枚新的龙脚印。', completion: '十枚脚印唤醒了沙丘中的龙。它伏下身子，邀请你骑上去。',
+      next: '骑上龙背', nextStage: 'library', interval: 1200, arrival: 5400,
+      endingNext: '前往高塔禁书', endingDetail: '你骑在龙背上，龙颈和双翼就在眼前，沙丘渐渐远去。',
+    },
+    library: {
+      number: '第九关', title: '高塔禁书', unit: '级书阶',
+      intro: '高书架的最顶层，一本禁书被绿色发光的魔咒封住。',
+      task: '每通过一个字，一本普通藏书飞来，搭成一级向上的台阶。',
+      start: '搭起藏书阶梯', step: '搭一级书阶', auto: '播放到书阶搭好', retry: '重新搭书阶',
+      demoHint: '普通藏书搭出阶梯，红金装帧的禁书就在架顶。',
+      demoFinished: '十级书阶搭好了，绿色结界解开。走上去，打开禁书。',
+      reward: '一本厚书落稳，又一级书阶搭好了。', completion: '十级书阶通向架顶，绿色结界解开了。打开禁书，念出咒语。',
+      next: '登上书阶，打开禁书', nextStage: 'ice', interval: 1200, arrival: 900,
+      endingNext: '前往冰雪庭院', endingDetail: '书中的咒语化成绿光，幽灵武士苏醒了。',
+    },
+    ice: {
+      number: '第十关', title: '冰雪庭院', unit: '道裂缝',
+      intro: '冰冻的庭院中央，女神本人被一层贴身的冰壳封住。',
+      task: '每通过一个字，冰上多一道裂缝，再融化一点。',
+      start: '唤醒冰封女神', step: '化开一道裂缝', auto: '播放到女神苏醒', retry: '重新融冰',
+      demoHint: '看女神身上的冰壳沿着裂纹一点点化开。',
+      demoFinished: '最后一层冰化尽，女神醒来，向你伸出了手。',
+      reward: '冰层裂开，融水顺着裂纹流下。', completion: '最后一层冰化尽，女神醒来，向你伸出了手。',
+      next: '牵住女神的手，飞起来', nextStage: 'armor', interval: 1200, arrival: 2200,
+      endingNext: '前往沉睡的盔甲', endingDetail: '你握住女神的手升入夜空，冰雪庭院渐渐落在脚下。',
+    },
+    armor: {
+      number: '第十一关', title: '沉睡的盔甲', unit: '根断链',
+      intro: '古堡里，一副盔甲被十根从墙上伸来的铁链牢牢缠绑。',
+      task: '每通过一个字，绕住身体和四肢的一根铁链就会绷断。',
+      start: '解开盔甲的束缚', step: '断开一根铁链', auto: '播放到铁链全断', retry: '重新解开锁链',
+      demoHint: '锁链绕过肩臂、胸腰和小腿，紧紧绑住盔甲。',
+      demoFinished: '最后一根铁链断开，盔甲向你单膝跪地，胸甲与甲缝发出光芒。',
+      reward: '一根缠着盔甲的铁链绷断，滑落下去。', completion: '十根铁链全部断开，盔甲向你单膝跪地，发出光芒。',
+      next: '回到草药房', nextStage: 'herbs', interval: 1200, arrival: 6500, automaticEnding: true,
     },
   };
 
@@ -128,6 +172,13 @@
     const sky = createVisual(doc.defaultView?.HanziBridgeTrain);
     const deep = createVisual(doc.defaultView?.HanziTombMermaid);
     const visuals = { giant, bridge: sky, train: sky, tomb: deep, sea: deep };
+    // Keep the new artwork off the startup path. Each scene is created only
+    // when first visited; created modules still all receive render to hide it.
+    const additions = [
+      { stages: ['dunes'], name: 'HanziDuneStory' },
+      { stages: ['library'], name: 'HanziLibraryStory' },
+      { stages: ['ice', 'armor'], name: 'HanziIceArmorStory' },
+    ];
 
     const hud = doc.createElement('div');
     hud.className = 'herb-hud';
@@ -220,7 +271,8 @@
     let demoTimer;
     let fadeTimer;
     let activeExit;
-    let seaSurfaced = false;
+    let endingShown = false;
+    let arrivalUntil = 0;
     let autoPlaying = false;
     let writing = true;
     let storage;
@@ -281,8 +333,12 @@
     function renderProgress(value, animate = false) {
       const count = Math.min(ROOM_SIZE, Math.max(0, value));
       if (renderedStage === displayStage && renderedCount === count) return;
+      if (renderedStage !== displayStage || count < ROOM_SIZE) arrivalUntil = 0;
       renderedStage = displayStage;
       renderedCount = count;
+      if (animate && count === ROOM_SIZE && !reducedMotion()) {
+        arrivalUntil = Date.now() + (STAGES[displayStage].arrival || 0);
+      }
       meter.textContent = count + ' / ' + ROOM_SIZE + ' ' + STAGES[displayStage].unit;
       if (displayStage === 'herbs') renderFill(count, animate);
       else {
@@ -292,6 +348,14 @@
         }
         catch (_) { /* The progress display is independent of the animation. */ }
       }
+      additions.forEach(entry => {
+        if (!entry.attempted && entry.stages.includes(displayStage)) {
+          entry.attempted = true;
+          entry.visual = createVisual(doc.defaultView?.[entry.name]);
+        }
+        try { entry.visual?.render(displayStage, count, animate); }
+        catch (_) { /* A missing scene must not interrupt a question or saving. */ }
+      });
     }
 
     function display(next) {
@@ -324,8 +388,8 @@
       demoDrop.classList.toggle('herb-primary', !finished);
       demoDrop.classList.toggle('herb-secondary', finished);
       demoNext.hidden = !finished;
-      demoNext.textContent = displayStage === 'sea' && seaSurfaced ? '从草药房再看一遍' : story.next;
-      demoStatus.textContent = seaSurfaced ? '你和人鱼一起浮出了海面。'
+      demoNext.textContent = endingShown ? story.endingNext : story.next;
+      demoStatus.textContent = endingShown ? story.endingDetail
         : finished ? story.demoFinished : story.demoHint;
     }
 
@@ -358,7 +422,8 @@
     }
 
     function playExit() {
-      activeExit = displayStage === 'stars' ? observatory : visuals[displayStage];
+      activeExit = displayStage === 'stars' ? observatory : visuals[displayStage]
+        || additions.find(entry => entry.stages.includes(displayStage))?.visual;
       try { return activeExit?.playExit(displayStage) || 0; }
       catch (_) { return 0; }
     }
@@ -368,9 +433,9 @@
     }
 
     function transition(nextStage, nextMode, animateExit = true) {
-      const surfaced = seaSurfaced;
-      resetCurtain(surfaced);
-      seaSurfaced = false;
+      const watched = endingShown;
+      resetCurtain(watched);
+      endingShown = false;
       function reveal() {
         display(nextStage);
         resetExit();
@@ -390,19 +455,25 @@
         curtain.classList.add(crossingWall && animateExit ? 'herb-crossing' : 'herb-fade');
         fadeTimer = setTimeout(reveal, crossingWall && animateExit ? 704 : 245);
       }
-      const duration = animateExit && !surfaced ? playExit() : 0;
-      if (duration) fadeTimer = setTimeout(beginFade, duration);
-      else beginFade();
+      function depart() {
+        const duration = animateExit && !watched && !STAGES[displayStage].automaticEnding ? playExit() : 0;
+        if (duration) fadeTimer = setTimeout(beginFade, duration);
+        else beginFade();
+      }
+      // Only scenery waits. The pass and next-round record are already saved.
+      const remainingArrival = animateExit ? Math.max(0, arrivalUntil - Date.now()) : 0;
+      if (remainingArrival) fadeTimer = setTimeout(depart, remainingArrival);
+      else depart();
     }
 
-    function surface() {
-      if (displayStage !== 'sea') return false;
+    function finishEnding() {
+      const story = STAGES[displayStage];
+      if (!story.endingNext) return false;
       if (mode === 'travel') return true;
-      if (seaSurfaced) return false;
-      seaSurfaced = true;
+      if (endingShown) return false;
+      endingShown = true;
       const previousMode = mode;
       setMode('travel');
-      const duration = playExit();
       function finish() {
         setMode(previousMode);
         if (previousMode === 'demo') {
@@ -411,15 +482,23 @@
         } else {
           const restart = get('restartBtn');
           const detail = get('finaleDetail');
-          detail.textContent = ['你和人鱼一起浮出了海面。', ...detail.textContent.split('\n').slice(1)].join('\n');
-          restart.textContent = '回草药房';
+          detail.textContent = [story.endingDetail, ...detail.textContent.split('\n').slice(1)].join('\n');
+          restart.textContent = story.endingNext;
           restart.focus({ preventScroll: true });
         }
       }
-      if (duration && !reducedMotion()) fadeTimer = setTimeout(finish, duration);
-      else finish();
+      function begin() {
+        const duration = playExit();
+        if (duration && !reducedMotion()) fadeTimer = setTimeout(finish, duration);
+        else finish();
+      }
+      const remainingArrival = reducedMotion() ? 0 : Math.max(0, arrivalUntil - Date.now());
+      if (remainingArrival) fadeTimer = setTimeout(begin, remainingArrival);
+      else begin();
       return true;
     }
+
+    function surface() { return displayStage === 'sea' && finishEnding(); }
 
     setupButton('herbStart', () => {
       setMode('playing');
@@ -429,7 +508,7 @@
     setupButton('herbShowDemo', () => {
       stopDemo();
       resetCurtain();
-      seaSurfaced = false;
+      endingShown = false;
       demoFill = 0;
       display('herbs');
       setMode('demo');
@@ -441,7 +520,7 @@
       if (autoPlaying) return;
       if (demoFill === ROOM_SIZE) {
         resetCurtain();
-        seaSurfaced = false;
+        endingShown = false;
         demoFill = 0;
         renderProgress(0);
         updateDemoControls();
@@ -464,7 +543,7 @@
       stopDemo();
       display(stage);
       resetCurtain();
-      seaSurfaced = false;
+      endingShown = false;
       setMode('intro');
       renderProgress(actualFill);
       get('herbShowDemo').focus({ preventScroll: true });
@@ -472,7 +551,7 @@
     setupButton('herbDemoNext', () => {
       if (mode !== 'demo' || demoFill !== ROOM_SIZE) return;
       stopDemo();
-      if (surface()) return;
+      if (finishEnding()) return;
       demoFill = 0;
       transition(STAGES[displayStage].nextStage, 'demo');
     });
@@ -531,7 +610,8 @@
     function restoreStage(savedStage, count, resume) {
       stopDemo();
       resetCurtain();
-      seaSurfaced = false;
+      endingShown = false;
+      arrivalUntil = 0;
       stage = savedStage;
       actualFill = count;
       display(stage);
@@ -542,7 +622,7 @@
     updateCoins(0);
     restoreStage('herbs', 0, false);
     body.classList.add('has-herbalist');
-    return { showWriting, arrive, pass, finale, nextLevel, restoreStage, updateMastered, surface };
+    return { showWriting, arrive, pass, finale, nextLevel, restoreStage, updateMastered, finishEnding, surface };
   }
 
   window.HanziStoryStages = STAGES;

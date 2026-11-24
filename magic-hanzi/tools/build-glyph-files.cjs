@@ -7,9 +7,11 @@ const path = require('node:path');
 const vm = require('node:vm');
 const crypto = require('node:crypto');
 const zlib = require('node:zlib');
+const { isDeepStrictEqual } = require('node:util');
 const ROOT = path.resolve(__dirname, '..');
 const SOURCES = ['hanzi-data.js', 'curriculum-hanzi-data.js'];
 const EXPECTED_COUNT = 167;
+const MANIFEST = 'data/glyph-manifest.json';
 const sha256 = text => crypto.createHash('sha256').update(text).digest('hex');
 const gzipBytes = text => zlib.gzipSync(Buffer.from(text), { level: 9 }).length;
 const canonical = glyphs => JSON.stringify(Object.keys(glyphs).sort().map(char => [char, glyphs[char]]));
@@ -89,7 +91,7 @@ function createGlyphFiles(projectRoot = ROOT) {
     '   Edit the frozen source files deliberately, then rebuild; do not edit this catalog by hand. */\n' +
     'window.HANZI_GLYPH_CATALOG=' + JSON.stringify(catalog) + ';\n';
   files.set('glyph-catalog.js', catalogCode);
-  files.set('data/glyph-manifest.json', JSON.stringify(manifest, null, 2) + '\n');
+  files.set(MANIFEST, JSON.stringify(manifest, null, 2) + '\n');
 
   // Reparse the exact bytes that will be served, not an alternate representation.
   const reconstructed = Object.fromEntries(Object.keys(glyphs).map(char =>
@@ -104,11 +106,27 @@ function createGlyphFiles(projectRoot = ROOT) {
   return { files, catalog, manifest, glyphs, summary };
 }
 
+function sameManifest(stored, built) {
+  // gzip size is a diagnostic measurement and can differ between zlib versions.
+  // The glyph bytes, source hashes and all other manifest fields still agree.
+  function withoutGzipSizes(text) {
+    const manifest = JSON.parse(text);
+    for (const entry of Object.values(manifest.glyphs)) {
+      if (!Number.isSafeInteger(entry.gzipBytes) || entry.gzipBytes <= 0) throw new Error('Invalid gzip size');
+      delete entry.gzipBytes;
+    }
+    return manifest;
+  }
+  try { return isDeepStrictEqual(withoutGzipSizes(stored), withoutGzipSizes(built)); }
+  catch { return false; }
+}
+
 function writeGlyphFiles(result, outputRoot, check = false) {
   for (const [file, content] of result.files) {
     const target = path.join(outputRoot, file);
     if (check) {
-      if (!fs.existsSync(target) || fs.readFileSync(target, 'utf8') !== content) {
+      const stored = fs.existsSync(target) ? fs.readFileSync(target, 'utf8') : null;
+      if (stored !== content && !(file === MANIFEST && sameManifest(stored, content))) {
         throw new Error('Generated glyph asset differs: ' + file);
       }
     } else {

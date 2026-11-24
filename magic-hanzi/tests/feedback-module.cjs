@@ -126,6 +126,30 @@ function environment({audio=true,reduced=false,resumeReject=false,resumeLater=fa
  lifecycle.window.listeners.pagehide[0]();
  assert.equal(lifecycle.contexts[1].closeCalls,1,'Page cache navigation also closes the context');
 
+ const late=environment();
+ const createElement=late.document.createElement;
+ late.document.createElement=tag=>Object.assign(createElement(tag),{querySelectorAll:()=>[]});
+ late.body.dataset={herbStage:'sea'};
+ late.body.insertBefore=child=>late.body.appendChild(child);
+ const lateScene=fs.readFileSync(path.join(root,'tomb-mermaid.js'),'utf8');
+ vm.runInNewContext(lateScene,{window:late.window});
+ late.window.HanziTombMermaid.create({document:late.document});
+ const captureSea=(type,event)=>late.document.listeners[type].at(-1)(event);
+ for(const id of ['speakBtn','sentenceBtn']){
+  const speechButton={closest:selector=>selector.includes('#'+id)};
+  for(const type of ['pointerdown','pointerup','touchend','keydown']){
+   captureSea(type,{isTrusted:true,pointerType:'pen',target:speechButton});
+  }
+ }
+ captureSea('touchend',{isTrusted:false,target:{}});
+ late.document.hidden=true;
+ captureSea('pointerup',{isTrusted:true,pointerType:'pen',target:{}});
+ assert.equal(late.contexts.length,0,'The late-room context excludes speech, synthetic events, and hidden pages');
+ late.document.hidden=false;
+ captureSea('pointerup',{isTrusted:true,pointerType:'pen',target:{}});
+ assert.equal(late.contexts.length,1,'A real Pencil gesture still unlocks the late-room effects');
+ assert.equal(late.contexts[0].state,'running');
+
  const fallback=environment({audio:false});fallback.tile.rect={left:0,top:0,width:0,height:0};fallback.api.playCorrect();assert.equal(fallback.findClass('hg-feedback-ring')[0].style.left,'65px');
  const results={checks:'unsupported audio, priming failure, rejected and delayed resume, bounded chimes, Pencil unlock and speech exclusion, background recreation, schedules, handoff, muted/hidden audio, visual cleanup, repeated celebration, reduced motion, door fallback',correctAudioEndSeconds:correctEnd,victoryAudioEndSeconds:Math.max(...victoryNodes.map(n=>n.stops[0])),wrongAudioEndSeconds:Math.max(...wrongNodes.map(n=>n.stops[0])),status:'passed'};
  fs.mkdirSync(path.join(root,'work/feedback'),{recursive:true});fs.writeFileSync(path.join(root,'work/feedback/check-results.json'),JSON.stringify(results,null,2)+'\n');console.log(JSON.stringify(results,null,2));

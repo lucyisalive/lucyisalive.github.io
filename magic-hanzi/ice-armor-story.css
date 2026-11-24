@@ -1,0 +1,404 @@
+.story-ice,
+.story-armor {
+  position: fixed;
+  z-index: 0;
+  inset: 0;
+  display: block;
+  overflow: hidden;
+  isolation: isolate;
+  pointer-events: none;
+}
+.story-ice[hidden],
+.story-armor[hidden] { display: none !important; }
+.story-ice { background: #08141c; }
+.story-armor { background: #0c0b0d; }
+.ia-frame {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(100%, 75dvh);
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  transform: translate(-50%,-50%);
+  box-shadow: 0 0 100px 28px #0008;
+}
+.ia-world { position: absolute; inset: 0; transform-origin: 50% 48%; }
+.ia-ice-world {
+  z-index: 1;
+  background: #17313e url("assets/story/frozen-courtyard.webp") center / 100% 100% no-repeat;
+}
+.ia-armor-world {
+  background: #201c21 url("assets/story/armor-chamber.webp") center / 100% 100% no-repeat;
+}
+.ia-frame-shade {
+  position: absolute;
+  z-index: 12;
+  inset: 0;
+  background: linear-gradient(#07111c7d, transparent 25% 68%, #051018ae);
+}
+.ia-armor-frame .ia-frame-shade {
+  background: linear-gradient(#0c090e94,transparent 23% 73%,#100b10cc);
+}
+.ia-goddess {
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  top: 22%;
+  width: 48%;
+  height: 53%;
+  transform: translateX(-50%);
+  transform-origin: 50% 94%;
+  /* Keep the painted shell's blue-white ice and specular highlights intact. */
+  filter: none;
+}
+.ia-goddess img,
+.ia-armor-figure img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center bottom;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+.ia-goddess img { transition: opacity 1.3s ease; }
+.ia-goddess img.ia-goddess-sleeping {
+  /* Only the living figure beneath the ice gradually regains warmth. */
+  filter: grayscale(calc(.8 - var(--ia-progress,0) * .65))
+    brightness(calc(.82 + var(--ia-progress,0) * .18));
+  transition: opacity 1.3s ease,filter 1.5s ease;
+}
+.ia-goddess img.ia-goddess-awake { position: absolute; inset: 0; opacity: 0; }
+.story-ice.is-complete .ia-goddess-sleeping { opacity: 0; }
+.story-ice.is-complete img.ia-goddess-awake { opacity: 1; }
+.ia-goddess-shadow {
+  position: absolute;
+  left: 50%;
+  top: 72.5%;
+  width: 34%;
+  height: 4.7%;
+  border-radius: 50%;
+  transform: translateX(-50%);
+  background: radial-gradient(ellipse,#03121d9e,transparent 70%);
+  filter: blur(5px);
+}
+.ia-body-ice {
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center bottom;
+  opacity: 1;
+  filter: drop-shadow(0 0 2px #a2e5fa26);
+  transition: opacity 1.5s ease,filter 1.5s ease;
+}
+.ia-ice-light {
+  position: absolute;
+  z-index: 1;
+  left: 19%;
+  top: 19%;
+  width: 62%;
+  height: 61%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse,#afe5f516,#71c6e90b 45%,transparent 70%);
+  mix-blend-mode: screen;
+}
+.ia-melt-water {
+  position: absolute;
+  z-index: 4;
+  left: 50%;
+  top: 74%;
+  width: calc(12% + var(--ia-progress,0) * 30%);
+  height: calc(1.8% + var(--ia-progress,0) * 2.5%);
+  transform: translateX(-50%);
+  border-radius: 50%;
+  opacity: calc(var(--ia-progress,0) * .8);
+  background: radial-gradient(ellipse,#cfecf642,#497d96b3 32%,#1536453a 58%,transparent 72%);
+  box-shadow: 0 -1px 1px #c9eeff59;
+  transition: opacity .8s,width .8s,height .8s;
+}
+.ia-ice-release {
+  position: absolute;
+  z-index: 5;
+  inset: 12% 19% 20%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse,#d4f4ff75,transparent 64%);
+  opacity: 0;
+  mix-blend-mode: screen;
+}
+.ia-snow { position: absolute; z-index: 6; inset: 0; overflow: hidden; }
+.ia-snow i {
+  position: absolute;
+  top: -4%;
+  left: var(--flake-x);
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background: #d9f4f4b0;
+  box-shadow: 0 0 4px #d9f4f450;
+  animation: ia-snowfall var(--flake-duration) linear var(--flake-delay) infinite;
+}
+@keyframes ia-snowfall {
+  0% { transform: translate(0,0); opacity: 0; }
+  12%,78% { opacity: .7; }
+  100% { transform: translate(28px,105dvh); opacity: 0; }
+}
+.story-ice.is-changing:not(.is-complete) .ia-body-ice {
+  animation: ia-ice-fracture .65s ease-out;
+}
+@keyframes ia-ice-fracture {
+  0%,100% { filter: drop-shadow(0 0 2px #a2e5fa26); }
+  30% { filter: brightness(1.3) drop-shadow(0 0 4px #d4faff70); }
+}
+.story-ice.is-complete .ia-body-ice {
+  opacity: 0;
+  filter: blur(1px);
+}
+.story-ice.is-complete .ia-ice-light {
+  background: radial-gradient(ellipse,#efd8a229,#b9d6bb0d 45%,transparent 70%);
+}
+.story-ice.is-complete .ia-goddess {
+  filter: drop-shadow(0 0 12px #dfcda952);
+  animation: ia-goddess-breath 4s ease-in-out infinite;
+}
+@keyframes ia-goddess-breath {
+  0%,100% { transform: translateX(-50%) rotate(-.35deg); }
+  50% { transform: translateX(-50%) translateY(-.4%) rotate(.35deg); }
+}
+.story-ice.is-awakening .ia-ice-release { animation: ia-ice-bloom 1.8s ease-out both; }
+@keyframes ia-ice-bloom {
+  0% { opacity: 0; transform: scale(.55); }
+  24% { opacity: .9; }
+  100% { opacity: 0; transform: scale(1.5); }
+}
+/* The guide remains close while the courtyard drops away beneath the viewer.
+   These separate layers produce an ascent, rather than zooming a single still. */
+.ia-flight-vista {
+  position: absolute;
+  z-index: 0;
+  inset: -8% -4% 0;
+  opacity: 0;
+  background: #102634 url("assets/story/ice-flight-sky-v3.webp") center / cover no-repeat;
+  transform: translateY(-4%) scale(1.08);
+}
+.ia-flight-guide {
+  position: absolute;
+  z-index: 4;
+  left: 50%;
+  top: 7%;
+  width: 82%;
+  /* Carry the first-person sleeve past the frame even at the highest hover. */
+  height: 97%;
+  visibility: hidden;
+  opacity: 0;
+  transform: translateX(-50%) translateY(8%) scale(.88);
+  transform-origin: 50% 76%;
+  filter: drop-shadow(0 0 8px #d7e9ed24);
+}
+.ia-flight-guide img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center bottom;
+  -webkit-user-drag: none;
+  user-select: none;
+  transition: opacity .45s ease;
+}
+.ia-flight-handhold { opacity: 0; }
+.has-flight-guide .ia-flight-handhold { opacity: 1; }
+.has-flight-guide .ia-flight-fallback { opacity: 0; }
+.ia-handhold-glimmer {
+  position: absolute;
+  z-index: 5;
+  left: 36%;
+  top: 63%;
+  width: 29%;
+  height: 16%;
+  opacity: 0;
+  border-radius: 50%;
+  background: radial-gradient(ellipse,#f3f0d7a3,#e0e9dd30 27%,transparent 68%);
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+.ia-flight-cloud {
+  position: absolute;
+  z-index: 6;
+  inset: -30% -45%;
+  opacity: 0;
+  background:
+    radial-gradient(ellipse at 19% 52%,#bfdbe05c,transparent 32%),
+    radial-gradient(ellipse at 85% 43%,#adcdd656,transparent 30%),
+    radial-gradient(ellipse at 42% 55%,#cce1df20,transparent 38%);
+  filter: blur(19px);
+  pointer-events: none;
+}
+.ia-flight-cloud-near { z-index: 7; filter: blur(13px); }
+.ia-flight-streaks { position: absolute; z-index: 7; inset: 0; overflow: hidden; opacity: 0; }
+.ia-flight-streaks i {
+  position: absolute;
+  left: var(--flight-x);
+  top: -25%;
+  width: 1px;
+  height: 17%;
+  border-radius: 50%;
+  background: linear-gradient(transparent,#d5e9e773,transparent);
+}
+.story-ice.is-leaving .ia-ice-world {
+  /* The receding environment blends into the sky instead of exposing a card. */
+  -webkit-mask-image: linear-gradient(to bottom,transparent,#000 20%),linear-gradient(to right,transparent,#000 8%,#000 92%,transparent);
+  mask-image: linear-gradient(to bottom,transparent,#000 20%),linear-gradient(to right,transparent,#000 8%,#000 92%,transparent);
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+  animation: ia-courtyard-recedes 7.2s cubic-bezier(.3,.02,.2,1) both;
+}
+.story-ice.is-leaving .ia-goddess {
+  animation: ia-goddess-reaches 2.2s ease-in-out both;
+}
+.story-ice.is-leaving .ia-goddess-shadow { animation: ia-release-shadow 2.5s ease-out both; }
+.story-ice.is-leaving .ia-flight-vista { animation: ia-reveal-night-flight 7.2s ease-out both; }
+.story-ice.is-leaving .ia-flight-guide {
+  visibility: visible;
+  animation: ia-take-hand 7.2s ease-in-out both,ia-held-flight 4.8s 7.2s ease-in-out infinite;
+}
+.story-ice.is-leaving .ia-handhold-glimmer { animation: ia-handhold-light 1.1s 1.1s ease-out both; }
+.story-ice.is-leaving .ia-flight-cloud-far { animation: ia-cloud-passes-far 5.5s 1.7s ease-in-out both; }
+.story-ice.is-leaving .ia-flight-cloud-near { animation: ia-cloud-passes-near 4.5s 2.1s ease-in-out both; }
+.story-ice.is-leaving .ia-flight-streaks { animation: ia-flight-wind-visible 7.2s ease-out both; }
+.story-ice.is-leaving .ia-flight-streaks i { animation: ia-flight-wind 1.5s calc(1.9s + var(--flight-delay)) ease-in 3; }
+@keyframes ia-goddess-reaches {
+  0% { transform: translateX(-50%); opacity: 1; }
+  58% { transform: translateX(-50%) translateY(4%) scale(1.3); opacity: 1; }
+  100% { transform: translateX(-50%) translateY(8%) scale(1.45); opacity: 0; }
+}
+@keyframes ia-courtyard-recedes {
+  0%,19% { transform: none; opacity: 1; }
+  35% { transform: translateY(18%) scale(.96); opacity: 1; }
+  61% { transform: translateY(73%) scale(.77); opacity: .8; }
+  85%,100% { transform: translateY(114%) scale(.62); opacity: 0; }
+}
+@keyframes ia-release-shadow { 0% { opacity: 1; } 100% { opacity: 0; transform: translateX(-50%) scale(.45); } }
+@keyframes ia-reveal-night-flight {
+  0%,17% { opacity: 0; transform: translateY(-4%) scale(1.08); }
+  39% { opacity: 1; }
+  100% { opacity: 1; transform: translateY(2%) scale(1); }
+}
+@keyframes ia-take-hand {
+  0%,12% { opacity: 0; transform: translateX(-50%) translateY(8%) scale(.88); }
+  29% { opacity: 1; transform: translateX(-50%) translateY(2%) scale(.98); }
+  60% { opacity: 1; transform: translateX(-50%) translateY(-1%) scale(1.02); }
+  100% { opacity: 1; transform: translateX(-50%) translateY(-3%) scale(1.03); }
+}
+@keyframes ia-held-flight {
+  0%,100% { transform: translateX(-50%) translateY(-3%) scale(1.03); }
+  50% { transform: translateX(-49.5%) translateY(-3.8%) scale(1.03); }
+}
+@keyframes ia-handhold-light {
+  0% { opacity: 0; transform: scale(.3); }
+  30% { opacity: .76; }
+  100% { opacity: 0; transform: scale(1.65); }
+}
+@keyframes ia-cloud-passes-far {
+  0% { opacity: 0; transform: translateY(-38%) scale(.8); }
+  36% { opacity: .38; }
+  100% { opacity: 0; transform: translateY(61%) scale(1.18); }
+}
+@keyframes ia-cloud-passes-near {
+  0% { opacity: 0; transform: translateY(-55%) scale(.7); }
+  32% { opacity: .64; }
+  100% { opacity: 0; transform: translateY(92%) scale(1.35); }
+}
+@keyframes ia-flight-wind-visible { 0%,24% { opacity: 0; } 42%,77% { opacity: .56; } 100% { opacity: 0; } }
+@keyframes ia-flight-wind { 0% { transform: translateY(-20dvh); opacity: 0; } 25% { opacity: .7; } 100% { transform: translateY(150dvh); opacity: 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .story-ice *, .story-armor * { animation: none !important; transition: none !important; }
+  .story-ice.is-leaving .ia-ice-world { opacity: 0; transform: translateY(114%) scale(.62); }
+  .story-ice.is-leaving .ia-flight-vista { opacity: 1; transform: none; }
+  .story-ice.is-leaving .ia-flight-guide { visibility: visible; opacity: 1; transform: translateX(-50%) translateY(-3%) scale(1.03); }
+  .story-ice.is-leaving .ia-handhold-glimmer,
+  .story-ice.is-leaving .ia-flight-cloud,
+  .story-ice.is-leaving .ia-flight-streaks { opacity: 0; }
+}
+
+/* Armor-only styles. Replace the old armor block, including helmet-view and
+   old walking/helmet keyframes. Do not replace the goddess/flight CSS. */
+.ia-armor-world { background:#201c21 url("assets/story/armor-chamber.webp") center/100% 100% no-repeat; }
+.ia-armor-figure {
+  position:absolute;z-index:3;left:50%;top:22%;width:50%;height:55%;
+  transform:translateX(-50%);transform-origin:50% 100%;filter:brightness(.9) drop-shadow(0 5px 5px #0008);
+}
+/* Safe when appended for preview: cancel the obsolete parent walk/helmet
+   animation so only the standing/kneeling pose sequence controls the figure. */
+.story-armor .ia-armor-figure {animation:none!important;}
+.ia-armor-figure img {display:block;width:100%;height:100%;object-fit:contain;object-position:center bottom;user-select:none;-webkit-user-drag:none;}
+.ia-armor-standing {position:absolute;inset:0;opacity:1;transform-origin:50% 100%;}
+.ia-armor-kneeling {position:absolute;inset:0;opacity:0;transform-origin:50% 100%;}
+.ia-armor-shadow {
+  position:absolute;z-index:0;left:50%;top:74.5%;width:40%;height:6%;transform:translateX(-50%);border-radius:50%;
+  background:radial-gradient(ellipse,#05030bd9 12%,#05030b68 48%,transparent 72%);filter:blur(5px);
+}
+.ia-armor-aura {position:absolute;z-index:0;inset:13% 21% 22%;border-radius:50%;background:radial-gradient(ellipse,#b38d622a,transparent 66%);}
+/* Neither ancestor creates a stacking context. Rear chains must genuinely pass
+   behind the armor (z3), while the front half clamps over its chest and limbs. */
+.ia-chains,.ia-chain {position:absolute;inset:0;z-index:auto;pointer-events:none;}
+.ia-chain canvas {position:absolute;display:block;transition:opacity .9s ease,transform 1s cubic-bezier(.3,.05,.7,1);}
+.ia-chain-back {z-index:1;}
+.ia-chain-wall {z-index:2;}
+.ia-chain-front {z-index:5;}
+.ia-chain-spark {
+  position:absolute;z-index:6;top:var(--spark-y);left:var(--spark-x);width:5%;aspect-ratio:1;opacity:0;
+  transform:translate(-50%,-50%);background:radial-gradient(ellipse,#fff5cd,#dbae5f80 20%,transparent 65%);mix-blend-mode:screen;
+}
+.ia-chain.is-broken .ia-chain-wall {transform:rotate(var(--chain-turn));opacity:.24;}
+.ia-chain.is-broken .ia-chain-front,.ia-chain.is-broken .ia-chain-back {transform:translateY(24dvh) rotate(calc(var(--chain-turn) * -1));opacity:0;}
+.ia-chain.is-snapping .ia-chain-spark {animation:ia-bound-chain-snap .7s ease-out both;}
+@keyframes ia-bound-chain-snap {0%{opacity:1;transform:translate(-50%,-50%) scale(.3)}30%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) scale(2.5)}}
+.ia-armor-dust {position:absolute;z-index:4;inset:62% 27% 15%;border-radius:50%;opacity:0;background:radial-gradient(ellipse,#b6a38a59,transparent 67%);filter:blur(10px);}
+.ia-armor-radiance {
+  position:absolute;z-index:0;inset:29% 14% 12%;border-radius:50%;opacity:0;
+  background:radial-gradient(ellipse at 50% 52%,#f7d79266,transparent 59%),conic-gradient(from 15deg at 50% 53%,transparent 0deg,#c6ab6330 13deg,transparent 23deg,transparent 43deg,#c6ab6326 53deg,transparent 63deg,transparent 94deg,#c6ab6325 105deg,transparent 116deg,transparent 164deg,#c6ab632c 175deg,transparent 184deg,transparent 244deg,#c6ab6326 255deg,transparent 266deg,transparent 304deg,#c6ab632a 316deg,transparent 328deg);
+  mix-blend-mode:screen;filter:blur(3px);transform-origin:50% 53%;
+}
+.ia-armor-seam-light {
+  position:absolute;inset:0;opacity:0;pointer-events:none;mix-blend-mode:screen;
+  -webkit-mask:url("assets/story/castle-armor-kneeling-v3.webp") center bottom/contain no-repeat;
+  mask:url("assets/story/castle-armor-kneeling-v3.webp") center bottom/contain no-repeat;
+  background:radial-gradient(ellipse 12% 7% at 50% 50%,#fff4cba0,transparent 88%),radial-gradient(ellipse 24% 1.6% at 50% 60%,#ffe3a1dd,transparent 92%),radial-gradient(ellipse 14% 2.4% at 45% 78%,#ffe8aac0,transparent 88%);
+}
+.ia-armor-chest-light {position:absolute;inset:38% 30% 28%;opacity:0;pointer-events:none;mix-blend-mode:screen;background:radial-gradient(ellipse at 50% 36%,#fff9d3b5,#ebc97845 20%,transparent 66%);filter:blur(3px);}
+.ia-armor-floor-light {position:absolute;z-index:0;left:50%;top:78%;width:47%;height:9%;border-radius:50%;opacity:0;transform:translateX(-50%);background:radial-gradient(ellipse,#ead18b70,transparent 70%);mix-blend-mode:screen;}
+.story-armor.is-complete .ia-armor-figure {transform:translateX(-50%);filter:brightness(1.04) drop-shadow(0 7px 6px #0008);}
+.story-armor.is-complete .ia-armor-standing {opacity:0;}
+.story-armor.is-complete .ia-armor-kneeling {opacity:1;transform:translateY(7%) scale(1.17);}
+.story-armor.is-complete .ia-armor-radiance {opacity:.72;}
+.story-armor.is-complete .ia-armor-seam-light,.story-armor.is-complete .ia-armor-chest-light {opacity:.85;}
+.story-armor.is-complete .ia-armor-floor-light {opacity:.75;}
+.story-armor.is-armor-ending .ia-armor-standing {animation:ia-armor-approach-stand 6.2s ease-in-out both;}
+.story-armor.is-armor-ending .ia-armor-kneeling {animation:ia-armor-bend-knee 6.2s ease-in-out both;}
+.story-armor.is-armor-ending .ia-armor-radiance {animation:ia-armor-released-light 6.2s ease-out both;}
+.story-armor.is-armor-ending .ia-armor-seam-light,.story-armor.is-armor-ending .ia-armor-chest-light {animation:ia-armor-released-light 6.2s ease-out both;}
+.story-armor.is-armor-ending .ia-armor-floor-light {animation:ia-armor-floor-glow 6.2s ease-out both;}
+.story-armor.is-armor-ending .ia-armor-dust {animation:ia-armor-knee-dust 6.2s ease-out both;}
+@keyframes ia-armor-approach-stand {0%{opacity:1;transform:translateY(0) scale(1)}16%{transform:translate(-.6%,2%) scale(1.06)}29%{opacity:1;transform:translateY(6%) scale(1.17)}39%,100%{opacity:0;transform:translateY(13%) scale(1.17)}}
+@keyframes ia-armor-bend-knee {0%,26%{opacity:0;transform:translateY(-4%) scale(1.17)}38%{opacity:1;transform:translateY(7.8%) scale(1.17)}44%{transform:translateY(6.6%) scale(1.17)}50%,100%{opacity:1;transform:translateY(7%) scale(1.17)}}
+@keyframes ia-armor-released-light {0%,40%{opacity:0;filter:blur(3px)}60%{opacity:.95;filter:blur(1px)}78%,100%{opacity:.75;filter:blur(3px)}}
+@keyframes ia-armor-floor-glow {0%,40%{opacity:0;transform:translateX(-50%) scale(.6)}65%,100%{opacity:.75;transform:translateX(-50%) scale(1)}}
+@keyframes ia-armor-knee-dust {0%,31%{opacity:0;transform:scale(.5)}39%{opacity:.6;transform:scale(1)}56%,100%{opacity:0;transform:translateY(13%) scale(1.2)}}
+/* The old wearing-a-helmet ending must not cover the kneeling figure. */
+.story-armor .ia-helmet-view {display:none!important;}
+@media (prefers-reduced-motion:reduce){
+  .story-armor *, .story-armor *::before,.story-armor *::after {animation:none!important;transition:none!important;}
+  .story-armor.is-complete .ia-armor-standing {opacity:0;}
+  .story-armor.is-complete .ia-armor-kneeling {opacity:1;transform:translateY(7%) scale(1.17);}
+  .story-armor.is-complete .ia-armor-radiance,.story-armor.is-complete .ia-armor-seam-light,.story-armor.is-complete .ia-armor-chest-light {opacity:.75;}
+}
+
+/* Missing/late pose artwork keeps a visible suit and working replay controls. */
+.story-armor:not(.has-kneel-art).is-complete .ia-armor-standing {
+  opacity:1;transform:translateY(7%) scale(1.17);animation:none!important;
+}

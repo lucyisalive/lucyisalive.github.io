@@ -2,7 +2,7 @@
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
-<meta name="game-version" content="2026.11.23.2">
+<meta name="game-version" content="2026.11.24.2">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>魔法闯关汉字游戏</title>
 <link rel="stylesheet" href="game-feedback.css?v=2026.11.02.4">
@@ -481,6 +481,9 @@
 <link rel="stylesheet" href="giant-kitchen.css">
 <link rel="stylesheet" href="bridge-train.css">
 <link rel="stylesheet" href="tomb-mermaid.css">
+<link rel="stylesheet" href="dune-story.css">
+<link rel="stylesheet" href="library-story.css">
+<link rel="stylesheet" href="ice-armor-story.css">
 </head>
 <body>
 <div class="startup-notice" id="startupNotice" role="status">正在准备汉字，马上就能开始…</div>
@@ -764,6 +767,10 @@
 <script src="giant-kitchen.js"></script>
 <script src="bridge-train.js"></script>
 <script src="tomb-mermaid.js"></script>
+<script src="dune-sand.js"></script>
+<script src="dune-story.js"></script>
+<script src="library-story.js"></script>
+<script src="ice-armor-story.js"></script>
 <script src="herbalist-room.js"></script>
 <script>
 /* ============================================================
@@ -829,7 +836,7 @@ function defaultBank(){
 // set — the change would reach nobody who actually uses the game.
 const BANK_VERSION = 5;
 const ROUND_GOAL = 10;
-const GAME_VERSION = '2026.11.24.1';
+const GAME_VERSION = '2026.11.24.2';
 
 let state = {
   bank: defaultBank(),
@@ -4906,7 +4913,7 @@ onTap(restartBtn, function(){
   // The next level on the same day keeps waiting retests and their actual
   // filler counts. Calendar-based learning history and priority dates stay intact.
   if(stage){
-    if(stage === 'sea' && herbalistCall('surface') === true) return;
+    if(herbalistCall('finishEnding') === true) return;
     state.herbalistStage = HERBALIST_STAGES[stage]?.nextStage || 'herbs';
     herbalistCall('nextLevel', state.herbalistStage);
   }
@@ -5671,7 +5678,7 @@ function showFinale(bankEmpty){
     ? `\n「${justMastered.map(b => b.char).join('、')}」集满 ${MASTERED_DAYS} 颗星，进入长时记忆库！`
     : '';
   const remaining = unfinishedParentEntries().length;
-  const nextRound = state.herbalistStage === 'sea' ? '下一轮' : '下一关';
+  const nextRound = HERBALIST_STAGES[state.herbalistStage]?.nextStage === 'herbs' ? '下一轮' : '下一关';
   const nextNote = remaining ? `\n还有 ${remaining} 个家长安排的字，${nextRound}优先练。` : '';
   const completedMessage = typeof herbalistRoom !== 'undefined' && herbalistRoom
     ? herbalistCompletionMessage()

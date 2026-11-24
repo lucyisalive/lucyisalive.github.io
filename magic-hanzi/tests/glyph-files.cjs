@@ -50,7 +50,18 @@ const temporary = fs.mkdtempSync(path.join(root, 'work', 'glyph-files-test-'));
 try {
   writeGlyphFiles(built, temporary);
   writeGlyphFiles(built, temporary, true);
-  const first = Object.values(built.manifest.glyphs)[0].file;
+  const manifestPath = path.join(temporary, 'data/glyph-manifest.json');
+  const originalManifest = fs.readFileSync(manifestPath, 'utf8');
+  const manifest = JSON.parse(originalManifest);
+  const firstEntry = Object.values(manifest.glyphs)[0];
+  firstEntry.gzipBytes += 1;
+  fs.writeFileSync(manifestPath, JSON.stringify(manifest));
+  writeGlyphFiles(built, temporary, true);
+  firstEntry.sha256 = '0'.repeat(64);
+  fs.writeFileSync(manifestPath, JSON.stringify(manifest));
+  assert.throws(() => writeGlyphFiles(built, temporary, true), /data\/glyph-manifest\.json/);
+  fs.writeFileSync(manifestPath, originalManifest);
+  const first = firstEntry.file;
   fs.writeFileSync(path.join(temporary, first), '{}');
   assert.throws(() => writeGlyphFiles(built, temporary, true), /asset differs/);
 } finally { fs.rmSync(temporary, { recursive: true, force: true }); }

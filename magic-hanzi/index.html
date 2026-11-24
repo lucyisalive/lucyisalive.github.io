@@ -3,7 +3,7 @@
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
-<meta name="game-version" content="2026.11.23.2">
+<meta name="game-version" content="2026.11.24.2">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>魔法闯关汉字游戏</title>
 <style data-source="game-feedback.css">
@@ -783,6 +783,10 @@ body.journey-departing #mountainJourney .journey-background {
 .herbalist-no-ai #aiSentenceSettings { display: none; }
 .has-herbalist :is(.herb-card, .herb-actions button)[hidden] { display: none; }
 .has-herbalist:not([data-herb-stage="herbs"]) #herbalistBackdrop { display: none; }
+.has-herbalist:not([data-herb-stage="dunes"]) .story-dune,
+.has-herbalist:not([data-herb-stage="library"]) .story-library,
+.has-herbalist:not([data-herb-stage="ice"]) .story-ice,
+.has-herbalist:not([data-herb-stage="armor"]) .story-armor { display: none !important; }
 
 .story-scene {
   display: none;
@@ -3096,6 +3100,950 @@ body[data-herb-stage="sea"] .story-sea { display: block; }
   .story-scene.story-sea * { animation: none !important; }
   .story-sea.is-leaving .deep-surface { opacity: 1; }
   .story-sea.is-leaving .deep-sea-world { opacity: 0; }
+}
+
+</style>
+<style data-source="dune-story.css">
+.story-dune {
+  position: fixed;
+  z-index: 0;
+  inset: 0;
+  overflow: hidden;
+  isolation: isolate;
+  pointer-events: none;
+  background: #151518;
+}
+.story-dune[hidden] { display: none; }
+.dune-frame {
+  position: absolute;
+  inset: 0;
+  width: min(100%,88dvh,980px);
+  margin-inline: auto;
+  overflow: hidden;
+  background: #211d20;
+  box-shadow: 0 0 100px 40px #151518;
+}
+.dune-world {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: max(100%,75dvh);
+  aspect-ratio: 3 / 4;
+  transform: translate(-50%,-50%);
+  transform-origin: 50% 54%;
+}
+.dune-landscape,
+.dune-footprints,
+.dune-ridge-mask,
+.dune-sand,
+.dune-low-drift,
+.dune-vignette { position: absolute; inset: 0; }
+.dune-landscape,
+.dune-ridge-mask {
+  background: #6a4e36 url("assets/story/dunes.webp") center / 100% 100% no-repeat;
+}
+.dune-ridge-mask {
+  z-index: 3;
+  clip-path: polygon(0 40.5%,8% 39.4%,18% 40.4%,28% 39%,36% 37.6%,44% 36.8%,51% 37.2%,60% 39%,68% 41%,76% 42%,87% 40.5%,100% 40.3%,100% 100%,0 100%);
+  opacity: 0;
+}
+.dragon-arrives .dune-ridge-mask { opacity: 1; }
+.dune-distant-haze {
+  position: absolute;
+  inset: 25% -12% 47%;
+  background: radial-gradient(ellipse,#e1b47c15,transparent 70%);
+  filter: blur(16px);
+  animation: dune-haze 14s ease-in-out infinite alternate;
+}
+.dune-footprints { z-index: 4; transition: opacity .6s ease; }
+.dune-footprint {
+  position: absolute;
+  left: var(--print-x);
+  top: var(--print-y);
+  width: var(--print-size);
+  aspect-ratio: 1.1;
+  transform: translate(-50%,-50%) rotate(var(--print-angle)) skewX(-8deg);
+  opacity: 0;
+  transition: opacity .4s ease;
+}
+.dune-footprint.is-revealed { opacity: .8; }
+.dune-footprint > i {
+  position: absolute;
+  background: linear-gradient(150deg,#5b38239c,#70482982);
+  box-shadow: inset 2px 3px 3px #362317ad,0 1px 1px #dfb47580;
+}
+.dune-heel {
+  left: 25%;
+  top: 35%;
+  width: 49%;
+  height: 49%;
+  clip-path: polygon(29% 0,75% 4%,100% 42%,73% 96%,25% 100%,0 56%);
+  border-radius: 39%;
+}
+.dune-toe {
+  width: 19%;
+  height: 50%;
+  top: 3%;
+  left: 15%;
+  clip-path: polygon(44% 0,100% 82%,64% 100%,0 88%);
+  transform: rotate(-27deg);
+  border-radius: 50% 50% 30% 30%;
+}
+.dune-toe:nth-of-type(3) { left: 42%; top: -8%; height: 56%; transform: rotate(3deg); }
+.dune-toe:nth-of-type(4) { left: 68%; top: 6%; transform: rotate(28deg); }
+.dune-footprint.is-rising > i { animation: dune-print-reveal .85s ease-out both; }
+.dune-dragon {
+  position: absolute;
+  z-index: 5;
+  top: 53%;
+  left: 50%;
+  width: 88%;
+  transform: translate(-50%,-50%);
+  transform-origin: 50% 65%;
+  opacity: 0;
+  visibility: hidden;
+  filter: drop-shadow(0 6px 9px #181310b0);
+}
+.dune-dragon img {
+  display: block;
+  width: 100%;
+  height: auto;
+  transform-origin: 57% 68%;
+  animation: dune-dragon-breathe 5s ease-in-out infinite;
+}
+.dune-dragon-shadow {
+  position: absolute;
+  z-index: 4;
+  top: 67%;
+  left: 50%;
+  width: 71%;
+  height: 9%;
+  transform: translate(-50%,-50%);
+  border-radius: 50%;
+  opacity: 0;
+  background: radial-gradient(ellipse,#261b14c9,#30201785 40%,transparent 72%);
+  filter: blur(8px);
+}
+.is-complete .dune-dragon { opacity: 1; visibility: visible; }
+.is-complete .dune-dragon-shadow { opacity: 1; }
+.dragon-arrives .dune-dragon { animation: dune-breach 5.4s cubic-bezier(.2,.55,.3,1) both; }
+.dragon-arrives .dune-dragon-shadow { animation: dune-landing-shadow 5.4s ease-out both; }
+.dragon-arrives .dune-world { animation: dune-ground-tremor .65s .2s ease-out; }
+.dune-sand { z-index: 7; width: 100%; height: 100%; }
+.dune-low-drift {
+  z-index: 6;
+  top: 69%;
+  height: 9%;
+  background: radial-gradient(ellipse,#efcda31a,transparent 68%);
+  filter: blur(10px);
+  animation: dune-haze 10s ease-in-out infinite alternate;
+}
+.dune-flight-view {
+  position: absolute;
+  z-index: 9;
+  inset: 0;
+  opacity: 0;
+  visibility: hidden;
+  overflow: hidden;
+  background: #282d36;
+}
+.dune-flight-land {
+  position: absolute;
+  inset: -35%;
+  background: url("assets/story/dunes.webp") center / 100% 100% no-repeat;
+  transform-origin: 50% 55%;
+}
+.dune-flight-haze {
+  position: absolute;
+  inset: 35% -10% -10%;
+  background: linear-gradient(transparent,#c6ad8335 60%,#b9a17c3d);
+  opacity: .55;
+}
+.dune-rider {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 80%;
+}
+.dune-rider img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: drop-shadow(0 5px 4px #1c130e80);
+}
+.dune-flight-wind {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(102deg,transparent 0 12%,#f9e5bc15 12.1% 12.2%,transparent 12.4% 19%);
+  mask-image: radial-gradient(ellipse,transparent 25%,#000 90%);
+  opacity: .25;
+}
+.dune-vignette {
+  z-index: 12;
+  background: linear-gradient(#0e14226b,transparent 20% 79%,#18151250),
+    linear-gradient(90deg,#1c171e33,transparent 14% 86%,#1c171e33);
+}
+.is-riding .dune-world { animation: dune-camera-mount 2.1s ease-in-out both; }
+.is-riding .dune-dragon { animation: dune-dragon-mount 2.1s ease-in-out both; }
+.is-riding .dune-footprints { opacity: 0; }
+.is-riding .dune-flight-view { animation: dune-board-view 4.7s ease-in-out both; visibility: visible; }
+.is-riding .dune-flight-land { animation: dune-takeoff-land 4.7s ease-in-out both; }
+.is-riding .dune-rider { animation: dune-rider-rise 4.7s ease-in-out both,dune-rider-sway 4.5s 4.7s ease-in-out infinite; }
+.is-riding .dune-flight-wind { animation: dune-wind-stream 2s linear infinite; }
+@keyframes dune-haze { to { transform: translateX(5%); opacity: .75; } }
+@keyframes dune-print-reveal { from { opacity: 0; } 50% { opacity: .12; } to { opacity: 1; } }
+@keyframes dune-dragon-breathe { 50% { transform: translateY(-.6%) scale(1.008); } }
+@keyframes dune-ground-tremor {
+  0%,100% { transform: translate(-50%,-50%); }
+  25% { transform: translate(-50.3%,-49.8%); }
+  50% { transform: translate(-49.7%,-50.1%); }
+  75% { transform: translate(-50.2%,-49.9%); }
+}
+@keyframes dune-breach {
+  0% { z-index: 2; left: 63%; top: 47%; opacity: 0; transform: translate(-50%,-50%) scale(.12) rotate(-12deg); }
+  11% { z-index: 2; left: 63%; top: 43%; opacity: 1; transform: translate(-50%,-50%) scale(.24) rotate(-10deg); }
+  32% { z-index: 2; left: 63%; top: 29%; opacity: 1; transform: translate(-50%,-50%) scale(.39) rotate(-8deg); }
+  40% { z-index: 5; left: 60%; top: 26%; transform: translate(-50%,-50%) scale(.49) rotate(-5deg); }
+  61% { left: 45%; top: 27%; transform: translate(-50%,-50%) scale(.68) rotate(4deg); }
+  80% { left: 48%; top: 47%; transform: translate(-50%,-50%) scale(.96) rotate(-2deg); }
+  90% { left: 50%; top: 54%; transform: translate(-50%,-50%) scale(1.02) rotate(1deg); }
+  100% { z-index: 5; left: 50%; top: 53%; opacity: 1; transform: translate(-50%,-50%) scale(1); }
+}
+@keyframes dune-landing-shadow {
+  0%,65% { opacity: 0; transform: translate(-50%,-50%) scale(.2); }
+  85% { opacity: .85; transform: translate(-50%,-50%) scale(.8); }
+  100% { opacity: 1; transform: translate(-50%,-50%) scale(1); }
+}
+@keyframes dune-camera-mount {
+  0% { transform: translate(-50%,-50%) scale(1); }
+  100% { transform: translate(-51%,-53%) scale(1.2); }
+}
+@keyframes dune-dragon-mount {
+  0% { transform: translate(-50%,-50%) scale(1); }
+  100% { transform: translate(-56%,-29%) scale(1.5); }
+}
+@keyframes dune-board-view {
+  0%,19% { opacity: 0; }
+  40%,100% { opacity: 1; }
+}
+@keyframes dune-takeoff-land {
+  0%,25% { transform: translateY(-2%) scale(1.18); }
+  100% { transform: translateY(14%) scale(.98); }
+}
+@keyframes dune-rider-rise {
+  0%,20% { transform: translateY(37%) scale(1.15); }
+  45% { transform: translateY(3%) scale(1.025) rotate(-1deg); }
+  70% { transform: translateY(-1.5%) scale(1) rotate(.7deg); }
+  100% { transform: translateY(0) scale(1); }
+}
+@keyframes dune-rider-sway {
+  0%,100% { transform: translateY(0) rotate(-.6deg); }
+  50% { transform: translateY(-1%) rotate(.6deg); }
+}
+@keyframes dune-wind-stream { to { transform: translateY(15%) scale(1.12); } }
+@media (prefers-reduced-motion: reduce) {
+  .story-dune *, .story-dune *::before, .story-dune *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+  .is-riding .dune-flight-view { opacity: 1; visibility: visible; }
+  .is-riding .dune-flight-land { transform: translateY(14%) scale(.98); }
+}
+
+</style>
+<style data-source="library-story.css">
+.story-library {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  isolation: isolate;
+  overflow: hidden;
+  pointer-events: none;
+  background: #0b100c;
+}
+.story-library[hidden] { display: none !important; }
+.story-library:not([hidden]) { display: block; }
+.library-frame {
+  position: absolute;
+  inset: 0;
+  width: min(100%, 88dvh, 1000px);
+  margin-inline: auto;
+  overflow: hidden;
+  background: #171611;
+  box-shadow: 0 0 95px 30px #0b0b09;
+}
+.library-frame::after {
+  content: '';
+  position: absolute;
+  z-index: 9;
+  inset: 0;
+  background: linear-gradient(#080d0f96, transparent 23% 78%, #090d0abd);
+}
+.library-world {
+  position: absolute;
+  width: max(100%, 75dvh);
+  aspect-ratio: 3 / 4;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  transform-origin: 67% 27%;
+}
+.library-art {
+  position: absolute;
+  inset: 0;
+  background: url("assets/story/forbidden-library-v2.webp") center / 100% 100% no-repeat,
+    radial-gradient(ellipse at 67% 24%, #535039, #272b22 52%, #111811 85%);
+}
+.library-steps { position: absolute; inset: 0; z-index: 4; }
+.library-step {
+  position: absolute;
+  left: var(--step-x);
+  top: var(--step-y);
+  width: var(--step-size);
+  aspect-ratio: 3 / 2;
+  z-index: calc(11 - var(--step-i));
+  opacity: 0;
+  transform: translate(-50%, -50%);
+  transition: opacity .25s ease;
+}
+.library-step.is-visible { opacity: 1; }
+.library-step-tome {
+  position: absolute;
+  inset: 0;
+  background: url("assets/story/book-step-plain-v2.webp") center / contain no-repeat;
+  filter: drop-shadow(0 7px 5px #020703ad);
+}
+.library-step:nth-child(3n + 2) .library-step-tome { filter: brightness(.96) drop-shadow(0 7px 5px #020703ad); }
+.library-step:nth-child(3n + 3) .library-step-tome { filter: brightness(.89) drop-shadow(0 7px 5px #020703ad); }
+.library-step-shadow {
+  position: absolute;
+  left: 6%;
+  right: 4%;
+  top: 71%;
+  height: 22%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, #000b, transparent 72%);
+  filter: blur(6px);
+}
+.library-step.is-arriving { animation: library-book-arrive .85s cubic-bezier(.17, .65, .24, 1) both; }
+@keyframes library-book-arrive {
+  0% { opacity: 0; transform: translate(-300%, -135%) rotate(-28deg) scale(.72); }
+  25% { opacity: 1; }
+  72% { transform: translate(-50%, -57%) rotate(2deg) scale(1.02); }
+  100% { transform: translate(-50%, -50%) rotate(0) scale(1); }
+}
+.library-forbidden-book {
+  position: absolute;
+  z-index: 5;
+  left: 67%;
+  top: 15%;
+  width: 12%;
+  height: 12%;
+  background: url("assets/story/forbidden-book.webp") center bottom / contain no-repeat;
+  transform: translateX(-50%) rotate(-2deg);
+  transform-origin: center bottom;
+  filter: drop-shadow(0 5px 3px #050904af);
+  animation: library-book-tremble 3.5s ease-in-out infinite;
+}
+@keyframes library-book-tremble {
+  0%, 74%, 100% { transform: translateX(-50%) rotate(-2deg); }
+  80% { transform: translateX(-51%) rotate(-3deg); }
+  86% { transform: translateX(-49%) rotate(0); }
+  92% { transform: translateX(-50%) rotate(-2deg); }
+}
+.library-seal {
+  position: absolute;
+  z-index: 6;
+  left: 67%;
+  top: 12.5%;
+  width: 20%;
+  height: 17%;
+  transform: translateX(-50%);
+  border: 2px solid #65d994c9;
+  box-shadow: 0 0 6px #59de8d9e, inset 0 0 9px #46c27b47, 0 0 21px #3dc47444;
+  background: linear-gradient(110deg, #5ee7910a, transparent 50%, #4fdb910b);
+  transition: opacity 1s ease, transform 1s ease;
+}
+.library-seal::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translate(13%, -8%);
+  border: 1px solid #58cc8b85;
+  box-shadow: 0 0 7px #4edb8577;
+}
+.library-seal > i {
+  position: absolute;
+  width: 18%;
+  height: 1px;
+  transform: rotate(-28deg);
+  transform-origin: left center;
+  background: #89e9aabf;
+  box-shadow: 0 0 5px #50e485;
+}
+.library-seal > i:nth-child(1) { top: 0; left: 0; }
+.library-seal > i:nth-child(2) { top: 0; left: 100%; }
+.library-seal > i:nth-child(3) { top: 100%; left: 0; }
+.library-seal > i:nth-child(4) { top: 100%; left: 100%; }
+.library-seal > b {
+  position: absolute;
+  inset: 14% 9%;
+  border: 1px solid #77e9a44a;
+  background: repeating-linear-gradient(0deg, transparent 0 19%, #74d9a01c 19.5% 20%);
+  animation: library-seal-breathe 3s ease-in-out infinite alternate;
+}
+@keyframes library-seal-breathe {
+  to { opacity: .35; filter: brightness(1.3); }
+}
+.library-shelf-glow {
+  position: absolute;
+  z-index: 2;
+  top: 15%;
+  left: 47%;
+  width: 40%;
+  height: 26%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, #4dda713d, transparent 68%);
+  filter: blur(10px);
+  transition: opacity 1s ease;
+}
+.library-ready .library-seal { opacity: 0; transform: translateX(-50%) scale(1.35); }
+.library-ready .library-forbidden-book { animation: none; transform: translateX(-50%); }
+.library-ready .library-shelf-glow { opacity: .25; }
+.library-reading-book {
+  position: absolute;
+  z-index: 12;
+  top: 64%;
+  left: 50%;
+  width: 68%;
+  aspect-ratio: 12 / 7;
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(.4);
+  perspective: 700px;
+  filter: drop-shadow(0 12px 12px #020503bd);
+}
+.library-reading-cover {
+  position: absolute;
+  top: 10%;
+  left: 25%;
+  width: 50%;
+  height: 84%;
+  background: url("assets/story/forbidden-book.webp") center / contain no-repeat;
+  transform: rotateX(28deg);
+  transform-origin: left center;
+}
+.library-reading-pages { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; }
+.library-page-edge { fill: #604526; stroke: #d7bc80; stroke-width: 3; }
+.library-page-left { fill: url(#libraryPaperLeft); stroke: #ac9364; stroke-width: 1.5; }
+.library-page-right { fill: url(#libraryPaperRight); stroke: #ac9364; stroke-width: 1.5; }
+.library-page-gutter { fill: none; stroke: #705232; stroke-width: 4; opacity: .7; }
+.library-page-ornament { fill: none; stroke: #6b613b; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.library-rising-runes { position: absolute; z-index: 13; inset: 29% 27% 17%; opacity: 0; }
+.library-rising-runes > svg {
+  position: absolute;
+  bottom: 3%;
+  left: calc(7% + var(--rune-i) * 16%);
+  width: 8%;
+  height: 12%;
+  fill: none;
+  stroke: #a7f6bf;
+  stroke-width: 1.3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 4px #59e69c);
+}
+.library-ghost-mist { position: absolute; z-index: 10; top: 48%; left: 15%; width: 70%; height: 37%; opacity: 0; }
+.library-ghost-mist i {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, #a4cfaf6b, #6b987d26 35%, transparent 69%);
+  filter: blur(12px);
+  animation: library-mist 4s ease-in-out infinite alternate;
+}
+.library-ghost-mist i:nth-child(2) { left: -20%; animation-delay: -1s; }
+.library-ghost-mist i:nth-child(3) { left: 20%; animation-delay: -2.4s; }
+@keyframes library-mist { to { transform: translate(8%, -20%) scale(1.1, .8); opacity: .4; } }
+.library-ghost-knight {
+  position: absolute;
+  z-index: 11;
+  top: 21%;
+  left: 50%;
+  width: 43%;
+  height: 57%;
+  opacity: 0;
+  background: url("assets/story/ghost-knight.webp") center bottom / contain no-repeat;
+  transform: translate(-50%, 20%) scale(.8);
+  filter: drop-shadow(0 0 13px #9ce1b264);
+  transform-origin: center bottom;
+}
+.library-motes { position: absolute; z-index: 7; inset: 12% 0 21%; overflow: hidden; }
+.library-motes > i {
+  position: absolute;
+  left: var(--mote-x);
+  top: 63%;
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background: #e2d5ab;
+  box-shadow: 0 0 5px #d3ae6a;
+  opacity: 0;
+  animation: library-mote calc(5s + var(--mote-i) * .2s) linear calc(var(--mote-i) * -.7s) infinite;
+}
+@keyframes library-mote {
+  10% { opacity: .4; }
+  80% { opacity: .3; }
+  100% { transform: translate(-15px, -160px); opacity: 0; }
+}
+.library-exiting .library-world { animation: library-ascend 6s cubic-bezier(.4, 0, .3, 1) both; }
+.library-exiting .library-forbidden-book { animation: library-take-book 6s ease-in-out both; }
+.library-exiting .library-reading-book { animation: library-present-book 6s ease-in-out both; }
+.library-exiting .library-reading-cover { animation: library-open-cover 6s ease-in-out both; }
+.library-exiting .library-reading-pages { animation: library-open-pages 6s ease-in-out both; }
+.library-exiting .library-rising-runes { animation: library-spell-appear 6s ease-in-out both; }
+.library-exiting .library-rising-runes > svg { animation: library-rune-rise 2.4s ease-out calc(3.15s + var(--rune-i) * .1s) both; }
+.library-exiting .library-ghost-mist { animation: library-mist-appear 6s ease-in-out both; }
+.library-exiting .library-ghost-knight { animation: library-knight-awaken 6s ease-in-out both; }
+@keyframes library-ascend {
+  0% { transform: translate(-50%, -50%) scale(1); filter: brightness(1); }
+  15% { transform: translate(-53%, -42%) scale(1.2); }
+  34% { transform: translate(-57%, -31%) scale(1.75); filter: brightness(1); }
+  45%, 100% { transform: translate(-57%, -31%) scale(1.75); filter: brightness(.55); }
+}
+@keyframes library-take-book { 0%, 31% { opacity: 1; } 42%, 100% { opacity: 0; } }
+@keyframes library-present-book {
+  0%, 30% { opacity: 0; transform: translate(-50%, 5%) scale(.4) rotateX(35deg); }
+  40% { opacity: 1; transform: translate(-50%, -50%) scale(.8) rotateX(18deg); }
+  54%, 77% { opacity: 1; transform: translate(-50%, -50%) scale(1) rotateX(12deg); }
+  100% { opacity: .86; transform: translate(-50%, -43%) scale(.93) rotateX(12deg); }
+}
+@keyframes library-open-cover { 0%, 40% { opacity: 1; transform: rotateY(0); } 56%, 100% { opacity: 0; transform: rotateY(-155deg); } }
+@keyframes library-open-pages { 0%, 44% { opacity: 0; transform: scaleX(.3); } 56%, 100% { opacity: 1; transform: scaleX(1); } }
+@keyframes library-spell-appear { 0%, 53% { opacity: 0; } 59%, 82% { opacity: 1; } 100% { opacity: .2; } }
+@keyframes library-rune-rise { 0% { opacity: 0; transform: translateY(15px) scale(.7); } 20% { opacity: 1; } 100% { opacity: 0; transform: translateY(-220px) scale(1.25); } }
+@keyframes library-mist-appear { 0%, 65% { opacity: 0; } 82%, 100% { opacity: 1; } }
+@keyframes library-knight-awaken {
+  0%, 68% { opacity: 0; transform: translate(-50%, 20%) scale(.8); }
+  91% { opacity: .9; transform: translate(-50%, 0) scale(1); }
+  97% { opacity: .94; transform: translate(-50%, 1%) scale(1) rotate(-2deg); }
+  100% { opacity: .94; transform: translate(-50%, 0) scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .story-library *, .story-library *::before, .story-library *::after {
+    animation-duration: .001ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+    transition-delay: 0ms !important;
+  }
+  .library-ready .library-seal { opacity: 0; }
+}
+
+</style>
+<style data-source="ice-armor-story.css">
+.story-ice,
+.story-armor {
+  position: fixed;
+  z-index: 0;
+  inset: 0;
+  display: block;
+  overflow: hidden;
+  isolation: isolate;
+  pointer-events: none;
+}
+.story-ice[hidden],
+.story-armor[hidden] { display: none !important; }
+.story-ice { background: #08141c; }
+.story-armor { background: #0c0b0d; }
+.ia-frame {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(100%, 75dvh);
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  transform: translate(-50%,-50%);
+  box-shadow: 0 0 100px 28px #0008;
+}
+.ia-world { position: absolute; inset: 0; transform-origin: 50% 48%; }
+.ia-ice-world {
+  z-index: 1;
+  background: #17313e url("assets/story/frozen-courtyard.webp") center / 100% 100% no-repeat;
+}
+.ia-armor-world {
+  background: #201c21 url("assets/story/armor-chamber.webp") center / 100% 100% no-repeat;
+}
+.ia-frame-shade {
+  position: absolute;
+  z-index: 12;
+  inset: 0;
+  background: linear-gradient(#07111c7d, transparent 25% 68%, #051018ae);
+}
+.ia-armor-frame .ia-frame-shade {
+  background: linear-gradient(#0c090e94,transparent 23% 73%,#100b10cc);
+}
+.ia-goddess {
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  top: 22%;
+  width: 48%;
+  height: 53%;
+  transform: translateX(-50%);
+  transform-origin: 50% 94%;
+  /* Keep the painted shell's blue-white ice and specular highlights intact. */
+  filter: none;
+}
+.ia-goddess img,
+.ia-armor-figure img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center bottom;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+.ia-goddess img { transition: opacity 1.3s ease; }
+.ia-goddess img.ia-goddess-sleeping {
+  /* Only the living figure beneath the ice gradually regains warmth. */
+  filter: grayscale(calc(.8 - var(--ia-progress,0) * .65))
+    brightness(calc(.82 + var(--ia-progress,0) * .18));
+  transition: opacity 1.3s ease,filter 1.5s ease;
+}
+.ia-goddess img.ia-goddess-awake { position: absolute; inset: 0; opacity: 0; }
+.story-ice.is-complete .ia-goddess-sleeping { opacity: 0; }
+.story-ice.is-complete img.ia-goddess-awake { opacity: 1; }
+.ia-goddess-shadow {
+  position: absolute;
+  left: 50%;
+  top: 72.5%;
+  width: 34%;
+  height: 4.7%;
+  border-radius: 50%;
+  transform: translateX(-50%);
+  background: radial-gradient(ellipse,#03121d9e,transparent 70%);
+  filter: blur(5px);
+}
+.ia-body-ice {
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center bottom;
+  opacity: 1;
+  filter: drop-shadow(0 0 2px #a2e5fa26);
+  transition: opacity 1.5s ease,filter 1.5s ease;
+}
+.ia-ice-light {
+  position: absolute;
+  z-index: 1;
+  left: 19%;
+  top: 19%;
+  width: 62%;
+  height: 61%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse,#afe5f516,#71c6e90b 45%,transparent 70%);
+  mix-blend-mode: screen;
+}
+.ia-melt-water {
+  position: absolute;
+  z-index: 4;
+  left: 50%;
+  top: 74%;
+  width: calc(12% + var(--ia-progress,0) * 30%);
+  height: calc(1.8% + var(--ia-progress,0) * 2.5%);
+  transform: translateX(-50%);
+  border-radius: 50%;
+  opacity: calc(var(--ia-progress,0) * .8);
+  background: radial-gradient(ellipse,#cfecf642,#497d96b3 32%,#1536453a 58%,transparent 72%);
+  box-shadow: 0 -1px 1px #c9eeff59;
+  transition: opacity .8s,width .8s,height .8s;
+}
+.ia-ice-release {
+  position: absolute;
+  z-index: 5;
+  inset: 12% 19% 20%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse,#d4f4ff75,transparent 64%);
+  opacity: 0;
+  mix-blend-mode: screen;
+}
+.ia-snow { position: absolute; z-index: 6; inset: 0; overflow: hidden; }
+.ia-snow i {
+  position: absolute;
+  top: -4%;
+  left: var(--flake-x);
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background: #d9f4f4b0;
+  box-shadow: 0 0 4px #d9f4f450;
+  animation: ia-snowfall var(--flake-duration) linear var(--flake-delay) infinite;
+}
+@keyframes ia-snowfall {
+  0% { transform: translate(0,0); opacity: 0; }
+  12%,78% { opacity: .7; }
+  100% { transform: translate(28px,105dvh); opacity: 0; }
+}
+.story-ice.is-changing:not(.is-complete) .ia-body-ice {
+  animation: ia-ice-fracture .65s ease-out;
+}
+@keyframes ia-ice-fracture {
+  0%,100% { filter: drop-shadow(0 0 2px #a2e5fa26); }
+  30% { filter: brightness(1.3) drop-shadow(0 0 4px #d4faff70); }
+}
+.story-ice.is-complete .ia-body-ice {
+  opacity: 0;
+  filter: blur(1px);
+}
+.story-ice.is-complete .ia-ice-light {
+  background: radial-gradient(ellipse,#efd8a229,#b9d6bb0d 45%,transparent 70%);
+}
+.story-ice.is-complete .ia-goddess {
+  filter: drop-shadow(0 0 12px #dfcda952);
+  animation: ia-goddess-breath 4s ease-in-out infinite;
+}
+@keyframes ia-goddess-breath {
+  0%,100% { transform: translateX(-50%) rotate(-.35deg); }
+  50% { transform: translateX(-50%) translateY(-.4%) rotate(.35deg); }
+}
+.story-ice.is-awakening .ia-ice-release { animation: ia-ice-bloom 1.8s ease-out both; }
+@keyframes ia-ice-bloom {
+  0% { opacity: 0; transform: scale(.55); }
+  24% { opacity: .9; }
+  100% { opacity: 0; transform: scale(1.5); }
+}
+/* The guide remains close while the courtyard drops away beneath the viewer.
+   These separate layers produce an ascent, rather than zooming a single still. */
+.ia-flight-vista {
+  position: absolute;
+  z-index: 0;
+  inset: -8% -4% 0;
+  opacity: 0;
+  background: #102634 url("assets/story/ice-flight-sky-v3.webp") center / cover no-repeat;
+  transform: translateY(-4%) scale(1.08);
+}
+.ia-flight-guide {
+  position: absolute;
+  z-index: 4;
+  left: 50%;
+  top: 7%;
+  width: 82%;
+  /* Carry the first-person sleeve past the frame even at the highest hover. */
+  height: 97%;
+  visibility: hidden;
+  opacity: 0;
+  transform: translateX(-50%) translateY(8%) scale(.88);
+  transform-origin: 50% 76%;
+  filter: drop-shadow(0 0 8px #d7e9ed24);
+}
+.ia-flight-guide img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center bottom;
+  -webkit-user-drag: none;
+  user-select: none;
+  transition: opacity .45s ease;
+}
+.ia-flight-handhold { opacity: 0; }
+.has-flight-guide .ia-flight-handhold { opacity: 1; }
+.has-flight-guide .ia-flight-fallback { opacity: 0; }
+.ia-handhold-glimmer {
+  position: absolute;
+  z-index: 5;
+  left: 36%;
+  top: 63%;
+  width: 29%;
+  height: 16%;
+  opacity: 0;
+  border-radius: 50%;
+  background: radial-gradient(ellipse,#f3f0d7a3,#e0e9dd30 27%,transparent 68%);
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+.ia-flight-cloud {
+  position: absolute;
+  z-index: 6;
+  inset: -30% -45%;
+  opacity: 0;
+  background:
+    radial-gradient(ellipse at 19% 52%,#bfdbe05c,transparent 32%),
+    radial-gradient(ellipse at 85% 43%,#adcdd656,transparent 30%),
+    radial-gradient(ellipse at 42% 55%,#cce1df20,transparent 38%);
+  filter: blur(19px);
+  pointer-events: none;
+}
+.ia-flight-cloud-near { z-index: 7; filter: blur(13px); }
+.ia-flight-streaks { position: absolute; z-index: 7; inset: 0; overflow: hidden; opacity: 0; }
+.ia-flight-streaks i {
+  position: absolute;
+  left: var(--flight-x);
+  top: -25%;
+  width: 1px;
+  height: 17%;
+  border-radius: 50%;
+  background: linear-gradient(transparent,#d5e9e773,transparent);
+}
+.story-ice.is-leaving .ia-ice-world {
+  /* The receding environment blends into the sky instead of exposing a card. */
+  -webkit-mask-image: linear-gradient(to bottom,transparent,#000 20%),linear-gradient(to right,transparent,#000 8%,#000 92%,transparent);
+  mask-image: linear-gradient(to bottom,transparent,#000 20%),linear-gradient(to right,transparent,#000 8%,#000 92%,transparent);
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+  animation: ia-courtyard-recedes 7.2s cubic-bezier(.3,.02,.2,1) both;
+}
+.story-ice.is-leaving .ia-goddess {
+  animation: ia-goddess-reaches 2.2s ease-in-out both;
+}
+.story-ice.is-leaving .ia-goddess-shadow { animation: ia-release-shadow 2.5s ease-out both; }
+.story-ice.is-leaving .ia-flight-vista { animation: ia-reveal-night-flight 7.2s ease-out both; }
+.story-ice.is-leaving .ia-flight-guide {
+  visibility: visible;
+  animation: ia-take-hand 7.2s ease-in-out both,ia-held-flight 4.8s 7.2s ease-in-out infinite;
+}
+.story-ice.is-leaving .ia-handhold-glimmer { animation: ia-handhold-light 1.1s 1.1s ease-out both; }
+.story-ice.is-leaving .ia-flight-cloud-far { animation: ia-cloud-passes-far 5.5s 1.7s ease-in-out both; }
+.story-ice.is-leaving .ia-flight-cloud-near { animation: ia-cloud-passes-near 4.5s 2.1s ease-in-out both; }
+.story-ice.is-leaving .ia-flight-streaks { animation: ia-flight-wind-visible 7.2s ease-out both; }
+.story-ice.is-leaving .ia-flight-streaks i { animation: ia-flight-wind 1.5s calc(1.9s + var(--flight-delay)) ease-in 3; }
+@keyframes ia-goddess-reaches {
+  0% { transform: translateX(-50%); opacity: 1; }
+  58% { transform: translateX(-50%) translateY(4%) scale(1.3); opacity: 1; }
+  100% { transform: translateX(-50%) translateY(8%) scale(1.45); opacity: 0; }
+}
+@keyframes ia-courtyard-recedes {
+  0%,19% { transform: none; opacity: 1; }
+  35% { transform: translateY(18%) scale(.96); opacity: 1; }
+  61% { transform: translateY(73%) scale(.77); opacity: .8; }
+  85%,100% { transform: translateY(114%) scale(.62); opacity: 0; }
+}
+@keyframes ia-release-shadow { 0% { opacity: 1; } 100% { opacity: 0; transform: translateX(-50%) scale(.45); } }
+@keyframes ia-reveal-night-flight {
+  0%,17% { opacity: 0; transform: translateY(-4%) scale(1.08); }
+  39% { opacity: 1; }
+  100% { opacity: 1; transform: translateY(2%) scale(1); }
+}
+@keyframes ia-take-hand {
+  0%,12% { opacity: 0; transform: translateX(-50%) translateY(8%) scale(.88); }
+  29% { opacity: 1; transform: translateX(-50%) translateY(2%) scale(.98); }
+  60% { opacity: 1; transform: translateX(-50%) translateY(-1%) scale(1.02); }
+  100% { opacity: 1; transform: translateX(-50%) translateY(-3%) scale(1.03); }
+}
+@keyframes ia-held-flight {
+  0%,100% { transform: translateX(-50%) translateY(-3%) scale(1.03); }
+  50% { transform: translateX(-49.5%) translateY(-3.8%) scale(1.03); }
+}
+@keyframes ia-handhold-light {
+  0% { opacity: 0; transform: scale(.3); }
+  30% { opacity: .76; }
+  100% { opacity: 0; transform: scale(1.65); }
+}
+@keyframes ia-cloud-passes-far {
+  0% { opacity: 0; transform: translateY(-38%) scale(.8); }
+  36% { opacity: .38; }
+  100% { opacity: 0; transform: translateY(61%) scale(1.18); }
+}
+@keyframes ia-cloud-passes-near {
+  0% { opacity: 0; transform: translateY(-55%) scale(.7); }
+  32% { opacity: .64; }
+  100% { opacity: 0; transform: translateY(92%) scale(1.35); }
+}
+@keyframes ia-flight-wind-visible { 0%,24% { opacity: 0; } 42%,77% { opacity: .56; } 100% { opacity: 0; } }
+@keyframes ia-flight-wind { 0% { transform: translateY(-20dvh); opacity: 0; } 25% { opacity: .7; } 100% { transform: translateY(150dvh); opacity: 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .story-ice *, .story-armor * { animation: none !important; transition: none !important; }
+  .story-ice.is-leaving .ia-ice-world { opacity: 0; transform: translateY(114%) scale(.62); }
+  .story-ice.is-leaving .ia-flight-vista { opacity: 1; transform: none; }
+  .story-ice.is-leaving .ia-flight-guide { visibility: visible; opacity: 1; transform: translateX(-50%) translateY(-3%) scale(1.03); }
+  .story-ice.is-leaving .ia-handhold-glimmer,
+  .story-ice.is-leaving .ia-flight-cloud,
+  .story-ice.is-leaving .ia-flight-streaks { opacity: 0; }
+}
+
+/* Armor-only styles. Replace the old armor block, including helmet-view and
+   old walking/helmet keyframes. Do not replace the goddess/flight CSS. */
+.ia-armor-world { background:#201c21 url("assets/story/armor-chamber.webp") center/100% 100% no-repeat; }
+.ia-armor-figure {
+  position:absolute;z-index:3;left:50%;top:22%;width:50%;height:55%;
+  transform:translateX(-50%);transform-origin:50% 100%;filter:brightness(.9) drop-shadow(0 5px 5px #0008);
+}
+/* Safe when appended for preview: cancel the obsolete parent walk/helmet
+   animation so only the standing/kneeling pose sequence controls the figure. */
+.story-armor .ia-armor-figure {animation:none!important;}
+.ia-armor-figure img {display:block;width:100%;height:100%;object-fit:contain;object-position:center bottom;user-select:none;-webkit-user-drag:none;}
+.ia-armor-standing {position:absolute;inset:0;opacity:1;transform-origin:50% 100%;}
+.ia-armor-kneeling {position:absolute;inset:0;opacity:0;transform-origin:50% 100%;}
+.ia-armor-shadow {
+  position:absolute;z-index:0;left:50%;top:74.5%;width:40%;height:6%;transform:translateX(-50%);border-radius:50%;
+  background:radial-gradient(ellipse,#05030bd9 12%,#05030b68 48%,transparent 72%);filter:blur(5px);
+}
+.ia-armor-aura {position:absolute;z-index:0;inset:13% 21% 22%;border-radius:50%;background:radial-gradient(ellipse,#b38d622a,transparent 66%);}
+/* Neither ancestor creates a stacking context. Rear chains must genuinely pass
+   behind the armor (z3), while the front half clamps over its chest and limbs. */
+.ia-chains,.ia-chain {position:absolute;inset:0;z-index:auto;pointer-events:none;}
+.ia-chain canvas {position:absolute;display:block;transition:opacity .9s ease,transform 1s cubic-bezier(.3,.05,.7,1);}
+.ia-chain-back {z-index:1;}
+.ia-chain-wall {z-index:2;}
+.ia-chain-front {z-index:5;}
+.ia-chain-spark {
+  position:absolute;z-index:6;top:var(--spark-y);left:var(--spark-x);width:5%;aspect-ratio:1;opacity:0;
+  transform:translate(-50%,-50%);background:radial-gradient(ellipse,#fff5cd,#dbae5f80 20%,transparent 65%);mix-blend-mode:screen;
+}
+.ia-chain.is-broken .ia-chain-wall {transform:rotate(var(--chain-turn));opacity:.24;}
+.ia-chain.is-broken .ia-chain-front,.ia-chain.is-broken .ia-chain-back {transform:translateY(24dvh) rotate(calc(var(--chain-turn) * -1));opacity:0;}
+.ia-chain.is-snapping .ia-chain-spark {animation:ia-bound-chain-snap .7s ease-out both;}
+@keyframes ia-bound-chain-snap {0%{opacity:1;transform:translate(-50%,-50%) scale(.3)}30%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) scale(2.5)}}
+.ia-armor-dust {position:absolute;z-index:4;inset:62% 27% 15%;border-radius:50%;opacity:0;background:radial-gradient(ellipse,#b6a38a59,transparent 67%);filter:blur(10px);}
+.ia-armor-radiance {
+  position:absolute;z-index:0;inset:29% 14% 12%;border-radius:50%;opacity:0;
+  background:radial-gradient(ellipse at 50% 52%,#f7d79266,transparent 59%),conic-gradient(from 15deg at 50% 53%,transparent 0deg,#c6ab6330 13deg,transparent 23deg,transparent 43deg,#c6ab6326 53deg,transparent 63deg,transparent 94deg,#c6ab6325 105deg,transparent 116deg,transparent 164deg,#c6ab632c 175deg,transparent 184deg,transparent 244deg,#c6ab6326 255deg,transparent 266deg,transparent 304deg,#c6ab632a 316deg,transparent 328deg);
+  mix-blend-mode:screen;filter:blur(3px);transform-origin:50% 53%;
+}
+.ia-armor-seam-light {
+  position:absolute;inset:0;opacity:0;pointer-events:none;mix-blend-mode:screen;
+  -webkit-mask:url("assets/story/castle-armor-kneeling-v3.webp") center bottom/contain no-repeat;
+  mask:url("assets/story/castle-armor-kneeling-v3.webp") center bottom/contain no-repeat;
+  background:radial-gradient(ellipse 12% 7% at 50% 50%,#fff4cba0,transparent 88%),radial-gradient(ellipse 24% 1.6% at 50% 60%,#ffe3a1dd,transparent 92%),radial-gradient(ellipse 14% 2.4% at 45% 78%,#ffe8aac0,transparent 88%);
+}
+.ia-armor-chest-light {position:absolute;inset:38% 30% 28%;opacity:0;pointer-events:none;mix-blend-mode:screen;background:radial-gradient(ellipse at 50% 36%,#fff9d3b5,#ebc97845 20%,transparent 66%);filter:blur(3px);}
+.ia-armor-floor-light {position:absolute;z-index:0;left:50%;top:78%;width:47%;height:9%;border-radius:50%;opacity:0;transform:translateX(-50%);background:radial-gradient(ellipse,#ead18b70,transparent 70%);mix-blend-mode:screen;}
+.story-armor.is-complete .ia-armor-figure {transform:translateX(-50%);filter:brightness(1.04) drop-shadow(0 7px 6px #0008);}
+.story-armor.is-complete .ia-armor-standing {opacity:0;}
+.story-armor.is-complete .ia-armor-kneeling {opacity:1;transform:translateY(7%) scale(1.17);}
+.story-armor.is-complete .ia-armor-radiance {opacity:.72;}
+.story-armor.is-complete .ia-armor-seam-light,.story-armor.is-complete .ia-armor-chest-light {opacity:.85;}
+.story-armor.is-complete .ia-armor-floor-light {opacity:.75;}
+.story-armor.is-armor-ending .ia-armor-standing {animation:ia-armor-approach-stand 6.2s ease-in-out both;}
+.story-armor.is-armor-ending .ia-armor-kneeling {animation:ia-armor-bend-knee 6.2s ease-in-out both;}
+.story-armor.is-armor-ending .ia-armor-radiance {animation:ia-armor-released-light 6.2s ease-out both;}
+.story-armor.is-armor-ending .ia-armor-seam-light,.story-armor.is-armor-ending .ia-armor-chest-light {animation:ia-armor-released-light 6.2s ease-out both;}
+.story-armor.is-armor-ending .ia-armor-floor-light {animation:ia-armor-floor-glow 6.2s ease-out both;}
+.story-armor.is-armor-ending .ia-armor-dust {animation:ia-armor-knee-dust 6.2s ease-out both;}
+@keyframes ia-armor-approach-stand {0%{opacity:1;transform:translateY(0) scale(1)}16%{transform:translate(-.6%,2%) scale(1.06)}29%{opacity:1;transform:translateY(6%) scale(1.17)}39%,100%{opacity:0;transform:translateY(13%) scale(1.17)}}
+@keyframes ia-armor-bend-knee {0%,26%{opacity:0;transform:translateY(-4%) scale(1.17)}38%{opacity:1;transform:translateY(7.8%) scale(1.17)}44%{transform:translateY(6.6%) scale(1.17)}50%,100%{opacity:1;transform:translateY(7%) scale(1.17)}}
+@keyframes ia-armor-released-light {0%,40%{opacity:0;filter:blur(3px)}60%{opacity:.95;filter:blur(1px)}78%,100%{opacity:.75;filter:blur(3px)}}
+@keyframes ia-armor-floor-glow {0%,40%{opacity:0;transform:translateX(-50%) scale(.6)}65%,100%{opacity:.75;transform:translateX(-50%) scale(1)}}
+@keyframes ia-armor-knee-dust {0%,31%{opacity:0;transform:scale(.5)}39%{opacity:.6;transform:scale(1)}56%,100%{opacity:0;transform:translateY(13%) scale(1.2)}}
+/* The old wearing-a-helmet ending must not cover the kneeling figure. */
+.story-armor .ia-helmet-view {display:none!important;}
+@media (prefers-reduced-motion:reduce){
+  .story-armor *, .story-armor *::before,.story-armor *::after {animation:none!important;transition:none!important;}
+  .story-armor.is-complete .ia-armor-standing {opacity:0;}
+  .story-armor.is-complete .ia-armor-kneeling {opacity:1;transform:translateY(7%) scale(1.17);}
+  .story-armor.is-complete .ia-armor-radiance,.story-armor.is-complete .ia-armor-seam-light,.story-armor.is-complete .ia-armor-chest-light {opacity:.75;}
+}
+
+/* Missing/late pose artwork keeps a visible suit and working replay controls. */
+.story-armor:not(.has-kneel-art).is-complete .ia-armor-standing {
+  opacity:1;transform:translateY(7%) scale(1.17);animation:none!important;
 }
 
 </style>
@@ -8596,6 +9544,764 @@ window.HANZI_GLYPH_CATALOG={"version":"41b38d977b270e08ea493526a4ee0f8643a59bbf2
 })(window);
 
 </script>
+<script data-source="dune-sand.js">
+(function (window) {
+  'use strict';
+
+  const WIDTH = 900;
+  const HEIGHT = 1200;
+  const MAX_PARTICLES = 950;
+  const GRAIN_COLORS = ['#e0b36d', '#b77d3e', '#d19b55', '#8c592e', '#edc78a'];
+
+  function create({canvas, document: doc}) {
+    const view = doc?.defaultView || window;
+    let context;
+    try { context = canvas?.getContext?.('2d', {alpha:true}); }
+    catch (_) { /* The scene remains available if canvas drawing is blocked. */ }
+    const inert = {gust() {}, eruption() {}, landing() {}, stop() {}};
+    if (!context || !view.requestAnimationFrame) return inert;
+
+    canvas.width = WIDTH;
+    canvas.height = HEIGHT;
+    const dust = doc.createElement('canvas');
+    dust.width = dust.height = 96;
+    const dustContext = dust.getContext('2d');
+    if (!dustContext) return inert;
+    const cloud = dustContext.createRadialGradient(48,48,3,48,48,47);
+    cloud.addColorStop(0,'#bd8a50b0');
+    cloud.addColorStop(.25,'#bb865593');
+    cloud.addColorStop(.59,'#b7834a46');
+    cloud.addColorStop(1,'#a8753b00');
+    dustContext.fillStyle = cloud;
+    dustContext.fillRect(0,0,96,96);
+
+    let particles = [];
+    let frame = 0;
+    let previousTime = 0;
+    let seed = 3917;
+
+    // Repeatable irregularity keeps replays comparable while avoiding rigid jets.
+    function random() {
+      seed = (Math.imul(seed,1664525) + 1013904223) >>> 0;
+      return seed / 4294967296;
+    }
+    const between = (minimum,maximum) => minimum + random() * (maximum-minimum);
+    const reduced = () => view.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+
+    function stop() {
+      if (frame) view.cancelAnimationFrame(frame);
+      frame = 0;
+      previousTime = 0;
+      particles = [];
+      context.clearRect(0,0,WIDTH,HEIGHT);
+    }
+
+    function render(now) {
+      frame = 0;
+      if (reduced()) { stop(); return; }
+      const elapsed = previousTime ? Math.min((now-previousTime)/1000,.05) : 0;
+      previousTime = now;
+      context.clearRect(0,0,WIDTH,HEIGHT);
+      particles = particles.filter(particle => {
+        particle.age += elapsed;
+        return particle.age < particle.life;
+      });
+
+      for (const particle of particles) {
+        if (particle.age < 0) continue;
+        const progress = particle.age / particle.life;
+        const fade = Math.min(1,particle.age/.08) * Math.pow(1-progress,particle.cloud ? 1.25 : .65);
+        const x = particle.x + particle.vx * particle.age;
+        const y = particle.y + particle.vy * particle.age + particle.gravity * particle.age * particle.age / 2;
+        if (particle.cloud) {
+          const spread = 1 + progress * particle.spread;
+          const size = particle.size * spread;
+          context.globalAlpha = fade * particle.opacity;
+          context.save();
+          context.translate(x,y);
+          context.rotate(particle.angle + progress * particle.turn);
+          context.drawImage(dust,-size,-size*particle.tall,size*2,size*2*particle.tall);
+          context.restore();
+        } else {
+          context.globalAlpha = fade * particle.opacity;
+          context.fillStyle = particle.color;
+          context.fillRect(x,y,particle.size,particle.size * particle.tall);
+        }
+      }
+      context.globalAlpha = 1;
+      if (particles.length) frame = view.requestAnimationFrame(render);
+      else previousTime = 0;
+    }
+
+    function start(next) {
+      if (reduced()) return;
+      particles = particles.concat(next).slice(-MAX_PARTICLES);
+      if (!frame) frame = view.requestAnimationFrame(render);
+    }
+
+    function grain(x,y,scale,delay,life,vx,vy,gravity) {
+      return {x,y,vx,vy,gravity,age:-delay,life,cloud:false,
+        size:between(.75,2.9)*scale, tall:between(.65,1.35),
+        opacity:between(.45,.95), color:GRAIN_COLORS[Math.floor(random()*GRAIN_COLORS.length)]};
+    }
+
+    function puff(x,y,size,delay,life,vx,vy,gravity,opacity,tall) {
+      return {x,y,vx,vy,gravity,age:-delay,life,cloud:true,size,opacity,tall,
+        angle:between(-.3,.3), turn:between(-.5,.5), spread:between(1.1,2.4)};
+    }
+
+    function gust(xPercent,yPercent,sizePercent=9) {
+      if (reduced()) return;
+      const x = xPercent * WIDTH / 100, y = yPercent * HEIGHT / 100;
+      const size = Math.max(10,sizePercent * WIDTH / 100);
+      const next = [];
+      for (let index=0; index<9; index++) {
+        next.push(puff(x+between(-.5,.5)*size,y+between(-.13,.13)*size,
+          size*.25,between(0,.12),between(.65,.95),between(-.7,1)*size,
+          between(-.7,-.2)*size,35,.23,.45));
+      }
+      for (let index=0; index<72; index++) {
+        next.push(grain(x+between(-.4,.4)*size,y+between(-.1,.1)*size,
+          .45,between(0,.12),between(.4,.85),between(-1.4,1.5)*size,
+          between(-1.4,-.3)*size,210));
+      }
+      start(next);
+    }
+
+    function eruption(xPercent=63,yPercent=43) {
+      if (reduced()) return;
+      const x = xPercent * WIDTH / 100, y = yPercent * HEIGHT / 100;
+      const next = [];
+      // Low, dense rolling sand hides the exact moment the body breaks the ridge.
+      for (let index=0; index<32; index++) {
+        const side = index%2 ? 1 : -1;
+        next.push(puff(x+between(-45,45),y+between(-8,18),between(30,57),
+          between(0,.7),between(1.65,2.3),side*between(45,175),between(-42,-10),
+          18,between(.24,.46),between(.4,.65)));
+      }
+      // Higher turbulent puffs accompany the upward fountain and drift sideways.
+      for (let index=0; index<24; index++) {
+        next.push(puff(x+between(-22,22),y,between(17,33),between(.05,.85),
+          between(1.5,2.25),between(-95,100),between(-210,-105),85,
+          between(.18,.33),between(.65,1)));
+      }
+      for (let index=0; index<540; index++) {
+        const coarse = index < 130;
+        next.push(grain(x+between(-42,42),y+between(-8,12),coarse?1.2:.55,
+          between(0,1),between(1.15,2),between(-220,220),
+          between(coarse?-440:-360,-155),between(280,430)));
+      }
+      start(next);
+    }
+
+    function landing(xPercent=50,yPercent=69) {
+      if (reduced()) return;
+      const x = xPercent * WIDTH / 100, y = yPercent * HEIGHT / 100;
+      const next = [];
+      for (let index=0; index<30; index++) {
+        const side = index%2 ? 1 : -1;
+        next.push(puff(x+between(-70,70),y+between(-7,7),between(22,43),
+          between(0,.2),between(.9,1.45),side*between(70,190),between(-42,-10),
+          24,between(.2,.36),between(.23,.4)));
+      }
+      for (let index=0; index<170; index++) {
+        const side = index%2 ? 1 : -1;
+        next.push(grain(x+between(-65,65),y,.75,between(0,.18),between(.55,1.2),
+          side*between(90,260),between(-110,-35),210));
+      }
+      start(next);
+    }
+
+    return {gust,eruption,landing,stop};
+  }
+
+  window.HanziDuneSand = Object.freeze({create});
+})(window);
+
+</script>
+<script data-source="dune-story.js">
+(function (window) {
+  'use strict';
+
+  // The paired tracks bend around the dune and turn back toward its ridge.
+  const FOOTPRINTS = [
+    [28,81,11.2,20], [43,76,10.2,33],
+    [44,70.7,9.3,20], [60,67,8.3,34],
+    [63,61.5,7.5,15], [77,58.2,6.4,-8],
+    [64,53.2,5.7,-28], [70,49.8,4.7,-33],
+    [54,46.8,4,-21], [63,43.4,3.4,9]
+  ];
+  const ARRIVAL_TIME = 5400;
+  const RIDING_TIME = 4700;
+
+  function create({document:doc}) {
+    const scene = doc.createElement('div');
+    scene.className = 'story-dune';
+    scene.hidden = true;
+    scene.setAttribute('aria-hidden','true');
+    scene.innerHTML = `
+      <div class="dune-frame">
+        <div class="dune-world">
+          <div class="dune-landscape"></div>
+          <div class="dune-distant-haze"></div>
+          <div class="dune-footprints">
+            ${FOOTPRINTS.map(([x,y,size,angle],index) => `
+              <span class="dune-footprint" data-print="${index+1}"
+                style="--print-x:${x}%;--print-y:${y}%;--print-size:${size}%;--print-angle:${angle}deg">
+                <i class="dune-heel"></i><i class="dune-toe"></i><i class="dune-toe"></i><i class="dune-toe"></i>
+              </span>`).join('')}
+          </div>
+          <div class="dune-dragon-shadow"></div>
+          <div class="dune-dragon"><img src="assets/story/dune-dragon-hornless-v2.webp" alt="" draggable="false"></div>
+          <div class="dune-ridge-mask"></div>
+          <canvas class="dune-sand"></canvas>
+          <div class="dune-low-drift"></div>
+        </div>
+        <div class="dune-flight-view">
+          <div class="dune-flight-land"></div>
+          <div class="dune-flight-haze"></div>
+          <div class="dune-rider">
+            <img src="assets/story/dragon-riding-hornless-v2.webp" alt="" draggable="false">
+          </div>
+          <div class="dune-flight-wind"></div>
+        </div>
+        <div class="dune-vignette"></div>
+      </div>`;
+    doc.body.insertBefore(scene,doc.body.firstChild);
+
+    const marks = Array.from(scene.querySelectorAll('.dune-footprint'));
+    const sand = window.HanziDuneSand?.create({canvas:scene.querySelector('.dune-sand'),document:doc});
+    const timers = new Set();
+    const reduced = () => doc.defaultView?.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+    let previousCount = 0;
+    let active = false;
+
+    function later(callback,delay) {
+      const timer = window.setTimeout(() => {
+        timers.delete(timer);
+        if(active)callback();
+      },delay);
+      timers.add(timer);
+    }
+
+    function resetExit() {
+      timers.forEach(timer => window.clearTimeout(timer));
+      timers.clear();
+      sand?.stop();
+      scene.classList.remove('is-riding','dragon-arrives');
+    }
+
+    function render(stage,value,animate=false) {
+      const visible = stage==='dunes';
+      scene.hidden = !visible;
+      if(!visible) {
+        resetExit();
+        active = false;
+        return;
+      }
+      const count = Math.min(10,Math.max(0,Math.floor(Number(value)||0)));
+      const advancing = active && count>previousCount;
+      if(count<previousCount || !active)resetExit();
+      active = true;
+
+      marks.forEach((mark,index) => {
+        mark.classList.toggle('is-revealed',index<count);
+        mark.classList.remove('is-rising');
+        if(index<count && index>=previousCount && animate && advancing) {
+          mark.getBoundingClientRect();
+          mark.classList.add('is-rising');
+          const [x,y,size] = FOOTPRINTS[index];
+          sand?.gust(x,y,size);
+        }
+      });
+      scene.classList.toggle('is-complete',count===10);
+      if(count===10 && previousCount<10 && animate && !reduced()) {
+        sand?.stop();
+        scene.classList.remove('dragon-arrives');
+        scene.getBoundingClientRect();
+        scene.classList.add('dragon-arrives');
+        later(() => sand?.eruption(63,41),250);
+        later(() => sand?.landing(50,69),3950);
+        later(() => scene.classList.remove('dragon-arrives'),ARRIVAL_TIME);
+      }
+      scene.dataset.count = String(count);
+      previousCount = count;
+    }
+
+    function playExit(stage) {
+      if(stage!=='dunes' || previousCount!==10 || !active)return 0;
+      resetExit();
+      scene.getBoundingClientRect();
+      scene.classList.add('is-riding');
+      return reduced()?0:RIDING_TIME;
+    }
+
+    return {render,playExit,resetExit,arrivalTime:ARRIVAL_TIME};
+  }
+
+  window.HanziDuneStory = {create};
+})(window);
+
+</script>
+<script data-source="library-story.js">
+(function (window) {
+  'use strict';
+
+  const EXIT_TIME = 6000;
+  const STEP_ARRIVAL_TIME = 900;
+  const STEPS = Array.from({ length: 10 }, (_, index) => ({
+    x: 28 + index * 39 / 9,
+    y: 83 - index * 53 / 9,
+    width: 24 - index * 12 / 9
+  }));
+  const RUNES = [
+    'M0 12 7 0 14 12M3 8H11M7 12V21',
+    'M1 3H13L2 18H14M7 1V21',
+    'M2 4 12 14 2 21M2 4V21M12 1V11',
+    'M7 0V21M1 6 7 1 13 6M1 16 7 21 13 16',
+    'M1 5H13M1 15H13M7 0V21M1 5 13 15',
+    'M7 0 14 10 7 21 0 10ZM7 5V16'
+  ];
+
+  function pageRunes(offset) {
+    return Array.from({ length: 4 }, (_, row) =>
+      `<g transform="translate(${offset} ${121 + row * 33})">${RUNES.map((path, index) =>
+        `<path d="${path}" transform="translate(${index * 25} 0)"/>`).join('')}</g>`).join('');
+  }
+
+  function create({ document: doc }) {
+    const scene = doc.createElement('div');
+    scene.className = 'story-scene story-library';
+    scene.hidden = true;
+    scene.setAttribute('aria-hidden', 'true');
+    scene.innerHTML = `
+      <div class="library-frame">
+        <div class="library-world">
+          <div class="library-art"></div>
+          <div class="library-steps">${STEPS.map(({ x, y, width }, index) => `
+            <div class="library-step" style="--step-x:${x}%;--step-y:${y}%;--step-size:${width}%;--step-i:${index}">
+              <i class="library-step-shadow"></i><i class="library-step-tome"></i>
+            </div>`).join('')}
+          </div>
+          <div class="library-forbidden-book"></div>
+          <div class="library-seal"><i></i><i></i><i></i><i></i><b></b></div>
+          <div class="library-shelf-glow"></div>
+          <div class="library-motes">${Array.from({ length: 14 }, (_, index) =>
+            `<i style="--mote-i:${index};--mote-x:${18 + (index * 23) % 67}%"></i>`).join('')}</div>
+        </div>
+        <div class="library-reading-book">
+          <div class="library-reading-cover"></div>
+          <svg class="library-reading-pages" viewBox="0 0 600 350">
+            <defs>
+              <linearGradient id="libraryPaperLeft" x1="0" x2="1">
+                <stop stop-color="#b59c69"/><stop offset=".16" stop-color="#ead9a7"/>
+                <stop offset=".74" stop-color="#f0e2b9"/><stop offset="1" stop-color="#9b8155"/>
+              </linearGradient>
+              <linearGradient id="libraryPaperRight" x1="0" x2="1">
+                <stop stop-color="#917447"/><stop offset=".2" stop-color="#e9d6a6"/>
+                <stop offset=".8" stop-color="#eee2b9"/><stop offset="1" stop-color="#b89c69"/>
+              </linearGradient>
+            </defs>
+            <path class="library-page-edge" d="M300 87Q173 46 43 83L20 286Q153 253 300 305Q445 253 580 286L558 83Q426 46 300 87Z"/>
+            <path class="library-page-left" d="M300 77Q179 37 51 73L29 272Q155 241 300 291Z"/>
+            <path class="library-page-right" d="M300 77Q422 37 549 73L571 272Q446 241 300 291Z"/>
+            <path class="library-page-gutter" d="M300 77V291"/>
+            <g class="library-page-ornament">
+              <path d="M70 98Q173 69 279 103M321 103Q428 69 530 98"/>
+              <path d="M61 255Q173 227 279 266M321 266Q428 227 539 255"/>
+              ${pageRunes(91)}${pageRunes(344)}
+            </g>
+          </svg>
+        </div>
+        <div class="library-rising-runes">${RUNES.map((path, index) =>
+          `<svg viewBox="-2 -2 19 26" style="--rune-i:${index}"><path d="${path}"/></svg>`).join('')}</div>
+        <div class="library-ghost-mist"><i></i><i></i><i></i></div>
+        <div class="library-ghost-knight"></div>
+      </div>`;
+    doc.body.insertBefore(scene, doc.body.firstChild);
+    const steps = Array.from(scene.querySelectorAll('.library-step'));
+    let shownCount = 0;
+
+    function resetExit() {
+      scene.classList.remove('library-exiting');
+    }
+
+    function render(stage, count, animate = false) {
+      scene.hidden = stage !== 'library';
+      if (scene.hidden) {
+        resetExit();
+        return;
+      }
+      const next = Math.max(0, Math.min(STEPS.length, Math.floor(Number(count) || 0)));
+      const arriving = animate && next > shownCount;
+      resetExit();
+      scene.classList.remove('library-releasing');
+      steps.forEach((step, index) => {
+        step.classList.toggle('is-visible', index < next);
+        step.classList.remove('is-arriving');
+      });
+      scene.dataset.count = String(next);
+      scene.classList.toggle('library-ready', next === STEPS.length);
+      if (arriving) {
+        scene.getBoundingClientRect();
+        steps[next - 1].classList.add('is-arriving');
+        if (next === STEPS.length) scene.classList.add('library-releasing');
+      }
+      shownCount = next;
+    }
+
+    function playExit(stage) {
+      if (stage !== 'library' || shownCount !== STEPS.length) return 0;
+      resetExit();
+      scene.getBoundingClientRect();
+      scene.classList.add('library-exiting');
+      return window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches ? 0 : EXIT_TIME;
+    }
+
+    return { render, playExit, resetExit, arrivalTime: STEP_ARRIVAL_TIME };
+  }
+
+  window.HanziLibraryStory = { create };
+})(window);
+
+</script>
+<script data-source="ice-armor-story.js">
+(function (window) {
+  'use strict';
+
+  const CRACKS = [
+    [[305,27],[285,75],[312,119],[296,170],[322,204]],
+    [[224,142],[242,211],[207,257],[180,304],[146,325]],
+    [[377,172],[396,235],[381,290],[414,354],[436,424]],
+    [[309,197],[283,267],[309,329],[286,393],[317,438]],
+    [[371,354],[350,428],[380,491],[355,563],[389,621]],
+    [[210,390],[230,469],[199,529],[224,593],[194,653]],
+    [[302,443],[284,519],[311,583],[282,651],[306,711]],
+    [[425,584],[398,650],[424,712],[391,779],[408,847]],
+    [[183,626],[207,692],[181,750],[208,813],[190,872]],
+    [[310,704],[282,756],[308,809],[286,857],[311,890]],
+  ];
+
+  // The artwork supplies the frozen human figure. This canvas removes patches
+  // of that actual shell and clips it to the original person's alpha silhouette;
+  // it never constructs an ice block around the person.
+  function drawIce(canvas, count, shell, silhouette) {
+    const ctx = canvas.getContext?.('2d');
+    if (!ctx) return;
+    const width = canvas.width = shell?.naturalWidth || 1024;
+    const height = canvas.height = shell?.naturalHeight || 1536;
+    ctx.clearRect(0, 0, width, height);
+    if (!shell?.naturalWidth || shell.complete === false ||
+        !silhouette?.naturalWidth || silhouette.complete === false) return;
+    ctx.drawImage(shell,0,0,width,height);
+    if (count) {
+      ctx.save();
+      ctx.scale(width/600,height/900);
+      // Expose the matching, closed-eye human underneath a little at each pass.
+      ctx.globalCompositeOperation = 'destination-out';
+      for (let index=0; index<count; index++) {
+        const [x,y]=CRACKS[index][2];
+        const radius = 36+count*5;
+        const melt=ctx.createRadialGradient(x,y,0,x,y,radius);
+        melt.addColorStop(0,'#000000ee');
+        melt.addColorStop(.5,'#000000b0');
+        melt.addColorStop(1,'#00000000');
+        ctx.fillStyle=melt;
+        ctx.fillRect(x-radius,y-radius,radius*2,radius*2);
+      }
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      for (let index=0; index<count; index++) {
+        ctx.beginPath();
+        const path=CRACKS[index];
+        path.forEach(([x,y], i) => i ? ctx.lineTo(x,y) : ctx.moveTo(x,y));
+        ctx.lineWidth=3.4;
+        ctx.strokeStyle='#163b4cb0';
+        ctx.stroke();
+        ctx.lineWidth=1.1;
+        ctx.strokeStyle='#e7ffffe6';
+        ctx.stroke();
+        for (let branch=1; branch<path.length-1; branch++) {
+          const [x,y]=path[branch];
+          const side=(branch+index)%2 ? 1 : -1;
+          ctx.beginPath();
+          ctx.moveTo(x,y);
+          ctx.lineTo(x+side*26,y+16);
+          ctx.lineTo(x+side*42,y+45);
+          ctx.lineWidth=.7;
+          ctx.strokeStyle='#d8f8fac0';
+          ctx.stroke();
+        }
+      }
+      ctx.restore();
+    }
+    // Use the original person as the silhouette even at zero progress. The
+    // generated frost material may include a faint glow outside that outline.
+    ctx.save();
+    ctx.globalCompositeOperation='destination-in';
+    ctx.drawImage(silhouette,0,0,width,height);
+    ctx.restore();
+  }
+
+// Insert inside the ice/armor scene IIFE. Coordinates are the existing 900x1200
+// armor stage. One binding is one learning-progress unit, although it has
+// independently layered wall, rear-loop, and front-loop canvases.
+const ARMOR_BINDINGS = [
+  {id:'left-upper-arm', wall:[-28,193], centre:[365,423], radius:[31,12], turn:-.18},
+  {id:'right-upper-arm',wall:[928,193], centre:[535,423], radius:[31,12], turn:.18},
+  {id:'left-forearm',  wall:[-25,425], centre:[351,570], radius:[22,9], turn:-.12},
+  {id:'right-forearm', wall:[925,425], centre:[549,570], radius:[22,9], turn:.12},
+  {id:'upper-waist',   wall:[-25,705], centre:[450,536], radius:[67,14],turn:.11},
+  {id:'lower-waist',   wall:[925,705], centre:[450,570], radius:[65,14],turn:-.11},
+  {id:'chest-diagonal-left', wall:[144,-25],centre:[450,472],radius:[84,17],turn:.73},
+  {id:'chest-diagonal-right',wall:[756,-25],centre:[450,472],radius:[84,17],turn:-.73},
+  {id:'left-shin',     wall:[84,1225], centre:[411,803], radius:[25,10],turn:-.08},
+  {id:'right-shin',    wall:[816,1225],centre:[489,803], radius:[25,10],turn:.08},
+];
+
+function armorBindingMarkup() {
+  return ARMOR_BINDINGS.map((binding,index)=>
+    `<div class="ia-chain" data-binding="${binding.id}" data-binding-index="${index}" style="--chain-direction:${index%2?-1:1};--chain-turn:${index%2?-24:24}deg">`+
+      '<canvas class="ia-chain-wall"></canvas><canvas class="ia-chain-back"></canvas>'+
+      '<canvas class="ia-chain-front"></canvas><i class="ia-chain-spark"></i></div>'
+  ).join('');
+}
+
+function armorEllipsePoint(binding,t) {
+  const [cx,cy]=binding.centre,[rx,ry]=binding.radius;
+  const c=Math.cos(binding.turn),s=Math.sin(binding.turn);
+  const x=rx*Math.cos(t),y=ry*Math.sin(t);
+  return [cx+x*c-y*s,cy+x*s+y*c];
+}
+
+function armorLoopPath(binding,front) {
+  const from=front?0:Math.PI,to=front?Math.PI:Math.PI*2;
+  return Array.from({length:61},(_,i)=>armorEllipsePoint(binding,from+(to-from)*i/60));
+}
+
+function armorTailPath(binding) {
+  let end=armorEllipsePoint(binding,0),distance=Infinity;
+  for(let i=0;i<120;i++){
+    const p=armorEllipsePoint(binding,Math.PI*2*i/120);
+    const d=Math.hypot(p[0]-binding.wall[0],p[1]-binding.wall[1]);
+    if(d<distance){distance=d;end=p;}
+  }
+  const [x0,y0]=binding.wall,[x1,y1]=end;
+  // A sagging tether approaches the loop rather than ending at a point on the
+  // suit. The rear loop continues behind the body and the front returns over it.
+  const sag=Math.min(38,Math.hypot(x1-x0,y1-y0)*.06);
+  return Array.from({length:81},(_,i)=>{
+    const t=i/80;
+    return [x0+(x1-x0)*t,y0+(y1-y0)*t+Math.sin(Math.PI*t)*sag];
+  });
+}
+
+function armorChainSamples(points,spacing=11) {
+  const lengths=[0];
+  for(let i=1;i<points.length;i++)lengths.push(lengths.at(-1)+Math.hypot(points[i][0]-points[i-1][0],points[i][1]-points[i-1][1]));
+  const total=lengths.at(-1),links=Math.max(2,Math.ceil(total/spacing));
+  let cursor=1;
+  return Array.from({length:links+1},(_,index)=>{
+    const d=total*index/links;
+    while(cursor<points.length-1&&lengths[cursor]<d)cursor++;
+    const a=points[cursor-1],b=points[cursor],part=(d-lengths[cursor-1])/Math.max(.001,lengths[cursor]-lengths[cursor-1]);
+    return {x:a[0]+(b[0]-a[0])*part,y:a[1]+(b[1]-a[1])*part,angle:Math.atan2(b[1]-a[1],b[0]-a[0])};
+  });
+}
+
+function drawArmorChainPath(canvas,points,{rear=false,anchor}={}) {
+  const context=canvas.getContext?.('2d');if(!context)return;
+  const xs=points.map(p=>p[0]),ys=points.map(p=>p[1]),pad=14;
+  const left=Math.min(...xs)-pad,top=Math.min(...ys)-pad;
+  const width=Math.max(...xs)-left+pad,height=Math.max(...ys)-top+pad;
+  canvas.width=Math.ceil(width);canvas.height=Math.ceil(height);
+  canvas.style.left=left/9+'%';canvas.style.top=top/12+'%';
+  canvas.style.width=width/9+'%';canvas.style.height=height/12+'%';
+  canvas.style.transformOrigin=((anchor?.[0]??points[0][0])-left)/width*100+'% '+((anchor?.[1]??points[0][1])-top)/height*100+'%';
+  const links=armorChainSamples(points);
+  context.lineCap='round';context.globalAlpha=rear?.76:1;
+  links.forEach((link,index)=>{
+    context.save();context.translate(link.x-left,link.y-top);context.rotate(link.angle);
+    context.shadowColor='#020309';context.shadowBlur=3;context.shadowOffsetY=2;
+    context.beginPath();context.ellipse(0,0,7.8,index%2?2.8:4.7,0,0,Math.PI*2);
+    context.strokeStyle='#0b1119';context.lineWidth=4.3;context.stroke();
+    context.shadowBlur=0;context.shadowOffsetY=0;
+    context.strokeStyle=index%2?'#626d7a':'#aaa594';context.lineWidth=2.2;context.stroke();
+    // A short upper rim highlight makes each link a metal ring, not a bead.
+    context.beginPath();context.ellipse(0,-.3,7.1,index%2?2.3:4.1,0,Math.PI*1.10,Math.PI*1.82);
+    context.strokeStyle=rear?'#9b9d93':'#d6cbb6';context.lineWidth=.75;context.stroke();
+    context.restore();
+  });
+}
+
+function installArmorBindings(armor) {
+  const chains=Array.from(armor.querySelectorAll('.ia-chain'));
+  ARMOR_BINDINGS.forEach((binding,index)=>{
+    const chain=chains[index];if(!chain)return;
+    drawArmorChainPath(chain.querySelector('.ia-chain-wall'),armorTailPath(binding),{anchor:binding.wall});
+    drawArmorChainPath(chain.querySelector('.ia-chain-back'),armorLoopPath(binding,false),{rear:true,anchor:binding.centre});
+    drawArmorChainPath(chain.querySelector('.ia-chain-front'),armorLoopPath(binding,true),{anchor:binding.centre});
+    const spark=armorEllipsePoint(binding,Math.PI*.52);
+    chain.style.setProperty('--spark-x',spark[0]/9+'%');
+    chain.style.setProperty('--spark-y',spark[1]/12+'%');
+  });
+  return chains;
+}
+
+function updateArmorBindings(chains,count,changed) {
+  const next=Math.max(0,Math.min(10,Math.floor(Number(count)||0)));
+  chains.forEach((chain,index)=>{
+    chain.classList.toggle('is-broken',index<next);
+    chain.classList.remove('is-snapping');
+    if(changed&&index===next-1){void chain.offsetWidth;chain.classList.add('is-snapping');}
+  });
+}
+
+
+
+
+  function create({document: doc}) {
+    const ice=doc.createElement('div');
+    ice.className='story-ice';
+    ice.hidden=true;
+    ice.setAttribute('aria-hidden','true');
+    ice.innerHTML=`
+      <div class="ia-frame ia-ice-frame">
+        <div class="ia-flight-vista"></div>
+        <div class="ia-world ia-ice-world">
+          <div class="ia-ice-light"></div>
+          <div class="ia-goddess-shadow"></div>
+          <div class="ia-goddess"><img class="ia-goddess-sleeping" src="assets/story/ice-goddess.webp" alt="" draggable="false"><img class="ia-goddess-awake" src="assets/story/ice-goddess-awake.webp" alt="" draggable="false"><canvas class="ia-body-ice"></canvas></div>
+          <div class="ia-melt-water"></div>
+          <div class="ia-ice-release"></div>
+          <div class="ia-snow">${Array.from({length:15},(_,index)=>
+            `<i style="--flake-x:${index*37%100}%;--flake-delay:${-index*.71}s;--flake-duration:${9+index%5}s"></i>`).join('')}</div>
+        </div>
+        <div class="ia-flight-guide" aria-hidden="true">
+          <img class="ia-flight-fallback" src="assets/story/ice-goddess-awake.webp" alt="" draggable="false">
+          <img class="ia-flight-handhold" src="assets/story/goddess-handhold-flight-v3.webp" alt="" draggable="false">
+        </div>
+        <div class="ia-handhold-glimmer"></div>
+        <div class="ia-flight-cloud ia-flight-cloud-far"></div>
+        <div class="ia-flight-cloud ia-flight-cloud-near"></div>
+        <div class="ia-flight-streaks">${Array.from({length:7},(_,index)=>
+          `<i style="--flight-x:${8+index*14}%;--flight-delay:${index*.19}s"></i>`).join('')}</div>
+        <div class="ia-frame-shade"></div>
+      </div>`;
+    const armor=doc.createElement('div');
+    armor.className='story-armor';
+    armor.hidden=true;
+    armor.setAttribute('aria-hidden','true');
+    armor.innerHTML=`
+<div class="ia-frame ia-armor-frame">
+  <div class="ia-world ia-armor-world">
+    <div class="ia-armor-aura"></div>
+    <div class="ia-armor-shadow"></div>
+    <div class="ia-armor-radiance"></div>
+    <div class="ia-armor-figure">
+      <img class="ia-armor-standing" src="assets/story/castle-armor-standing-v2.webp" alt="" draggable="false">
+      <div class="ia-armor-kneeling">
+        <img src="assets/story/castle-armor-kneeling-v3.webp" alt="" draggable="false">
+        <div class="ia-armor-seam-light"></div>
+        <div class="ia-armor-chest-light"></div>
+      </div>
+    </div>
+    <div class="ia-chains">${armorBindingMarkup()}</div>
+    <div class="ia-armor-dust"></div>
+    <div class="ia-armor-floor-light"></div>
+  </div>
+  <div class="ia-frame-shade"></div>
+</div>`;
+    doc.body.insertBefore(ice,doc.body.firstChild);
+    doc.body.insertBefore(armor,doc.body.firstChild);
+    const crystal=ice.querySelector('.ia-body-ice');
+    const counts={ice:0,armor:0};
+    const sleeping=ice.querySelector('.ia-goddess-sleeping');
+    const handhold=ice.querySelector('.ia-flight-handhold');
+    const updateFlightArtwork=()=>ice.classList.toggle('has-flight-guide',Boolean(handhold?.complete && handhold.naturalWidth));
+    handhold.addEventListener('load',updateFlightArtwork);
+    handhold.addEventListener('error',updateFlightArtwork);
+    updateFlightArtwork();
+    const shell=doc.createElement('img');
+    const redrawIce=()=>drawIce(crystal,counts.ice,shell,sleeping);
+    shell.addEventListener('load',redrawIce);
+    sleeping.addEventListener('load',redrawIce);
+    shell.src='assets/story/ice-goddess-shell-v2.webp';
+    const chains=installArmorBindings(armor);
+    const kneelingArt=armor.querySelector('.ia-armor-kneeling img');
+    const updateArmorArtwork=()=>armor.classList.toggle('has-kneel-art',Boolean(kneelingArt?.complete && kneelingArt.naturalWidth));
+    kneelingArt?.addEventListener('load',updateArmorArtwork);
+    kneelingArt?.addEventListener('error',updateArmorArtwork);
+    updateArmorArtwork();
+
+    let currentStage;
+    drawIce(crystal,0,shell,sleeping);
+
+    function playArmorEnding() {
+      armor.classList.remove('is-armor-ending');
+      void armor.offsetWidth;
+      armor.classList.add('is-armor-ending');
+      return window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches?0:6200;
+    }
+
+    function resetExit() {
+      ice.classList.remove('is-leaving');
+      armor.classList.remove('is-leaving','is-armor-ending');
+    }
+
+    function render(stage,count,animate=false) {
+      ice.hidden=stage!=='ice';
+      armor.hidden=stage!=='armor';
+      if(stage!=='ice' && stage!=='armor') {
+        resetExit();
+        currentStage=stage;
+        return;
+      }
+      const scene=stage==='ice'?ice:armor;
+      const next=Math.max(0,Math.min(10,Math.floor(Number(count)||0)));
+      const changed=Boolean(animate && currentStage===stage && next>counts[stage]);
+      if(currentStage!==stage || next<counts[stage])resetExit();
+      scene.dataset.count=String(next);
+      scene.style.setProperty('--ia-progress',String(next/10));
+      scene.classList.toggle('is-complete',next===10);
+      scene.classList.remove('is-changing','is-awakening');
+      if(stage==='ice') {
+        drawIce(crystal,next,shell,sleeping);
+      } else {
+        updateArmorBindings(chains,next,changed);
+      }
+      if(changed) {
+        void scene.offsetWidth;
+        scene.classList.add('is-changing');
+        if(next===10)scene.classList.add('is-awakening');
+        if(stage==='armor'&&next===10)playArmorEnding();
+      }
+      counts[stage]=next;
+      currentStage=stage;
+    }
+
+    function playExit(stage) {
+      if(stage==='armor') {
+        if(counts.armor!==10)return 0;
+        resetExit();
+        return playArmorEnding();
+      }
+      if((stage!=='ice' && stage!=='armor') || counts[stage]!==10)return 0;
+      const scene=stage==='ice'?ice:armor;
+      resetExit();
+      void scene.offsetWidth;
+      scene.classList.add('is-leaving');
+      return window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches?0:stage==='ice'?7200:3200;
+    }
+
+    return {render,playExit,resetExit};
+  }
+
+  window.HanziIceArmorStory=Object.freeze({create});
+})(window);
+
+</script>
 <script data-source="herbalist-room.js">
 (function () {
   'use strict';
@@ -8680,13 +10386,57 @@ window.HANZI_GLYPH_CATALOG={"version":"41b38d977b270e08ea493526a4ee0f8643a59bbf2
     },
     sea: {
       number: '第七关', title: '水底人鱼', unit: '个音符',
-      intro: '门后的石阶没入水中。水底飘着十个音符。',
-      task: '每通过一个字，就点亮并奏响一个音。把十个音连起来，人鱼会循声而来。',
+      intro: '门后的石阶没入水中。四周只有幽蓝的水光。',
+      task: '每通过一个字，就出现并奏响一个音符。十个音连成曲子，人鱼会循声而来。',
       start: '奏响水底音符', step: '奏响一个音符', auto: '播放到十音成曲', retry: '重新奏响',
       demoHint: '点亮第一个音符，听它在水底响起来。',
       demoFinished: '人鱼游来了。跟上她，一起浮出海面。',
       reward: '一个水底音符亮了起来。', completion: '十个音符连成了曲子。人鱼循着歌声游来了。',
-      next: '跟人鱼浮出海面', nextStage: 'herbs', interval: 590,
+      next: '跟人鱼浮出海面', nextStage: 'dunes', interval: 590,
+      endingNext: '前往沙丘寻龙', endingDetail: '你和人鱼一起浮出了海面。',
+    },
+    dunes: {
+      number: '第八关', title: '沙丘寻龙', unit: '个脚印',
+      intro: '眼前是一望无际的沙丘，沙面上还没有脚印。',
+      task: '每通过一个字，沙子扬起，露出一个脚印。第十枚脚印会唤起沙丘中的龙。',
+      start: '寻找龙的足迹', step: '留下一枚脚印', auto: '播放到龙出现', retry: '重新寻找脚印',
+      demoHint: '沿着弯曲的足迹，看看沙丘中藏着什么。',
+      demoFinished: '龙掀起沙浪、破沙腾起，落在你面前，伏下身子。',
+      reward: '沙子扬起，留下了一枚新的龙脚印。', completion: '十枚脚印唤醒了沙丘中的龙。它伏下身子，邀请你骑上去。',
+      next: '骑上龙背', nextStage: 'library', interval: 1200, arrival: 5400,
+      endingNext: '前往高塔禁书', endingDetail: '你骑在龙背上，龙颈和双翼就在眼前，沙丘渐渐远去。',
+    },
+    library: {
+      number: '第九关', title: '高塔禁书', unit: '级书阶',
+      intro: '高书架的最顶层，一本禁书被绿色发光的魔咒封住。',
+      task: '每通过一个字，一本普通藏书飞来，搭成一级向上的台阶。',
+      start: '搭起藏书阶梯', step: '搭一级书阶', auto: '播放到书阶搭好', retry: '重新搭书阶',
+      demoHint: '普通藏书搭出阶梯，红金装帧的禁书就在架顶。',
+      demoFinished: '十级书阶搭好了，绿色结界解开。走上去，打开禁书。',
+      reward: '一本厚书落稳，又一级书阶搭好了。', completion: '十级书阶通向架顶，绿色结界解开了。打开禁书，念出咒语。',
+      next: '登上书阶，打开禁书', nextStage: 'ice', interval: 1200, arrival: 900,
+      endingNext: '前往冰雪庭院', endingDetail: '书中的咒语化成绿光，幽灵武士苏醒了。',
+    },
+    ice: {
+      number: '第十关', title: '冰雪庭院', unit: '道裂缝',
+      intro: '冰冻的庭院中央，女神本人被一层贴身的冰壳封住。',
+      task: '每通过一个字，冰上多一道裂缝，再融化一点。',
+      start: '唤醒冰封女神', step: '化开一道裂缝', auto: '播放到女神苏醒', retry: '重新融冰',
+      demoHint: '看女神身上的冰壳沿着裂纹一点点化开。',
+      demoFinished: '最后一层冰化尽，女神醒来，向你伸出了手。',
+      reward: '冰层裂开，融水顺着裂纹流下。', completion: '最后一层冰化尽，女神醒来，向你伸出了手。',
+      next: '牵住女神的手，飞起来', nextStage: 'armor', interval: 1200, arrival: 2200,
+      endingNext: '前往沉睡的盔甲', endingDetail: '你握住女神的手升入夜空，冰雪庭院渐渐落在脚下。',
+    },
+    armor: {
+      number: '第十一关', title: '沉睡的盔甲', unit: '根断链',
+      intro: '古堡里，一副盔甲被十根从墙上伸来的铁链牢牢缠绑。',
+      task: '每通过一个字，绕住身体和四肢的一根铁链就会绷断。',
+      start: '解开盔甲的束缚', step: '断开一根铁链', auto: '播放到铁链全断', retry: '重新解开锁链',
+      demoHint: '锁链绕过肩臂、胸腰和小腿，紧紧绑住盔甲。',
+      demoFinished: '最后一根铁链断开，盔甲向你单膝跪地，胸甲与甲缝发出光芒。',
+      reward: '一根缠着盔甲的铁链绷断，滑落下去。', completion: '十根铁链全部断开，盔甲向你单膝跪地，发出光芒。',
+      next: '回到草药房', nextStage: 'herbs', interval: 1200, arrival: 6500, automaticEnding: true,
     },
   };
 
@@ -8727,6 +10477,13 @@ window.HANZI_GLYPH_CATALOG={"version":"41b38d977b270e08ea493526a4ee0f8643a59bbf2
     const sky = createVisual(doc.defaultView?.HanziBridgeTrain);
     const deep = createVisual(doc.defaultView?.HanziTombMermaid);
     const visuals = { giant, bridge: sky, train: sky, tomb: deep, sea: deep };
+    // Keep the new artwork off the startup path. Each scene is created only
+    // when first visited; created modules still all receive render to hide it.
+    const additions = [
+      { stages: ['dunes'], name: 'HanziDuneStory' },
+      { stages: ['library'], name: 'HanziLibraryStory' },
+      { stages: ['ice', 'armor'], name: 'HanziIceArmorStory' },
+    ];
 
     const hud = doc.createElement('div');
     hud.className = 'herb-hud';
@@ -8819,7 +10576,8 @@ window.HANZI_GLYPH_CATALOG={"version":"41b38d977b270e08ea493526a4ee0f8643a59bbf2
     let demoTimer;
     let fadeTimer;
     let activeExit;
-    let seaSurfaced = false;
+    let endingShown = false;
+    let arrivalUntil = 0;
     let autoPlaying = false;
     let writing = true;
     let storage;
@@ -8880,8 +10638,12 @@ window.HANZI_GLYPH_CATALOG={"version":"41b38d977b270e08ea493526a4ee0f8643a59bbf2
     function renderProgress(value, animate = false) {
       const count = Math.min(ROOM_SIZE, Math.max(0, value));
       if (renderedStage === displayStage && renderedCount === count) return;
+      if (renderedStage !== displayStage || count < ROOM_SIZE) arrivalUntil = 0;
       renderedStage = displayStage;
       renderedCount = count;
+      if (animate && count === ROOM_SIZE && !reducedMotion()) {
+        arrivalUntil = Date.now() + (STAGES[displayStage].arrival || 0);
+      }
       meter.textContent = count + ' / ' + ROOM_SIZE + ' ' + STAGES[displayStage].unit;
       if (displayStage === 'herbs') renderFill(count, animate);
       else {
@@ -8891,6 +10653,14 @@ window.HANZI_GLYPH_CATALOG={"version":"41b38d977b270e08ea493526a4ee0f8643a59bbf2
         }
         catch (_) { /* The progress display is independent of the animation. */ }
       }
+      additions.forEach(entry => {
+        if (!entry.attempted && entry.stages.includes(displayStage)) {
+          entry.attempted = true;
+          entry.visual = createVisual(doc.defaultView?.[entry.name]);
+        }
+        try { entry.visual?.render(displayStage, count, animate); }
+        catch (_) { /* A missing scene must not interrupt a question or saving. */ }
+      });
     }
 
     function display(next) {
@@ -8923,8 +10693,8 @@ window.HANZI_GLYPH_CATALOG={"version":"41b38d977b270e08ea493526a4ee0f8643a59bbf2
       demoDrop.classList.toggle('herb-primary', !finished);
       demoDrop.classList.toggle('herb-secondary', finished);
       demoNext.hidden = !finished;
-      demoNext.textContent = displayStage === 'sea' && seaSurfaced ? '从草药房再看一遍' : story.next;
-      demoStatus.textContent = seaSurfaced ? '你和人鱼一起浮出了海面。'
+      demoNext.textContent = endingShown ? story.endingNext : story.next;
+      demoStatus.textContent = endingShown ? story.endingDetail
         : finished ? story.demoFinished : story.demoHint;
     }
 
@@ -8957,7 +10727,8 @@ window.HANZI_GLYPH_CATALOG={"version":"41b38d977b270e08ea493526a4ee0f8643a59bbf2
     }
 
     function playExit() {
-      activeExit = displayStage === 'stars' ? observatory : visuals[displayStage];
+      activeExit = displayStage === 'stars' ? observatory : visuals[displayStage]
+        || additions.find(entry => entry.stages.includes(displayStage))?.visual;
       try { return activeExit?.playExit(displayStage) || 0; }
       catch (_) { return 0; }
     }
@@ -8967,9 +10738,9 @@ window.HANZI_GLYPH_CATALOG={"version":"41b38d977b270e08ea493526a4ee0f8643a59bbf2
     }
 
     function transition(nextStage, nextMode, animateExit = true) {
-      const surfaced = seaSurfaced;
-      resetCurtain(surfaced);
-      seaSurfaced = false;
+      const watched = endingShown;
+      resetCurtain(watched);
+      endingShown = false;
       function reveal() {
         display(nextStage);
         resetExit();
@@ -8989,19 +10760,25 @@ window.HANZI_GLYPH_CATALOG={"version":"41b38d977b270e08ea493526a4ee0f8643a59bbf2
         curtain.classList.add(crossingWall && animateExit ? 'herb-crossing' : 'herb-fade');
         fadeTimer = setTimeout(reveal, crossingWall && animateExit ? 704 : 245);
       }
-      const duration = animateExit && !surfaced ? playExit() : 0;
-      if (duration) fadeTimer = setTimeout(beginFade, duration);
-      else beginFade();
+      function depart() {
+        const duration = animateExit && !watched && !STAGES[displayStage].automaticEnding ? playExit() : 0;
+        if (duration) fadeTimer = setTimeout(beginFade, duration);
+        else beginFade();
+      }
+      // Only scenery waits. The pass and next-round record are already saved.
+      const remainingArrival = animateExit ? Math.max(0, arrivalUntil - Date.now()) : 0;
+      if (remainingArrival) fadeTimer = setTimeout(depart, remainingArrival);
+      else depart();
     }
 
-    function surface() {
-      if (displayStage !== 'sea') return false;
+    function finishEnding() {
+      const story = STAGES[displayStage];
+      if (!story.endingNext) return false;
       if (mode === 'travel') return true;
-      if (seaSurfaced) return false;
-      seaSurfaced = true;
+      if (endingShown) return false;
+      endingShown = true;
       const previousMode = mode;
       setMode('travel');
-      const duration = playExit();
       function finish() {
         setMode(previousMode);
         if (previousMode === 'demo') {
@@ -9010,15 +10787,23 @@ window.HANZI_GLYPH_CATALOG={"version":"41b38d977b270e08ea493526a4ee0f8643a59bbf2
         } else {
           const restart = get('restartBtn');
           const detail = get('finaleDetail');
-          detail.textContent = ['你和人鱼一起浮出了海面。', ...detail.textContent.split('\n').slice(1)].join('\n');
-          restart.textContent = '回草药房';
+          detail.textContent = [story.endingDetail, ...detail.textContent.split('\n').slice(1)].join('\n');
+          restart.textContent = story.endingNext;
           restart.focus({ preventScroll: true });
         }
       }
-      if (duration && !reducedMotion()) fadeTimer = setTimeout(finish, duration);
-      else finish();
+      function begin() {
+        const duration = playExit();
+        if (duration && !reducedMotion()) fadeTimer = setTimeout(finish, duration);
+        else finish();
+      }
+      const remainingArrival = reducedMotion() ? 0 : Math.max(0, arrivalUntil - Date.now());
+      if (remainingArrival) fadeTimer = setTimeout(begin, remainingArrival);
+      else begin();
       return true;
     }
+
+    function surface() { return displayStage === 'sea' && finishEnding(); }
 
     setupButton('herbStart', () => {
       setMode('playing');
@@ -9028,7 +10813,7 @@ window.HANZI_GLYPH_CATALOG={"version":"41b38d977b270e08ea493526a4ee0f8643a59bbf2
     setupButton('herbShowDemo', () => {
       stopDemo();
       resetCurtain();
-      seaSurfaced = false;
+      endingShown = false;
       demoFill = 0;
       display('herbs');
       setMode('demo');
@@ -9040,7 +10825,7 @@ window.HANZI_GLYPH_CATALOG={"version":"41b38d977b270e08ea493526a4ee0f8643a59bbf2
       if (autoPlaying) return;
       if (demoFill === ROOM_SIZE) {
         resetCurtain();
-        seaSurfaced = false;
+        endingShown = false;
         demoFill = 0;
         renderProgress(0);
         updateDemoControls();
@@ -9063,7 +10848,7 @@ window.HANZI_GLYPH_CATALOG={"version":"41b38d977b270e08ea493526a4ee0f8643a59bbf2
       stopDemo();
       display(stage);
       resetCurtain();
-      seaSurfaced = false;
+      endingShown = false;
       setMode('intro');
       renderProgress(actualFill);
       get('herbShowDemo').focus({ preventScroll: true });
@@ -9071,7 +10856,7 @@ window.HANZI_GLYPH_CATALOG={"version":"41b38d977b270e08ea493526a4ee0f8643a59bbf2
     setupButton('herbDemoNext', () => {
       if (mode !== 'demo' || demoFill !== ROOM_SIZE) return;
       stopDemo();
-      if (surface()) return;
+      if (finishEnding()) return;
       demoFill = 0;
       transition(STAGES[displayStage].nextStage, 'demo');
     });
@@ -9130,7 +10915,8 @@ window.HANZI_GLYPH_CATALOG={"version":"41b38d977b270e08ea493526a4ee0f8643a59bbf2
     function restoreStage(savedStage, count, resume) {
       stopDemo();
       resetCurtain();
-      seaSurfaced = false;
+      endingShown = false;
+      arrivalUntil = 0;
       stage = savedStage;
       actualFill = count;
       display(stage);
@@ -9141,7 +10927,7 @@ window.HANZI_GLYPH_CATALOG={"version":"41b38d977b270e08ea493526a4ee0f8643a59bbf2
     updateCoins(0);
     restoreStage('herbs', 0, false);
     body.classList.add('has-herbalist');
-    return { showWriting, arrive, pass, finale, nextLevel, restoreStage, updateMastered, surface };
+    return { showWriting, arrive, pass, finale, nextLevel, restoreStage, updateMastered, finishEnding, surface };
   }
 
   window.HanziStoryStages = STAGES;
@@ -9213,7 +10999,7 @@ function defaultBank(){
 // set — the change would reach nobody who actually uses the game.
 const BANK_VERSION = 5;
 const ROUND_GOAL = 10;
-const GAME_VERSION = '2026.11.24.1';
+const GAME_VERSION = '2026.11.24.2';
 
 let state = {
   bank: defaultBank(),
@@ -13290,7 +15076,7 @@ onTap(restartBtn, function(){
   // The next level on the same day keeps waiting retests and their actual
   // filler counts. Calendar-based learning history and priority dates stay intact.
   if(stage){
-    if(stage === 'sea' && herbalistCall('surface') === true) return;
+    if(herbalistCall('finishEnding') === true) return;
     state.herbalistStage = HERBALIST_STAGES[stage]?.nextStage || 'herbs';
     herbalistCall('nextLevel', state.herbalistStage);
   }
@@ -14055,7 +15841,7 @@ function showFinale(bankEmpty){
     ? `\n「${justMastered.map(b => b.char).join('、')}」集满 ${MASTERED_DAYS} 颗星，进入长时记忆库！`
     : '';
   const remaining = unfinishedParentEntries().length;
-  const nextRound = state.herbalistStage === 'sea' ? '下一轮' : '下一关';
+  const nextRound = HERBALIST_STAGES[state.herbalistStage]?.nextStage === 'herbs' ? '下一轮' : '下一关';
   const nextNote = remaining ? `\n还有 ${remaining} 个家长安排的字，${nextRound}优先练。` : '';
   const completedMessage = typeof herbalistRoom !== 'undefined' && herbalistRoom
     ? herbalistCompletionMessage()

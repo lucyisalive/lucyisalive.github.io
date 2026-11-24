@@ -21,6 +21,10 @@
 .herbalist-no-ai #aiSentenceSettings { display: none; }
 .has-herbalist :is(.herb-card, .herb-actions button)[hidden] { display: none; }
 .has-herbalist:not([data-herb-stage="herbs"]) #herbalistBackdrop { display: none; }
+.has-herbalist:not([data-herb-stage="dunes"]) .story-dune,
+.has-herbalist:not([data-herb-stage="library"]) .story-library,
+.has-herbalist:not([data-herb-stage="ice"]) .story-ice,
+.has-herbalist:not([data-herb-stage="armor"]) .story-armor { display: none !important; }
 
 .story-scene {
   display: none;

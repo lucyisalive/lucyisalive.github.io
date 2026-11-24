@@ -1,0 +1,245 @@
+.story-dune {
+  position: fixed;
+  z-index: 0;
+  inset: 0;
+  overflow: hidden;
+  isolation: isolate;
+  pointer-events: none;
+  background: #151518;
+}
+.story-dune[hidden] { display: none; }
+.dune-frame {
+  position: absolute;
+  inset: 0;
+  width: min(100%,88dvh,980px);
+  margin-inline: auto;
+  overflow: hidden;
+  background: #211d20;
+  box-shadow: 0 0 100px 40px #151518;
+}
+.dune-world {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: max(100%,75dvh);
+  aspect-ratio: 3 / 4;
+  transform: translate(-50%,-50%);
+  transform-origin: 50% 54%;
+}
+.dune-landscape,
+.dune-footprints,
+.dune-ridge-mask,
+.dune-sand,
+.dune-low-drift,
+.dune-vignette { position: absolute; inset: 0; }
+.dune-landscape,
+.dune-ridge-mask {
+  background: #6a4e36 url("assets/story/dunes.webp") center / 100% 100% no-repeat;
+}
+.dune-ridge-mask {
+  z-index: 3;
+  clip-path: polygon(0 40.5%,8% 39.4%,18% 40.4%,28% 39%,36% 37.6%,44% 36.8%,51% 37.2%,60% 39%,68% 41%,76% 42%,87% 40.5%,100% 40.3%,100% 100%,0 100%);
+  opacity: 0;
+}
+.dragon-arrives .dune-ridge-mask { opacity: 1; }
+.dune-distant-haze {
+  position: absolute;
+  inset: 25% -12% 47%;
+  background: radial-gradient(ellipse,#e1b47c15,transparent 70%);
+  filter: blur(16px);
+  animation: dune-haze 14s ease-in-out infinite alternate;
+}
+.dune-footprints { z-index: 4; transition: opacity .6s ease; }
+.dune-footprint {
+  position: absolute;
+  left: var(--print-x);
+  top: var(--print-y);
+  width: var(--print-size);
+  aspect-ratio: 1.1;
+  transform: translate(-50%,-50%) rotate(var(--print-angle)) skewX(-8deg);
+  opacity: 0;
+  transition: opacity .4s ease;
+}
+.dune-footprint.is-revealed { opacity: .8; }
+.dune-footprint > i {
+  position: absolute;
+  background: linear-gradient(150deg,#5b38239c,#70482982);
+  box-shadow: inset 2px 3px 3px #362317ad,0 1px 1px #dfb47580;
+}
+.dune-heel {
+  left: 25%;
+  top: 35%;
+  width: 49%;
+  height: 49%;
+  clip-path: polygon(29% 0,75% 4%,100% 42%,73% 96%,25% 100%,0 56%);
+  border-radius: 39%;
+}
+.dune-toe {
+  width: 19%;
+  height: 50%;
+  top: 3%;
+  left: 15%;
+  clip-path: polygon(44% 0,100% 82%,64% 100%,0 88%);
+  transform: rotate(-27deg);
+  border-radius: 50% 50% 30% 30%;
+}
+.dune-toe:nth-of-type(3) { left: 42%; top: -8%; height: 56%; transform: rotate(3deg); }
+.dune-toe:nth-of-type(4) { left: 68%; top: 6%; transform: rotate(28deg); }
+.dune-footprint.is-rising > i { animation: dune-print-reveal .85s ease-out both; }
+.dune-dragon {
+  position: absolute;
+  z-index: 5;
+  top: 53%;
+  left: 50%;
+  width: 88%;
+  transform: translate(-50%,-50%);
+  transform-origin: 50% 65%;
+  opacity: 0;
+  visibility: hidden;
+  filter: drop-shadow(0 6px 9px #181310b0);
+}
+.dune-dragon img {
+  display: block;
+  width: 100%;
+  height: auto;
+  transform-origin: 57% 68%;
+  animation: dune-dragon-breathe 5s ease-in-out infinite;
+}
+.dune-dragon-shadow {
+  position: absolute;
+  z-index: 4;
+  top: 67%;
+  left: 50%;
+  width: 71%;
+  height: 9%;
+  transform: translate(-50%,-50%);
+  border-radius: 50%;
+  opacity: 0;
+  background: radial-gradient(ellipse,#261b14c9,#30201785 40%,transparent 72%);
+  filter: blur(8px);
+}
+.is-complete .dune-dragon { opacity: 1; visibility: visible; }
+.is-complete .dune-dragon-shadow { opacity: 1; }
+.dragon-arrives .dune-dragon { animation: dune-breach 5.4s cubic-bezier(.2,.55,.3,1) both; }
+.dragon-arrives .dune-dragon-shadow { animation: dune-landing-shadow 5.4s ease-out both; }
+.dragon-arrives .dune-world { animation: dune-ground-tremor .65s .2s ease-out; }
+.dune-sand { z-index: 7; width: 100%; height: 100%; }
+.dune-low-drift {
+  z-index: 6;
+  top: 69%;
+  height: 9%;
+  background: radial-gradient(ellipse,#efcda31a,transparent 68%);
+  filter: blur(10px);
+  animation: dune-haze 10s ease-in-out infinite alternate;
+}
+.dune-flight-view {
+  position: absolute;
+  z-index: 9;
+  inset: 0;
+  opacity: 0;
+  visibility: hidden;
+  overflow: hidden;
+  background: #282d36;
+}
+.dune-flight-land {
+  position: absolute;
+  inset: -35%;
+  background: url("assets/story/dunes.webp") center / 100% 100% no-repeat;
+  transform-origin: 50% 55%;
+}
+.dune-flight-haze {
+  position: absolute;
+  inset: 35% -10% -10%;
+  background: linear-gradient(transparent,#c6ad8335 60%,#b9a17c3d);
+  opacity: .55;
+}
+.dune-rider {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 80%;
+}
+.dune-rider img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: drop-shadow(0 5px 4px #1c130e80);
+}
+.dune-flight-wind {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(102deg,transparent 0 12%,#f9e5bc15 12.1% 12.2%,transparent 12.4% 19%);
+  mask-image: radial-gradient(ellipse,transparent 25%,#000 90%);
+  opacity: .25;
+}
+.dune-vignette {
+  z-index: 12;
+  background: linear-gradient(#0e14226b,transparent 20% 79%,#18151250),
+    linear-gradient(90deg,#1c171e33,transparent 14% 86%,#1c171e33);
+}
+.is-riding .dune-world { animation: dune-camera-mount 2.1s ease-in-out both; }
+.is-riding .dune-dragon { animation: dune-dragon-mount 2.1s ease-in-out both; }
+.is-riding .dune-footprints { opacity: 0; }
+.is-riding .dune-flight-view { animation: dune-board-view 4.7s ease-in-out both; visibility: visible; }
+.is-riding .dune-flight-land { animation: dune-takeoff-land 4.7s ease-in-out both; }
+.is-riding .dune-rider { animation: dune-rider-rise 4.7s ease-in-out both,dune-rider-sway 4.5s 4.7s ease-in-out infinite; }
+.is-riding .dune-flight-wind { animation: dune-wind-stream 2s linear infinite; }
+@keyframes dune-haze { to { transform: translateX(5%); opacity: .75; } }
+@keyframes dune-print-reveal { from { opacity: 0; } 50% { opacity: .12; } to { opacity: 1; } }
+@keyframes dune-dragon-breathe { 50% { transform: translateY(-.6%) scale(1.008); } }
+@keyframes dune-ground-tremor {
+  0%,100% { transform: translate(-50%,-50%); }
+  25% { transform: translate(-50.3%,-49.8%); }
+  50% { transform: translate(-49.7%,-50.1%); }
+  75% { transform: translate(-50.2%,-49.9%); }
+}
+@keyframes dune-breach {
+  0% { z-index: 2; left: 63%; top: 47%; opacity: 0; transform: translate(-50%,-50%) scale(.12) rotate(-12deg); }
+  11% { z-index: 2; left: 63%; top: 43%; opacity: 1; transform: translate(-50%,-50%) scale(.24) rotate(-10deg); }
+  32% { z-index: 2; left: 63%; top: 29%; opacity: 1; transform: translate(-50%,-50%) scale(.39) rotate(-8deg); }
+  40% { z-index: 5; left: 60%; top: 26%; transform: translate(-50%,-50%) scale(.49) rotate(-5deg); }
+  61% { left: 45%; top: 27%; transform: translate(-50%,-50%) scale(.68) rotate(4deg); }
+  80% { left: 48%; top: 47%; transform: translate(-50%,-50%) scale(.96) rotate(-2deg); }
+  90% { left: 50%; top: 54%; transform: translate(-50%,-50%) scale(1.02) rotate(1deg); }
+  100% { z-index: 5; left: 50%; top: 53%; opacity: 1; transform: translate(-50%,-50%) scale(1); }
+}
+@keyframes dune-landing-shadow {
+  0%,65% { opacity: 0; transform: translate(-50%,-50%) scale(.2); }
+  85% { opacity: .85; transform: translate(-50%,-50%) scale(.8); }
+  100% { opacity: 1; transform: translate(-50%,-50%) scale(1); }
+}
+@keyframes dune-camera-mount {
+  0% { transform: translate(-50%,-50%) scale(1); }
+  100% { transform: translate(-51%,-53%) scale(1.2); }
+}
+@keyframes dune-dragon-mount {
+  0% { transform: translate(-50%,-50%) scale(1); }
+  100% { transform: translate(-56%,-29%) scale(1.5); }
+}
+@keyframes dune-board-view {
+  0%,19% { opacity: 0; }
+  40%,100% { opacity: 1; }
+}
+@keyframes dune-takeoff-land {
+  0%,25% { transform: translateY(-2%) scale(1.18); }
+  100% { transform: translateY(14%) scale(.98); }
+}
+@keyframes dune-rider-rise {
+  0%,20% { transform: translateY(37%) scale(1.15); }
+  45% { transform: translateY(3%) scale(1.025) rotate(-1deg); }
+  70% { transform: translateY(-1.5%) scale(1) rotate(.7deg); }
+  100% { transform: translateY(0) scale(1); }
+}
+@keyframes dune-rider-sway {
+  0%,100% { transform: translateY(0) rotate(-.6deg); }
+  50% { transform: translateY(-1%) rotate(.6deg); }
+}
+@keyframes dune-wind-stream { to { transform: translateY(15%) scale(1.12); } }
+@media (prefers-reduced-motion: reduce) {
+  .story-dune *, .story-dune *::before, .story-dune *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+  .is-riding .dune-flight-view { opacity: 1; visibility: visible; }
+  .is-riding .dune-flight-land { transform: translateY(14%) scale(.98); }
+}

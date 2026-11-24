@@ -495,12 +495,12 @@ answer(true);
 assert.equal(bankItem('龙').history.at(-1).outcome, 'first-try');
 assert.equal(queue()[0].completedDay, TODAY);
 run('renderQueueList()');
-assert.ok(context.queueList.innerHTML.includes('自定义例句'));
+assert.ok(context.queueList.innerHTML.includes('已保存例句'));
 assert.ok(context.queueList.innerHTML.includes('今天已完成'));
 context.window.HanziSentenceHints = {get() { throw Error('Optional sentence module failed'); }};
 assert.equal(run('sentenceFor(state.priorityQueue[0])'), '飞龙飞过天空。');
 run('renderQueueList()');
-assert.ok(context.queueList.innerHTML.includes('自定义例句'));
+assert.ok(context.queueList.innerHTML.includes('已保存例句'));
 assert.equal(run('sentenceFor(null)'), '');
 
 console.log('parent-priority: ten-pass levels, priority, next-day reviews, star reset and recovery, retest carryover, request races, and parking passed');

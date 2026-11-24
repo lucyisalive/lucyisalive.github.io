@@ -114,6 +114,57 @@ assert.deepEqual(queueOrder([request('山', 'old-1', d4), request('舟', 'old-2'
   [request('月', 'new-1', d4), request('星', 'new-2', d4), request('林', 'new-3', d4)]),
 ['old-1', 'old-2', 'new-1', 'new-2', 'new-3']);
 
+const sentenceTarget = {char: '珊', word: '珊瑚', pinyin: 'shān'};
+const sentenceText = '小鱼躲进鲜红的珊瑚，避开了大鱼。';
+const sentenceBase = {
+  ...oldSave,
+  bank: [item('珊', {...sentenceTarget, fromParent: true})],
+  priorityQueue: [request('珊', 'sentence-request', d4, sentenceTarget)],
+};
+const sentenceUpdate = {
+  ...sentenceBase,
+  bank: [{...sentenceBase.bank[0], sentence: sentenceText}],
+  priorityQueue: [{...sentenceBase.priorityQueue[0], sentence: sentenceText, completedDay: d4}],
+};
+const sentenceMerged = mergeLearning(sentenceBase, sentenceUpdate);
+assert.equal(sentenceMerged.bank[0].sentence, sentenceText, 'A delayed sentence fills the same bank target');
+assert.equal(sentenceMerged.priorityQueue[0].sentence, sentenceText, 'The matching parent request gains the same sentence');
+assert.equal(sentenceMerged.priorityQueue[0].completedDay, d4, 'Sentence enrichment preserves completion merging');
+assert.deepEqual(mergeLearning(sentenceMerged, sentenceUpdate), sentenceMerged);
+assert.equal(Object.hasOwn(sentenceBase.bank[0], 'sentence'), false, 'Enrichment leaves the source untouched');
+for (const change of [{word: '珊瑚海'}, {pinyin: 'shàn'}, {requestId: 'replacement-request'}]) {
+  const incompatible = {...sentenceUpdate,
+    bank: [{...sentenceUpdate.bank[0], ...(change.requestId ? {} : change)}],
+    priorityQueue: [{...sentenceUpdate.priorityQueue[0], ...change}]};
+  const kept = mergeLearning(sentenceBase, incompatible);
+  assert.equal(kept.bank[0].sentence, undefined, 'A changed word, reading, or request cannot supply an old hint');
+  assert.equal(kept.priorityQueue[0].sentence, undefined);
+}
+const manualSentence = '家长写下的珊瑚例句应当完整保留。';
+const manualBase = {...sentenceBase,
+  bank: [{...sentenceBase.bank[0], sentence: manualSentence}],
+  priorityQueue: [{...sentenceBase.priorityQueue[0], sentence: manualSentence}]};
+const manualMerged = mergeLearning(manualBase, sentenceUpdate);
+assert.equal(manualMerged.bank[0].sentence, manualSentence);
+assert.equal(manualMerged.priorityQueue[0].sentence, manualSentence);
+const manualBankOnly = mergeLearning({...manualBase, priorityQueue: sentenceBase.priorityQueue}, sentenceUpdate);
+assert.equal(manualBankOnly.bank[0].sentence, manualSentence);
+assert.equal(manualBankOnly.priorityQueue[0].sentence, manualSentence,
+  'An empty old queue keeps its own bank sentence before a generated hint can be merged');
+const manualQueueOnly = mergeLearning({...sentenceBase, priorityQueue: manualBase.priorityQueue}, sentenceUpdate);
+assert.equal(manualQueueOnly.bank[0].sentence, manualSentence);
+assert.equal(manualQueueOnly.priorityQueue[0].sentence, manualSentence);
+const queueOnlyUpdate = mergeLearning(sentenceBase, {...sentenceUpdate, bank: sentenceBase.bank});
+assert.equal(queueOnlyUpdate.bank[0].sentence, sentenceText,
+  'A matching queue sentence is also usable when both bank entries are still empty');
+const unqueuedSentences = mergeLearning({...sentenceBase, priorityQueue: []}, {...sentenceUpdate, priorityQueue: []});
+assert.equal(unqueuedSentences.bank[0].sentence, sentenceText,
+  'A matching ordinary bank target without a parent request can receive a sentence');
+assert.equal(mergeLearning(sentenceBase, {...sentenceUpdate, priorityQueue: []}).bank[0].sentence, undefined,
+  'A missing request on only the donor side cannot authorize filling the selected bank sentence');
+assert.equal(mergeLearning({...sentenceBase, priorityQueue: []}, sentenceUpdate).bank[0].sentence, sentenceText,
+  'An already saved sentence remains attached when the existing rules select a newer parent request');
+
 const dirtyNewSave = {
   ...newSave,
   bank: [{ ...newSave.bank[0], rawS: 'synthetic', history: [{ ...event(d4), rawS: 'synthetic' }] }],

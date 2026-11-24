@@ -13,11 +13,13 @@ const html = fromSource ? require('../tools/build-page.cjs').buildPage().html
 const scripts = [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script\s*>/gi)]
   .map(match => ({attributes: match[1], source: match[2]}));
 const mainIndex = scripts.findIndex(script => script.source.includes('function newBankItem(') && script.source.includes('function onTap('));
-const modules = ['curriculum-data.js', 'practice-selector.js', 'sentence-hints.js', 'ai-sentences.js',
+const modules = ['curriculum-data.js', 'practice-selector.js', 'sentence-hints.js', 'ai-sentences.js', 'openai-sentences.js',
   'game-feedback.js', 'glyph-catalog.js', 'glyph-loader.js', 'learning-timing.js', 'parent-validation.js', 'progress-sync.js', 'shared-learning.js',
-  'mountain-journey.js', 'observatory.js', 'giant-kitchen.js', 'bridge-train.js', 'tomb-mermaid.js', 'herbalist-room.js'];
+  'mountain-journey.js', 'observatory.js', 'giant-kitchen.js', 'bridge-train.js', 'tomb-mermaid.js',
+  'dune-sand.js', 'dune-story.js', 'library-story.js', 'ice-armor-story.js', 'herbalist-room.js'];
 const styles = ['game-feedback.css', 'mountain-journey.css', 'herbalist-room.css', 'observatory.css',
-  'giant-kitchen.css', 'bridge-train.css', 'tomb-mermaid.css'];
+  'giant-kitchen.css', 'bridge-train.css', 'tomb-mermaid.css',
+  'dune-story.css', 'library-story.css', 'ice-armor-story.css'];
 assert.ok(scripts.every(script => !/\bsrc\s*=/i.test(script.attributes)), 'Critical scripts must be embedded');
 for(const file of modules) assert.equal(scripts.filter(script => script.attributes.includes('data-source="'+file+'"')).length,1,'Embed exactly one '+file);
 assert.deepEqual(scripts.filter(script => /\bdata-source=/.test(script.attributes))
