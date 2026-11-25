@@ -258,6 +258,22 @@
     tone(783.99, start + 0.42, 0.62, 0.06, 'sine');
   }
 
+  function stoneDoorSound() {
+    // A brief low rumble uses the already-unlocked effects context. Preserve the
+    // correct/victory chime from the tenth pass while the stone door opens.
+    const start = startSound(true);
+    if (start == null) return;
+    tone(64, start, 0.96, 0.105, 'triangle', 45);
+    tone(96, start + 0.035, 0.78, 0.04, 'sine', 55);
+    tone(52, start + 0.16, 0.86, 0.075, 'sine', 38);
+  }
+
+  function playStoneDoor() {
+    if (muted || document.hidden || !context || context.state !== 'running') return 0;
+    stoneDoorSound();
+    return 1050;
+  }
+
   function targetRect() {
     const ids = ['writeTile', 'writeSlot', 'doorpanel'];
     for (let i = 0; i < ids.length; i++) {
@@ -407,6 +423,7 @@
     unlock: unlock,
     playCorrect: playCorrect,
     playWrong: playWrong,
+    playStoneDoor: playStoneDoor,
     celebrate: celebrate,
     reset: reset,
     setMuted: setMuted,

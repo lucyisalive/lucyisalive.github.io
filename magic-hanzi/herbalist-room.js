@@ -133,7 +133,37 @@
       demoHint: '锁链绕过肩臂、胸腰和小腿，紧紧绑住盔甲。',
       demoFinished: '最后一根铁链断开，盔甲向你单膝跪地，胸甲与甲缝发出光芒。',
       reward: '一根缠着盔甲的铁链绷断，滑落下去。', completion: '十根铁链全部断开，盔甲向你单膝跪地，发出光芒。',
-      next: '回到草药房', nextStage: 'herbs', interval: 1200, arrival: 6500, automaticEnding: true,
+      next: '前往魔豆云梯', nextStage: 'beans', interval: 1200, arrival: 6500, automaticEnding: true,
+    },
+    beans: {
+      number: '第十二关', title: '魔豆云梯与天堂火车站', unit: '截豆藤',
+      intro: '眼前的魔豆正在生长，云层遮住了高处。',
+      task: '每通过一个字，豆藤就向上长高一截。',
+      start: '让魔豆生长', step: '长高一截豆藤', auto: '播放到列车发车', retry: '重新种下魔豆',
+      demoHint: '看看豆藤怎样向云层高处伸展。',
+      demoFinished: '十截豆藤长成，天堂火车站从云中露出，整列火车缓缓发车。',
+      reward: '豆藤向上长高了一截。', completion: '豆藤长到云层高处，天堂火车站露出来，整列梦幻火车发车了。',
+      next: '前往玫瑰棺', nextStage: 'rose', interval: 1200, arrival: 13700, automaticEnding: true,
+    },
+    rose: {
+      number: '第十三关', title: '玫瑰棺中的沉睡美人', unit: '朵玫瑰',
+      intro: '敞口的棺材里睡着一位女子，枯萎的玫瑰藤遮住了她的脸。',
+      task: '每通过一个字，一朵玫瑰开放，相应的藤蔓恢复绿色。',
+      start: '唤醒玫瑰', step: '绽放一朵玫瑰', auto: '播放到美人醒来', retry: '重新绽放玫瑰',
+      demoHint: '让十朵玫瑰一朵一朵开放。',
+      demoFinished: '十朵玫瑰开放，花藤向两旁让开，女子睁开了眼睛。',
+      reward: '一朵玫瑰开放，藤蔓恢复了绿色。', completion: '十朵玫瑰开满棺材，花藤向两旁让开，露出美人的脸，她睁开了眼睛。',
+      next: '前往八卦石门', nextStage: 'bagua', interval: 1200, arrival: 3800, automaticEnding: true,
+    },
+    bagua: {
+      number: '第十四关', title: '八卦封印石门', unit: '处封印',
+      intro: '厚重的石门上，八卦与中央的太极阴阳还没有亮起。',
+      task: '前八次通过点亮外圈八卦，最后两次分别点亮中央太极的阴阳两半。',
+      start: '点亮八卦封印', step: '点亮一处封印', auto: '播放到石门打开', retry: '重新点亮封印',
+      demoHint: '先点亮外圈八卦，再点亮中央的阴阳两半。',
+      demoFinished: '十处封印全部亮起，厚重石门轰隆一声向左右平移打开。',
+      reward: '石门上的一处封印亮了起来。', completion: '外圈八卦和中央太极全部亮起，厚重石门向左右两边平移打开。',
+      next: '回到草药房', nextStage: 'herbs', interval: 1200, arrival: 5200, automaticEnding: true,
     },
   };
 
@@ -180,6 +210,8 @@
       { stages: ['dunes'], name: 'HanziDuneStory' },
       { stages: ['library'], name: 'HanziLibraryStory' },
       { stages: ['ice', 'armor'], name: 'HanziIceArmorStory' },
+      { stages: ['beans'], name: 'HanziBeanTrainStory' },
+      { stages: ['rose', 'bagua'], name: 'HanziRoseBaguaStory' },
     ];
 
     const hud = doc.createElement('div');

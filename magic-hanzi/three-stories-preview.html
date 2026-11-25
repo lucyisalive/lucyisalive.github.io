@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>魔法闯关汉字游戏 · 三关续作预览</title>
+  <link rel="stylesheet" href="bean-train-story.css">
+  <link rel="stylesheet" href="rose-bagua-story.css">
+  <link rel="stylesheet" href="new-stories-preview.css">
+  <link rel="stylesheet" href="three-stories-preview.css">
+</head>
+<body>
+  <aside class="preview-panel" aria-label="画面预览控制">
+    <p class="preview-label">魔法闯关汉字游戏 · 三关续作</p>
+    <nav class="preview-scenes" aria-label="选择关卡">
+      <button type="button" data-stage="beans" aria-pressed="true">魔豆云梯</button>
+      <button type="button" data-stage="rose" aria-pressed="false">玫瑰美人</button>
+      <button type="button" data-stage="bagua" aria-pressed="false">八卦石门</button>
+    </nav>
+    <div class="preview-story"><h1 id="previewTitle">魔豆云梯</h1><p id="previewDescription"></p></div>
+    <div class="preview-progress"><span id="previewCount">0 / 10</span><div id="previewBeads" aria-hidden="true"></div></div>
+    <p class="preview-status" id="previewStatus" role="status" aria-live="polite"></p>
+    <div class="preview-actions">
+      <button type="button" class="preview-primary" id="previewStep">通过一个字</button>
+      <button type="button" class="preview-secondary" id="previewAuto">播放整关</button>
+      <button type="button" class="preview-primary" id="previewEnding" hidden>再看一次结尾</button>
+      <button type="button" class="preview-reset" id="previewReset">重看本关</button>
+    </div>
+  </aside>
+  <script src="game-feedback.js"></script>
+  <script src="bean-train-story.js"></script>
+  <script src="rose-bagua-story.js"></script>
+  <script src="three-stories-preview.js"></script>
+</body>
+</html>

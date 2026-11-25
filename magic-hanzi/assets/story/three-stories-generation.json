@@ -1,0 +1,98 @@
+{
+  "generator": "内置图像生成（ImageGen）",
+  "conversion": "无损WebP转换；原图和转换图RGB/alpha逐字节一致",
+  "assets": [
+    {
+      "key": "bean-cloud-garden-v1",
+      "transparent": false,
+      "prompt": "Use case: illustration-story. Asset type: full-screen portrait background for a classical magical learning adventure, 3:4 portrait composition. Paint an original mysterious old garden at night that opens vertically into a deep sea of luminous clouds. Mossy stones and dark emerald earth occupy the bottom 12 percent, framing a small central planting patch. Tall dark foliage frames the sides, the spacious central 65 percent is mostly open blue-purple night air, wisps of clouds rising toward a distant moonlit sky. No beanstalk or vine yet, because the game will draw a growing vine. No railway station, train, castle, people, letters, interface, watermark. Rich classical hand-painted storybook realism, fine atmospheric depth, indigo and antique emerald shadows, restrained warm golden firefly specks; mysterious and inviting rather than pastel or cute. Keep the whole middle open so a large twisting beanstalk can later grow from ground into clouds.",
+      "width": 1086,
+      "height": 1448,
+      "bytes": 1824664,
+      "sha256": "a151fe1ad67f22116c36529d7ea7140df276dc1608e87d0ab26bd6072c56ccf3"
+    },
+    {
+      "key": "heaven-station-v1",
+      "transparent": false,
+      "prompt": "Use case: illustration-story. Asset type: full-screen 3:4 portrait background, original classical fantasy railway station suspended above an immense night-time cloud sea. A refined antique platform with dark blue ironwork, aged brass and a softly lit glass canopy occupies the left-middle and upper left. Beautiful rails start near the LOWER LEFT edge at about y75 percent, pass across the lower middle at y65 percent, then curve gracefully RIGHT and UP into the distant luminous mist at x80 percent y43 percent. Empty railway tracks with no train, no people, no balloons, no giant castle, no text, no interface or watermark. An unknown destination beyond the clouds, restrained warm windows/lamps against mysterious indigo moonlight, exquisite detailed hand-painted classical fairy-tale realism. A clear unobstructed broad lower-middle area for an animated train to run on the curved rails. Dreamlike, grand, atmospheric; not a reproduction of any film frame.",
+      "width": 1086,
+      "height": 1448,
+      "bytes": 2027890,
+      "sha256": "11724b9a9aba5443a4494999063450888a82fdb037d7b0ad4475e2d7d01a06d1"
+    },
+    {
+      "key": "heaven-train-v1",
+      "transparent": true,
+      "prompt": "Use case: illustration-story. Asset type: a single isolated horizontal fantasy passenger train sprite with a genuinely TRANSPARENT background. Entire original antique navy-blue and aged-brass magical train, THREE connected complete passenger car units: rear carriage on LEFT, middle carriage CENTER, self-propelled front carriage with elegant locomotive-style rounded nose at RIGHT. All three have rich dark navy panels, antique brass trim, warmly lit amber windows and matching ornate wheels, a refined classical storybook realism. Side view, near-orthographic so all wheel bottoms share exactly one horizontal baseline. Two narrow visible coupler gaps at approximately one third and two thirds of overall train width, so each complete carriage can later animate independently. Show EVERY carriage, complete roof, nose, tail and wheels fully within the frame. Very wide panoramic framing, train uses about92% width and65% height with transparent margin around every side; preferably1536x512. No tracks, platform, smoke clouds, scenery, people, interface, text, watermark. Transparent outside the train, no cast shadow or ground. No balloons, no rocket. Front head points RIGHT.",
+      "width": 2172,
+      "height": 724,
+      "bytes": 1020364,
+      "sha256": "1dc510b4c5e4d79b0f88a58f743d5793fd9992abe246b8d3bf3dca1231c479b3",
+      "alphaZero": 939395,
+      "alphaPartial": 632754,
+      "alphaOpaque": 379
+    },
+    {
+      "key": "rose-crypt-v1",
+      "transparent": false,
+      "prompt": "Use case: illustration-story. Asset type: full-screen 3:4 portrait sleeping-beauty game background. An exceptionally beautiful ADULT woman with long dark chestnut hair sleeps peacefully in a clearly visible OPEN LIDLESS carved pale stone coffin in a mysterious moonlit rose sanctuary. NO lid, no glass cover anywhere. A high frontal view down the long coffin: her head is farthest from us, face CENTER precisely x50 percent y44 percent of full image, body extends toward foreground bottom y90 percent. CLOSED eyes, serene alive sleeping face, modest elegant ivory long-sleeved embroidered medieval gown, hands resting motionless at abdomen, neither hands nor hair cover her face. The full coffin is visibly long and open with carved rim, flanked by aged stone columns and dim moonlit garden architecture. Leave coffin sides/rim clear for animated thorny vines and ten roses to be added by game; do NOT paint ANY roses, flowers, vines, thorns or leaves on coffin, woman or face. Classical richly painted fairy-tale realism with deep indigo, antique moss and restrained warm ivory; mature elegant proportions, soft photoreal facial features. No other person, skull, gore, text, interface or watermark. Peaceful enchantment rather than horror.",
+      "width": 1086,
+      "height": 1448,
+      "bytes": 1968800,
+      "sha256": "30a6883dcecd60746ae388aa4d24156f474250162ac720a3fecbaf5ae9038988"
+    },
+    {
+      "key": "rose-bloom-v1",
+      "transparent": true,
+      "prompt": "Use case: illustration-story. Asset type: isolated sprite of ONE beautiful fully open deep crimson rose bloom, on a genuinely TRANSPARENT background. Near frontal three-quarter angle, exquisite layered velvety dark-red petals catching restrained warm moonlight, rich classical hand-painted realistic fairy-tale style. Short small dark-green sepals under the flower, NO long stem, NO extra flowers or buds, NO surrounding leaves or objects. Centered flower with transparent margin on all sides, whole flower uncropped. No background, ground, shadow, text, interface or watermark. The game places this blossom at ten points on living vines; the single rose should remain clearly readable at small size, dignified mysterious rich crimson, never pastel pink.",
+      "width": 1312,
+      "height": 1199,
+      "bytes": 1033154,
+      "sha256": "e90ede241f3e1d64c17443a26a8f9424ba4502afc0738137e19dab9004ad9f74",
+      "alphaZero": 777858,
+      "alphaPartial": 794862,
+      "alphaOpaque": 368
+    },
+    {
+      "key": "bagua-door-closed-v1",
+      "transparent": false,
+      "prompt": "Use case: illustration-story. Asset type: full-screen 3:4 portrait background, a straight-on symmetrical view of a monumental ancient Chinese DOUBLE SLIDING STONE DOOR in a mysterious underground stone sanctuary. Two closed heavy dark-grey jade stone leaves meet at an exactly vertical CENTER SEAM x50 percent. The two rectangular door leaves occupy x10 to90 percent and y17 to96 percent, surrounded by a fixed massive carved stone doorway and mossy wall. A large perfectly PLAIN EMPTY circular recessed medallion is centered x50 percent y46 percent, diameter58 percent of image width, visibly split by the center door seam. The game will draw correct bagua and taiji on this empty circle: absolutely NO symbols, letters, trigrams, yin-yang, glyphs, inscriptions or decorative marks inside the disk. Outer door carving restrained geometric stone relief. The leaves can slide horizontally apart into the side walls like an automatic hotel door, so no hinges or handles. Classical hand-painted fantasy realism, moonlit blue-grey stone, dark jade, subtle aged bronze accents, fine material detail, atmospheric and mysterious, never cartoon or pastel. No cracks opening through the stone, no people, no text, no interface, no watermark.",
+      "width": 1086,
+      "height": 1448,
+      "bytes": 1945018,
+      "sha256": "5cda93f69385a125cf0bc632c6856fad85d5202b472a7eb2d8e23d0dba094a10"
+    },
+    {
+      "key": "rose-awake-face-v1",
+      "source": "rose-crypt-v1",
+      "transparent": false,
+      "prompt": "Use case: precise-object-edit. Edit target: the provided whole portrait sleeping woman image. Change ONLY her eyes from closed to naturally softly OPEN, looking gently upward toward the viewer. She is an adult enchanted sleeping beauty waking peacefully. Keep the exact same woman and identity, her precise face location, lips, hairstyle, body position, hands resting at abdomen, ivory gown, lidless open stone coffin, columns, moon, background, all camera geometry, framing, colors, exposure, every other object and lighting absolutely unchanged. No smile necessary, no sitting up, no movement, no raised hands, no new roses, vines, lid or glass. Produce the same full-scene portrait composition, not a cropped face patch. No text or watermark.",
+      "width": 1086,
+      "height": 1448,
+      "bytes": 1698116,
+      "sha256": "55e1bd2fa6c599eb188c72578a030c4aa0d8cb9511cde20f2dc64e99d4a9e259"
+    },
+    {
+      "key": "bagua-door-open-v1",
+      "source": "bagua-door-closed-v1",
+      "transparent": false,
+      "prompt": "Use case: precise-object-edit. Edit target: the provided full portrait ancient Chinese stone double door. Keep the EXACT SAME outside doorway, fixed lintel, side pillars, walls, vines, floor, lighting, camera, original3:4 framing and all architectural details. Change ONLY the two rectangular central stone door leaves: slide the LEFT leaf horizontally left and the RIGHT leaf horizontally right, retracting behind the fixed side pillars into the wall like an automatic hotel door. A wide fully open rectangular doorway is now revealed in the center, filled with softly luminous mist and subtle depth, with no particular room or story beyond. The blank circular medallion belongs to the sliding door leaves so must move out with them and no longer remain floating in the middle. The fixed stone outside frame must not shift or expand. No hinges, swinging, fractures or broken stone. No new symbols, letters, people, treasure, train or scene, no text/interface/watermark. Neutral mysterious open passage only.",
+      "width": 1086,
+      "height": 1448,
+      "bytes": 1538652,
+      "sha256": "1bf87464268c4dad0a14cd128b77b8252ac6134e2fb0a1a14c6704054d893990"
+    },
+    {
+      "key": "rose-leaf-v1",
+      "transparent": true,
+      "prompt": "Use case: illustration-story. Asset type: ONE isolated realistic rose leaf sprite on a genuinely transparent background, for a classical fairy-tale game. A single elegant pointed oval rose leaf, elongated oval with finely serrated edges, deep antique emerald green, subtle bronze-green veins and a short slender petiole at its base. FRONT view, tip points straight UP, petiole points DOWN, nearly flat with gently curved natural surface. The full leaf centered on canvas, occupies about80 percent width and85 percent height; transparent margin all around. Painterly photoreal botanical detail, restrained moonlit highlights, sophisticated rich dark green, not bright lime green. Only ONE leaf, no other leaves, no branch, no flower, no pot, no ground, no shadow, no text, no watermark. Transparent outside the leaf.",
+      "width": 1217,
+      "height": 1293,
+      "bytes": 869154,
+      "sha256": "4e0c3c1571614e1e8a2c91d50294351a6655b40eea07c05e35380d8c370b7402",
+      "alphaZero": 1049117,
+      "alphaPartial": 524085,
+      "alphaOpaque": 379
+    }
+  ]
+}

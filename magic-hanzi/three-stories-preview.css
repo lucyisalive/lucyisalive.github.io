@@ -1,0 +1,5 @@
+:is(.story-beans,.story-rose,.story-bagua) { left: var(--preview-panel); bottom: var(--preview-bottom); }
+.rb-frame { width: min(100%,calc(var(--preview-height) * .75)); }
+.beans-frame { width: min(100%,calc(var(--preview-height) * .88),1000px); }
+.beans-world { width: max(100%,calc(var(--preview-height) * .75)); }
+@media (max-width:720px) { .preview-scenes { grid-template-columns: repeat(3,1fr); } }

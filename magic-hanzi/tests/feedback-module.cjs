@@ -2,7 +2,7 @@ const fs=require('fs'),vm=require('vm'),assert=require('assert'),path=require('p
 const root=path.resolve(__dirname,'..');
 const source=fs.readFileSync(path.join(root,'game-feedback.js'),'utf8');
 function environment({audio=true,reduced=false,resumeReject=false,resumeLater=false,primeReject=false}={}){
- let now=0,nextTimer=0;const timers=new Map(),oscillators=[],contexts=[];
+ let now=0,nextTimer=0;const timers=new Map(),oscillators=[],contexts=[],gains=[];
  class Element{
   constructor(tag){this.tagName=tag;this.children=[];this.parentNode=null;this.hidden=false;this.attrs={};this.textContent='';this.className='';this.style={setProperty(k,v){this[k]=v;}};this.listeners={};const self=this;this.classList={add(...names){self.className=[...new Set(self.className.split(/\s+/).filter(Boolean).concat(names))].join(' ')},remove(...names){self.className=self.className.split(/\s+/).filter(x=>!names.includes(x)).join(' ')},contains(name){return self.className.split(/\s+/).includes(name)}};}
   get isConnected(){return this===body || Boolean(this.parentNode&&this.parentNode.isConnected)}
@@ -20,7 +20,7 @@ function environment({audio=true,reduced=false,resumeReject=false,resumeLater=fa
   addEventListener(k,fn){(this.listeners[k]||(this.listeners[k]=[])).push(fn)},
   setTimeout(fn,ms){timers.set(++nextTimer,{fn,at:now+ms});return nextTimer},
   clearTimeout(id){timers.delete(id)},matchMedia:()=>({matches:reduced})};
- class Param{constructor(){this.value=1;}setValueAtTime(v,t){this.value=v;}linearRampToValueAtTime(v,t){}exponentialRampToValueAtTime(v,t){}cancelScheduledValues(t){}}
+ class Param{constructor(){this.value=1;this.ramps=[];}setValueAtTime(v,t){this.value=v;}linearRampToValueAtTime(v,t){this.ramps.push({value:v,at:t});}exponentialRampToValueAtTime(v,t){this.ramps.push({value:v,at:t});}cancelScheduledValues(t){}}
  class AudioContext{
   constructor(){
    this.state='suspended';this.sampleRate=44100;this.destination={};
@@ -28,7 +28,7 @@ function environment({audio=true,reduced=false,resumeReject=false,resumeLater=fa
    contexts.push(this);
   }
   get currentTime(){return now/1000}
-  createGain(){return {gain:new Param(),connect(){},disconnect(){}}}
+  createGain(){const node={gain:new Param(),connect(){},disconnect(){}};gains.push(node);return node;}
   createBufferSource(){return {connect(){},disconnect(){},start(){}}}
   createBuffer(){
    if(primeReject)throw Error('Silent source unavailable');
@@ -55,7 +55,7 @@ function environment({audio=true,reduced=false,resumeReject=false,resumeLater=fa
  }
  if(audio)window.AudioContext=AudioContext;
  vm.runInNewContext(source,{window,document,Promise,Set,Math,Array,Object,Boolean});
- return {api:window.HanziGameFeedback,window,document,body,tile,door,timers,oscillators,contexts,findClass(cls){let found=[];function walk(n){if(n.classList.contains(cls))found.push(n);n.children.forEach(walk)}walk(body);return found},advance(ms){const until=now+ms;for(;;){const entries=[...timers].filter(([,x])=>x.at<=until).sort((a,b)=>a[1].at-b[1].at);if(!entries.length)break;const[id,x]=entries[0];timers.delete(id);now=x.at;x.fn()}now=until}};
+ return {api:window.HanziGameFeedback,window,document,body,tile,door,timers,oscillators,contexts,gains,findClass(cls){let found=[];function walk(n){if(n.classList.contains(cls))found.push(n);n.children.forEach(walk)}walk(body);return found},advance(ms){const until=now+ms;for(;;){const entries=[...timers].filter(([,x])=>x.at<=until).sort((a,b)=>a[1].at-b[1].at);if(!entries.length)break;const[id,x]=entries[0];timers.delete(id);now=x.at;x.fn()}now=until}};
 }
 (async()=>{
  const basic=environment({audio:false});assert.equal(await basic.api.unlock(),false);basic.api.playCorrect();assert.equal(basic.findClass('hg-feedback-star').length,12);assert.equal(basic.findClass('hg-feedback-ring').length,1);basic.api.playWrong();assert.equal(basic.api.celebrate('慧'),2400);assert.equal(basic.findClass('hg-feedback-message')[0].textContent,'今天这个字学会啦，改天再考。');assert.equal(basic.findClass('hg-feedback-character')[0].textContent,'慧');assert.equal(basic.findClass('hg-feedback-banner')[0].hidden,false);basic.advance(2390);assert.equal(basic.findClass('hg-feedback-banner')[0].hidden,true);assert.equal(basic.findClass('hg-feedback-star').length,0);assert.equal(basic.timers.size,0);
@@ -63,6 +63,39 @@ function environment({audio=true,reduced=false,resumeReject=false,resumeLater=fa
  const still=environment({audio:false,reduced:true});still.api.playCorrect();assert.equal(still.findClass('hg-feedback-star').length,0);assert.equal(still.findClass('hg-feedback-ring').length,1);still.advance(360);assert.equal(still.findClass('hg-feedback-ring').length,0);
  const sounds=environment();assert.equal(await sounds.api.unlock(),true);sounds.api.playCorrect();const correctNodes=sounds.oscillators.slice();const correctEnd=Math.max(...correctNodes.map(n=>n.stops[0]));assert(correctEnd<.5);sounds.api.celebrate('慧');const victoryNodes=sounds.oscillators.slice(correctNodes.length);assert(Math.min(...victoryNodes.map(n=>n.began))>=.32);assert(Math.max(...victoryNodes.map(n=>n.stops[0]))<1.5);assert(correctNodes.every(n=>n.stops.length===1),'celebration must preserve the just-played correct chime');sounds.api.reset();assert(sounds.oscillators.every(n=>n.stops.length>=2));const prior=sounds.oscillators.length;sounds.api.setMuted(true);sounds.api.playCorrect();assert.equal(sounds.oscillators.length,prior);sounds.api.setMuted(false);sounds.api.playWrong();const wrongNodes=sounds.oscillators.slice(prior);assert(Math.max(...wrongNodes.map(n=>n.stops[0]))<.6);sounds.document.hidden=true;const hiddenCount=sounds.oscillators.length;sounds.api.playWrong();assert.equal(sounds.oscillators.length,hiddenCount);
  assert.equal(sounds.contexts.length,1);await sounds.api.unlock();assert.equal(sounds.contexts.length,1,'reuse one AudioContext');
+ // The optional stone-door rumble shares the gesture-unlocked effects context.
+ // Missing/locked audio never creates a second context or queues a late rumble.
+ assert.equal(basic.api.playStoneDoor(),0);
+ const stone=environment();
+ assert.equal(stone.api.playStoneDoor(),0);
+ assert.equal(stone.contexts.length,0,'A decorative stone-door request must not create an audio context');
+ await stone.api.unlock();
+ stone.api.playCorrect();stone.api.celebrate('门');
+ const stonePrior=stone.oscillators.slice(),gainStart=stone.gains.length;
+ assert.equal(stone.api.playStoneDoor(),1050);
+ const stoneNodes=stone.oscillators.slice(stonePrior.length);
+ assert.equal(stoneNodes.length,3,'A short rumble uses three low-volume tones');
+ assert.ok(stoneNodes.every(node=>node.frequency.value>=38 && node.frequency.value<=96),'Stone-door tones stay low');
+ assert.ok(Math.max(...stoneNodes.map(node=>node.stops[0]))<1.2,'The whole rumble ends in under 1.2 seconds');
+ assert.ok(stone.gains.slice(gainStart).every(node=>Math.max(...node.gain.ramps.map(r=>r.value))<=.105),'The rumble stays quiet');
+ assert.ok(stonePrior.every(node=>node.stops.length===1),'Stone-door sound preserves the correct and victory chimes');
+ assert.equal(stone.contexts.length,1,'Stone-door sound reuses the feedback context');
+ stone.api.reset();
+ assert.ok(stoneNodes.every(node=>node.stops.length===2),'Reset cancels every stone-door voice');
+ const stoneCount=stone.oscillators.length;
+ stone.api.setMuted(true);assert.equal(stone.api.playStoneDoor(),0);
+ stone.api.setMuted(false);stone.document.hidden=true;assert.equal(stone.api.playStoneDoor(),0);
+ assert.equal(stone.oscillators.length,stoneCount,'Muted and hidden pages never sound the stone door');
+ stone.document.hidden=false;stone.api.playStoneDoor();
+ const backgroundStone=stone.oscillators.slice(stoneCount);
+ stone.document.hidden=true;stone.document.listeners.visibilitychange[0]();
+ assert.ok(backgroundStone.every(node=>node.stops.length===2),'Hiding the page cancels an in-flight stone-door sound');
+ assert.equal(stone.contexts[0].closeCalls,1);
+ const suspendedStone=environment({resumeLater:true});
+ const stoneUnlock=suspendedStone.api.unlock();
+ assert.equal(suspendedStone.api.playStoneDoor(),0);
+ suspendedStone.contexts[0].finishResume();await stoneUnlock;
+ assert.equal(suspendedStone.oscillators.length,0,'A suspended door sound is not replayed after resume');
  const blocked=environment({resumeReject:true});assert.equal(await blocked.api.unlock(),false);blocked.api.playCorrect();assert.equal(blocked.oscillators.length,0);
 
  const noPrime=environment({primeReject:true});
@@ -151,6 +184,6 @@ function environment({audio=true,reduced=false,resumeReject=false,resumeLater=fa
  assert.equal(late.contexts[0].state,'running');
 
  const fallback=environment({audio:false});fallback.tile.rect={left:0,top:0,width:0,height:0};fallback.api.playCorrect();assert.equal(fallback.findClass('hg-feedback-ring')[0].style.left,'65px');
- const results={checks:'unsupported audio, priming failure, rejected and delayed resume, bounded chimes, Pencil unlock and speech exclusion, background recreation, schedules, handoff, muted/hidden audio, visual cleanup, repeated celebration, reduced motion, door fallback',correctAudioEndSeconds:correctEnd,victoryAudioEndSeconds:Math.max(...victoryNodes.map(n=>n.stops[0])),wrongAudioEndSeconds:Math.max(...wrongNodes.map(n=>n.stops[0])),status:'passed'};
+ const results={checks:'unsupported audio, priming failure, rejected and delayed resume, bounded chimes, Pencil unlock and speech exclusion, background recreation, schedules, handoff, bounded stone-door tones and shared context, muted/hidden audio, visual cleanup, repeated celebration, reduced motion, door fallback',correctAudioEndSeconds:correctEnd,victoryAudioEndSeconds:Math.max(...victoryNodes.map(n=>n.stops[0])),wrongAudioEndSeconds:Math.max(...wrongNodes.map(n=>n.stops[0])),status:'passed'};
  fs.mkdirSync(path.join(root,'work/feedback'),{recursive:true});fs.writeFileSync(path.join(root,'work/feedback/check-results.json'),JSON.stringify(results,null,2)+'\n');console.log(JSON.stringify(results,null,2));
 })().catch(e=>{console.error(e);process.exit(1)});
