@@ -10,6 +10,7 @@
   const particles = new Set();
   const timers = new Set();
   const voices = new Set();
+  const clockbirdVoices = new Set();
   let context = null;
   let master = null;
   let resuming = null;
@@ -184,6 +185,7 @@
       } catch (error) {}
     });
     voices.clear();
+    clockbirdVoices.clear();
   }
 
   function startSound(preserveExisting) {
@@ -211,10 +213,12 @@
       voices.add(voice);
       oscillator.onended = function () {
         voices.delete(voice);
+        clockbirdVoices.delete(voice);
         try { oscillator.disconnect(); gain.disconnect(); } catch (error) {}
       };
       oscillator.start(start);
       oscillator.stop(start + duration + 0.012);
+      return voice;
     } catch (error) {
       try { if (oscillator) oscillator.disconnect(); if (gain) gain.disconnect(); } catch (ignored) {}
     }
@@ -272,6 +276,46 @@
     if (muted || document.hidden || !context || context.state !== 'running') return 0;
     stoneDoorSound();
     return 1050;
+  }
+
+  function stopClockbirdChorus() {
+    // A scene may leave while its scheduled calls are still pending. Cancel
+    // only these voices so travel does not silence grading or victory chimes.
+    clockbirdVoices.forEach(function (voice) {
+      try {
+        const now = context ? context.currentTime : 0;
+        voice.gain.gain.cancelScheduledValues(now);
+        voice.gain.gain.setValueAtTime(voice.gain.gain.value, now);
+        voice.gain.gain.linearRampToValueAtTime(0, now + 0.012);
+        voice.oscillator.stop(now + 0.015);
+      } catch (_) {}
+      voices.delete(voice);
+    });
+    clockbirdVoices.clear();
+  }
+
+  function playClockbirdChorus() {
+    // Decorative call-and-response only; share the unlocked effects context and
+    // retain the tenth-pass chimes. Never unlock or queue audio from a timer.
+    const start = startSound(true);
+    if (start == null) return 0;
+    stopClockbirdChorus();
+    const calls = [
+      [0.00, 1568, 2350], [0.19, 2093, 1760], [0.43, 1760, 2637],
+      [1.12, 1865, 2794], [1.39, 2349, 1976], [1.71, 2093, 3136],
+      [2.16, 1397, 2093], [2.36, 1760, 2637], [2.73, 2349, 1865],
+      [3.08, 1976, 2960], [3.34, 2637, 2093], [3.72, 1760, 2349],
+      [4.15, 2093, 3136], [4.43, 1568, 2349], [4.80, 2349, 2794],
+      [5.14, 1976, 2637], [5.48, 2637, 2093], [5.76, 2093, 1568]
+    ];
+    calls.forEach(function (call, index) {
+      const duration = index < 3 ? 0.14 : 0.20;
+      const main = tone(call[1], start + call[0], duration, index < 3 ? 0.065 : 0.045, 'sine', call[2]);
+      const overtone = tone(call[1] * 2, start + call[0] + 0.018, duration * 0.65, 0.009, 'sine', call[2] * 2);
+      if (main) clockbirdVoices.add(main);
+      if (overtone) clockbirdVoices.add(overtone);
+    });
+    return 6000;
   }
 
   function targetRect() {
@@ -424,6 +468,8 @@
     playCorrect: playCorrect,
     playWrong: playWrong,
     playStoneDoor: playStoneDoor,
+    playClockbirdChorus: playClockbirdChorus,
+    stopClockbirdChorus: stopClockbirdChorus,
     celebrate: celebrate,
     reset: reset,
     setMuted: setMuted,

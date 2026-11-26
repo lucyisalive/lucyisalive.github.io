@@ -12,7 +12,7 @@ assert.equal(CSS_FILE, 'game-feedback.css', 'Keep the existing singular CSS expo
 assert.deepEqual(CSS_FILES, [CSS_FILE, 'mountain-journey.css', 'herbalist-room.css', 'observatory.css',
   'giant-kitchen.css', 'bridge-train.css', 'tomb-mermaid.css',
   'dune-story.css', 'library-story.css', 'ice-armor-story.css',
-  'bean-train-story.css', 'rose-bagua-story.css', 'magic-shop.css']);
+  'bean-train-story.css', 'rose-bagua-story.css', 'goose-story.css', 'clockbird-story.css', 'elves-story.css', 'magic-shop.css']);
 for (const file of CSS_FILES) assets[file] = '.sample { color: red; }';
 // Include closing tags inside JS and CSS strings, where packaging must escape
 // the HTML terminator without changing the string value used by the program.
@@ -154,6 +154,13 @@ if (!process.argv.includes('--unit')) {
   assert.deepEqual(new Set(continuationImages),new Set(expectedContinuationImages),'The three new rooms reference exactly their ten approved images');
   const offlineBuilder=fs.readFileSync(path.join(root,'tools/build-offline-preview.cjs'),'utf8');
   for(const image of expectedContinuationImages)assert.equal(offlineBuilder.split("'"+image+"'").length-1,1,'Offline preview embeds exactly one '+image);
+
+  const fairytaleFiles=['goose-story.js','goose-story.css','clockbird-story.js','clockbird-story.css','elves-story.js','elves-story.css'];
+  const fairytaleImages=fairytaleFiles.flatMap(file=>[...fs.readFileSync(path.join(root,file),'utf8')
+    .matchAll(/assets\/story\/[a-z0-9-]+\.webp/g)].map(match=>match[0]));
+  const expectedFairytaleImages=["assets/story/goose-courtyard-v1.webp", "assets/story/golden-goose-v1.webp", "assets/story/goose-followers-a-v1.webp", "assets/story/goose-followers-b-v1.webp", "assets/story/goose-princess-v1.webp", "assets/story/clockwork-workshop-v1.webp", "assets/story/clockwork-nightingale-v1.webp", "assets/story/nightingale-flock-v1.webp", "assets/story/elves-tailor-workshop-v1.webp", "assets/story/elves-base-v1.webp", "assets/story/elves-dressed-v1.webp", "assets/story/elves-awake-v1.webp", "assets/story/elves-sneak-atlas-v1.webp"];
+  assert.deepEqual(new Set(fairytaleImages),new Set(expectedFairytaleImages),'The three fairy-tale rooms reference exactly their thirteen selected assets');
+  for(const image of expectedFairytaleImages)assert.equal(offlineBuilder.split("'"+image+"'").length-1,1,'Offline preview embeds exactly one '+image);
 
   for (const image of new Set([...mountainImages, ...roomImages, ...observatoryImages, ...storyImages, ...scriptImages])) {
     const url = new URL(image, 'https://lucyisalive.github.io/');

@@ -3,7 +3,7 @@
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
-<meta name="game-version" content="2026.11.26.1">
+<meta name="game-version" content="2026.11.26.2">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>魔法闯关汉字游戏</title>
 <style data-source="game-feedback.css">
@@ -4472,6 +4472,332 @@ body[data-herb-stage="sea"] .story-sea { display: block; }
 }
 
 </style>
+<style data-source="goose-story.css">
+.story-goose {
+  position: fixed;
+  z-index: 0;
+  inset: 0;
+  overflow: hidden;
+  isolation: isolate;
+  pointer-events: none;
+  background: #10151f;
+  --gs-camera-x: 27.5%;
+}
+.story-goose[hidden] { display: none !important; }
+.story-goose:not([hidden]) { display: block; }
+.gs-frame {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(100%, 75dvh);
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 100px 30px #0009;
+}
+.gs-courtyard-world,.gs-courtyard-art,.gs-courtyard-fallback { position: absolute; inset: 0; width: 100%; height: 100%; }
+.gs-courtyard-art { object-fit: fill; user-select: none; -webkit-user-drag: none; }
+.gs-courtyard-fallback { background: radial-gradient(ellipse at 72% 30%,#7c624138,transparent 30%),linear-gradient(#172333 0%,#252c38 45%,#524b43 67%,#292c31 100%); }
+.gs-palace-light { position: absolute; z-index: 1; inset: 0; background: radial-gradient(ellipse at 73% 30%,#f4d58d20,transparent 24%),radial-gradient(ellipse at 42% 68%,#e7bc7010,transparent 48%); mix-blend-mode: screen; }
+.gs-frame img { user-select: none; -webkit-user-drag: none; }
+.gs-frame img[hidden] { display: none !important; }
+.gs-princess { position: absolute; z-index: 4; left: 83%; top: 17.7%; width: 18%; aspect-ratio: 3 / 4; transform: translateX(-50%); transform-origin: 50% 87%; }
+.gs-balcony-front { position: absolute; z-index: 5; inset: 0; clip-path: polygon(67% 28.1%,98.6% 26.2%,100% 28.2%,100% 35.8%,67% 36.4%); }
+.gs-balcony-front img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: fill; }
+.gs-princess-crop { position: absolute; inset: 0; overflow: hidden; }
+.gs-princess-crop img { position: absolute; top: 0; left: 0; width: 200%; height: 100%; max-width: none; }
+.gs-princess-laugh { opacity: 0; transition: opacity .24s ease; }
+.gs-princess-laugh img { left: -100%; }
+.gs-princess-calm { opacity: 1; transition: opacity .24s ease; }
+.is-laughing .gs-princess-calm { opacity: 0; }
+.is-laughing .gs-princess-laugh { opacity: 1; }
+.is-ending.is-laughing .gs-princess { animation: gs-princess-laugh 1.4s ease-in-out 2; }
+.gs-laugh-ring { position: absolute; left: 35%; top: 19%; width: 39%; height: 29%; border: 1px solid #f7d590b3; border-radius: 50%; opacity: 0; }
+.is-ending.is-laughing .gs-laugh-ring { animation: gs-laughter-air 1.1s ease-out 2; }
+.is-ending.is-laughing .gs-laugh-ring:last-child { animation-delay: .38s; }
+.gs-queue-world { position: absolute; z-index: 6; inset: 0; transform: translateX(var(--gs-camera-x)); transition: transform .85s cubic-bezier(.2,.75,.25,1); }
+.gs-goose { position: absolute; z-index: 32; left: 10.7%; top: 81.8%; width: 16.5%; aspect-ratio: 3 / 2; transform: translate(-50%,-100%); }
+.gs-goose-motion { position: absolute; inset: 0; transform-origin: 48% 92%; }
+.gs-goose-motion > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 0 5px #c9a74c30) drop-shadow(0 3px 2px #070a0bb0); }
+.gs-goose-shadow,.gs-person-shadow { position: absolute; z-index: -1; left: 27%; top: 92%; width: 52%; height: 6%; background: radial-gradient(ellipse,#101015c2,transparent 70%); filter: blur(2px); }
+.gs-goose-shadow { left: 13%; top: 91%; width: 76%; height: 11%; }
+.gs-follower { position: absolute; width: var(--gs-person-size); aspect-ratio: 1; transform: translate(-50%,-100%); }
+.gs-follower[hidden] { display: none !important; }
+.gs-follower-motion,.gs-follower-lean { position: absolute; inset: 0; transform-origin: 58% 92%; }
+.gs-follower-lean { transform: rotate(var(--gs-lean)); }
+.gs-person-sprite { position: absolute; inset: 0; overflow: hidden; filter: drop-shadow(0 2px 1px #080c0d99); }
+.gs-person-art { position: absolute; width: 300%; height: 200%; max-width: none; }
+.gs-sticky-flash { position: absolute; left: 15%; top: 46%; width: 4%; aspect-ratio: 1; border-radius: 50%; opacity: .45; background: #f5d77d; box-shadow: 0 0 4px #edc96ab0; transform: scale(.5); }
+.is-joining .gs-follower-motion { animation: gs-person-join 1.3s cubic-bezier(.16,.65,.25,1) both; }
+.is-joining .gs-sticky-flash { animation: gs-sticky-catch .52s ease-out .98s both; }
+.is-procession .gs-queue-world { animation: gs-procession-drift 4.6s ease-in-out both; }
+.is-procession .gs-follower-motion { animation: gs-linked-step .68s ease-in-out var(--gs-step-delay) infinite; }
+.is-procession .gs-follower-lean { animation: gs-linked-sway 1.06s ease-in-out var(--gs-step-delay) infinite alternate; }
+.is-procession .gs-goose-motion { animation: gs-goose-waddle .55s ease-in-out infinite; }
+.is-released .gs-queue-world { transform: translateX(-4%); }
+.is-released .gs-sticky-flash { opacity: 0; transition: opacity .15s ease; }
+.is-ending.is-released .gs-follower-motion { animation: gs-gentle-release .95s cubic-bezier(.2,.7,.3,1) var(--gs-stagger) both; }
+.is-released .gs-follower-lean { transform: rotate(0); transition: transform .5s ease; }
+.is-finished .gs-follower-motion { transform: translate(var(--gs-release-x),var(--gs-release-y)); }
+.is-finished .gs-goose-motion { transform: rotate(-5deg); }
+.is-goose-cheering .gs-goose-motion { animation: gs-goose-cheer 1.1s ease-in-out both; }
+.gs-goose-sparks { position: absolute; inset: -15% -7% -5%; }
+.gs-goose-sparks i { position: absolute; left: var(--gs-spark-x); top: var(--gs-spark-y); width: 3px; height: 3px; border-radius: 50%; background: #f2d58a; box-shadow: 0 0 5px #f1c765; opacity: 0; }
+.is-goose-cheering .gs-goose-sparks i { animation: gs-goose-spark .6s ease-out var(--gs-spark-delay) both; }
+.gs-near-haze { position: absolute; z-index: 45; inset: 90% 0 -8%; background: linear-gradient(transparent,#10202c59); filter: blur(6px); }
+.gs-frame-shade { position: absolute; z-index: 50; inset: 0; background: linear-gradient(#070d1848,transparent 26% 78%,#0b142270),linear-gradient(90deg,#11182633,transparent 14% 87%,#11182633); }
+@keyframes gs-person-join {
+  0% { transform: translate(var(--gs-arrive-x),-8%) rotate(6deg); opacity: 0; }
+  9% { opacity: 1; }
+  62% { transform: translate(12%,-4%) rotate(-6deg); }
+  83% { transform: translate(-5%,1%) rotate(4deg); }
+  100% { transform: translate(0,0) rotate(0); opacity: 1; }
+}
+@keyframes gs-sticky-catch { 0% { opacity: 0; transform: scale(.2); } 35% { opacity: 1; transform: scale(2); } 100% { opacity: .45; transform: scale(.5); } }
+@keyframes gs-procession-drift { 0% { transform: translateX(0); } 38% { transform: translateX(-1.8%); } 75% { transform: translateX(-3.2%); } 100% { transform: translateX(-4%); } }
+@keyframes gs-linked-step { 0%,100% { transform: translateY(0); } 25% { transform: translate(-1%,-2.5%); } 50% { transform: translateY(0); } 75% { transform: translate(1%,-2%); } }
+@keyframes gs-linked-sway { from { transform: rotate(calc(var(--gs-lean) - 4deg)); } to { transform: rotate(calc(var(--gs-lean) + 4deg)); } }
+@keyframes gs-goose-waddle { 0%,100% { transform: rotate(-3deg); } 50% { transform: translateY(-4%) rotate(4deg); } }
+@keyframes gs-princess-laugh { 0%,100% { transform: translateX(-50%) rotate(0); } 25% { transform: translate(-50%,-2%) rotate(-2deg); } 50% { transform: translate(-50%,1%) rotate(1.8deg); } 75% { transform: translate(-50%,-1%) rotate(-1deg); } }
+@keyframes gs-laughter-air { from { opacity: .65; transform: scale(.65); } to { opacity: 0; transform: translate(12%,-16%) scale(1.5); } }
+@keyframes gs-gentle-release { 0% { transform: none; } 28% { transform: translate(calc(var(--gs-release-x) * .4),-9%) rotate(-5deg); } 55% { transform: translate(var(--gs-release-x),calc(var(--gs-release-y) + 2%)) rotate(3deg); } 78% { transform: translate(var(--gs-release-x),calc(var(--gs-release-y) - 4%)) rotate(-1deg); } 100% { transform: translate(var(--gs-release-x),var(--gs-release-y)); } }
+@keyframes gs-goose-cheer { 0% { transform: none; } 22% { transform: translateY(-12%) rotate(-8deg); } 45% { transform: translateY(0) rotate(5deg); } 68% { transform: translateY(-7%) rotate(-6deg); } 100% { transform: rotate(-5deg); } }
+@keyframes gs-goose-spark { 0% { transform: scale(.3); opacity: 0; } 25% { opacity: .9; } 100% { transform: translate(15%,-180%) scale(.1); opacity: 0; } }
+.story-goose.is-suspended *, .story-goose.is-instant * { animation: none !important; transition: none !important; }
+@media (prefers-reduced-motion: reduce) {
+  .story-goose *, .story-goose *::before, .story-goose *::after { animation: none !important; transition: none !important; }
+}
+
+</style>
+<style data-source="clockbird-story.css">
+.story-clockbird {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  isolation: isolate;
+  overflow: hidden;
+  pointer-events: none;
+  background: #111a22;
+}
+.story-clockbird[hidden] { display: none !important; }
+.story-clockbird:not([hidden]) { display: block; }
+.story-clockbird *, .story-clockbird *::before, .story-clockbird *::after { pointer-events: none; }
+.clockbird-frame {
+  position: absolute;
+  inset: 0;
+  width: min(100%, 94dvh, 1100px);
+  margin-inline: auto;
+  overflow: hidden;
+  background: #171b20;
+  box-shadow: 0 0 100px 40px #10171e;
+}
+.clockbird-ambience {
+  position: absolute;
+  inset: -5%;
+  background: var(--clockbird-workshop) center / cover no-repeat;
+  filter: blur(36px) brightness(.5);
+  opacity: .8;
+}
+.clockbird-world-position {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(100%, 75dvh);
+  aspect-ratio: 3 / 4;
+  transform: translate(-50%, -50%);
+}
+.clockbird-world { position: absolute; inset: 0; transform-origin: 82% 35%; }
+.clockbird-workshop-art {
+  position: absolute;
+  inset: 0;
+  background: var(--clockbird-workshop) center / 100% 100% no-repeat,
+    linear-gradient(135deg, #172132, #302a20 55%, #171c22);
+  -webkit-mask-image: linear-gradient(transparent, #000 2% 98%, transparent);
+  mask-image: linear-gradient(transparent, #000 2% 98%, transparent);
+}
+.clockbird-window-dawn {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  clip-path: polygon(58% 18%, 60% 14%, 66% 10%, 74% 7%, 81% 7%, 88% 11%, 92.5% 18%, 92.5% 46%, 58% 46%);
+  background: linear-gradient(125deg, transparent 38%, #efc6773b 71%, #ffeacaa6);
+  opacity: .08;
+}
+.clockbird-window-dawn i {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 82% 36%, #fff0c3, #f4cd8142 13%, transparent 35%);
+}
+.clockbird-shared-defs { position: absolute; overflow: hidden; }
+.clockbird-flock-window { position: absolute; z-index: 3; inset: 0; clip-path: polygon(58% 18%, 60% 14%, 66% 10%, 74% 7%, 81% 7%, 88% 11%, 92.5% 18%, 92.5% 46%, 58% 46%); }
+.clockbird-wild-bird { position: absolute; aspect-ratio: 3 / 2; opacity: 0; transform-origin: center; filter: drop-shadow(0 1px 1px #0e141655); }
+.clockbird-wild-sprite { display: block; width: 100%; height: 100%; overflow: visible; }
+.clockbird-wild-far-wing, .clockbird-wild-near-wing { transform-box: view-box; transform-origin: 60% 53%; animation: clockbird-wild-far-flap .7s var(--wild-delay) ease-in-out infinite; }
+.clockbird-wild-near-wing { animation-name: clockbird-wild-near-flap; transform-origin: 47% 42%; }
+@keyframes clockbird-wild-far-flap { 0%, 100% { transform: rotate(-9deg) scaleY(.77); } 50% { transform: rotate(17deg) scaleY(1); } }
+@keyframes clockbird-wild-near-flap { 0%, 100% { transform: rotate(18deg) scaleY(.58); } 50% { transform: rotate(-15deg) scaleY(1); } }
+.clockbird-table-shadow { position: absolute; z-index: 2; left: 46%; top: 65%; width: 34%; height: 2.8%; transform: translateX(-50%); background: radial-gradient(ellipse, #080b0bc9, transparent 72%); filter: blur(5px); }
+.clockbird-machine { position: absolute; z-index: 4; left: 46%; top: 50.5%; width: 68%; aspect-ratio: 3 / 2; transform: translate(-50%, -50%); transform-origin: center; filter: drop-shadow(0 7px 5px #090b0b80); }
+.clockbird-machine-sprite { display: block; width: 100%; height: 100%; overflow: visible; }
+.clockbird-part { opacity: 0; visibility: hidden; }
+.clockbird-part.is-installed { opacity: 1; visibility: visible; }
+.clockbird-install-motion { transform-box: view-box; transform-origin: 50% 57%; }
+.clockbird-part.is-arriving .clockbird-install-motion { animation: clockbird-install .9s cubic-bezier(.15, .67, .23, 1) both; }
+@keyframes clockbird-install {
+  0% { opacity: 0; transform: translate(var(--part-x), var(--part-y)) rotate(var(--part-turn)) scale(.5); }
+  21% { opacity: 1; }
+  79% { transform: translate(0, -5px) rotate(-1deg) scale(1.015); }
+  100% { opacity: 1; transform: translate(0) rotate(0) scale(1); }
+}
+.clockbird-frame-cavity { opacity: .82; }
+.clockbird-frame-rim { fill: none; stroke-width: 9; opacity: .5; }
+.clockbird-frame-rib { fill: none; stroke: #9a783a99; stroke-width: 6; }
+.clockbird-leg { fill: none; stroke: #92713c; stroke-width: 9; stroke-linecap: round; stroke-linejoin: round; opacity: .9; }
+.clockbird-frame-rivet { fill: #d7ba74; stroke: #5a391f; stroke-width: 2; }
+.clockbird-armored .clockbird-frame-rim, .clockbird-armored .clockbird-frame-rib, .clockbird-armored .clockbird-frame-rivet, .clockbird-armored .clockbird-leg, .clockbird-armored .clockbird-carrier-art { opacity: 0; }
+.clockbird-spring-drum { fill: #1b2422; stroke: #b38d4b; stroke-width: 7; }
+.clockbird-spring { fill: none; stroke: #e0b86d; stroke-width: 4; stroke-linecap: round; }
+.clockbird-spring-pin { stroke: #806035; stroke-width: 5; }
+.clockbird-gear-rim { stroke: #68441f; stroke-width: 2; }
+.clockbird-gear-well { fill: #112021; stroke: #e4c989b5; stroke-width: 3; }
+.clockbird-gear-spoke { fill: none; stroke: #bc9655; stroke-width: 10; stroke-linecap: round; }
+.clockbird-pin { fill: #243235; stroke: #684b2c; stroke-width: 2; }
+.clockbird-link-arm { fill: none; stroke: #e2c58a; stroke-width: 8; stroke-linecap: round; opacity: .6; }
+.clockbird-running .clockbird-rotor { animation: clockbird-gear-turn var(--gear-period, 7s) linear infinite; transform-origin: 0 0; }
+.clockbird-running .clockbird-rotor-reverse { animation-direction: reverse; }
+@keyframes clockbird-gear-turn { to { transform: rotate(360deg); } }
+.clockbird-running .clockbird-spring-group { animation: clockbird-spring-wind 2s ease-in-out infinite alternate; }
+@keyframes clockbird-spring-wind { to { filter: brightness(1.17); } }
+.clockbird-pipe { stroke: #725226; stroke-width: 2; }
+.clockbird-pipe-mouth { fill: #0c1719; stroke: #e1bf77; stroke-width: 2; }
+.clockbird-pipe-ring { stroke: #f1d69e; stroke-width: 3; }
+.clockbird-air-link { fill: none; stroke: #96713b; stroke-width: 12; stroke-linecap: round; }
+.clockbird-singing .clockbird-resonator { animation: clockbird-resonance .33s calc(var(--pipe-i) * -.09s) ease-in-out infinite alternate; }
+@keyframes clockbird-resonance { to { filter: brightness(1.8) drop-shadow(0 0 8px #efd29966); } }
+.clockbird-metal-far-wing, .clockbird-metal-near-wing { transform-box: view-box; transform-origin: 64% 26.5%; }
+.clockbird-metal-near-wing { transform-origin: 54.5% 58.5%; }
+.clockbird-flapping .clockbird-metal-far-wing { animation: clockbird-metal-far-flap .84s ease-in-out infinite; }
+.clockbird-flapping .clockbird-metal-near-wing { animation: clockbird-metal-near-flap .84s ease-in-out infinite; }
+@keyframes clockbird-metal-far-flap { 0%, 100% { transform: rotate(-5deg) scaleY(.92); } 50% { transform: rotate(8deg) scaleY(1.01); } }
+@keyframes clockbird-metal-near-flap { 0%, 100% { transform: rotate(8deg) scaleY(.9); } 50% { transform: rotate(-7deg) scaleY(1.03); } }
+.clockbird-head-hinge { transform-box: view-box; transform-origin: 77.5% 30%; }
+.clockbird-singing .clockbird-head-hinge { animation: clockbird-sing-head .66s ease-in-out infinite alternate; }
+@keyframes clockbird-sing-head { to { transform: rotate(-3deg); } }
+.clockbird-song-lines { position: absolute; z-index: 5; inset: 0; width: 100%; height: 100%; opacity: 0; overflow: visible; }
+.clockbird-song-lines path { fill: none; stroke: #efd296; stroke-width: 1.8; stroke-linecap: round; stroke-dasharray: 5 12; filter: drop-shadow(0 0 4px #e8c96f88); }
+.clockbird-singing .clockbird-song-lines { animation: clockbird-song-rise 2.1s ease-in-out infinite; }
+@keyframes clockbird-song-rise { 0% { opacity: 0; transform: translate(0); } 28% { opacity: .7; } 100% { opacity: 0; transform: translate(2%, -1.5%); } }
+.clockbird-dust { position: absolute; z-index: 1; inset: 0; opacity: .4; }
+.clockbird-dust i { position: absolute; left: var(--dust-x); top: 33%; width: 2px; height: 2px; border-radius: 50%; background: #ecd8a6; box-shadow: 0 0 5px #ddbd6b66; animation: clockbird-dust-rise 11s calc(var(--dust-i) * -1.4s) linear infinite; }
+@keyframes clockbird-dust-rise { 0% { opacity: 0; transform: translate(0, 22dvh); } 20% { opacity: .8; } 100% { opacity: 0; transform: translate(12px, -12dvh); } }
+.clockbird-frame-shade { position: absolute; z-index: 10; inset: 0; background: linear-gradient(#080e1742, transparent 25% 76%, #090e186e), linear-gradient(90deg, #080e1745, transparent 12% 88%, #080e1745); }
+.clockbird-finished *, .clockbird-still *, .story-clockbird[hidden] * { animation-play-state: paused !important; }
+.clockbird-finished .clockbird-song-lines { opacity: 0; }
+@media (prefers-reduced-motion: reduce) {
+  .story-clockbird *, .story-clockbird *::before, .story-clockbird *::after { animation: none !important; transition: none !important; }
+  .clockbird-part.is-installed { opacity: 1; }
+}
+
+</style>
+<style data-source="elves-story.css">
+.story-elves {
+  position: fixed;
+  z-index: 0;
+  inset: 0;
+  display: block;
+  overflow: hidden;
+  isolation: isolate;
+  pointer-events: none;
+  background: #101318;
+}
+.story-elves[hidden] { display: none !important; }
+.elves-frame {
+  position: absolute;
+  top: 50%;left: 50%;
+  width: min(100%,75dvh);
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  transform: translate(-50%,-50%);
+  box-shadow: 0 0 100px 28px #0009;
+}
+.el-world,.el-full-art,.el-room-fallback,.el-actor,.el-still-figure,.el-base-fallback,.el-dress-fallback { position: absolute; inset: 0; width: 100%; height: 100%; }
+.el-full-art { display: block; object-fit: fill; user-select: none; -webkit-user-drag: none; }
+.el-full-art[hidden] { display: none; }
+.el-room-fallback { background: radial-gradient(ellipse at 78% 27%,#738d9b50,transparent 37%),linear-gradient(125deg,#1d252c,#302720 62%,#13191f); }
+.el-room-fallback::before { content: '';position: absolute;inset: 13% 8% 43% 57%;border: 8px double #a28d663d;background: radial-gradient(circle at 69% 23%,#d6e2dba8 0 5%,transparent 6%),linear-gradient(115deg,#1b3647,#415d67);box-shadow: inset 0 0 20px #0a1426; }
+.el-room-fallback::after { content: '';position: absolute;inset: 63% -3% -4%;background: repeating-linear-gradient(1deg,#3c3023 0 3px,#55422d 4px 7px,#443524 8px 29px);transform: perspective(450px) rotateX(13deg);border-top: 2px solid #b2906059;box-shadow: 0 -8px 22px #070a10a3; }
+.el-frame-shade { position: absolute;z-index: 20;inset: 0;background: linear-gradient(#06101b70,transparent 28% 81%,#0610189c); }
+.el-actor { z-index: 4;transform-origin: 50% 87%; }
+.el-actor-left { transform-origin: 34% 87%; }
+.el-actor-right { transform-origin: 66% 87%; }
+/* Figures, hair, eyes, and previously placed clothes have no idle animation. */
+.el-actor,.el-still-figure,.el-base-art,.el-base-fallback,.el-awake-art { animation: none; }
+.el-base-art { opacity: 0; }
+.story-elves.has-base-art .el-base-art { opacity: 1; }
+.story-elves.has-base-art .el-base-fallback { display: none; }
+.el-garment { position: absolute;inset: 0;z-index: 2;opacity: 0;visibility: hidden;clip-path: var(--el-piece-mask);transform-origin: var(--el-piece-origin); }
+.el-garment.is-worn { opacity: 1;visibility: visible; }
+.el-garment.is-arriving { animation: el-garment-arrives .95s cubic-bezier(.22,.74,.25,1) both; }
+.el-clothing-art { opacity: 0; }
+.story-elves.has-clothing-art .el-clothing-art { opacity: 1; }
+.story-elves.has-clothing-art .el-dress-fallback { display: none; }
+.el-awake-art { z-index: 3;opacity: 0; }
+.story-elves.is-ending .el-awake-art { transition: opacity .95s ease; }
+.story-elves.has-awake-art.is-awake .el-awake-art { opacity: 1; }
+.el-table-shadows { position: absolute;inset: 0;z-index: 2; }
+.el-table-shadows i { position: absolute;top: 85.8%;width: 13%;height: 2.3%;border-radius: 50%;background: radial-gradient(ellipse,#0b0d12bf,transparent 70%);filter: blur(2px);transform: translateX(-50%); }
+.el-shadow-left { left: 34%; }.el-shadow-right { left: 66%; }
+.story-elves.is-sneaking .el-table-shadows { opacity: 0;transition: opacity .4s ease; }
+.el-awakening-light { position: absolute;z-index: 5;inset: 29% 15% 15%;opacity: 0;background: radial-gradient(ellipse,#ccbd7b0f,transparent 68%);mix-blend-mode: screen; }
+.story-elves.is-awake .el-awakening-light { animation: el-awakening-light 1.6s ease-out both; }
+.story-elves.is-awake:not(.is-sneaking) .el-actor-left { animation: el-wake-left 1.6s ease-in-out both; }
+.story-elves.is-awake:not(.is-sneaking) .el-actor-right { animation: el-wake-right 1.6s ease-in-out both; }
+.story-elves.is-sneaking .el-still-figure { opacity: 0;transition: opacity .18s ease; }
+.el-runner { position: absolute;z-index: 7;bottom: 13%;height: 63%;aspect-ratio: var(--el-step-aspect,2 / 3);opacity: 0;transform: translateX(-50%);transform-origin: 50% 100%; }
+.el-runner-left { left: 34%;height: 45%; }
+.el-runner-right { left: 66%;height: 45%; }
+.el-step-pose { position: absolute;inset: 0;background: var(--el-atlas-image) var(--el-step-x) var(--el-step-y) / var(--el-step-size) no-repeat;transform: translateY(var(--el-foot-offset,0%)); }
+.el-walk-shadow { position: absolute;z-index: 0;left: 12%;bottom: -.7%;width: 76%;height: 2.7%;border-radius: 50%;background: radial-gradient(ellipse,#101015a8,transparent 70%);filter: blur(2px); }
+.el-step-pose { z-index: 1; }
+.el-run-fallback { position: absolute;inset: 0;width: 100%;height: 100%; }
+.story-elves.has-sneak-art .el-run-fallback { display: none; }
+.el-step-a { --el-atlas-col: 0%; }.el-step-b { --el-atlas-col: 100%;opacity: 0; }
+.story-elves.is-sneaking .el-runner { opacity: 1; }
+.story-elves.is-sneaking .el-step-a { animation: el-step-a .54s steps(1,end) infinite; }
+.story-elves.is-sneaking .el-step-b { animation: el-step-b .54s steps(1,end) infinite; }
+.story-elves.is-sneaking .el-runner-right { animation: el-sneak-right 5.4s linear both; }
+.story-elves.is-sneaking .el-runner-left { animation: el-sneak-left 5.7s linear .4s both; }
+.story-elves.is-sneaking .el-runner-left .el-step-pose { animation-delay: .4s; }
+.story-elves.is-finished .el-actor,.story-elves.is-finished .el-runner { opacity: 0;visibility: hidden;animation: none; }
+.story-elves.is-finished .el-step-pose { animation: none; }
+.story-elves.is-rewinding * { animation: none !important;transition: none !important; }
+@keyframes el-garment-arrives { from { opacity: 0;transform: translate(var(--el-flight-x),-13%) rotate(var(--el-flight-turn)) scale(.66); } 25% { opacity: 1; } 78% { transform: translate(0,-.6%) rotate(-1deg) scale(1.015); } to { opacity: 1;transform: none; } }
+@keyframes el-wake-left { 0%,100% { transform: none; } 35% { transform: translateY(-.35%) rotate(-.7deg); } 68% { transform: rotate(.6deg); } }
+@keyframes el-wake-right { 0%,100% { transform: none; } 40% { transform: translateY(-.4%) rotate(.7deg); } 72% { transform: rotate(-.7deg); } }
+@keyframes el-awakening-light { 0% { opacity: 0; } 50% { opacity: .8; } 100% { opacity: 0; } }
+@keyframes el-step-a { 0%,49% { opacity: 1; } 50%,100% { opacity: 0; } }
+@keyframes el-step-b { 0%,49% { opacity: 0; } 50%,100% { opacity: 1; } }
+@keyframes el-sneak-right {
+  0% { left: 66%;bottom: 13%;transform: translateX(-50%) scale(1);opacity: 1; }
+  32% { left: 75%;bottom: 30%;transform: translateX(-50%) scale(.66);opacity: 1; }
+  66% { left: 84%;bottom: 46%;transform: translateX(-50%) scale(.34);opacity: 1; }
+  85% { left: 90%;bottom: 56%;transform: translateX(-50%) scale(.14);opacity: 1; }
+  94% { left: 94%;bottom: 59.8%;transform: translateX(-50%) scale(.10);opacity: .9; }
+  100% { left: 98%;bottom: 60.2%;transform: translateX(-50%) scale(.09);opacity: 0; }
+}
+@keyframes el-sneak-left {
+  0% { left: 34%;bottom: 13%;transform: translateX(-50%) scale(1);opacity: 1; }
+  35% { left: 56%;bottom: 27%;transform: translateX(-50%) scale(.72);opacity: 1; }
+  68% { left: 76%;bottom: 44%;transform: translateX(-50%) scale(.38);opacity: 1; }
+  88% { left: 88%;bottom: 56%;transform: translateX(-50%) scale(.14);opacity: 1; }
+  97% { left: 94%;bottom: 59.8%;transform: translateX(-50%) scale(.10);opacity: .9; }
+  100% { left: 98%;bottom: 60.2%;transform: translateX(-50%) scale(.09);opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .story-elves *, .story-elves *::before,.story-elves *::after { animation: none !important;transition: none !important; }
+}
+
+</style>
 <style data-source="magic-shop.css">
 /* A single native dialog holds room, shop and one-item confirmation. */
 .herb-cottage.magic-shop-enabled {
@@ -5126,7 +5452,7 @@ body[data-herb-stage="sea"] .story-sea { display: block; }
         </details>
       </div>
     </section>
-    <p class="hint-text" id="gameVersion">版本 2026.11.26.1</p>
+    <p class="hint-text" id="gameVersion">版本 2026.11.26.2</p>
   </div>
 </div>
 
@@ -7338,6 +7664,7 @@ window.HANZI_CURRICULUM = {
   const particles = new Set();
   const timers = new Set();
   const voices = new Set();
+  const clockbirdVoices = new Set();
   let context = null;
   let master = null;
   let resuming = null;
@@ -7512,6 +7839,7 @@ window.HANZI_CURRICULUM = {
       } catch (error) {}
     });
     voices.clear();
+    clockbirdVoices.clear();
   }
 
   function startSound(preserveExisting) {
@@ -7539,10 +7867,12 @@ window.HANZI_CURRICULUM = {
       voices.add(voice);
       oscillator.onended = function () {
         voices.delete(voice);
+        clockbirdVoices.delete(voice);
         try { oscillator.disconnect(); gain.disconnect(); } catch (error) {}
       };
       oscillator.start(start);
       oscillator.stop(start + duration + 0.012);
+      return voice;
     } catch (error) {
       try { if (oscillator) oscillator.disconnect(); if (gain) gain.disconnect(); } catch (ignored) {}
     }
@@ -7600,6 +7930,46 @@ window.HANZI_CURRICULUM = {
     if (muted || document.hidden || !context || context.state !== 'running') return 0;
     stoneDoorSound();
     return 1050;
+  }
+
+  function stopClockbirdChorus() {
+    // A scene may leave while its scheduled calls are still pending. Cancel
+    // only these voices so travel does not silence grading or victory chimes.
+    clockbirdVoices.forEach(function (voice) {
+      try {
+        const now = context ? context.currentTime : 0;
+        voice.gain.gain.cancelScheduledValues(now);
+        voice.gain.gain.setValueAtTime(voice.gain.gain.value, now);
+        voice.gain.gain.linearRampToValueAtTime(0, now + 0.012);
+        voice.oscillator.stop(now + 0.015);
+      } catch (_) {}
+      voices.delete(voice);
+    });
+    clockbirdVoices.clear();
+  }
+
+  function playClockbirdChorus() {
+    // Decorative call-and-response only; share the unlocked effects context and
+    // retain the tenth-pass chimes. Never unlock or queue audio from a timer.
+    const start = startSound(true);
+    if (start == null) return 0;
+    stopClockbirdChorus();
+    const calls = [
+      [0.00, 1568, 2350], [0.19, 2093, 1760], [0.43, 1760, 2637],
+      [1.12, 1865, 2794], [1.39, 2349, 1976], [1.71, 2093, 3136],
+      [2.16, 1397, 2093], [2.36, 1760, 2637], [2.73, 2349, 1865],
+      [3.08, 1976, 2960], [3.34, 2637, 2093], [3.72, 1760, 2349],
+      [4.15, 2093, 3136], [4.43, 1568, 2349], [4.80, 2349, 2794],
+      [5.14, 1976, 2637], [5.48, 2637, 2093], [5.76, 2093, 1568]
+    ];
+    calls.forEach(function (call, index) {
+      const duration = index < 3 ? 0.14 : 0.20;
+      const main = tone(call[1], start + call[0], duration, index < 3 ? 0.065 : 0.045, 'sine', call[2]);
+      const overtone = tone(call[1] * 2, start + call[0] + 0.018, duration * 0.65, 0.009, 'sine', call[2] * 2);
+      if (main) clockbirdVoices.add(main);
+      if (overtone) clockbirdVoices.add(overtone);
+    });
+    return 6000;
   }
 
   function targetRect() {
@@ -7752,6 +8122,8 @@ window.HANZI_CURRICULUM = {
     playCorrect: playCorrect,
     playWrong: playWrong,
     playStoneDoor: playStoneDoor,
+    playClockbirdChorus: playClockbirdChorus,
+    stopClockbirdChorus: stopClockbirdChorus,
     celebrate: celebrate,
     reset: reset,
     setMuted: setMuted,
@@ -11884,6 +12256,774 @@ function updateArmorBindings(chains,count,changed) {
 })(window);
 
 </script>
+<script data-source="goose-story.js">
+(function (window) {
+  'use strict';
+
+  const ENDING_TIME = 9000;
+  const JOIN_TIME = 1300;
+  // One literal per artwork keeps the offline builder's asset list explicit.
+  const ASSETS = Object.freeze({
+    courtyard: 'assets/story/goose-courtyard-v1.webp',
+    goose: 'assets/story/golden-goose-v1.webp',
+    followersA: 'assets/story/goose-followers-a-v1.webp',
+    followersB: 'assets/story/goose-followers-b-v1.webp',
+    princess: 'assets/story/goose-princess-v1.webp'
+  });
+  const PEOPLE = Object.freeze([
+    { name: '面包师', prop: '擀面杖', atlas: 'followersA', cell: 0, x: 20.7, y: 81.3, lean: -22, size: 19.2 },
+    { name: '挤奶女工', prop: '提桶', atlas: 'followersA', cell: 1, x: 27.7, y: 80.7, lean: 3, size: 19.6 },
+    { name: '铁匠', prop: '木槌', atlas: 'followersA', cell: 2, x: 34.8, y: 80.0, lean: -4, size: 19.1 },
+    { name: '裁缝', prop: '线卷', atlas: 'followersA', cell: 3, x: 41.8, y: 79.6, lean: 2, size: 19.8 },
+    { name: '园丁', prop: '小水壶', atlas: 'followersA', cell: 4, x: 48.9, y: 79.8, lean: -3, size: 19.2 },
+    { name: '传令员', prop: '卷纸', atlas: 'followersB', cell: 0, x: 55.9, y: 80.4, lean: 4, size: 19.5 },
+    { name: '琴师', prop: '小提琴', atlas: 'followersB', cell: 1, x: 63.0, y: 81.0, lean: -4, size: 19.9 },
+    { name: '厨师', prop: '小锅', atlas: 'followersB', cell: 2, x: 70.1, y: 81.7, lean: 3, size: 19.3 },
+    { name: '画师', prop: '画具', atlas: 'followersB', cell: 3, x: 77.1, y: 82.4, lean: -2, size: 20.0 },
+    { name: '鞋匠', prop: '靴子', atlas: 'followersB', cell: 4, x: 84.2, y: 82.9, lean: 4, size: 19.5 }
+  ]);
+  const artworkCache = new Map();
+
+  function acquireArtwork(source, doc) {
+    const src = String(source);
+    const existing = artworkCache.get(src);
+    if (existing) { existing.users++; return existing.url; }
+    if (!/^data:image\/[^,]+;base64,/i.test(src)) return src;
+    try {
+      const view = doc.defaultView || window;
+      const decode = view.atob || window.atob;
+      const BlobType = view.Blob || window.Blob;
+      const urls = view.URL || window.URL;
+      if (typeof decode !== 'function' || typeof BlobType !== 'function' || typeof urls?.createObjectURL !== 'function') return src;
+      const comma = src.indexOf(',');
+      const binary = decode.call(view, src.slice(comma + 1));
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      const url = urls.createObjectURL(new BlobType([bytes], { type: src.slice(5, comma).split(';')[0] }));
+      artworkCache.set(src, { url, users: 1, urls });
+      return url;
+    } catch (_) { return src; }
+  }
+
+  function releaseArtwork(source) {
+    const entry = artworkCache.get(String(source));
+    if (!entry || --entry.users > 0) return;
+    try { entry.urls.revokeObjectURL?.(entry.url); } catch (_) { /* Optional artwork cleanup. */ }
+    artworkCache.delete(String(source));
+  }
+
+  function personMarkup(person, index, art) {
+    const column = person.cell % 3, row = Math.floor(person.cell / 3);
+    // Preserve everyone's left-to-right order while giving alternate people
+    // a different stopping depth. They separate without crossing or colliding.
+    const releaseX = (index - 4.5) * 3.4;
+    const releaseY = (index % 2 ? 12 : -10) + index % 3 * 2;
+    const fromX = (118 - person.x) / person.size * 100;
+    return `<div class="gs-follower" data-person-index="${index}" data-person="${person.name}" data-prop="${person.prop}" hidden style="left:${person.x}%;top:${person.y}%;--gs-person-size:${person.size}%;--gs-lean:${person.lean}deg;--gs-arrive-x:${fromX.toFixed(2)}%;--gs-release-x:${releaseX}%;--gs-release-y:${releaseY}%;--gs-stagger:${index * 65}ms;--gs-step-delay:${index * -135}ms;z-index:${20 + index}">
+      <span class="gs-person-shadow"></span><div class="gs-follower-motion"><div class="gs-follower-lean">
+        <div class="gs-person-sprite"><img class="gs-person-art" src="${art[person.atlas]}" alt="" draggable="false" style="left:${-column * 100}%;top:${-row * 100}%"></div>
+        <span class="gs-sticky-flash"></span>
+      </div></div>
+    </div>`;
+  }
+
+  function create({ document: doc }) {
+    const view = doc.defaultView || window;
+    const art = Object.fromEntries(Object.entries(ASSETS).map(([key, source]) => [key, acquireArtwork(source, doc)]));
+    const scene = doc.createElement('div');
+    scene.className = 'story-scene story-goose';
+    scene.hidden = true;
+    scene.setAttribute('aria-hidden', 'true');
+    scene.innerHTML = `<div class="gs-frame"><div class="gs-courtyard-world">
+      <div class="gs-courtyard-fallback"></div><img class="gs-courtyard-art" src="${art.courtyard}" alt="" draggable="false">
+      <div class="gs-palace-light"></div>
+      <div class="gs-princess"><div class="gs-princess-crop gs-princess-calm"><img src="${art.princess}" alt="" draggable="false"></div><div class="gs-princess-crop gs-princess-laugh"><img src="${art.princess}" alt="" draggable="false"></div><i class="gs-laugh-ring"></i><i class="gs-laugh-ring"></i></div>
+      <div class="gs-balcony-front"><img src="${art.courtyard}" alt="" draggable="false"></div>
+      <div class="gs-queue-world"><div class="gs-goose"><span class="gs-goose-shadow"></span><div class="gs-goose-motion"><img src="${art.goose}" alt="" draggable="false"><div class="gs-goose-sparks">${Array.from({ length: 9 }, (_, i) => `<i style="--gs-spark-x:${15 + i * 23 % 75}%;--gs-spark-y:${10 + i * 17 % 66}%;--gs-spark-delay:${i * 75}ms"></i>`).join('')}</div></div></div>
+        ${PEOPLE.map((person, index) => personMarkup(person, index, art)).join('')}
+      </div><div class="gs-near-haze"></div><div class="gs-frame-shade"></div>
+    </div></div>`;
+    doc.body.insertBefore(scene, doc.body.firstChild);
+
+    const people = Array.from(scene.querySelectorAll('.gs-follower'));
+    const timers = new Set();
+    const media = view.matchMedia?.('(prefers-reduced-motion: reduce)');
+    let active = false, shownCount = -1, generation = 0, endingUntil = 0, finished = false, destroyed = false;
+    const reduced = () => Boolean(media?.matches);
+    const now = () => view.performance?.now?.() ?? Date.now();
+
+    function cancelTimers() {
+      generation++;
+      timers.forEach(handle => view.clearTimeout(handle));
+      timers.clear();
+      endingUntil = 0;
+    }
+    function later(delay, callback) {
+      const ticket = generation;
+      const handle = view.setTimeout(() => {
+        timers.delete(handle);
+        if (!destroyed && ticket === generation) callback();
+      }, delay);
+      timers.add(handle);
+    }
+    function clearPhases() {
+      scene.classList.remove('is-ending', 'is-procession', 'is-laughing', 'is-released', 'is-goose-cheering', 'is-finished');
+      people.forEach(person => person.classList.remove('is-joining'));
+      finished = false;
+    }
+    function finalPose() {
+      clearPhases();
+      if (shownCount !== 10) return;
+      scene.classList.add('is-laughing', 'is-released', 'is-finished');
+      scene.dataset.phase = 'celebration';
+      finished = true;
+    }
+    function beginEnding() {
+      cancelTimers();
+      if (!active || shownCount !== 10) return 0;
+      if (reduced() || doc.hidden) { finalPose(); return 0; }
+      scene.classList.add('is-ending');
+      scene.dataset.phase = 'last-arrival';
+      endingUntil = now() + ENDING_TIME;
+      later(1400, () => {
+        people.forEach(person => person.classList.remove('is-joining'));
+        scene.classList.add('is-procession');
+        scene.dataset.phase = 'procession';
+      });
+      later(4300, () => { scene.classList.add('is-laughing'); scene.dataset.phase = 'princess-laughs'; });
+      later(6000, () => { scene.classList.remove('is-procession'); scene.classList.add('is-released'); scene.dataset.phase = 'release'; });
+      later(7600, () => { scene.classList.add('is-goose-cheering'); scene.dataset.phase = 'goose-cheers'; });
+      later(ENDING_TIME, () => { endingUntil = 0; finalPose(); });
+      return ENDING_TIME;
+    }
+
+    function render(stage, count, animate = false) {
+      if (destroyed) return;
+      if (stage !== 'goose') {
+        cancelTimers();
+        clearPhases();
+        active = false;
+        scene.hidden = true;
+        shownCount = -1;
+        scene.dataset.phase = 'hidden';
+        return;
+      }
+      const next = Math.max(0, Math.min(10, Math.floor(Number(count) || 0)));
+      if (active && next === shownCount) return;
+      const previous = shownCount, wasActive = active;
+      const joining = animate && wasActive && next > previous && !reduced() && !doc.hidden;
+      cancelTimers();
+      clearPhases();
+      scene.classList.toggle('is-instant', !joining);
+      active = true;
+      shownCount = next;
+      scene.hidden = false;
+      scene.dataset.count = String(next);
+      scene.dataset.phase = 'queue';
+      scene.style.setProperty('--gs-camera-x', (Math.max(0, 10 - next) * 2.75).toFixed(2) + '%');
+      people.forEach((person, index) => {
+        person.hidden = index >= next;
+        person.classList.toggle('is-stuck', index < next);
+      });
+      if (joining && next > 0) {
+        const person = people[next - 1];
+        void person.offsetWidth;
+        person.classList.add('is-joining');
+      }
+      if (next === 10) {
+        if (joining) beginEnding();
+        else finalPose();
+      } else if (joining) later(JOIN_TIME + 30, () => people[next - 1].classList.remove('is-joining'));
+    }
+
+    function playExit(stage = 'goose') {
+      if (destroyed || stage !== 'goose' || !active || shownCount !== 10 || finished) return 0;
+      // The tenth pass already starts the complete ending. Travel may inspect
+      // its remaining duration, but never starts a second procession.
+      return Math.max(0, endingUntil - now());
+    }
+    function resetExit() {
+      cancelTimers();
+      scene.classList.add('is-instant');
+      if (shownCount === 10) finalPose();
+      else { clearPhases(); scene.dataset.phase = active ? 'queue' : 'hidden'; }
+    }
+    function onVisibility() {
+      scene.classList.toggle('is-suspended', Boolean(doc.hidden));
+      if (doc.hidden) resetExit();
+    }
+    function onPageHide() {
+      scene.classList.add('is-suspended');
+      resetExit();
+    }
+    function onMotionPreference() { if (reduced()) resetExit(); }
+    doc.addEventListener?.('visibilitychange', onVisibility);
+    view.addEventListener?.('pagehide', onPageHide);
+    view.addEventListener?.('pageshow', onVisibility);
+    media?.addEventListener?.('change', onMotionPreference);
+    scene.querySelectorAll('img').forEach(img => {
+      img.addEventListener('error', () => { img.hidden = true; });
+    });
+
+    function destroy() {
+      if (destroyed) return;
+      resetExit();
+      destroyed = true;
+      doc.removeEventListener?.('visibilitychange', onVisibility);
+      view.removeEventListener?.('pagehide', onPageHide);
+      view.removeEventListener?.('pageshow', onVisibility);
+      media?.removeEventListener?.('change', onMotionPreference);
+      scene.remove();
+      Object.values(ASSETS).forEach(releaseArtwork);
+    }
+    return { render, playExit, resetExit, destroy, arrivalTime: () => reduced() || doc.hidden ? 0 : ENDING_TIME, totalEndingTime: ENDING_TIME };
+  }
+
+  window.HanziGooseStory = Object.freeze({ create });
+})(window);
+
+</script>
+<script data-source="clockbird-story.js">
+(function (window) {
+  'use strict';
+
+  const STAGE = 'clockbird';
+  const ENDING_TIME = 11000;
+  const INSTALL_TIME = 900;
+  const SONG_TIME = 900;
+  const ASSETS = Object.freeze({
+    workshop: 'assets/story/clockwork-workshop-v1.webp',
+    machine: 'assets/story/clockwork-nightingale-v1.webp',
+    wild: 'assets/story/nightingale-flock-v1.webp'
+  });
+  const imageUrls = new Map();
+  let instance = 0;
+  const clamp = value => Math.max(0, Math.min(1, value));
+  const smooth = value => { const v = clamp(value); return v * v * (3 - 2 * v); };
+  const between = (time, start, end) => smooth((time - start) / (end - start));
+  const lerp = (start, end, progress) => start + (end - start) * progress;
+
+  function acquireImage(source, doc) {
+    if (!/^data:image\/[^,]+;base64,/i.test(source)) return source;
+    const existing = imageUrls.get(source);
+    if (existing) { existing.references++; return existing.url; }
+    try {
+      const view = doc.defaultView || window;
+      const comma = source.indexOf(',');
+      const binary = view.atob(source.slice(comma + 1));
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      const blob = new view.Blob([bytes], { type: source.slice(5, comma).split(';')[0] });
+      const url = view.URL.createObjectURL(blob);
+      imageUrls.set(source, { url, objectUrls: view.URL, references: 1 });
+      return url;
+    } catch (_) { return source; }
+  }
+
+  function releaseImage(source) {
+    const cached = imageUrls.get(source);
+    if (!cached || --cached.references > 0) return;
+    try { cached.objectUrls.revokeObjectURL(cached.url); } catch (_) {}
+    imageUrls.delete(source);
+  }
+
+  function gearPath(radius, teeth) {
+    const points = [];
+    for (let tooth = 0; tooth < teeth; tooth++) {
+      for (let corner = 0; corner < 4; corner++) {
+        const angle = (tooth + corner / 4) * Math.PI * 2 / teeth;
+        const r = radius * (corner === 0 || corner === 3 ? .84 : 1);
+        points.push(`${(Math.cos(angle) * r).toFixed(2)} ${(Math.sin(angle) * r).toFixed(2)}`);
+      }
+    }
+    return `M${points.join('L')}Z`;
+  }
+
+  function gear(id, x, y, radius, teeth, reverse = false) {
+    return `<g transform="translate(${x} ${y})"><g class="clockbird-rotor${reverse ? ' clockbird-rotor-reverse' : ''}" style="--gear-period:${7 * teeth / 18}s">
+      <path class="clockbird-gear-rim" d="${gearPath(radius, teeth)}" fill="url(#${id}-brass)"/>
+      <circle r="${radius * .68}" class="clockbird-gear-well"/>
+      ${Array.from({ length: 5 }, (_, index) => `<path class="clockbird-gear-spoke" d="M0 ${-radius * .65}V${radius * .65}" transform="rotate(${index * 36})"/>`).join('')}
+      <circle r="${radius * .2}" fill="url(#${id}-brass)"/><circle r="${radius * .075}" class="clockbird-pin"/>
+    </g></g>`;
+  }
+
+  const PARTS = [
+    { name: '承轴骨架', x: -920, y: 180, turn: -22 },
+    { name: '卷簧', x: 650, y: -560, turn: 120 },
+    { name: '主齿轮', x: -850, y: -160, turn: -145 },
+    { name: '传动齿轮组', x: 650, y: 340, turn: 110 },
+    { name: '共鸣管', x: 750, y: -330, turn: 32 },
+    { name: '胸甲', x: -500, y: -600, turn: -30 },
+    { name: '尾羽', x: -1050, y: 110, turn: -24 },
+    { name: '远翼', x: 230, y: -820, turn: 28 },
+    { name: '近翼', x: -630, y: -530, turn: -40 },
+    { name: '头颈与宝石眼', x: 800, y: -490, turn: 20 }
+  ];
+
+  // The five artwork regions are anatomical components, not rectangular tiles.
+  // Their final contours are calibrated against the actual transparent bird art.
+  const MACHINE_CLIPS = {
+    chest: '550,330 900,220 1160,250 1320,345 1370,560 1250,690 1070,770 1140,870 1260,910 1260,1024 650,1024 615,900 720,730 560,650',
+    tail: '0,720 510,510 690,530 680,660 360,960 0,1024',
+    farwing: '340,500 450,380 590,240 830,130 1060,150 1090,290 865,400 640,490',
+    nearwing: '410,810 445,660 530,570 675,500 790,510 825,575 845,680 735,750 570,810',
+    head: '1025,265 1070,195 1110,120 1130,0 1536,0 1536,270 1390,400 1360,520 1265,500 1225,390 1130,315'
+  };
+  const REGION_ORDER = ['head', 'nearwing', 'farwing', 'tail', 'chest'];
+  const WILD_REGIONS = {
+    near: '130,0 620,0 710,300 790,440 760,610 600,660 380,600 180,410',
+    far: '850,480 1190,450 1480,390 1536,820 1100,900 760,750 800,610',
+    body: '170,1024 600,1024 700,800 930,670 1000,460 1120,370 1130,270 850,240 720,350 590,500 450,730'
+  };
+  const FLOCK = [
+    { x: .67, y: .29, width: .09, arc: -.04 },
+    { x: .78, y: .21, width: .08, arc: .03 },
+    { x: .88, y: .27, width: .095, arc: -.025 },
+    { x: .73, y: .36, width: .105, arc: .035 },
+    { x: .86, y: .38, width: .085, arc: -.045 },
+    { x: .62, y: .22, width: .072, arc: .02 },
+    { x: .83, y: .16, width: .07, arc: -.02 },
+    { x: .885, y: .33, width: .078, arc: .03 },
+    { x: .76, y: .29, width: .09, arc: -.03 }
+  ];
+
+  function create({ document: doc }) {
+    const id = `clockbird-${++instance}`;
+    const art = Object.fromEntries(Object.entries(ASSETS).map(([key, src]) => [key, acquireImage(src, doc)]));
+    const scene = doc.createElement('div');
+    scene.className = 'story-scene story-clockbird';
+    scene.hidden = true;
+    scene.setAttribute('aria-hidden', 'true');
+    scene.style.setProperty('--clockbird-workshop', `url("${art.workshop}")`);
+    const image = (clip, className = '') => `<image class="clockbird-machine-art ${className}" href="${art.machine}" width="1536" height="1024" preserveAspectRatio="xMidYMid meet" mask="url(#${id}-${clip})"/>`;
+    const part = (number, content, className = '') => {
+      const spec = PARTS[number - 1];
+      return `<g class="clockbird-part ${className}" data-part="${number}" data-name="${spec.name}" style="--part-x:${spec.x}px;--part-y:${spec.y}px;--part-turn:${spec.turn}deg"><g class="clockbird-install-motion">${content}</g></g>`;
+    };
+    const wild = index => `<div class="clockbird-wild-bird" data-wild-bird="${index}" style="--wild-delay:${-index * .137}s">
+      <svg viewBox="0 0 1536 1024" class="clockbird-wild-sprite">
+        <image href="${art.wild}" width="1536" height="1024" mask="url(#${id}-wild-body)"/>
+        <g class="clockbird-wild-far-wing"><image href="${art.wild}" width="1536" height="1024" mask="url(#${id}-wild-far)"/></g>
+        <g class="clockbird-wild-near-wing"><image href="${art.wild}" width="1536" height="1024" mask="url(#${id}-wild-near)"/></g>
+      </svg></div>`;
+    scene.innerHTML = `
+      <div class="clockbird-frame">
+        <div class="clockbird-ambience"></div>
+        <div class="clockbird-world-position"><div class="clockbird-world">
+          <div class="clockbird-workshop-art"></div>
+          <div class="clockbird-window-dawn"><i></i></div>
+          <svg class="clockbird-shared-defs" width="0" height="0"><defs>
+            ${['near', 'far', 'body'].map((key, index) => `<mask id="${id}-wild-${key}" maskUnits="userSpaceOnUse" x="0" y="0" width="1536" height="1024" style="mask-type:luminance"><polygon points="${WILD_REGIONS[key]}" fill="white"/>${['near', 'far'].slice(0, index).map(other => `<polygon points="${WILD_REGIONS[other]}" fill="black"/>`).join('')}</mask>`).join('')}
+          </defs></svg>
+          <div class="clockbird-flock-window">${FLOCK.map((_, index) => wild(index)).join('')}</div>
+          <div class="clockbird-table-shadow"></div>
+          <div class="clockbird-machine">
+            <svg class="clockbird-machine-sprite" viewBox="0 0 1536 1024">
+              <defs>
+                <linearGradient id="${id}-brass" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#68421d"/><stop offset=".22" stop-color="#d9b76d"/><stop offset=".43" stop-color="#f0d59a"/><stop offset=".57" stop-color="#a06a2f"/><stop offset=".79" stop-color="#d4ae60"/><stop offset="1" stop-color="#50351b"/></linearGradient>
+                <linearGradient id="${id}-pipe" x1="0" x2="1"><stop stop-color="#573618"/><stop offset=".38" stop-color="#e9cc8a"/><stop offset=".62" stop-color="#b58c43"/><stop offset="1" stop-color="#4a311b"/></linearGradient>
+                <radialGradient id="${id}-cavity"><stop stop-color="#172020"/><stop offset="1" stop-color="#071112"/></radialGradient>
+                <mask id="${id}-carrier" maskUnits="userSpaceOnUse" x="0" y="0" width="1536" height="1024" style="mask-type:luminance"><ellipse cx="1034" cy="466" rx="248" ry="164" fill="white"/><ellipse cx="1034" cy="466" rx="225" ry="143" fill="black"/><polygon points="750,748 803,744 854,892 970,935 1005,1024 680,1024 685,927 792,901" fill="white"/><polygon points="920,735 983,735 1046,878 1215,912 1240,1004 950,1004 930,918 979,880" fill="white"/></mask>
+                ${REGION_ORDER.map((key, regionIndex) => `<mask id="${id}-${key}" maskUnits="userSpaceOnUse" x="0" y="0" width="1536" height="1024" style="mask-type:luminance"><polygon points="${MACHINE_CLIPS[key]}" fill="white"/>${REGION_ORDER.slice(0, regionIndex).map(other => `<polygon points="${MACHINE_CLIPS[other]}" fill="black"/>`).join('')}</mask>`).join('')}
+              </defs>
+              ${part(1, `<g class="clockbird-bearing-frame"><path class="clockbird-frame-cavity" d="M1030 319C902 316 806 367 804 466C801 552 889 607 1029 606C1164 605 1253 548 1252 465C1251 383 1164 321 1030 319Z" fill="url(#${id}-cavity)"/><path class="clockbird-frame-rim" d="M1030 319C902 316 806 367 804 466C801 552 889 607 1029 606C1164 605 1253 548 1252 465C1251 383 1164 321 1030 319Z" stroke="url(#${id}-brass)"/><path class="clockbird-frame-rib" d="M824 466H1225M919 340L1130 582M835 532L1168 357"/><path class="clockbird-leg" style="stroke:url(#${id}-brass)" d="M900 600L785 774L835 920L754 950M835 920L902 966M1120 598L953 760L1032 914L973 939M1032 914L1155 949"/>${[0, 1, 2, 3, 4, 5].map(i => `<circle cx="${850 + i * 67}" cy="${i % 2 ? 565 : 365}" r="5" class="clockbird-frame-rivet"/>`).join('')}</g>${image('carrier', 'clockbird-carrier-art')}`)}
+              ${part(2, `<g class="clockbird-spring-group" transform="translate(911 405) scale(.64)"><circle r="58" class="clockbird-spring-drum"/><path class="clockbird-spring" d="M0 0C-11-17 17-28 28-11C45 14 12 44-17 29C-60 8-44-56 7-62C77-70 109 21 55 69C-10 124-116 61-110-22"/><path class="clockbird-spring-pin" d="M-16 0H16M0-16V16"/></g>`)}
+              ${part(3, gear(id, 1035, 507, 73, 18))}
+              ${part(4, gear(id, 1044, 390, 45, 14, true) + gear(id, 934, 499, 30, 11, true) + '<path class="clockbird-link-arm" d="M934 499L1035 507L1044 390"/>')}
+              ${part(5, `<g class="clockbird-resonators">${[0, 1, 2].map(i => `<g class="clockbird-resonator" style="--pipe-i:${i}" transform="translate(${1147 + i * 25} ${365 + i * 20})"><rect class="clockbird-pipe" x="-8" width="16" height="${170 - i * 29}" rx="7" fill="url(#${id}-pipe)"/><ellipse cy="8" rx="7" ry="4" class="clockbird-pipe-mouth"/><path class="clockbird-pipe-ring" d="M-9 29H9M-9 42H9"/></g>`).join('')}<path class="clockbird-air-link" d="M1148 529Q1103 577 1040 563"/></g>`)}
+              ${part(6, image('chest'))}
+              ${part(7, image('tail'))}
+              ${part(8, `<g class="clockbird-metal-far-wing">${image('farwing')}</g>`)}
+              ${part(9, `<g class="clockbird-metal-near-wing">${image('nearwing')}</g>`)}
+              ${part(10, `<g class="clockbird-head-hinge">${image('head')}</g>`)}
+            </svg>
+          </div>
+          <svg class="clockbird-song-lines" viewBox="0 0 1000 1400" preserveAspectRatio="none">
+            <path d="M787 503Q824 480 853 496T924 476"/><path d="M790 517Q840 496 877 511T951 493"/><path d="M793 530Q833 529 881 535T963 513"/>
+          </svg>
+          <div class="clockbird-dust">${Array.from({ length: 8 }, (_, index) => `<i style="--dust-i:${index};--dust-x:${12 + index * 11}%"></i>`).join('')}</div>
+        </div></div>
+        <div class="clockbird-frame-shade"></div>
+      </div>`;
+    doc.body.insertBefore(scene, doc.body.firstChild);
+    const parts = Array.from(scene.querySelectorAll('.clockbird-part'));
+    const machine = scene.querySelector('.clockbird-machine');
+    const birds = Array.from(scene.querySelectorAll('.clockbird-wild-bird'));
+    const world = scene.querySelector('.clockbird-world');
+    const shadow = scene.querySelector('.clockbird-table-shadow');
+    const dawn = scene.querySelector('.clockbird-window-dawn');
+    const preference = window.matchMedia?.('(prefers-reduced-motion: reduce)');
+    const reduced = () => Boolean(preference?.matches);
+    let active = false;
+    let shownCount = -1;
+    let frameRequest = null;
+    let soundPlayed = false;
+    let destroyed = false;
+    let phase = '';
+
+    function setPhase(next) {
+      if (phase === next) return;
+      phase = next;
+      scene.dataset.phase = next;
+    }
+
+    function cancelEnding() {
+      try { window.HanziGameFeedback?.stopClockbirdChorus?.(); } catch (_) {}
+      if (frameRequest !== null) window.cancelAnimationFrame(frameRequest);
+      frameRequest = null;
+    }
+
+    function positionEnding(progress) {
+      const p = clamp(progress), time = p * ENDING_TIME;
+      const lift = between(time, 4300, 6900);
+      const flight = between(time, 4300, ENDING_TIME);
+      scene.dataset.endingProgress = p.toFixed(4);
+      scene.classList.toggle('clockbird-singing', time >= SONG_TIME && time < 5000 && p < 1);
+      scene.classList.toggle('clockbird-flapping', time >= 4250 && p < 1);
+      scene.classList.toggle('clockbird-finished', p === 1);
+      setPhase(p === 1 ? 'finished' : time < SONG_TIME ? 'last-part' : time < 2600 ? 'singing' : time < 4300 ? 'chorus' : time < 6900 ? 'taking-flight' : 'toward-dawn');
+      const travel = between(time, 4300, ENDING_TIME);
+      const v = 1 - travel;
+      const x = .46 * v ** 3 + 3 * .55 * v * v * travel + 3 * .79 * v * travel * travel + .824 * travel ** 3;
+      const y = .505 * v ** 3 + 3 * .27 * v * v * travel + 3 * .31 * v * travel * travel + .345 * travel ** 3;
+      const scale = lerp(1, .2, lift) * lerp(1, .4, between(time, 6900, ENDING_TIME));
+      machine.style.left = `${x * 100}%`;
+      machine.style.top = `${y * 100}%`;
+      machine.style.transform = `translate(-50%, -50%) scale(${scale})`;
+      machine.style.filter = `drop-shadow(0 ${7 * (1 - lift)}px ${5 * (1 - lift)}px #090b0b80) brightness(${1 + .18 * flight})`;
+      shadow.style.opacity = String(.45 * (1 - lift));
+      shadow.style.transform = `translateX(-50%) scale(${1 - lift * .65})`;
+      world.style.transform = `scale(${1 + .14 * between(time, 6000, ENDING_TIME)})`;
+      dawn.style.opacity = String(.08 + .56 * between(time, 2800, ENDING_TIME));
+      birds.forEach((bird, index) => {
+        const spec = FLOCK[index];
+        const arrival = between(time, 2600 + index * 65, 3500 + index * 65);
+        const onward = p === 1 ? 1 : between(time, 4700 + index * 70, ENDING_TIME);
+        const targetX = .82 + (spec.x - .79) * .32;
+        const targetY = .344 + (spec.y - .27) * .17;
+        const bx = lerp(lerp(.46 - index * .015, spec.x, arrival), targetX, onward) + Math.sin(onward * Math.PI) * spec.arc;
+        const by = lerp(lerp(spec.y + .035, spec.y, arrival), targetY, onward) - Math.sin(onward * Math.PI) * (.022 + index % 3 * .012);
+        bird.style.left = `${bx * 100}%`;
+        bird.style.top = `${by * 100}%`;
+        bird.style.width = `${spec.width * (1 - .65 * onward) * 100}%`;
+        bird.style.opacity = String(arrival * (1 - .12 * onward));
+        bird.style.transform = `translate(-50%, -50%) rotate(${-4 - onward * 9 + index % 3 * 3}deg)`;
+      });
+    }
+
+    function resetExit() {
+      cancelEnding();
+      soundPlayed = false;
+      scene.classList.remove('clockbird-singing', 'clockbird-flapping', 'clockbird-finished');
+      parts.forEach(part => part.classList.remove('is-arriving'));
+      positionEnding(0);
+      setPhase('assembling');
+      if (doc.hidden && shownCount === 10) positionEnding(1);
+    }
+
+    function startEnding() {
+      cancelEnding();
+      soundPlayed = false;
+      if (reduced() || doc.hidden || scene.hidden) { positionEnding(1); return 0; }
+      positionEnding(0);
+      const started = window.performance?.now?.() ?? Date.now();
+      function animate(time) {
+        if (!active || doc.hidden || scene.hidden) {
+          frameRequest = null;
+          positionEnding(1);
+          return;
+        }
+        const elapsed = Math.max(0, time - started);
+        positionEnding(elapsed / ENDING_TIME);
+        if (elapsed >= SONG_TIME && elapsed < 5000 && !soundPlayed) {
+          soundPlayed = true;
+          try {
+            const playback = window.HanziGameFeedback?.playClockbirdChorus?.();
+            playback?.catch?.(() => {});
+          } catch (_) {}
+        }
+        if (elapsed >= 5000) soundPlayed = true;
+        if (elapsed < ENDING_TIME) frameRequest = window.requestAnimationFrame(animate);
+        else frameRequest = null;
+      }
+      frameRequest = window.requestAnimationFrame(animate);
+      return ENDING_TIME;
+    }
+
+    function playExit(stage) {
+      if (stage !== STAGE || !active || shownCount !== 10) return 0;
+      resetExit();
+      return startEnding();
+    }
+
+    function render(stage, count, animate = false) {
+      if (stage !== STAGE) {
+        if (active) resetExit();
+        active = false;
+        shownCount = -1;
+        scene.hidden = true;
+        return;
+      }
+      const next = Math.max(0, Math.min(10, Math.floor(Number(count) || 0)));
+      if (active && shownCount === next) return;
+      const previous = shownCount;
+      active = true;
+      scene.hidden = false;
+      shownCount = next;
+      resetExit();
+      scene.dataset.count = String(next);
+      scene.classList.toggle('clockbird-running', next >= 2);
+      scene.classList.toggle('clockbird-armored', next >= 6);
+      scene.classList.toggle('clockbird-still', reduced() || doc.hidden);
+      const arriving = animate && next > Math.max(0, previous) && !reduced() && !doc.hidden;
+      parts.forEach((part, index) => {
+        part.classList.toggle('is-installed', index < next);
+        if (arriving && index === next - 1) part.classList.add('is-arriving');
+      });
+      if (next === 10) {
+        if (arriving) startEnding();
+        else positionEnding(1);
+      }
+    }
+
+    function settle() {
+      if (!active) return;
+      cancelEnding();
+      parts.forEach(part => part.classList.remove('is-arriving'));
+      scene.classList.toggle('clockbird-still', reduced() || doc.hidden);
+      if (shownCount === 10) positionEnding(1);
+    }
+    function onVisibility() { if (doc.hidden) settle(); else if (active) scene.classList.toggle('clockbird-still', reduced()); }
+    function onPreference() { if (reduced()) settle(); else scene.classList.toggle('clockbird-still', doc.hidden); }
+    doc.addEventListener('visibilitychange', onVisibility);
+    preference?.addEventListener?.('change', onPreference);
+    positionEnding(0);
+    setPhase('assembling');
+
+    return {
+      render, playExit, resetExit,
+      arrivalTime: ENDING_TIME,
+      totalEndingTime: ENDING_TIME,
+      growthTime: INSTALL_TIME,
+      automaticEnding: true,
+      destroy() {
+        if (destroyed) return;
+        destroyed = true;
+        cancelEnding();
+        doc.removeEventListener('visibilitychange', onVisibility);
+        preference?.removeEventListener?.('change', onPreference);
+        Object.values(ASSETS).forEach(releaseImage);
+        scene.remove();
+      }
+    };
+  }
+
+  window.HanziClockbirdStory = { create };
+})(window);
+
+</script>
+<script data-source="elves-story.js">
+(function (window) {
+  'use strict';
+
+  const ENDING_MS=8800;
+  // One source literal per image keeps offline packages small. All repeated
+  // costumes and atlas poses share the same cached short Blob URL.
+  const ASSETS=Object.freeze({
+    workshop:'assets/story/elves-tailor-workshop-v1.webp',
+    base:'assets/story/elves-base-v1.webp',
+    dressed:'assets/story/elves-dressed-v1.webp',
+    awake:'assets/story/elves-awake-v1.webp',
+    sneak:'assets/story/elves-sneak-atlas-v1.webp'
+  });
+  const blobUrls=new Map();
+  let instances=0;
+
+  function imageUrl(source,doc) {
+    const src=String(source),comma=src.indexOf(',');
+    const header=comma<0?'':src.slice(0,comma);
+    if(!/^data:image\/[^,]+;base64$/i.test(header))return src;
+    if(blobUrls.has(src))return blobUrls.get(src);
+    try {
+      const view=doc.defaultView||window,decode=view.atob||window.atob;
+      const BlobType=view.Blob||window.Blob,urls=view.URL||window.URL;
+      if(typeof decode!=='function'||typeof BlobType!=='function'||typeof urls?.createObjectURL!=='function')return src;
+      const binary=decode.call(view,src.slice(comma+1)),bytes=new Uint8Array(binary.length);
+      for(let index=0;index<binary.length;index++)bytes[index]=binary.charCodeAt(index);
+      const url=urls.createObjectURL(new BlobType([bytes],{type:header.slice(5).split(';')[0]}));
+      if(typeof url!=='string'||!url)return src;
+      blobUrls.set(src,url);
+      return url;
+    } catch (_) { return src; }
+  }
+
+  // Two five-piece outfits, alternated between the figures. Coordinates are
+  // in the common full-size artwork, so dressing never moves either body.
+  const ITEMS=[
+    {elf:'left',piece:'hat',label:'第一位的帽子',origin:'31.5% 32%',mask:'polygon(23% 27.5%,40% 27.5%,40% 31.8%,37% 32.3%,33.4% 32.9%,30.6% 34%,28.7% 34.2%,26.6% 34%,27.2% 35%,28.6% 35.8%,30.1% 36.4%,28.5% 37%,27.5% 39.2%,23% 39.2%)'},
+    {elf:'right',piece:'hat',label:'第二位的帽子',origin:'64% 35%',mask:'polygon(55.8% 30.5%,72% 30.5%,72% 34.8%,68.4% 35%,65.6% 35.5%,63.4% 36.1%,61.5% 36.1%,59.6% 35.7%,60.1% 36.7%,61.5% 37.7%,63% 38.2%,60.6% 39.3%,59.4% 41.8%,55.8% 41.8%)'},
+    {elf:'left',piece:'jacket',label:'第一位的短上衣',origin:'33% 49%',mask:'polygon(28.5% 38.5%,37.7% 38.5%,43.5% 41.5%,48.2% 57.5%,46.8% 59%,43.4% 59.3%,40.8% 54.5%,38.7% 56.3%,25.4% 56.3%,23.5% 53.8%,22.8% 59.3%,18% 58.2%,22.8% 42%)'},
+    {elf:'right',piece:'jacket',label:'第二位的短上衣',origin:'65.5% 50.5%',mask:'polygon(61.8% 42.3%,57.1% 43.5%,52.2% 58.6%,57.3% 59.6%,57.9% 54%,59% 57.2%,72.8% 57.2%,73.9% 55.2%,75.8% 59.5%,79.5% 59.5%,79.8% 57.1%,74.6% 43%,69.4% 41%,64.9% 42.1%,64.5% 44.2%,64.9% 46.7%,64.4% 48%,63.7% 47.7%,63.1% 45.7%,62.7% 43.7%)'},
+    {elf:'left',piece:'trousers',label:'第一位的下装',origin:'33% 68%',mask:'polygon(23% 54.6%,43.6% 54.6%,43.6% 68%,41.6% 80.4%,36% 80.4%,33.4% 67.6%,29.2% 80.4%,22.8% 80.4%,23% 66%)'},
+    {elf:'right',piece:'trousers',label:'第二位的下装',origin:'65.5% 69%',mask:'polygon(56% 56.1%,76% 56.1%,76% 68%,74.5% 80.4%,69.2% 80.4%,65.7% 68.4%,61.8% 80.4%,56% 80.4%)'},
+    {elf:'left',piece:'left-shoe',label:'第一位的左鞋',origin:'25.5% 85%',mask:'polygon(21% 80.4%,30% 80.4%,30% 88%,21% 88%)'},
+    {elf:'right',piece:'left-shoe',label:'第二位的左鞋',origin:'58.2% 85%',mask:'polygon(54.4% 80.4%,62% 80.4%,62% 88%,54.4% 88%)'},
+    {elf:'left',piece:'right-shoe',label:'第一位的右鞋',origin:'40.5% 85%',mask:'polygon(36.3% 80.4%,46.2% 80.4%,46.2% 88%,36.3% 88%)'},
+    {elf:'right',piece:'right-shoe',label:'第二位的右鞋',origin:'73.5% 85%',mask:'polygon(69% 80.4%,77.8% 80.4%,77.8% 88%,69% 88%)'}
+  ];
+  // Matched crops preserve each full hat, hand and shoe. Normalized coordinates
+  // are measured from the final 1536x1024, two-step-per-person atlas.
+  const SNEAK_FRAMES=[
+    {elf:'left',box:[150/1536,10/1024,400/1536,490/1024],ground:496/1024},
+    {elf:'left',box:[918/1536,10/1024,400/1536,490/1024],ground:493/1024},
+    {elf:'right',box:[155/1536,528/1024,400/1536,486/1024],ground:1009/1024},
+    {elf:'right',box:[923/1536,528/1024,400/1536,486/1024],ground:1007/1024}
+  ];
+
+  function fallbackFigure(elf,dressed=false) {
+    const x=elf==='left'?204:396;
+    const coat=elf==='left'?'#465b43':'#754637',cap=elf==='left'?'#803b33':'#3f5964';
+    return `<svg class="${dressed?'el-dress-fallback':'el-base-fallback'}" viewBox="0 0 600 800" preserveAspectRatio="none" aria-hidden="true"><g transform="translate(${x} -184) scale(1 1.417)">
+      ${dressed?`<path fill="${cap}" stroke="#d1aa6c" stroke-width="1.2" d="M-42 326Q-33 284 22 263L10 306 42 322 35 335-35 335Z"/>`:''}
+      <path fill="#b69a78" d="M-24 323L-45 310-32 346-22 350M24 323L45 310 32 346 22 350"/>
+      <path fill="#b49a79" d="M-23 318Q-18 297 0 299Q21 300 25 321L21 351Q14 369 0 370Q-15 367-21 352Z"/>
+      <path fill="#8d8c80" d="M-25 317Q-19 294 1 296Q27 298 27 328L18 310-8 314-23 337Z"/>
+      <path d="M-15 338Q-8 342-3 338M5 338Q11 342 17 338" fill="none" stroke="#473d37" stroke-width="1.5"/>
+      <path fill="${dressed?coat:'#b5aa90'}" stroke="#3f3b32" stroke-width="1.5" d="M-17 368L-36 375-60 442-45 455-24 411-21 487H24L23 410 47 455 61 440 37 375 17 368Z"/>
+      <path fill="${dressed?'#4a4435':'#817b69'}" stroke="#33372e" stroke-width="1.2" d="M-21 484H24L31 581 9 584 0 520-8 585-31 582Z"/>
+      <path fill="${dressed?'#473125':'#a28f74'}" d="M-31 578L-10 580-9 617-43 621-47 614-29 605Z M10 578L31 579 33 606 49 614 43 621 9 617Z"/>
+      ${dressed?'<path d="M0 376V484M-17 480H20" fill="none" stroke="#b69a63" stroke-width="2"/><path d="M-4 397H4M-4 420H4M-4 443H4" stroke="#d5bb79" stroke-width="4"/>':''}
+    </g></svg>`;
+  }
+
+  function actorMarkup(elf,art) {
+    const clip=elf==='left'?'inset(0 50% 0 0)':'inset(0 0 0 50%)';
+    return `<div class="el-actor el-actor-${elf}" data-elf="${elf}">
+      <div class="el-still-figure">
+        ${fallbackFigure(elf)}<img class="el-full-art el-base-art" style="clip-path:${clip}" src="${art.base}" alt="" draggable="false">
+        ${ITEMS.map((item,index)=>item.elf!==elf?'':`<div class="el-garment" data-item-index="${index}" data-piece="${item.piece}" data-item-label="${item.label}" style="--el-piece-mask:${item.mask};--el-piece-origin:${item.origin};--el-flight-x:${elf==='left'?'-46%':'46%'};--el-flight-turn:${elf==='left'?'-18deg':'18deg'}">${fallbackFigure(elf,true)}<img class="el-full-art el-clothing-art" src="${art.dressed}" alt="" draggable="false"></div>`).join('')}
+        <img class="el-full-art el-awake-art" style="clip-path:${clip}" src="${art.awake}" alt="" draggable="false">
+      </div>
+    </div>`;
+  }
+
+  function runnerFallback(elf) {
+    return fallbackFigure(elf,true).replace('class="el-dress-fallback"','class="el-run-fallback"')
+      .replace('viewBox="0 0 600 800"',`viewBox="${elf==='left'?124:316} 160 160 550"`);
+  }
+  function poseMarkup(elf) {
+    return SNEAK_FRAMES.map((frame,index)=> {
+      if(frame.elf!==elf)return '';
+      const [x,y,w,h]=frame.box;
+      return `<span class="el-step-pose ${index%2?'el-step-b':'el-step-a'}" data-step-index="${index}" style="--el-step-size:${100/w}% ${100/h}%;--el-step-x:${x/(1-w)*100}%;--el-step-y:${y/(1-h)*100}%;--el-foot-offset:${(y+h-frame.ground)/h*100}%"></span>`;
+    }).join('');
+  }
+
+  function create({document:doc}) {
+    const art=Object.fromEntries(Object.entries(ASSETS).map(([name,path])=>[name,imageUrl(path,doc)]));
+    const scene=doc.createElement('div');
+    scene.className='story-elves';scene.hidden=true;scene.setAttribute('aria-hidden','true');
+    scene.dataset.instance=String(++instances);
+    scene.style.setProperty('--el-atlas-image',`url("${art.sneak}")`);
+    scene.innerHTML=`<div class="elves-frame"><div class="el-world">
+      <div class="el-room-fallback"></div><img class="el-full-art el-workshop-art" src="${art.workshop}" alt="" draggable="false">
+      <div class="el-table-shadows"><i class="el-shadow-left"></i><i class="el-shadow-right"></i></div>
+      ${actorMarkup('left',art)}${actorMarkup('right',art)}
+      <div class="el-runner el-runner-left" data-runner="left"><i class="el-walk-shadow"></i>${runnerFallback('left')}${poseMarkup('left')}</div>
+      <div class="el-runner el-runner-right" data-runner="right"><i class="el-walk-shadow"></i>${runnerFallback('right')}${poseMarkup('right')}</div>
+      <div class="el-awakening-light"></div><div class="el-frame-shade"></div>
+    </div></div>`;
+    doc.body.insertBefore(scene,doc.body.firstChild);
+    const garments=Array.from(scene.querySelectorAll('.el-garment'));
+    const timers=new Set();
+    let stage,count=0,generation=0;
+    const motion=window.matchMedia?.('(prefers-reduced-motion: reduce)');
+    const reduced=()=>Boolean(motion?.matches);
+    const phases=['is-ending','is-awake','is-sneaking','is-finished','is-rewinding'];
+
+    function cancelTimers() {
+      generation++;timers.forEach(timer=>window.clearTimeout(timer));timers.clear();
+    }
+    function later(delay,callback) {
+      const token=generation;
+      const timer=window.setTimeout(()=>{timers.delete(timer);if(token===generation)callback();},delay);
+      timers.add(timer);
+    }
+    function finalPose() {
+      scene.classList.remove(...phases);
+      if(count===10)scene.classList.add('is-awake','is-sneaking','is-finished');
+    }
+    function resetExit() {
+      cancelTimers();garments.forEach(item=>item.classList.remove('is-arriving'));finalPose();
+    }
+    function beginEnding() {
+      cancelTimers();
+      if(reduced()||doc.hidden){finalPose();return 0;}
+      scene.classList.remove(...phases);scene.classList.add('is-rewinding');
+      void scene.offsetWidth;scene.classList.remove('is-rewinding');scene.classList.add('is-ending');
+      later(1000,()=>scene.classList.add('is-awake'));
+      later(2600,()=>scene.classList.add('is-sneaking'));
+      later(ENDING_MS,()=>scene.classList.add('is-finished'));
+      return ENDING_MS;
+    }
+
+    function watch(img,className) {
+      const ready=()=>scene.classList.toggle(className,Boolean(img.complete&&img.naturalWidth));
+      img.addEventListener('load',ready);img.addEventListener('error',()=>{img.hidden=true;ready();});ready();
+    }
+    watch(scene.querySelector('.el-base-art'),'has-base-art');
+    watch(scene.querySelector('.el-clothing-art'),'has-clothing-art');
+    watch(scene.querySelector('.el-awake-art'),'has-awake-art');
+    const atlas=doc.createElement('img');watch(atlas,'has-sneak-art');
+    atlas.addEventListener('load',()=>{
+      scene.querySelectorAll('.el-runner').forEach(runner=>{
+        const frame=SNEAK_FRAMES.find(part=>part.elf===runner.dataset.runner);
+        const [, ,w,h]=frame.box;
+        runner.style.setProperty('--el-step-aspect',String(atlas.naturalWidth*w/(atlas.naturalHeight*h)));
+      });
+    });
+    atlas.src=art.sneak;
+    scene.querySelectorAll('img').forEach(img=>img.addEventListener('error',()=>{img.hidden=true;}));
+    garments.forEach(item=>item.addEventListener('animationend',event=>{
+      if(event.target===item&&event.animationName==='el-garment-arrives')item.classList.remove('is-arriving');
+    }));
+
+    function render(nextStage,nextCount,animate=false) {
+      const switched=stage!==nextStage;
+      scene.hidden=nextStage!=='elves';
+      if(nextStage!=='elves'){resetExit();stage=nextStage;return;}
+      const next=Math.max(0,Math.min(10,Math.floor(Number(nextCount)||0)));
+      const previous=count,changed=Boolean(animate&&!switched&&next>previous);
+      if(switched||next<previous)resetExit();
+      garments.forEach(item=>{
+        const index=Number(item.dataset.itemIndex);
+        item.classList.toggle('is-worn',index<next);
+        if(switched||next!==previous)item.classList.remove('is-arriving');
+        if(changed&&index===next-1&&!reduced()&&!doc.hidden){void item.offsetWidth;item.classList.add('is-arriving');}
+      });
+      count=next;stage=nextStage;scene.dataset.count=String(count);
+      scene.classList.toggle('is-complete',count===10);
+      if(count===10){
+        if(changed)beginEnding();
+        else if(switched||previous!==count)finalPose();
+      }else if(switched||previous!==count)scene.classList.remove(...phases);
+    }
+    function playExit(nextStage) {
+      if(nextStage!=='elves'||stage!=='elves'||count!==10)return 0;
+      return beginEnding();
+    }
+    doc.addEventListener('visibilitychange',()=>{if(doc.hidden)resetExit();});
+    const reduceNow=()=>{if(reduced())resetExit();};
+    if(typeof motion?.addEventListener==='function')motion.addEventListener('change',reduceNow);
+    else motion?.addListener?.(reduceNow);
+    return {render,playExit,resetExit,arrivalTime:(nextStage='elves')=>nextStage==='elves'&&!reduced()&&!doc.hidden?ENDING_MS:0};
+  }
+
+  window.HanziElvesStory=Object.freeze({create});
+})(window);
+
+</script>
 <script data-source="magic-shop-catalog.js">
 (function (root) {
   'use strict';
@@ -13248,7 +14388,37 @@ function updateArmorBindings(chains,count,changed) {
       demoHint: '先点亮外圈八卦，再点亮中央的阴阳两半。',
       demoFinished: '十处封印全部亮起，厚重石门轰隆一声向左右平移打开。',
       reward: '石门上的一处封印亮了起来。', completion: '外圈八卦和中央太极全部亮起，厚重石门向左右两边平移打开。',
-      next: '回到草药房', nextStage: 'herbs', interval: 1200, arrival: 5200, automaticEnding: true,
+      next: '前往金鹅黏黏队', nextStage: 'goose', interval: 1200, arrival: 5200, automaticEnding: true,
+    },
+    goose: {
+      number: '第十五关', title: '金鹅黏黏队', unit: '位同行者',
+      intro: '宫廷的庭院里，一只金鹅正摇摇摆摆地走着。阳台上的公主从不发笑。',
+      task: '每通过一个字，就有一位好奇的人碰到队伍，黏在后面。',
+      start: '跟上金鹅', step: '黏上一位同行者', auto: '播放到十人排队', retry: '重新跟上金鹅',
+      demoHint: '看看拿着不同工具的人，怎样一个接一个黏在队尾。',
+      demoFinished: '十个人跟着金鹅绕过庭院，公主终于笑了。魔法解开，大家高高兴兴地散开。',
+      reward: '又一位好奇的人黏上了队伍。', completion: '十个人黏成了长队，公主看到这有趣的游行，终于笑出了声。',
+      next: '前往钟表夜莺', nextStage: 'clockbird', interval: 1500, arrival: 9000, automaticEnding: true,
+    },
+    clockbird: {
+      number: '第十六关', title: '钟表夜莺', unit: '件部件',
+      intro: '钟表工坊的桌上，机械夜莺还没有装好。窗外的天空正露出晨光。',
+      task: '每通过一个字，就装上一件部件。十件装齐，它便能唱歌、飞翔。',
+      start: '装好钟表夜莺', step: '装上一件部件', auto: '播放到夜莺齐飞', retry: '重新装配夜莺',
+      demoHint: '仔细看齿轮、羽翼和尾羽怎样一件件装上。',
+      demoFinished: '机械夜莺唱响，九只真夜莺在窗外回应。十只夜莺一起冲向晨光。',
+      reward: '又一件部件装上，夜莺更加完整。', completion: '十件部件都装齐了，机械夜莺与窗外的九只夜莺一起飞向晨光。',
+      next: '前往小精灵的午夜舞台', nextStage: 'elves', interval: 1500, arrival: 11000, automaticEnding: true,
+    },
+    elves: {
+      number: '第十七关', title: '小精灵的午夜舞台', unit: '件衣物',
+      intro: '午夜的裁缝桌上，两个被魔法定住的小精灵正闭着眼睛。',
+      task: '每通过一个字，穿好一件衣物。两个小精灵各需五件，全穿好才会苏醒。',
+      start: '为小精灵穿衣', step: '穿好一件衣物', auto: '播放到精灵溜走', retry: '重新打扮小精灵',
+      demoHint: '帽子、外衣、裤子和两只鞋，一件一件穿齐。',
+      demoFinished: '十件衣物都穿好了。两个小精灵睁眼相望，踮脚沿桌面走向窗边，悄悄溜走。',
+      reward: '一件衣物穿好了，小精灵还在静静等待。', completion: '两个小精灵穿戴整齐，终于活了过来，互相看了一眼，悄悄溜走了。',
+      next: '回到草药房', nextStage: 'herbs', interval: 1500, arrival: 8800, automaticEnding: true,
     },
   };
 
@@ -13297,6 +14467,9 @@ function updateArmorBindings(chains,count,changed) {
       { stages: ['ice', 'armor'], name: 'HanziIceArmorStory' },
       { stages: ['beans'], name: 'HanziBeanTrainStory' },
       { stages: ['rose', 'bagua'], name: 'HanziRoseBaguaStory' },
+      { stages: ['goose'], name: 'HanziGooseStory' },
+      { stages: ['clockbird'], name: 'HanziClockbirdStory' },
+      { stages: ['elves'], name: 'HanziElvesStory' },
     ];
 
     const hud = doc.createElement('div');
@@ -13956,7 +15129,7 @@ function defaultBank(){
 // set — the change would reach nobody who actually uses the game.
 const BANK_VERSION = 5;
 const ROUND_GOAL = 10;
-const GAME_VERSION = '2026.11.26.1';
+const GAME_VERSION = '2026.11.26.2';
 
 let state = {
   bank: defaultBank(),

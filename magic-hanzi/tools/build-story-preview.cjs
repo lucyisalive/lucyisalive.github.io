@@ -8,7 +8,7 @@ const output = process.argv[2];
 if(!output)throw new Error('Supply an output HTML path.');
 
 const entry=process.argv[3] || 'new-stories-preview.html';
-if(!['new-stories-preview.html','three-stories-preview.html'].includes(entry))throw new Error('Unknown story preview entry.');
+if(!['new-stories-preview.html','three-stories-preview.html','fairytale-stories-preview.html'].includes(entry))throw new Error('Unknown story preview entry.');
 let html = read(entry);
 html = html.replace(/<link rel="stylesheet" href="([^"]+)">/g,
   (_,file) => '<style>\n'+read(file)+'\n</style>');

@@ -163,7 +163,37 @@
       demoHint: '先点亮外圈八卦，再点亮中央的阴阳两半。',
       demoFinished: '十处封印全部亮起，厚重石门轰隆一声向左右平移打开。',
       reward: '石门上的一处封印亮了起来。', completion: '外圈八卦和中央太极全部亮起，厚重石门向左右两边平移打开。',
-      next: '回到草药房', nextStage: 'herbs', interval: 1200, arrival: 5200, automaticEnding: true,
+      next: '前往金鹅黏黏队', nextStage: 'goose', interval: 1200, arrival: 5200, automaticEnding: true,
+    },
+    goose: {
+      number: '第十五关', title: '金鹅黏黏队', unit: '位同行者',
+      intro: '宫廷的庭院里，一只金鹅正摇摇摆摆地走着。阳台上的公主从不发笑。',
+      task: '每通过一个字，就有一位好奇的人碰到队伍，黏在后面。',
+      start: '跟上金鹅', step: '黏上一位同行者', auto: '播放到十人排队', retry: '重新跟上金鹅',
+      demoHint: '看看拿着不同工具的人，怎样一个接一个黏在队尾。',
+      demoFinished: '十个人跟着金鹅绕过庭院，公主终于笑了。魔法解开，大家高高兴兴地散开。',
+      reward: '又一位好奇的人黏上了队伍。', completion: '十个人黏成了长队，公主看到这有趣的游行，终于笑出了声。',
+      next: '前往钟表夜莺', nextStage: 'clockbird', interval: 1500, arrival: 9000, automaticEnding: true,
+    },
+    clockbird: {
+      number: '第十六关', title: '钟表夜莺', unit: '件部件',
+      intro: '钟表工坊的桌上，机械夜莺还没有装好。窗外的天空正露出晨光。',
+      task: '每通过一个字，就装上一件部件。十件装齐，它便能唱歌、飞翔。',
+      start: '装好钟表夜莺', step: '装上一件部件', auto: '播放到夜莺齐飞', retry: '重新装配夜莺',
+      demoHint: '仔细看齿轮、羽翼和尾羽怎样一件件装上。',
+      demoFinished: '机械夜莺唱响，九只真夜莺在窗外回应。十只夜莺一起冲向晨光。',
+      reward: '又一件部件装上，夜莺更加完整。', completion: '十件部件都装齐了，机械夜莺与窗外的九只夜莺一起飞向晨光。',
+      next: '前往小精灵的午夜舞台', nextStage: 'elves', interval: 1500, arrival: 11000, automaticEnding: true,
+    },
+    elves: {
+      number: '第十七关', title: '小精灵的午夜舞台', unit: '件衣物',
+      intro: '午夜的裁缝桌上，两个被魔法定住的小精灵正闭着眼睛。',
+      task: '每通过一个字，穿好一件衣物。两个小精灵各需五件，全穿好才会苏醒。',
+      start: '为小精灵穿衣', step: '穿好一件衣物', auto: '播放到精灵溜走', retry: '重新打扮小精灵',
+      demoHint: '帽子、外衣、裤子和两只鞋，一件一件穿齐。',
+      demoFinished: '十件衣物都穿好了。两个小精灵睁眼相望，踮脚沿桌面走向窗边，悄悄溜走。',
+      reward: '一件衣物穿好了，小精灵还在静静等待。', completion: '两个小精灵穿戴整齐，终于活了过来，互相看了一眼，悄悄溜走了。',
+      next: '回到草药房', nextStage: 'herbs', interval: 1500, arrival: 8800, automaticEnding: true,
     },
   };
 
@@ -212,6 +242,9 @@
       { stages: ['ice', 'armor'], name: 'HanziIceArmorStory' },
       { stages: ['beans'], name: 'HanziBeanTrainStory' },
       { stages: ['rose', 'bagua'], name: 'HanziRoseBaguaStory' },
+      { stages: ['goose'], name: 'HanziGooseStory' },
+      { stages: ['clockbird'], name: 'HanziClockbirdStory' },
+      { stages: ['elves'], name: 'HanziElvesStory' },
     ];
 
     const hud = doc.createElement('div');

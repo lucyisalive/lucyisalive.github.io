@@ -1,0 +1,127 @@
+.story-clockbird {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  isolation: isolate;
+  overflow: hidden;
+  pointer-events: none;
+  background: #111a22;
+}
+.story-clockbird[hidden] { display: none !important; }
+.story-clockbird:not([hidden]) { display: block; }
+.story-clockbird *, .story-clockbird *::before, .story-clockbird *::after { pointer-events: none; }
+.clockbird-frame {
+  position: absolute;
+  inset: 0;
+  width: min(100%, 94dvh, 1100px);
+  margin-inline: auto;
+  overflow: hidden;
+  background: #171b20;
+  box-shadow: 0 0 100px 40px #10171e;
+}
+.clockbird-ambience {
+  position: absolute;
+  inset: -5%;
+  background: var(--clockbird-workshop) center / cover no-repeat;
+  filter: blur(36px) brightness(.5);
+  opacity: .8;
+}
+.clockbird-world-position {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(100%, 75dvh);
+  aspect-ratio: 3 / 4;
+  transform: translate(-50%, -50%);
+}
+.clockbird-world { position: absolute; inset: 0; transform-origin: 82% 35%; }
+.clockbird-workshop-art {
+  position: absolute;
+  inset: 0;
+  background: var(--clockbird-workshop) center / 100% 100% no-repeat,
+    linear-gradient(135deg, #172132, #302a20 55%, #171c22);
+  -webkit-mask-image: linear-gradient(transparent, #000 2% 98%, transparent);
+  mask-image: linear-gradient(transparent, #000 2% 98%, transparent);
+}
+.clockbird-window-dawn {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  clip-path: polygon(58% 18%, 60% 14%, 66% 10%, 74% 7%, 81% 7%, 88% 11%, 92.5% 18%, 92.5% 46%, 58% 46%);
+  background: linear-gradient(125deg, transparent 38%, #efc6773b 71%, #ffeacaa6);
+  opacity: .08;
+}
+.clockbird-window-dawn i {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 82% 36%, #fff0c3, #f4cd8142 13%, transparent 35%);
+}
+.clockbird-shared-defs { position: absolute; overflow: hidden; }
+.clockbird-flock-window { position: absolute; z-index: 3; inset: 0; clip-path: polygon(58% 18%, 60% 14%, 66% 10%, 74% 7%, 81% 7%, 88% 11%, 92.5% 18%, 92.5% 46%, 58% 46%); }
+.clockbird-wild-bird { position: absolute; aspect-ratio: 3 / 2; opacity: 0; transform-origin: center; filter: drop-shadow(0 1px 1px #0e141655); }
+.clockbird-wild-sprite { display: block; width: 100%; height: 100%; overflow: visible; }
+.clockbird-wild-far-wing, .clockbird-wild-near-wing { transform-box: view-box; transform-origin: 60% 53%; animation: clockbird-wild-far-flap .7s var(--wild-delay) ease-in-out infinite; }
+.clockbird-wild-near-wing { animation-name: clockbird-wild-near-flap; transform-origin: 47% 42%; }
+@keyframes clockbird-wild-far-flap { 0%, 100% { transform: rotate(-9deg) scaleY(.77); } 50% { transform: rotate(17deg) scaleY(1); } }
+@keyframes clockbird-wild-near-flap { 0%, 100% { transform: rotate(18deg) scaleY(.58); } 50% { transform: rotate(-15deg) scaleY(1); } }
+.clockbird-table-shadow { position: absolute; z-index: 2; left: 46%; top: 65%; width: 34%; height: 2.8%; transform: translateX(-50%); background: radial-gradient(ellipse, #080b0bc9, transparent 72%); filter: blur(5px); }
+.clockbird-machine { position: absolute; z-index: 4; left: 46%; top: 50.5%; width: 68%; aspect-ratio: 3 / 2; transform: translate(-50%, -50%); transform-origin: center; filter: drop-shadow(0 7px 5px #090b0b80); }
+.clockbird-machine-sprite { display: block; width: 100%; height: 100%; overflow: visible; }
+.clockbird-part { opacity: 0; visibility: hidden; }
+.clockbird-part.is-installed { opacity: 1; visibility: visible; }
+.clockbird-install-motion { transform-box: view-box; transform-origin: 50% 57%; }
+.clockbird-part.is-arriving .clockbird-install-motion { animation: clockbird-install .9s cubic-bezier(.15, .67, .23, 1) both; }
+@keyframes clockbird-install {
+  0% { opacity: 0; transform: translate(var(--part-x), var(--part-y)) rotate(var(--part-turn)) scale(.5); }
+  21% { opacity: 1; }
+  79% { transform: translate(0, -5px) rotate(-1deg) scale(1.015); }
+  100% { opacity: 1; transform: translate(0) rotate(0) scale(1); }
+}
+.clockbird-frame-cavity { opacity: .82; }
+.clockbird-frame-rim { fill: none; stroke-width: 9; opacity: .5; }
+.clockbird-frame-rib { fill: none; stroke: #9a783a99; stroke-width: 6; }
+.clockbird-leg { fill: none; stroke: #92713c; stroke-width: 9; stroke-linecap: round; stroke-linejoin: round; opacity: .9; }
+.clockbird-frame-rivet { fill: #d7ba74; stroke: #5a391f; stroke-width: 2; }
+.clockbird-armored .clockbird-frame-rim, .clockbird-armored .clockbird-frame-rib, .clockbird-armored .clockbird-frame-rivet, .clockbird-armored .clockbird-leg, .clockbird-armored .clockbird-carrier-art { opacity: 0; }
+.clockbird-spring-drum { fill: #1b2422; stroke: #b38d4b; stroke-width: 7; }
+.clockbird-spring { fill: none; stroke: #e0b86d; stroke-width: 4; stroke-linecap: round; }
+.clockbird-spring-pin { stroke: #806035; stroke-width: 5; }
+.clockbird-gear-rim { stroke: #68441f; stroke-width: 2; }
+.clockbird-gear-well { fill: #112021; stroke: #e4c989b5; stroke-width: 3; }
+.clockbird-gear-spoke { fill: none; stroke: #bc9655; stroke-width: 10; stroke-linecap: round; }
+.clockbird-pin { fill: #243235; stroke: #684b2c; stroke-width: 2; }
+.clockbird-link-arm { fill: none; stroke: #e2c58a; stroke-width: 8; stroke-linecap: round; opacity: .6; }
+.clockbird-running .clockbird-rotor { animation: clockbird-gear-turn var(--gear-period, 7s) linear infinite; transform-origin: 0 0; }
+.clockbird-running .clockbird-rotor-reverse { animation-direction: reverse; }
+@keyframes clockbird-gear-turn { to { transform: rotate(360deg); } }
+.clockbird-running .clockbird-spring-group { animation: clockbird-spring-wind 2s ease-in-out infinite alternate; }
+@keyframes clockbird-spring-wind { to { filter: brightness(1.17); } }
+.clockbird-pipe { stroke: #725226; stroke-width: 2; }
+.clockbird-pipe-mouth { fill: #0c1719; stroke: #e1bf77; stroke-width: 2; }
+.clockbird-pipe-ring { stroke: #f1d69e; stroke-width: 3; }
+.clockbird-air-link { fill: none; stroke: #96713b; stroke-width: 12; stroke-linecap: round; }
+.clockbird-singing .clockbird-resonator { animation: clockbird-resonance .33s calc(var(--pipe-i) * -.09s) ease-in-out infinite alternate; }
+@keyframes clockbird-resonance { to { filter: brightness(1.8) drop-shadow(0 0 8px #efd29966); } }
+.clockbird-metal-far-wing, .clockbird-metal-near-wing { transform-box: view-box; transform-origin: 64% 26.5%; }
+.clockbird-metal-near-wing { transform-origin: 54.5% 58.5%; }
+.clockbird-flapping .clockbird-metal-far-wing { animation: clockbird-metal-far-flap .84s ease-in-out infinite; }
+.clockbird-flapping .clockbird-metal-near-wing { animation: clockbird-metal-near-flap .84s ease-in-out infinite; }
+@keyframes clockbird-metal-far-flap { 0%, 100% { transform: rotate(-5deg) scaleY(.92); } 50% { transform: rotate(8deg) scaleY(1.01); } }
+@keyframes clockbird-metal-near-flap { 0%, 100% { transform: rotate(8deg) scaleY(.9); } 50% { transform: rotate(-7deg) scaleY(1.03); } }
+.clockbird-head-hinge { transform-box: view-box; transform-origin: 77.5% 30%; }
+.clockbird-singing .clockbird-head-hinge { animation: clockbird-sing-head .66s ease-in-out infinite alternate; }
+@keyframes clockbird-sing-head { to { transform: rotate(-3deg); } }
+.clockbird-song-lines { position: absolute; z-index: 5; inset: 0; width: 100%; height: 100%; opacity: 0; overflow: visible; }
+.clockbird-song-lines path { fill: none; stroke: #efd296; stroke-width: 1.8; stroke-linecap: round; stroke-dasharray: 5 12; filter: drop-shadow(0 0 4px #e8c96f88); }
+.clockbird-singing .clockbird-song-lines { animation: clockbird-song-rise 2.1s ease-in-out infinite; }
+@keyframes clockbird-song-rise { 0% { opacity: 0; transform: translate(0); } 28% { opacity: .7; } 100% { opacity: 0; transform: translate(2%, -1.5%); } }
+.clockbird-dust { position: absolute; z-index: 1; inset: 0; opacity: .4; }
+.clockbird-dust i { position: absolute; left: var(--dust-x); top: 33%; width: 2px; height: 2px; border-radius: 50%; background: #ecd8a6; box-shadow: 0 0 5px #ddbd6b66; animation: clockbird-dust-rise 11s calc(var(--dust-i) * -1.4s) linear infinite; }
+@keyframes clockbird-dust-rise { 0% { opacity: 0; transform: translate(0, 22dvh); } 20% { opacity: .8; } 100% { opacity: 0; transform: translate(12px, -12dvh); } }
+.clockbird-frame-shade { position: absolute; z-index: 10; inset: 0; background: linear-gradient(#080e1742, transparent 25% 76%, #090e186e), linear-gradient(90deg, #080e1745, transparent 12% 88%, #080e1745); }
+.clockbird-finished *, .clockbird-still *, .story-clockbird[hidden] * { animation-play-state: paused !important; }
+.clockbird-finished .clockbird-song-lines { opacity: 0; }
+@media (prefers-reduced-motion: reduce) {
+  .story-clockbird *, .story-clockbird *::before, .story-clockbird *::after { animation: none !important; transition: none !important; }
+  .clockbird-part.is-installed { opacity: 1; }
+}

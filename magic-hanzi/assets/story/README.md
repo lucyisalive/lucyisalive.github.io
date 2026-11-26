@@ -203,3 +203,12 @@ Use case precise-object-edit / identity-preserve. Edit target: the referenced EM
 完整生成提示词：
 
 Use case lighting-weather / historical-scene. Environment transition background for the SAME moonlit frozen Gothic courtyard in the reference, viewed now from ABOVE as the first-person child is gently lifted into the sky by a goddess. No people in this asset. Full bleed 3:4 portrait classical highly detailed dark fairytale painting matching the reference's cold deep indigo and muted steel blue, silver moonlight, soft painterly texture. Upper 85 percent open night sky, a partly cloud-veiled small moon near upper right, thin streaks of blue-gray cloud and mist with clear air between them. At the very BOTTOM edge only, small distant frost-covered Gothic roof ridges/spires of that same courtyard recede below, leaving the central/lower-middle air clear for an animated handholding goddess sprite. This is flying just over the courtyard rooftops, not space or a new landscape. No wings, dragon, birds, banners, people, hands, figures, symbols, text, interface or frame. No bright sun, pastel candy colors or large glow wash. Dark mysterious but readable moonlit heights.
+
+
+## 2026年11月26日童话三关
+
+本轮十三张素材用于金鹅黏黏队、钟表夜莺、小精灵的午夜舞台。经典、深色的真实绘画材质延续原场景；角色、背景、服饰步相独立，程序负责十次进展与结尾。不是引用现成影视画面。
+
+金鹅五张：宫廷庭院、金鹅、两张五人图集与两态公主。钟表三张：晨光工坊、可拆分机械夜莺、一只可复用为九只的真实夜莺。精灵五张：午夜裁缝桌、闭眼底衣、闭眼穿戴、睁眼互看及两个人各两步相的图集。完整提示词与选图哈希见 [fairytale-generation.json](fairytale-generation.json)。
+
+均使用内置图像生成工具（ImageGen），没有调用账户API或额外服务。原图只做无损WebP格式转换，透明与全部RGBA像素保持一致；删除金鹅背景、分离跨格人物与调整走路姿势均通过内置图像编辑完成。原始生成图与废弃变体不作为运行资产。

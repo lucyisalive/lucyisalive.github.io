@@ -96,6 +96,41 @@ function environment({audio=true,reduced=false,resumeReject=false,resumeLater=fa
  assert.equal(suspendedStone.api.playStoneDoor(),0);
  suspendedStone.contexts[0].finishResume();await stoneUnlock;
  assert.equal(suspendedStone.oscillators.length,0,'A suspended door sound is not replayed after resume');
+ // The birdsong has no independent audio engine or deferred unlock request.
+ assert.equal(basic.api.playClockbirdChorus(),0);
+ const birds=environment();
+ assert.equal(birds.api.playClockbirdChorus(),0);assert.equal(birds.contexts.length,0);
+ await birds.api.unlock();birds.api.playCorrect();birds.api.celebrate('莺');
+ const birdsPrior=birds.oscillators.slice(),birdGainStart=birds.gains.length;
+ assert.equal(birds.api.playClockbirdChorus(),6000);
+ const birdVoices=birds.oscillators.slice(birdsPrior.length);
+ assert.equal(birdVoices.length,36,'Birdsong schedules a bounded eighteen two-tone calls');
+ assert.ok(Math.max(...birdVoices.map(n=>n.stops[0]))<6.1);
+ assert.ok(birds.gains.slice(birdGainStart).every(n=>Math.max(...n.gain.ramps.map(r=>r.value))<=.065));
+ assert.ok(birdsPrior.every(n=>n.stops.length===1),'The flock preserves correct/victory sounds');
+ assert.equal(birds.contexts.length,1);
+ birds.api.reset();assert.ok(birdVoices.every(n=>n.stops.length===2),'Reset cancels the entire flock');
+ const birdCount=birds.oscillators.length;
+ birds.api.setMuted(true);assert.equal(birds.api.playClockbirdChorus(),0);
+ birds.api.setMuted(false);birds.document.hidden=true;assert.equal(birds.api.playClockbirdChorus(),0);
+ assert.equal(birds.oscillators.length,birdCount);
+ birds.document.hidden=false;birds.api.playClockbirdChorus();
+ const hiddenBirds=birds.oscillators.slice(birdCount);
+ birds.document.hidden=true;birds.document.listeners.visibilitychange[0]();
+ assert.ok(hiddenBirds.every(n=>n.stops.length===2),'Backgrounding cancels scheduled bird calls');
+ const leavingBirds=environment();await leavingBirds.api.unlock();
+ leavingBirds.api.playCorrect();leavingBirds.api.celebrate('莺');
+ const retainedChimes=leavingBirds.oscillators.slice();leavingBirds.api.playClockbirdChorus();
+ const leavingCalls=leavingBirds.oscillators.slice(retainedChimes.length);
+ leavingBirds.api.stopClockbirdChorus();
+ assert.ok(leavingCalls.every(n=>n.stops.length===2),'Leaving the scene stops every pending bird call');
+ assert.ok(retainedChimes.every(n=>n.stops.length===1),'Stopping the flock retains grading and victory chimes');
+ leavingBirds.api.stopClockbirdChorus();assert.ok(leavingCalls.every(n=>n.stops.length===2),'Repeated cancellation is harmless');
+ leavingBirds.api.reset();assert.ok(retainedChimes.every(n=>n.stops.length===2));
+ const suspendedBirds=environment({resumeLater:true}),birdUnlock=suspendedBirds.api.unlock();
+ assert.equal(suspendedBirds.api.playClockbirdChorus(),0);
+ suspendedBirds.contexts[0].finishResume();await birdUnlock;
+ assert.equal(suspendedBirds.oscillators.length,0,'A suspended birdsong never replays after unlock');
  const blocked=environment({resumeReject:true});assert.equal(await blocked.api.unlock(),false);blocked.api.playCorrect();assert.equal(blocked.oscillators.length,0);
 
  const noPrime=environment({primeReject:true});
@@ -184,6 +219,6 @@ function environment({audio=true,reduced=false,resumeReject=false,resumeLater=fa
  assert.equal(late.contexts[0].state,'running');
 
  const fallback=environment({audio:false});fallback.tile.rect={left:0,top:0,width:0,height:0};fallback.api.playCorrect();assert.equal(fallback.findClass('hg-feedback-ring')[0].style.left,'65px');
- const results={checks:'unsupported audio, priming failure, rejected and delayed resume, bounded chimes, Pencil unlock and speech exclusion, background recreation, schedules, handoff, bounded stone-door tones and shared context, muted/hidden audio, visual cleanup, repeated celebration, reduced motion, door fallback',correctAudioEndSeconds:correctEnd,victoryAudioEndSeconds:Math.max(...victoryNodes.map(n=>n.stops[0])),wrongAudioEndSeconds:Math.max(...wrongNodes.map(n=>n.stops[0])),status:'passed'};
+ const results={checks:'unsupported audio, priming failure, rejected and delayed resume, bounded chimes, Pencil unlock and speech exclusion, background recreation, schedules, handoff, bounded stone-door tones, bounded nightingale chorus and shared context, muted/hidden audio, visual cleanup, repeated celebration, reduced motion, door fallback',correctAudioEndSeconds:correctEnd,victoryAudioEndSeconds:Math.max(...victoryNodes.map(n=>n.stops[0])),wrongAudioEndSeconds:Math.max(...wrongNodes.map(n=>n.stops[0])),status:'passed'};
  fs.mkdirSync(path.join(root,'work/feedback'),{recursive:true});fs.writeFileSync(path.join(root,'work/feedback/check-results.json'),JSON.stringify(results,null,2)+'\n');console.log(JSON.stringify(results,null,2));
 })().catch(e=>{console.error(e);process.exit(1)});

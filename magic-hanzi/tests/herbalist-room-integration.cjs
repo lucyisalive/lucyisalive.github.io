@@ -50,14 +50,14 @@ function verifyAutomaticEndings() {
     const body=new Node('body');body.innerHTML='<header class="topbar"></header><button id="restartBtn"></button><button id="submitBtn"></button><p id="finaleDetail"></p>';
     const window={matchMedia:()=>({matches:reduced}),addEventListener(){},localStorage:{getItem:k=>storage.get(k)??null,setItem:(k,v)=>storage.set(k,v),removeItem:k=>storage.delete(k),key:i=>[...storage.keys()][i],get length(){return storage.size;}}};
     const document={body,defaultView:window,createElement:tag=>new Node(tag),querySelector:s=>body.querySelector(s),getElementById:id=>body.querySelector('#'+id),addEventListener(){}};
-    for(const name of ['HanziDuneStory','HanziLibraryStory','HanziIceArmorStory','HanziBeanTrainStory','HanziRoseBaguaStory'])if(!missing)window[name]={create(){created.push(name);return {render(...args){renders.push([name,...args]);},playExit(stage){exits.push(stage);return 1000;},resetExit(){}};}};
+    for(const name of ['HanziDuneStory','HanziLibraryStory','HanziIceArmorStory','HanziBeanTrainStory','HanziRoseBaguaStory','HanziGooseStory','HanziClockbirdStory','HanziElvesStory'])if(!missing)window[name]={create(){created.push(name);return {render(...args){renders.push([name,...args]);},playExit(stage){exits.push(stage);return 1000;},resetExit(){}};}};
     class ClockDate extends Date { static now(){return now;} }
     const context=vm.createContext({window,document,Date:ClockDate,setTimeout(fn,ms){timers.set(++timerId,{fn,at:now+ms});return timerId;},clearTimeout:id=>timers.delete(id)});
     vm.runInContext(fs.readFileSync(path.join(__dirname,'../herbalist-room.js'),'utf8'),context);
     const room=window.HanziHerbalist.create({document,onTap(node,fn){node.tap=fn;}});
     return {room,document,body,storage,created,renders,exits,advance(ms){const until=now+ms;for(;;){const due=[...timers].filter(([,t])=>t.at<=until).sort((a,b)=>a[1].at-b[1].at);if(!due.length)break;const[id,t]=due[0];timers.delete(id);now=t.at;t.fn();}now=until;}};
   }
-  const durations={beans:13700,rose:3800,bagua:5200},next={beans:'rose',rose:'bagua',bagua:'herbs'};
+  const durations={beans:13700,rose:3800,bagua:5200,goose:9000,clockbird:11000,elves:8800},next={beans:'rose',rose:'bagua',bagua:'goose',goose:'clockbird',clockbird:'elves',elves:'herbs'};
   for(const [stage,duration] of Object.entries(durations))for(const reduced of [false,true])for(const missing of [false,true]) {
     const e=roomFixture({reduced,missing});
     assert.deepEqual(e.created,[],'New scenery stays off the original startup path');
@@ -75,7 +75,7 @@ function verifyAutomaticEndings() {
     }
     assert.equal(e.body.dataset.herbStage,next[stage]);
     assert.deepEqual(e.exits,[],stage+' travel never calls playExit for the automatic ending');
-    if(!missing)assert.ok(e.renders.some(([name,renderStage])=>name===(stage==='beans'?'HanziBeanTrainStory':'HanziRoseBaguaStory') && renderStage===next[stage]),'Previously created scenes still render the next stage so they can hide');
+    if(!missing)assert.ok(e.renders.some(([name,renderStage])=>name===({beans:'HanziBeanTrainStory',rose:'HanziRoseBaguaStory',bagua:'HanziRoseBaguaStory',goose:'HanziGooseStory',clockbird:'HanziClockbirdStory',elves:'HanziElvesStory'}[stage]) && renderStage===next[stage]),'Previously created scenes still render the next stage so they can hide');
     const restored=roomFixture({reduced,missing});
     restored.room.restoreStage(stage,10,true);restored.room.nextLevel(next[stage]);
     restored.advance(245);
@@ -125,10 +125,10 @@ async function run() {
   const passAwards = () => calls.filter(([method]) => method === 'pass').length;
   const levelAwards = () => calls.filter(([method, bankEmpty, count, mastered, newlyAwarded]) =>
     method === 'finale' && !bankEmpty && count === 10 && newlyAwarded === true).length;
-  const routes = ['herbs', 'stars', 'giant', 'bridge', 'train', 'tomb', 'sea', 'dunes', 'library', 'ice', 'armor', 'beans', 'rose', 'bagua'];
-  assert.deepEqual(Array.from(game.run('Object.keys(HERBALIST_STAGES)')), routes, 'The formal game exposes all fourteen story rooms');
-  assert.equal(game.run('GAME_VERSION'),'2026.11.26.1');
-  for(const [stage,arrival] of [['beans',13700],['rose',3800],['bagua',5200]]) {
+  const routes = ['herbs', 'stars', 'giant', 'bridge', 'train', 'tomb', 'sea', 'dunes', 'library', 'ice', 'armor', 'beans', 'rose', 'bagua', 'goose', 'clockbird', 'elves'];
+  assert.deepEqual(Array.from(game.run('Object.keys(HERBALIST_STAGES)')), routes, 'The formal game exposes all seventeen story rooms');
+  assert.equal(game.run('GAME_VERSION'),'2026.11.26.2');
+  for(const [stage,arrival] of [['beans',13700],['rose',3800],['bagua',5200],['goose',9000],['clockbird',11000],['elves',8800]]) {
     assert.equal(game.run(`HERBALIST_STAGES.${stage}.arrival`),arrival,stage+' waits only for its remaining scenery');
     assert.equal(game.run(`HERBALIST_STAGES.${stage}.automaticEnding`),true,stage+' must not replay its automatic ending during travel');
     assert.equal(game.run(`HERBALIST_STAGES.${stage}.endingNext`),undefined,stage+' transitions directly after the automatic ending');
@@ -207,10 +207,13 @@ async function run() {
     ['armor', 'beans', /铁链|锁链/, /盔甲|跪/],
     ['beans', 'rose', /豆藤/, /车站|火车/],
     ['rose', 'bagua', /玫瑰|藤蔓/, /美人|睁开/],
-    ['bagua', 'herbs', /封印/, /太极|石门/],
+    ['bagua', 'goose', /封印/, /太极|石门/],
+    ['goose', 'clockbird', /黏|队伍/, /金鹅|长队|公主/],
+    ['clockbird', 'elves', /部件|夜莺/, /夜莺|晨光/],
+    ['elves', 'herbs', /衣物|小精灵/, /小精灵|苏醒|溜走/],
   ];
   for (const [stage, next, passMessage, finishedMessage] of remainingStages) {
-    const addedRoom = ['dunes', 'library', 'ice', 'armor', 'beans', 'rose', 'bagua'].includes(stage);
+    const addedRoom = ['dunes', 'library', 'ice', 'armor', 'beans', 'rose', 'bagua', 'goose', 'clockbird', 'elves'].includes(stage);
     assert.equal(game.run('state.herbalistStage'), stage);
     const saved = JSON.parse(game.storage.get('hanzi-magic-herbalist-state-v1'));
     const passesBeforeReload = passAwards(), bonusesBeforeReload = levelAwards();
@@ -259,7 +262,7 @@ async function run() {
       await submitReference();
       assert.match(game.run('resultBanner.textContent'), passMessage);
     }
-    if(['beans','rose','bagua'].includes(stage)) {
+    if(['beans','rose','bagua','goose','clockbird','elves'].includes(stage)) {
       const immediateSave=JSON.parse(game.storage.get('hanzi-magic-herbalist-state-v1'));
       assert.equal(immediateSave.herbalistStage,stage);
       assert.ok(immediateSave.bank.some(item=>item.passedDays?.length),'The tenth formal pass saves learning before scenery finishes');
@@ -309,9 +312,9 @@ async function run() {
     assert.deepEqual(calls.filter(([method]) => method === 'nextLevel').at(-1), ['nextLevel', next]);
     assert.equal(levelAwards(), bonusesBefore + 1);
   }
-  assert.equal(levelAwards(), 14, 'One bonus per room across the complete fourteen-room route');
+  assert.equal(levelAwards(), 17, 'One bonus per room across the complete seventeen-room route');
   assert.ok(game.network.every(call => call.kind !== 'unexpected'));
-  console.log('Story rooms: fourteen-stage route, teaching/retest rewards, partial/completed restoration, two-step endings, and once-only bonuses passed.');
+  console.log('Story rooms: seventeen-stage route, teaching/retest rewards, partial/completed restoration, two-step endings, and once-only bonuses passed.');
 }
 
 run().catch(error => { console.error(error); process.exitCode = 1; });

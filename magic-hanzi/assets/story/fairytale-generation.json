@@ -1,0 +1,227 @@
+{
+  "mode": "built-in image_gen",
+  "createdAt": "2026-11-26",
+  "selectedFiles": [
+    {
+      "asset": "goose-courtyard-v1.webp",
+      "size": [
+        1086,
+        1448
+      ],
+      "bytes": 2320580,
+      "sha256": "e20a1a45c22120d344847f8e09f860aa8418ae62aae77ae622ccb434db3e2070",
+      "alpha0": 0,
+      "alpha240plus": 1572528
+    },
+    {
+      "asset": "golden-goose-v1.webp",
+      "size": [
+        1536,
+        1024
+      ],
+      "bytes": 1277914,
+      "sha256": "c9eb5dfb1e89d88bcdfbef3919af9b3e7eceb0227b1a8f69ad85b994e3232b00",
+      "alpha0": 1148812,
+      "alpha240plus": 397236
+    },
+    {
+      "asset": "goose-followers-a-v1.webp",
+      "size": [
+        1536,
+        1024
+      ],
+      "bytes": 1505534,
+      "sha256": "e7f0a199172453d1dd7f3bf0331e3cbaa4cae0253fd19440466b29d8e4cf1967",
+      "alpha0": 991682,
+      "alpha240plus": 462064
+    },
+    {
+      "asset": "goose-followers-b-v1.webp",
+      "size": [
+        1536,
+        1024
+      ],
+      "bytes": 1496814,
+      "sha256": "33aab0f592ea0c45a52da12f2ef8bc5dd08b51365460f821ebc93df5815937e9",
+      "alpha0": 1017208,
+      "alpha240plus": 466450
+    },
+    {
+      "asset": "goose-princess-v1.webp",
+      "size": [
+        1536,
+        1024
+      ],
+      "bytes": 1719090,
+      "sha256": "2868a1424f83866efadb8768ecf13c40e06a30830c21bb3e83ef5877c0651d65",
+      "alpha0": 611779,
+      "alpha240plus": 892325
+    },
+    {
+      "asset": "clockwork-workshop-v1.webp",
+      "size": [
+        1086,
+        1448
+      ],
+      "bytes": 1766414,
+      "sha256": "bad97d51de29cabfc9a2e5ebec6f55387e771400c9629713d7a67c6c31c4196c",
+      "alpha0": 0,
+      "alpha240plus": 1572528
+    },
+    {
+      "asset": "clockwork-nightingale-v1.webp",
+      "size": [
+        1536,
+        1024
+      ],
+      "bytes": 1501872,
+      "sha256": "1faabd07e86c8407922c5df5c160285d6c77a3f3459685b3427a5aacea9caff6",
+      "alpha0": 1045648,
+      "alpha240plus": 474885
+    },
+    {
+      "asset": "nightingale-flock-v1.webp",
+      "size": [
+        1536,
+        1024
+      ],
+      "bytes": 1286022,
+      "sha256": "f92ec7be9393d4563744dc44c2db645ef518b782ede5e48dd8433563763c7d2f",
+      "alpha0": 1056015,
+      "alpha240plus": 451101
+    },
+    {
+      "asset": "elves-tailor-workshop-v1.webp",
+      "size": [
+        1086,
+        1448
+      ],
+      "bytes": 2176848,
+      "sha256": "0b92d44d603c4c4b809834780b019ff473bf0d9ff2e484b7eeccf43183e98b33",
+      "alpha0": 0,
+      "alpha240plus": 1572528
+    },
+    {
+      "asset": "elves-base-v1.webp",
+      "size": [
+        1086,
+        1448
+      ],
+      "bytes": 385180,
+      "sha256": "e0f592b13fef00e0ea15768fd953ea6a29911664ae09b37a95b8ea421afb0714",
+      "alpha0": 1301718,
+      "alpha240plus": 227360
+    },
+    {
+      "asset": "elves-dressed-v1.webp",
+      "size": [
+        1086,
+        1448
+      ],
+      "bytes": 486050,
+      "sha256": "5cc2575561b4024550a84aecf1e00d6344a0799eac7b802e23b0753f4bebf448",
+      "alpha0": 1271546,
+      "alpha240plus": 252662
+    },
+    {
+      "asset": "elves-awake-v1.webp",
+      "size": [
+        1086,
+        1448
+      ],
+      "bytes": 471164,
+      "sha256": "2e22f85a9232e7504580212dd123a69d496fdae3d9bfedd1208de1adc2c902ba",
+      "alpha0": 1267759,
+      "alpha240plus": 260872
+    },
+    {
+      "asset": "elves-sneak-atlas-v1.webp",
+      "size": [
+        1536,
+        1024
+      ],
+      "bytes": 1098506,
+      "sha256": "7479f776e22a852943f6e485c1c79c2cabcd238028ffb2b4011d4f4739ca57fa",
+      "alpha0": 1282022,
+      "alpha240plus": 215863
+    }
+  ],
+  "initial": [
+    {
+      "key": "clockwork-workshop-v1",
+      "transparent": false,
+      "prompt": "Use case: illustration-story. Asset type: full screen3:4 portrait game environment, original classical magical clockmaker workshop. Finely hand-painted realistic fairy-tale art, deep old walnut wood, aged brass, mysterious indigo shadows and restrained warm lamplight. A broad beautiful empty wooden workbench occupies lower half, empty central tabletop around x25–73% y60–83% where a large mechanical nightingale will later assemble. A HUGE OPEN arched window on the upper RIGHT x54–97% y9–54%, open casement drawn to sides so the main opening has NO glass or bars; beyond it a calm pale golden DAWN sky and soft distant clouds. Room remains night-dark, window dawn is a restrained luminous destination. Surrounding edges may have antique clock faces, gear cabinets, brass tools and small drawers, but central table and window opening must stay clear. NO birds, bird automata, people, hands, text, interface, watermark or clockface numbers/lettering. The game will add mechanical bird parts and a flying flock, so no fixed bird imagery anywhere. Classical atmospheric depth, sophisticated colors, not pastel cartoon."
+    },
+    {
+      "key": "clockwork-nightingale-v1",
+      "transparent": true,
+      "prompt": "Use case: illustration-story. Asset type: ONE complete intricate classical brass MECHANICAL NIGHTINGALE isolated on a genuinely TRANSPARENT background, entire bird shown, horizontal3:2 canvas preferably1536x1024. SIDE VIEW head and beak point RIGHT, long tail LEFT, feet below share clear lower perch line. Realistic songbird proportions, elegant pointed beak, jeweled eye, antique gold/brass layered metal feathers, tasteful engraved filigree and small visible hinges, not a duck or owl. The central torso contains a LARGE clean OVAL OPEN WINDOW exposing an empty dark open cavity: the interior opening itself should be TRANSPARENT so the game can draw working gears, spring and resonance pipes inside; do NOT fill the opening with gears or close it with armor. The near wing forms a separable curved metal feather panel below/behind the oval opening, far wing slightly raised, both have distinguishable natural boundaries; head/neck, chest plate, wings and tail should be individually readable. Whole feet, beak, tail and wing tips entirely in frame with transparent margins. Classical finely painted realistic fairy-tale object, warm edge light with indigo shadow. No perch, stand, background, ground, cast shadow, glow haze, writing, interface or watermark. Outside physical bird and through open torso cavity is genuine alpha transparency."
+    },
+    {
+      "key": "nightingale-flock-v1",
+      "transparent": true,
+      "prompt": "Use case: illustration-story. Asset type: ONE real natural NIGHTINGALE in flight, whole bird isolated on a genuinely TRANSPARENT background. Original classical realistic hand-painted bird with subtle warm-brown and grey plumage, tiny pointed dark beak and black eye, soft copper-brown tail, anatomically plausible songbird, not a swallow/eagle/phoenix. Side three-quarter view facing RIGHT, both feathered wings clearly spread in a strong flying stroke, feet lightly tucked, whole tail/beak/wing tips completely inside wide3:2 frame with generous transparent margin. The game will reuse this single sprite as a flock of nine birds with separate scales/flight paths. Feather detail readable at small size, pearl-gold dawn edge light and restrained cool shadow matching a dark classical clock workshop. No branch, cage, scenery, sky, cloud, motion blur trails, cast shadow, people, text, interface or watermark. Fully transparent outside bird, clean soft feather edges."
+    },
+    {
+      "key": "elves-tailor-workshop-v1",
+      "transparent": false,
+      "prompt": "Use case: illustration-story. Asset type: full screen3:4 portrait environment for a classical magical tailor's midnight table stage. Finely hand-painted realistic fairy-tale interior in dark old wood, brass, indigo moonlight and a warm candle glow. A HUGE wooden sewing worktable fills lower65% with open central area. Tabletop perspective must provide feet positions at x34% and x66%, y78%; leave both actor regions x23–76% y37–83% clear of foreground props, as two tiny elves will stand there. The rear tabletop edge joins a low OPEN moonlit window on RIGHT, with sill about y63–67%, so the elves can walk along the table toward the right-back window and sneak away without flying. Open clear window passage, no glass barriers across escape path. Oversized wooden thread spools, tape measure, thimble, old scissors and a teacup sit around the LEFT and outer edges as scale references, not over the center. Sophisticated mysterious miniature world with real textures, no macaron colors or dollhouse plastic. No elves, people, clothes laid out as actors, animals, letters, interface or watermark. Enough readable tabletop foreground and a clear walking route to right window."
+    },
+    {
+      "key": "elves-base-v1",
+      "transparent": true,
+      "prompt": "Use case: illustration-story. Asset type: two original tiny ADULT fairy-tale elves, full bodies on a genuinely TRANSPARENT3:4 portrait canvas, for precise costume-layer animation. They have slender adult proportions, small pointed ears, refined realistic painted faces, NOT baby dolls/chibi/cartoon. LEFT elf centered x34%, RIGHT elf centered x66%; BOTH bare head tops about y40%, BOTH foot soles on y78%, equal physical scale and upright still posture, both faces visible three-quarter frontal. Left elf has short silver-brown hair; right elf has dark chestnut hair in a small neat braid. Both EYES CLOSED and facial expressions serene, motionless as if enchanted. Bodies and arms still, hands lowered slightly away from hips, legs slightly separated so left/right feet are independently visible. Both modestly fully dressed in plain warm-ivory long-sleeved UNDER SHIRTS and plain fitted under trousers, neutral stocking feet. NO hats, outer coats, colored breeches or boots yet; those five items per elf will be added later. Whole full silhouettes stay in original exact positions on the canvas, lots of transparent space above and below, no crop. Classical detailed fairy-tale realism, subtle right-side blue moonlight and left warm candlelight. No table, floor, stand, ground shadow, magic glow, other objects, text, interface or watermark. Truly transparent outside both figures."
+    },
+    {
+      "key": "goose-courtyard-v1",
+      "transparent": false,
+      "prompt": "Use case: illustration-story. Asset type: full screen3:4 portrait background for an original classical fairy-tale palace courtyard and a comic golden-goose parade. Finely hand-painted realistic old European stone architecture, restrained indigo twilight, warm gold lanterns, dark ivy and aged brass details, rich sophisticated palette. The lower60% is a broad OPEN cobbled court with coherent perspective and unobstructed space for ten adult villagers linked into a winding queue. No fountain, large plants or other obstacles in the playing court. A small elegant EMPTY balcony high on the RIGHT at x60–89% y18–38%, its stone rail top near y36%, where the game will overlay a princess from the waist up. Palace doorway and open arches may frame upper left, atmospheric depth and welcoming magical comedy. No people, princess, geese, animals, statues resembling people, text, interface or watermark. Never pastel/cartoon, no reproduction of an existing movie scene."
+    },
+    {
+      "key": "golden-goose-v1",
+      "transparent": true,
+      "prompt": "Use case: illustration-story. Asset type: ONE complete magical GOLDEN GOOSE isolated on a genuinely TRANSPARENT background. Elegant anatomically plausible goose, long curved neck and clearly goose-shaped head/beak, entire body in three-quarter SIDE VIEW facing LEFT, head on left and tail on right. Rich antique gold feathers with subtle warm metallic glints and dark bronze shaded feather layers, orange-gold bill and webbed feet, eye bright and curious, one foot lifted in a natural waddling step. Dignified finely hand-painted realistic classical fairy tale, playful but not a rubber duck or chibi cartoon. Whole beak, tail, wing feathers and both feet inside a wide3:2 canvas with ample transparent margin all around. No floor, background, ground shadow, exterior halo, props, text, interface or watermark. The visible object is fully opaque; everything outside physical goose is genuinely alpha transparent."
+    },
+    {
+      "key": "goose-followers-a-v1",
+      "transparent": true,
+      "prompt": "Use case: illustration-story. Asset type: production sprite atlas on a genuinely TRANSPARENT1536x1024 landscape canvas, EXACT regular3 COLUMNS x2 ROWS, each cell512x512, no visible grid/borders/text. FIRST FIVE cells contain exactly ONE full-body adult medieval villager each; BOTTOM RIGHT sixth cell must be COMPLETELY EMPTY transparent. All figures same physical scale, full heads near each cell y45 and soles near y470, entirely inside their own cell with transparent gaps, NO limbs or props cross cell boundaries. Each character faces LEFT three-quarter side view, LEFT/front arm stretches toward left at about45% body height to grip the coat/hand of the preceding person; the other hand carries a SMALL tool close to body. Top-left: male baker in off-white apron holding rolling pin. Top-middle: adult dairy woman with dark red skirt holding small pail. Top-right: sturdy smith in leather apron holding small wooden mallet. Bottom-left: slender older tailor in muted indigo holding thread spool. Bottom-middle: adult gardener in antique green holding small watering can. Distinct faces, ages, silhouettes and garments. Feet grounded on same invisible baseline, slightly forward-leaning comical walking poses but no falls/injury. Detailed classical realistic hand-painted fairy-tale style, rich muted cloth, gold twilight rim light from upper left, not pastel/dolls/chibi. No background, floor, cast shadows, scenery, other people/animals, labels or watermark. Preserve actual alpha outside all five complete characters and entire empty sixth cell."
+    },
+    {
+      "key": "goose-followers-b-v1",
+      "transparent": true,
+      "prompt": "Use case: illustration-story. Asset type: production sprite atlas on a genuinely TRANSPARENT1536x1024 landscape canvas, EXACT regular3 COLUMNS x2 ROWS, each cell512x512, no visible grid/borders/text. FIRST FIVE cells contain exactly ONE full-body adult medieval villager each; BOTTOM RIGHT sixth cell must be COMPLETELY EMPTY transparent. All figures same scale, complete heads near cell y45 and soles near y470, transparent gaps all around each full person, nothing crosses cell boundary. Each faces LEFT three-quarter side view, front arm stretches LEFT at about45% body height to grip preceding person's coat/hand; other hand holds a SMALL prop close to body. Top-left: town messenger in dark plum coat with rolled parchment. Top-middle: adult woman fiddler in ochre-brown with small fiddle held close. Top-right: plump older cook in cream apron with small saucepan. Bottom-left: adult woman painter in deep blue with small palette and brushes. Bottom-middle: old shoemaker in brown leather vest with one boot held close. Distinct faces, ages, body silhouettes and rich muted garments; same realistic classical hand-painted fairy-tale finish, warm gold twilight edge light from upper left, restrained indigo shadows. Forward-leaning funny walking/gripping poses, no violence/injury, no cute dolls or pastel cartoon. No backgrounds, floor, ground shadows, extra people/animals, writing, labels, interface or watermark. Genuine alpha outside physical people and an entirely empty sixth cell."
+    },
+    {
+      "key": "goose-princess-v1",
+      "transparent": true,
+      "prompt": "Use case: illustration-story. Asset type: two-state sprite atlas of the SAME original ADULT fairy-tale princess, truly TRANSPARENT1536x1024 landscape canvas divided into TWO equal vertical cells, left768x1024 and right768x1024. Each cell contains the SAME complete waist-up princess at the SAME scale, position and clothing, all head/hair/crown/arms inside cell with transparent margins; waist near y930, crown near y120. LEFT cell calm neutral expression, lips relaxed. RIGHT cell genuinely laughing with open smiling mouth and raised cheeks, head tips back slightly in delight, shoulders mildly move but SAME identity and costume. Refined realistic painted adult face, auburn braided updo, tiny antique-gold crown, modest dark sapphire/indigo velvet gown with restrained gold embroidery, no long wand. Both three-quarter frontal gently look down-left toward a parade below. This is for overlaying an empty palace balcony, so NO balcony railing or room painted in, no background, no throne, no props, no sparkles or exterior glow. Classical sophisticated hand-painted fairy-tale realism, warm-gold side light and cool dusk shadow. Not a doll, child, cartoon or movie character. No labels, letters, divider line, interface or watermark. Alpha transparent everywhere outside the princess in each cell."
+    }
+  ],
+  "edits": [
+    {
+      "key": "golden-goose-clean",
+      "prompt": "Use case background-extraction. Edit target is this golden goose PNG. Keep exactly the same complete goose, pixels/pose/size/position, facing LEFT. Remove ALL background, checkerboard squares, grey black gold gradients and exterior glow haze. Only physical feathers, beak, eye and feet remain opaque. Everything outside physical goose is genuinely alpha 0 transparent, including all four corners; soft clean feather edges only, no colored fringe. No new objects. Preserve1536x1024 canvas and actual bird geometry."
+    },
+    {
+      "key": "goose-followers-a-clean",
+      "prompt": "Use case precise-object-edit plus background-extraction. Edit this sprite atlas into five SEPARATE FULL-BODY CUTOUTS in exact3columns x2rows,1536x1024. Preserve these same5 villagers, identities, costumes, props, poses, classical painted style and order: baker/dairywoman/smith on top, tailor/gardener/EMPTY bottom. Each512x512 cell must contain ONE ENTIRE independent person with transparent margin on every side, heads atcell y35–65, soles atcell y470. Shrink each slightly if needed. Their front hands reach LEFT but DO NOT actually grip or include any preceding person's clothing: close fingertips into a small gripping gesture in EMPTY SPACE. Each person's coat tails remain INSIDE THEIR OWN cell. No body, hand, cloth or prop crosses any cell boundary. Remove all brown/gold fog, glow, ground and background; genuine alpha0 outside physical people and entire sixthcell. Preserve all full hands, heads, feet; alladult realistic, no new characters, labels or grid lines."
+    },
+    {
+      "key": "goose-followers-b-clean",
+      "prompt": "Use case precise-object-edit plus background-extraction. Edit this sprite atlas into five SEPARATE FULL-BODY CUTOUTS in exact3columns x2rows,1536x1024. Preserve these same5 villagers, identities, costumes, props, style and order: messenger/fiddler/cook on top, painter/shoemaker/EMPTY bottom. Each512x512 cell contains ONE ENTIRE independent person with transparent margin on every side, heads atcell y35–65 and soles y470. Shrink each slightly if needed. Front hands reach LEFT but DO NOT actually grip or include preceding person's clothing: close fingertips into a small gripping gesture in EMPTY SPACE. All own coat tails stay INSIDE THEIR OWN cell. No hand/cloth/body/prop crosses cell boundaries. Preserve full heads/hands/feet. Remove every exterior haze/gradient/glow/background/ground, genuine alpha0 outside physical people and entire sixthcell. No other characters, labels or grid."
+    },
+    {
+      "key": "elves-base-clean",
+      "prompt": "Use case background-extraction. Edit target this pair of motionless adult elves. Keep exactly the same two characters, CLOSED EYES, faces, plain ivory underclothes, full bodies, posture and precise pixel placement/size on the same1086x1448 transparent canvas. Remove ALL colored red/yellow/blue/white fringe and stray opaque pixels around silhouettes, especially ears/hair/arms/legs. Clean natural soft hair/clothing edges. Physical people opaque, everywhere else alpha0 truly transparent. No background glow, no ground, no clothes added, no pose changes, no text."
+    },
+    {
+      "key": "elves-dressed",
+      "prompt": "Use case identity-preserve precise costume-layer edit. Edit target is the two sleeping adult elves on this1086x1448 transparent canvas. Preserve EXACT two identities/faces/body shapes/limb positions/head angles and CLOSED EYES; same pose, same positions, same foot soles baseline, no resizing or moving. Add EXACTLY FIVE outer costume pieces to EACH elf,10total: one soft pointed cap, one short outer jacket, one pair of knee breeches, one LEFT ankle boot and one RIGHT ankle boot. LEFT silver-haired male wears deep antique PLUM cap, dark EMERALD short jacket, brown breeches and two dark brown leather ankle boots. RIGHT braided female wears muted BURGUNDY cap, deep INDIGO short jacket, umber breeches and two brown leather ankle boots. Detailed classical old fairy-tale tailor workmanship, restrained embroidery, adult proportions, not dolls. Hands stay visible and unchanged. Both eyes stay CLOSED and figures completely still; no smiles or movement yet. New clothes fit same silhouettes but cap mayextend slightlyabovehair; all feet stayexactlyplaced. Genuinely transparent everywhere outside physical people/clothes. Remove colored fringe/straypixel/background haze from original. No groundshadow/background/text."
+    }
+  ],
+  "awakePrompt": "Use case identity-preserve. Edit target: this exact pair of fully dressed adult elves on1086x1448 transparent canvas. Change ONLY faces so BOTH EYES OPEN naturally and heads turn very slightly inward as they notice each other; soft pleased expressions. Keep exactly same male/female identity, precise same full body and arm/hand/leg/foot pose, height, positions, all10 clothes and colors, cap shape/embroidery/boots, original canvas and transparency. No walking or liftingfeet yet. Every other pixel and garment silhouette should remain unchanged. Clean natural edges, genuinely transparent outside physical elves, no background, groundshadow, halo, writing or extra objects.",
+  "sneakPrompt": "Use case identity-preserve sprite animation. Reference image supplies exact two adult elf identities, clothing, colors and painted style. Create a genuinely TRANSPARENT1536x1024 animation atlas with EXACT2 COLUMNS x2 ROWS, each cell768x512. TOP ROW contains the SAME LEFT male elf in TWO DISTINCT full-body SNEAKING WALK poses, BOTTOM ROW contains the SAME RIGHT female elf in TWO DISTINCT full-body SNEAKING WALK poses. All FOUR figures face RIGHT in side/three-quarter profile. Keep faces, pointy ears, pointed caps, embroidered emerald male jacket/plum cap/brown breeches and indigo female jacket/burgundycap/brownbreeches, two boots each EXACTLY as reference. They tiptoe mischievously, first pose right leg forward/leftheel raised, second pose leftlegforward/rightheelraised, knees slightly bent, hands subtly balancing but no extra objects. Fullbody inside EACH cell with GENEROUS alpha0 gap around every head/hand/foot. Heads within cell y50, grounded boot soles atcell y470. Each sprite should be narrow and SAME HEIGHT/scale so two-step animation does not bob wildly. Adult slender proportions, not dolls. No standing frontal pose, no duplicate actor in one cell, no feet outsidecell, no backgrounds/ground/shadow/haze/glow/labels/grid/text/watermark. Truly transparent outside physical figure silhouettes and clean edges.",
+  "sneakCorrectionPrompt": "Use case precise-object-edit. Edit target this2x2 transparent elf sprite atlas1536x1024. Keep LEFT column both figures EXACTLY unchanged. In RIGHT column ONLY, change BOTH elves LOWER BODY/LEGS to a CLEARLY DIFFERENT opposite walking step: the leg currently stretched behind to the LEFT should now swing FORWARD to the RIGHT with knee raised, boot lifted in front; the leg currently reaching forward RIGHT must now extend BEHIND towardLEFT, with heel raised and toe touching the invisible floor. This must be a visibly alternating step compared to leftcolumn, NOT same legs again. Preserve rightcolumn faces, bodies/arms/clothes/colors, exact figureheight/headpositions/feetbaseline, and all transparent margins. No crossingcellboundaries. Keep true alpha transparency outside physical figures, remove exteriorhaze. No other changes/text/grid.",
+  "conversion": "Lossless WebP, exact RGBA preserved; no crop, resize or manual raster edits."
+}
