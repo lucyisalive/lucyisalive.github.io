@@ -1,0 +1,14 @@
+{
+  "generator": "内置图像生成（ImageGen）",
+  "key": "bean-depth-cloud-v1",
+  "prompt": "Use case: illustration-story. Asset type: single independent wide cloud-bank sprite for a camera rising vertically through moonlit magical clouds, on a genuinely TRANSPARENT background. Paint one long layered, irregular, gently curling cloud formation with wispy translucent edges, classical realistic hand-painted fairy-tale texture. Cool indigo-blue-grey shaded undersides and restrained pearl-silver moonlit rims, delicate atmospheric depth. Left and middle have some dense soft cloud body, the right thins into long broken gauzy filaments. Not circular puff balls or a regular horizontal stripe; asymmetrical natural billowing structure with small transparent gaps between wisps. Full entire cloud formation within wide3:2 or2:1 framing and transparent margin all around; feather opacity gradually at EVERY edge without cropping cloud on canvas boundary. No sky or landscape rectangle, ground, mountains, buildings, station, train, stars, sun, moon, people, text, interface, watermark or cast shadow. Transparent outside the cloud and semi-transparent gauzy cloud edges so existing night sky can show through. Richly painted, atmospheric, mysterious moonlit fantasy, not pastel cartoon clouds.",
+  "transparent": true,
+  "width": 1536,
+  "height": 1024,
+  "bytes": 1320146,
+  "sha256": "d1ddd537034613f208fc3235fb2168bc4688a51850ab82a36e48205a423c4964",
+  "alphaZero": 731747,
+  "alphaPartial": 841117,
+  "alphaOpaque": 0,
+  "conversion": "仅无损格式转换，RGBA逐字节一致"
+}

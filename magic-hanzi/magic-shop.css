@@ -11,6 +11,7 @@
   max-width: none;
   max-height: calc(100dvh - 20px);
   overflow: hidden;
+  touch-action: pan-y;
   padding: 0;
   color: var(--shop-paper);
   background: #1b1c25;
@@ -25,7 +26,7 @@
 .magic-shop-enabled button { font: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
 .magic-shop-enabled button:focus-visible { outline: 3px solid #fce0a1; outline-offset: 3px; }
 .magic-shop-enabled button:disabled { cursor: default; opacity: .7; }
-.magic-house-shell { height: 100%; display: flex; flex-direction: column; }
+.magic-house-shell { height: 100%; min-height: 0; display: flex; flex-direction: column; overflow: hidden; touch-action: pan-y; }
 .magic-house-header {
   display: flex;
   justify-content: space-between;
@@ -43,7 +44,7 @@
 .magic-wallet small { display: block; margin-top: 2px; font-size: 10px; letter-spacing: .13em; color: var(--shop-muted); }
 .magic-coin { position: relative; display: inline-block; width: 20px; height: 20px; border: 2px solid #e0c082; border-radius: 50%; box-shadow: inset 0 0 0 2px #796d53, inset 0 0 0 4px #bcb29a, 0 2px 4px #0006; background: radial-gradient(circle at 32% 24%, #e5dfcc, #a89d82 61%, #686957); vertical-align: middle; flex: 0 0 auto; }
 .magic-coin::before { content: ''; position: absolute; inset: 5px; border: 1px solid #6b6855; transform: rotate(45deg); }
-.magic-house-content { flex: 1 1 auto; min-height: 0; overflow: auto; overscroll-behavior: contain; scrollbar-color: #847051 #1a1c25; scrollbar-width: thin; }
+.magic-house-content { flex: 1 1 0%; height: 0; min-height: 0; overflow-x: hidden; overflow-y: auto; touch-action: pan-y; -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain; scrollbar-color: #847051 #1a1c25; scrollbar-width: thin; }
 .magic-storage-alert { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex: 0 0 auto; padding: 9px 15px; border-bottom: 1px solid #d2a26766; background: #503c2d; }
 .magic-shop-enabled .magic-storage-alert p { margin: 0; color: #ffdfba; font-size: 11px; line-height: 1.5; }
 .magic-storage-alert .magic-button { flex: 0 0 auto; color: #ffebca; font-size: 11px; }
@@ -60,21 +61,25 @@
 .magic-text-button:hover { color: #fff1cf; text-decoration: underline; text-underline-offset: 4px; }
 
 /* The room keeps the original portrait background. All positions share its coordinates. */
-.magic-room-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 18px; background: #252331; border-bottom: 1px solid #bb985b50; }
+.magic-room-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 18px; background: #252331; border-bottom: 1px solid #bb985b50; }
+.magic-room-toolbar-actions { display: flex; align-items: center; gap: 8px; margin-left: auto; }
 .magic-room-toolbar > span { color: #d9c5a1; font-size: 13px; white-space: nowrap; }
 .magic-room-toolbar .magic-button { min-height: 44px; padding: 9px 17px; font-size: 15px; }
 .magic-room-panel { background: radial-gradient(ellipse at 50% 48%, #46372d, #211f29 78%); }
+.magic-arrange-guidance { padding: 11px 18px; border-bottom: 1px solid #c5a66c70; background: #353143; }
+.magic-shop-enabled .magic-arrange-guidance p { margin: 0 0 5px; color: #f1ddba; font-size: 12px; line-height: 1.6; }
+.magic-shop-enabled .magic-arrange-guidance p:last-child { margin-bottom: 0; }
+.magic-shop-enabled .magic-arrange-guidance .is-error { color: #ffd0aa; }
+.magic-arrange-guidance .magic-button { margin-top: 6px; }
 .magic-room-stage { position: relative; width: min(100%,490px,max(280px,calc(75dvh - 247.5px))); aspect-ratio: 1086/1448; margin: 0 auto; overflow: hidden; isolation: isolate; background: #62442a; box-shadow: 0 0 22px #0006; }
 .magic-room-background { position: absolute; inset: 0; z-index: 0; background: #62442a url("assets/herbalist/cottage.webp") center/100% 100% no-repeat; }
 .magic-room-background::after { content: ''; position: absolute; inset: 0; background: linear-gradient(#1b112211, transparent 60%, #17101b22); pointer-events: none; }
 .magic-room-objects { position: absolute; inset: 0; }
-.magic-old-crate { position: absolute; left: 5%; top: 65%; width: 21%; height: 8%; z-index: 15; border: 2px solid #68452e; border-radius: 3px; background: repeating-linear-gradient(0deg, #805533 0 18%, #5f3d2c 19% 21%, #87613e 22% 40%); transform: perspective(300px) rotateY(7deg); box-shadow: inset 3px 0 #b1834a44, 3px 7px 7px #35241977; }
-.magic-old-crate::before, .magic-old-crate::after { content: ''; position: absolute; top: -2px; bottom: -2px; width: 9%; border: 1px solid #362b22; background: linear-gradient(90deg, #554c39, #8f7b51, #4c4436); }
-.magic-old-crate::before { left: 15%; }.magic-old-crate::after { right: 15%; }
-.magic-wall-shelf { position: absolute; top: 52%; left: 44%; width: 17%; height: 1.2%; z-index: 20; background: linear-gradient(#a57944, #543a2c); border-bottom: 3px solid #3e2c25; box-shadow: 0 5px 9px #39282088; }
-.magic-wall-shelf::before, .magic-wall-shelf::after { content: ''; position: absolute; top: 100%; width: 7%; height: 220%; background: #5d412d; transform: skewX(-20deg); }
-.magic-wall-shelf::before { left: 10%; }.magic-wall-shelf::after { right: 10%; }
 .magic-room-item { position: absolute; left: calc(var(--room-x)*1%); top: calc(var(--room-y)*1%); width: max(44px, calc(var(--room-w)*1%)); aspect-ratio: 1; min-height: 44px; z-index: var(--room-z, 30); transform: translate(-50%, -50%); padding: 0; border: 0; border-radius: 20%; color: #ffe7ad; background: transparent; }
+.magic-shop-enabled.is-arranging .magic-room-item { touch-action: none; cursor: grab; outline: 1px dashed #fff0b5ab; outline-offset: -4px; background: #ead6a009; }
+.magic-shop-enabled.is-arranging .magic-room-item.is-selected { z-index: 9000; outline: 2px solid #e9ce94; }
+.magic-shop-enabled.is-arranging .magic-room-item.is-dragging { z-index: 10000; cursor: grabbing; outline: 2px solid #fff0b5; background: #ead6a021; }
+.magic-shop-enabled.is-arranging .magic-room-item-name { display: block; }
 .magic-room-item .magic-item-art { filter: drop-shadow(2px 5px 3px #26152577); }
 .magic-room-item:focus-visible { outline-offset: -3px; border-radius: 10%; }
 .magic-room-item:hover > .magic-item-art { filter: drop-shadow(0 0 5px #ffdf8e99) drop-shadow(2px 5px 3px #26152577); }
@@ -99,6 +104,7 @@
 .magic-shop-enabled .magic-no-collection { grid-column: 1/-1; color: #d6c5a9; font-size: 13px; }
 .magic-room-inspector { margin-top: 13px; padding: 12px; border: 1px solid #a184585e; border-radius: 8px; background: #191c26; }
 .magic-inspector-main { display: grid; grid-template-columns: 105px 1fr; gap: 12px; align-items: center; }
+.magic-inspector-actions { display: flex; flex-wrap: wrap; gap: 7px; }
 .magic-inspector-main h3 { margin: 0 0 6px; font: 700 18px/1.3 var(--herb-serif, serif); color: #f7e3bc; }
 .magic-shop-enabled .magic-inspector-main p { margin: 0 0 10px; font-size: 12px; line-height: 1.6; color: #d9c9af; }
 .magic-inspector-preview { position: relative; width: 105px; height: 120px; padding: 0; border: 1px solid #b0936050; border-radius: 7px; background: radial-gradient(ellipse at 50% 60%, #54415a60, #161a2600 75%); }

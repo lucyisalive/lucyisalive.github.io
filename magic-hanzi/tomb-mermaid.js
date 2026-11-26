@@ -69,13 +69,14 @@
     [12, 59], [20, 47], [29, 56], [38, 42], [46, 49],
     [54, 36], [62, 43], [71, 30], [80, 36], [88, 25]
   ];
-  // Left rank centers and floor positions, from the entrance toward the door.
-  // The right rank mirrors these coordinates. Each row has its own depth clearance.
+  // Both ranks share the artwork's 3:4 floor coordinates. The large entrance
+  // pair recedes in five regular steps toward the door, keeping a clear aisle.
   const GUARD_ROWS = [
-    [13, 79.2, 13.5, .065], [19.5, 71.7, 11.6, .053],
-    [24.8, 65.6, 10.1, .042], [29, 60.7, 8.8, .034],
-    [32.4, 56.7, 7.7, .033]
+    [18.5, 94.5, 32], [23.9, 84.5, 25],
+    [28, 75.8, 19.3], [31.3, 69.1, 15],
+    [34, 64, 11.7]
   ];
+  const GUARD_GROUND = [98.5, 96.5, 98.5, 98, 99.5, 97.5, 96, 96, 98, 97];
   const GUARD_SPREAD = [9, 5, 7, 8, 5, 7, 10, 7, 4, 8];
   const GUARD_ATLASES = [
     { url: 'assets/story/fierce-guards-a.webp', width: 1536, height: 1024 },
@@ -132,7 +133,7 @@
 
   function guardianMarkup(guardian, index) {
     const row = Math.floor(index / 2);
-    const [x, y, size, clearance] = GUARD_ROWS[row];
+    const [x, y, size] = GUARD_ROWS[row];
     const [spriteX, spriteY, spriteWidth, spriteHeight, eyeX, eyeY] = GUARD_SPRITES[index];
     const atlas = GUARD_ATLASES[Math.floor(index / 5)];
     const onRight = index % 2 === 1;
@@ -140,7 +141,6 @@
       --guard-x:${onRight ? 100 - x : x}%;
       --guard-y:${y}%;
       --guard-size:${size}%;
-      --guard-clearance:${clearance};
       --guard-depth:${GUARD_ROWS.length - row};
       --guard-phase:${(index * -.71).toFixed(2)}s;
       --guard-pace:${(4.1 + index * .17).toFixed(2)}s;
@@ -150,10 +150,11 @@
       --sprite-size:${atlas.width / spriteWidth * 100}% ${atlas.height / spriteHeight * 100}%;
       --sprite-ratio:${spriteWidth} / ${spriteHeight};
       --sprite-aspect:${(spriteWidth / spriteHeight).toFixed(4)};
+      --sprite-ground:${GUARD_GROUND[index]}%;
       --sprite-facing:${onRight ? -1 : 1};
       --sprite-eye-x:${eyeX}%;
       --sprite-eye-y:${eyeY}%`;
-    return `<div class="deep-guard" data-species="${guardian.name}" data-atlas="${Math.floor(index / 5)}" style="${style}"><i></i><div class="deep-guard-shape"><canvas width="216" height="176"></canvas><span></span></div><b></b></div>`;
+    return `<div class="deep-guard" data-species="${guardian.name}" data-rank="${row+1}" data-atlas="${Math.floor(index / 5)}" style="${style}"><i></i><div class="deep-guard-shape"><canvas width="216" height="176"></canvas><span></span></div><b></b></div>`;
   }
 
   function create({ document: doc }) {
@@ -169,8 +170,8 @@
               <div class="deep-flooded-stair"></div>
               <i class="deep-door-leaf"></i><i class="deep-door-leaf"></i>
             </div>
+            <div class="deep-guards">${GUARDIANS.map(guardianMarkup).join('')}</div>
           </div>
-          <div class="deep-guards">${GUARDIANS.map(guardianMarkup).join('')}</div>
         </div>
         <div class="deep-tomb-dive"></div>
       </div>`;

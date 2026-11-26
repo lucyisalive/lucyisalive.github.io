@@ -14,6 +14,7 @@ const checks = [
   ['tests/herbalist-room-integration.cjs'],
   ['tests/magic-shop-catalog.cjs'],
   ['tests/magic-shop-ledger.cjs'],
+  ['tests/magic-shop-room-input.cjs', '--browser-required'],
 ];
 
 for (const [file, ...args] of checks) {

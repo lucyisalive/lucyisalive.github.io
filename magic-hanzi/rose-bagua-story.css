@@ -9,7 +9,7 @@
   pointer-events: none;
 }
 .story-rose[hidden],.story-bagua[hidden] { display: none !important; }
-.story-rose { --rb-face-x: 50%; --rb-face-y: 33.5%; --rb-face-width: 30%; --rb-face-height: 15%; background: #100e14; }
+.story-rose { background: #100e14; }
 .story-bagua { --rb-seal-x: 50%; --rb-seal-y: 48.7%; --rb-seal-size: 65%; background: #0c1316; }
 .rb-frame {
   position: absolute;
@@ -32,10 +32,10 @@
 .rb-rose-lantern-light { position: absolute; z-index: 2; inset: 0; background: radial-gradient(ellipse at 18% 55%,#cd915611,transparent 40%),radial-gradient(ellipse at 78% 53%,#be8d5b13,transparent 36%); mix-blend-mode: screen; }
 .rb-vines { position: absolute; z-index: 5; inset: 0; width: 100%; height: 100%; overflow: visible; }
 .rb-vines-left,.rb-vines-right { transform-box: view-box; transform-origin: 50% 76%; transition: transform .65s cubic-bezier(.18,.8,.28,1); }
-.rb-vine,.rb-face-branch { --rb-leaf: #544337; --rb-leaf-vein: #a28a6257; --rb-stem: #6b5440; }
-.rb-vine.is-restored,.rb-face-branch.is-restored { --rb-leaf: #345b3a; --rb-leaf-vein: #c0c48c70; --rb-stem: #60774a; }
-.rb-vine-shadow { fill: none; stroke: #181514e8; stroke-width: 9; stroke-linecap: round; stroke-linejoin: round; }
-.rb-vine-stem { fill: none; stroke: var(--rb-stem); stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; transition: stroke 1s ease; }
+.rb-vine { --rb-leaf: #544337; --rb-leaf-vein: #a28a6257; --rb-stem: #6b5440; }
+.rb-vine.is-restored { --rb-leaf: #345b3a; --rb-leaf-vein: #c0c48c70; --rb-stem: #60774a; }
+.rb-vine-shadow { fill: none; stroke: #181514e8; stroke-width: 7; stroke-linecap: round; stroke-linejoin: round; }
+.rb-vine-stem { fill: none; stroke: var(--rb-stem); stroke-width: 3.7; stroke-linecap: round; stroke-linejoin: round; transition: stroke 1s ease; }
 .rb-leaf { filter: drop-shadow(1px 2px 1px #090d0bb0); }
 .rb-leaf path:first-child { fill: var(--rb-leaf); stroke: #151f1880; stroke-width: .8; transition: fill 1s ease; }
 .rb-leaf .rb-leaf-sheen { fill: #b6bf8920; stroke: none; }
@@ -55,25 +55,8 @@
 .rb-rose-real { display: none; }
 .story-rose.has-bloom-art .rb-rose-real { display: block; filter: drop-shadow(1px 3px 3px #100b14c9); }
 .story-rose.has-bloom-art .rb-rose-vector { display: none; }
-.rb-face-vines {
-  position: absolute;
-  z-index: 6;
-  left: var(--rb-face-x);
-  top: var(--rb-face-y);
-  width: var(--rb-face-width);
-  height: var(--rb-face-height);
-  overflow: visible;
-  transform: translate(-50%,-50%);
-  filter: drop-shadow(0 3px 3px #070a0eaa);
-}
-.rb-face-left,.rb-face-right { transform-box: view-box; transform-origin: 50% 50%; transition: transform .62s cubic-bezier(.16,.84,.25,1),opacity .8s ease; }
-.rb-face-vines .rb-vine-shadow { stroke-width: 4.2; }
-.rb-face-vines .rb-vine-stem { stroke-width: 2.2; }
-.story-rose.is-vines-open .rb-vines-left { transform: translate(-10%,1%) rotate(-2deg); }
-.story-rose.is-vines-open .rb-vines-right { transform: translate(10%,1%) rotate(2deg); }
-.story-rose.is-vines-open .rb-face-vines { z-index: 4; }
-.story-rose.is-vines-open .rb-face-left { transform: translate(-90%,5%) rotate(-8deg); opacity: .5; }
-.story-rose.is-vines-open .rb-face-right { transform: translate(90%,5%) rotate(8deg); opacity: .5; }
+.story-rose.is-vines-open .rb-vines-left { transform: translate(-43%,1%) rotate(-2deg); }
+.story-rose.is-vines-open .rb-vines-right { transform: translate(43%,1%) rotate(2deg); }
 .rb-rose-pollen { position: absolute; z-index: 7; inset: 0; }
 .rb-rose-pollen i { position: absolute; left: var(--rb-particle-x); top: var(--rb-particle-y); width: 2px; height: 2px; border-radius: 50%; opacity: 0; background: #ebd3a5; box-shadow: 0 0 5px #d5bd81; }
 .story-rose.is-ending .rb-rose-pollen i { animation: rb-pollen 2.3s ease-out calc(1.3s + var(--rb-particle-delay)) both; }

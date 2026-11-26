@@ -19,6 +19,68 @@
   ];
   const TRAIN_WIDTH = .86;
   const RAIL_ANCHOR = 535 / 724 * 100;
+  const CLOUD_STEP_TIME = 2350;
+  const CLOUD_ARRIVAL_TIME = 2900;
+  const CLOUD_STATION_HEIGHT = 11.3;
+  // The offline builder embeds this literal once. Every cloud shares one short
+  // Blob URL, instead of copying a large data URI into fifteen moving layers.
+  const CLOUD_IMAGE_SOURCE = 'assets/story/bean-depth-cloud-v1.webp';
+  const cloudImageUrls = new Map();
+  const CLOUD_DEPTHS = {
+    far: { speed: .16, width: 1.22, opacity: .3, scale: .86, drift: .018, blur: 1.4 },
+    middle: { speed: .39, width: 1.3, opacity: .49, scale: .96, drift: .052, blur: .65 },
+    near: { speed: 1.1, width: 1.82, opacity: .86, scale: 1.04, drift: .13, blur: .2 }
+  };
+  // These clouds occupy different heights. They pass the camera once, rather
+  // than looping on a screen-bound decorative drift or moving with the backdrop.
+  const CLOUD_BANDS = [
+    { depth: 'far', height: -1.1, x: .1, turn: -5 },
+    { depth: 'far', height: 2.6, x: .91, turn: 4, flip: true },
+    { depth: 'far', height: 6.2, x: .12, turn: -3 },
+    { depth: 'far', height: 9.8, x: .9, turn: 5, flip: true },
+    { depth: 'middle', height: .1, x: -.1, turn: -7, flip: true },
+    { depth: 'middle', height: 2.4, x: .98, turn: 6 },
+    { depth: 'middle', height: 4.8, x: .08, turn: -3 },
+    { depth: 'middle', height: 7.1, x: 1.03, turn: 8, flip: true },
+    { depth: 'middle', height: 9.7, x: .15, turn: -5 },
+    { depth: 'near', height: .55, x: .17, turn: 4 },
+    { depth: 'near', height: 2.55, x: .84, turn: -6, flip: true },
+    { depth: 'near', height: 4.55, x: .22, turn: 7 },
+    { depth: 'near', height: 6.55, x: .9, turn: -2, flip: true },
+    { depth: 'near', height: 8.55, x: .13, turn: 5 },
+    { depth: 'near', height: 9.9, x: .5, turn: -3, flip: true }
+  ];
+  const clamp = value => Math.max(0, Math.min(1, value));
+
+  function cloudImageUrl(doc) {
+    const source = CLOUD_IMAGE_SOURCE;
+    if (!/^data:image\/[^,]+;base64,/i.test(source)) return source;
+    const cached = cloudImageUrls.get(source);
+    if (cached) { cached.references++; return cached.url; }
+    try {
+      const view = doc.defaultView || window;
+      const comma = source.indexOf(',');
+      const binary = view.atob(source.slice(comma + 1));
+      const bytes = new Uint8Array(binary.length);
+      for (let index = 0; index < binary.length; index++) bytes[index] = binary.charCodeAt(index);
+      const blob = new view.Blob([bytes], { type: source.slice(5, comma).split(';')[0] });
+      const url = view.URL.createObjectURL(blob);
+      cloudImageUrls.set(source, { url, references: 1, objectUrls: view.URL });
+      return url;
+    } catch (_) { return source; }
+  }
+
+  function releaseCloudImage() {
+    const cached = cloudImageUrls.get(CLOUD_IMAGE_SOURCE);
+    if (!cached || --cached.references > 0) return;
+    try { cached.objectUrls.revokeObjectURL(cached.url); } catch (_) {}
+    cloudImageUrls.delete(CLOUD_IMAGE_SOURCE);
+  }
+
+  function cloudField(depth) {
+    return `<div class="beans-cloud-field beans-cloud-field-${depth}">${CLOUD_BANDS.map((cloud, index) =>
+      cloud.depth === depth ? `<div class="beans-cloud-plane" data-cloud="${index}" data-depth="${depth}" data-height="${cloud.height}"></div>` : '').join('')}</div>`;
+  }
 
   function vineSegment(index) {
     const [x0, y0] = VINE_POINTS[index];
@@ -51,11 +113,15 @@
     scene.className = 'story-scene story-beans';
     scene.hidden = true;
     scene.setAttribute('aria-hidden', 'true');
+    scene.style.setProperty('--beans-cloud-texture', `url("${cloudImageUrl(doc)}")`);
     scene.innerHTML = `
       <div class="beans-frame">
-        <div class="beans-world">
+        <div class="beans-world beans-scenery-world">
           <div class="beans-garden-art"></div>
           <div class="beans-height-haze"></div>
+        </div>
+        ${cloudField('far')}${cloudField('middle')}
+        <div class="beans-world beans-vine-world">
           <svg class="beans-vine" viewBox="0 0 900 1600" preserveAspectRatio="none">
             <defs>
               <linearGradient id="beansStem" x1="0" x2="1">
@@ -76,7 +142,6 @@
               <path d="M-1-5C-25-7-33-23-29-36C-9-35 1-21-1-5Z"/>
             </g>
           </svg>
-          <div class="beans-low-mist"></div>
         </div>
         <div class="beans-station">
          <div class="beans-station-view">
@@ -94,8 +159,7 @@
           <div class="beans-track-mist"></div>
          </div>
         </div>
-        <div class="beans-cloud-curtain beans-cloud-left"></div>
-        <div class="beans-cloud-curtain beans-cloud-right"></div>
+        ${cloudField('near')}
         <div class="beans-foreground-mist"></div>
         <div class="beans-frame-shade"></div>
       </div>`;
@@ -105,14 +169,18 @@
     const tip = scene.querySelector('.beans-vine-tip');
     const cars = Array.from(scene.querySelectorAll('.beans-car'));
     const firstSprite = scene.querySelector('.beans-car-sprite');
+    const cloudPlanes = Array.from(scene.querySelectorAll('.beans-cloud-plane'));
     const timers = new Set();
     let shownCount = -1;
     let active = false;
     let frameRequest = null;
+    let cloudFrameRequest = null;
+    let cloudHeight = 0;
     let exitProgress = 0;
     let spriteAspect = 3;
     let frameAspect = 3 / 4;
-    const reduced = () => Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches);
+    const motionPreference = window.matchMedia?.('(prefers-reduced-motion: reduce)');
+    const reduced = () => Boolean(motionPreference?.matches);
     const now = () => window.performance?.now?.() ?? Date.now();
     const requestFrame = callback => window.requestAnimationFrame(callback);
 
@@ -130,6 +198,55 @@
       timers.clear();
       if (frameRequest !== null) window.cancelAnimationFrame(frameRequest);
       frameRequest = null;
+      if (cloudFrameRequest !== null) window.cancelAnimationFrame(cloudFrameRequest);
+      cloudFrameRequest = null;
+      scene.classList.remove('beans-clouds-moving');
+    }
+
+    function placeClouds(height) {
+      cloudHeight = height;
+      scene.dataset.cloudHeight = height.toFixed(3);
+      cloudPlanes.forEach(plane => {
+        const band = CLOUD_BANDS[Number(plane.dataset.cloud)];
+        const depth = CLOUD_DEPTHS[band.depth];
+        const distance = height - band.height;
+        const y = .48 + distance * depth.speed;
+        const entry = clamp((y + .72) / .45);
+        const exit = clamp((1.85 - y) / .55);
+        const close = band.depth === 'near';
+        const perspective = close ? .72 + .37 * clamp((distance + .65) / 1.25) : .94 + .08 * clamp((distance + 2) / 4);
+        const scale = depth.scale * perspective;
+        const afterPass = close ? 1 - .48 * clamp((distance - .1) / .8) : 1;
+        const opacity = depth.opacity * entry * exit * afterPass;
+        plane.hidden = opacity < .002 || y < -1 || y > 2.2;
+        plane.style.left = `${(band.x + distance * depth.drift * (band.flip ? -1 : 1)) * 100}%`;
+        plane.style.top = `${y * 100}%`;
+        plane.style.width = `${depth.width * 100}%`;
+        plane.style.opacity = String(opacity);
+        plane.style.transform = `translate(-50%, -50%) rotate(${band.turn}deg) scale(${band.flip ? -scale : scale}, ${scale})`;
+        plane.style.filter = `blur(${depth.blur + (close ? Math.max(0, distance) * .8 : 0)}px) brightness(${close ? .98 : .86}) saturate(.78)`;
+        plane.classList.toggle('is-passing-camera', close && Math.abs(distance) < .4);
+      });
+    }
+
+    function moveClouds(target, duration) {
+      const start = cloudHeight;
+      const startedAt = now();
+      scene.classList.add('beans-clouds-moving');
+      function animate(time) {
+        const fraction = clamp((time - startedAt) / duration);
+        // Smooth arrival preserves the sense of weight without stopping all
+        // layers together. Their depth-specific speeds remain independent.
+        const eased = fraction * fraction * (3 - 2 * fraction);
+        placeClouds(start + (target - start) * eased);
+        if (fraction < 1 && active && !doc.hidden) cloudFrameRequest = requestFrame(animate);
+        else {
+          cloudFrameRequest = null;
+          scene.classList.remove('beans-clouds-moving');
+          placeClouds(target);
+        }
+      }
+      cloudFrameRequest = requestFrame(animate);
     }
 
     function measure() {
@@ -191,20 +308,23 @@
       placeTrain(1);
     }
 
-    function resetExit() {
+    function resetExit(keepCloudPosition = false) {
       cancelMotion();
-      scene.classList.remove('beans-exiting', 'beans-departed', 'beans-unveiling');
+      scene.classList.remove('beans-exiting', 'beans-departed', 'beans-unveiling', 'beans-camera-moving');
       scene.dataset.exit = 'parked';
       segments.forEach(segment => segment.classList.remove('is-growing'));
       tip.classList.remove('beans-tip-growing');
       measure();
       placeTrain(0);
+      if (!keepCloudPosition) placeClouds(shownCount === 10 ? CLOUD_STATION_HEIGHT : Math.max(0, shownCount));
+      if (doc.hidden && shownCount === 10) setDeparted();
     }
 
     function playExit(stage) {
       if (stage !== 'beans' || !active || shownCount !== 10) return 0;
-      resetExit();
-      if (reduced()) {
+      resetExit(true);
+      placeClouds(CLOUD_STATION_HEIGHT);
+      if (reduced() || doc.hidden) {
         setDeparted();
         return 0;
       }
@@ -239,10 +359,11 @@
       const wasActive = active;
       active = true;
       scene.hidden = false;
-      resetExit();
-      const growing = animate && next > Math.max(0, previous) && !reduced();
+      resetExit(true);
+      const growing = animate && next > Math.max(0, previous) && !reduced() && !doc.hidden;
       scene.dataset.count = String(next);
       scene.style.setProperty('--beans-rise', String(next * 3.8));
+      scene.style.setProperty('--beans-sky-rise', String(next * 2.5));
       scene.classList.toggle('beans-ready', next === 10);
       scene.classList.toggle('beans-camera-moving', growing && wasActive);
       segments.forEach((segment, index) => {
@@ -254,6 +375,11 @@
       tip.classList.toggle('beans-tip-hidden', next === 10);
       if (growing && next < 10) tip.classList.add('beans-tip-growing');
       shownCount = next;
+      const cloudTarget = next === 10 ? CLOUD_STATION_HEIGHT : next;
+      if (growing) {
+        if (!wasActive) placeClouds(Math.max(0, next - 1));
+        moveClouds(cloudTarget, next === 10 ? CLOUD_ARRIVAL_TIME : CLOUD_STEP_TIME);
+      } else placeClouds(cloudTarget);
       if (next === 10) {
         if (growing) {
           scene.classList.add('beans-unveiling');
@@ -273,6 +399,19 @@
     if (firstSprite.complete) imageReady();
     function onResize() { measure(); placeTrain(exitProgress); }
     window.addEventListener('resize', onResize);
+    function settleMotion() {
+      if (!active) return;
+      cancelMotion();
+      scene.classList.remove('beans-camera-moving', 'beans-unveiling');
+      segments.forEach(segment => segment.classList.remove('is-growing'));
+      tip.classList.remove('beans-tip-growing');
+      placeClouds(shownCount === 10 ? CLOUD_STATION_HEIGHT : Math.max(0, shownCount));
+      if (shownCount === 10) setDeparted();
+    }
+    function onVisibility() { if (doc.hidden) settleMotion(); }
+    function onMotionPreference() { if (reduced()) settleMotion(); }
+    doc.addEventListener('visibilitychange', onVisibility);
+    motionPreference?.addEventListener?.('change', onMotionPreference);
 
     return {
       render, playExit, resetExit,
@@ -284,6 +423,9 @@
       destroy() {
         cancelMotion();
         window.removeEventListener('resize', onResize);
+        doc.removeEventListener('visibilitychange', onVisibility);
+        motionPreference?.removeEventListener?.('change', onMotionPreference);
+        releaseCloudImage();
         scene.remove();
       }
     };

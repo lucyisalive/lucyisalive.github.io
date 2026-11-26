@@ -206,6 +206,66 @@ async function displayTests() {
   console.log('PASS magic-shop-ledger: display choices persist atomically with purchases, cross-document edits, failed writes, and old-record compatibility');
 }
 
+async function roomPositionTests() {
+  const shared = sharedStorage({ [LEGACY]: '2000', 'unrelated-learning-record': 'keep' });
+  const a = environment(shared).ledger;
+  await a.ready();
+  for (const id of ['little-fireplace', 'brass-candlestick', 'wizard-cat']) assert.equal((await a.purchase(id)).ok, true);
+  const original = a.snapshot();
+  assert.equal((await a.setRoomPosition('little-fireplace', { x: .72, y: .64 })).ok, true);
+  assert.equal((await a.setRoomPosition('brass-candlestick', { x: .26, y: .39 })).ok, true);
+  assert.equal(a.snapshot().displayPlaces.window, undefined, 'Dragging a small item retires only its old slot');
+  assert.equal(a.snapshot().balance, original.balance, 'Moving furniture never charges coins');
+  assert.deepEqual(JSON.parse(JSON.stringify(a.snapshot().owned)), JSON.parse(JSON.stringify(original.owned)), 'Moving never changes purchase evidence');
+  const b = environment(shared).ledger;
+  await b.ready();
+  assert.deepEqual(JSON.parse(JSON.stringify(b.snapshot().roomPositions)), {
+    'little-fireplace': { x: .72, y: .64 }, 'brass-candlestick': { x: .26, y: .39 },
+  }, 'Normalized coordinates survive reopening');
+  const together = await Promise.all([
+    a.setRoomPosition('little-fireplace', { x: .32, y: .73 }),
+    b.setRoomPosition('wizard-cat', { x: .65, y: .84 }),
+    a.credit(5, 'position-race:reward'), b.purchase('star-chair'),
+  ]);
+  assert.ok(together.every(result => result.ok));
+  const reopened = environment(shared).ledger;
+  await reopened.ready();
+  assert.equal(reopened.snapshot().balance, original.balance + 5 - 30, 'Concurrent placement preserves both a reward and a purchase');
+  assert.equal(reopened.snapshot().owned.length, 4);
+  assert.deepEqual(JSON.parse(JSON.stringify(reopened.snapshot().roomPositions)), {
+    'little-fireplace': { x: .32, y: .73 }, 'brass-candlestick': { x: .26, y: .39 }, 'wizard-cat': { x: .65, y: .84 },
+  }, 'Different tabs merge only their own moved items');
+  assert.equal((await reopened.credit(5, 'position-race:reward')).credited, 0, 'Placement does not lose reward dedupe');
+  for (const point of [{ x: -.1, y: .5 }, { x: 1.1, y: .5 }, { x: .5, y: NaN }, { x: '0.2', y: .5 }, null]) {
+    assert.equal((await reopened.setRoomPosition('star-chair', point)).reason, 'invalid-room-position');
+  }
+  assert.equal((await reopened.setRoomPosition('oak-desk', { x: .5, y: .5 })).reason, 'not-owned');
+  assert.equal((await reopened.setRoomPosition('no-item', { x: .5, y: .5 })).reason, 'invalid-item');
+  const before = shared.data.get(KEY);
+  shared.failWrites = true;
+  const failed = await reopened.setRoomPosition('little-fireplace', { x: .5, y: .5 });
+  assert.equal(failed.ok, false);
+  assert.deepEqual(JSON.parse(JSON.stringify(failed.snapshot.roomPositions['little-fireplace'])), { x: .32, y: .73 }, 'Failed placement retains the committed position');
+  assert.equal(shared.data.get(KEY), before, 'Failure preserves the entire authoritative record');
+  shared.failWrites = false;
+  await reopened.retry();
+  assert.equal((await reopened.setRoomPosition('little-fireplace', { x: .5, y: .5 })).ok, true);
+  assert.equal((await reopened.setDisplayPlace('shelf', 'brass-candlestick')).ok, true);
+  assert.equal(reopened.snapshot().roomPositions['brass-candlestick'], undefined, 'Legacy quick placement explicitly supersedes that item\'s free position');
+  assert.deepEqual(JSON.parse(JSON.stringify(reopened.snapshot().roomPositions['wizard-cat'])), { x: .65, y: .84 });
+  const historical = JSON.parse(shared.data.get(KEY));
+  delete historical.roomPositions;
+  historical.futureDecorationMetadata = { keep: true };
+  shared.data.set(KEY, JSON.stringify(historical));
+  const older = environment(shared).ledger;
+  assert.deepEqual(JSON.parse(JSON.stringify((await older.ready()).roomPositions)), {}, 'Old schema 1 wallets migrate without inventing positions');
+  assert.equal(older.snapshot().displayPlaces.shelf, 'brass-candlestick');
+  await older.setRoomPosition('wizard-cat', { x: .6, y: .8 });
+  assert.deepEqual(JSON.parse(shared.data.get(KEY)).futureDecorationMetadata, { keep: true }, 'Unknown historical metadata is preserved');
+  assert.equal(shared.data.get('unrelated-learning-record'), 'keep');
+  console.log('PASS magic-shop-ledger: normalized room positions, old-wallet migration, independent item merges, purchase/reward concurrency, save failure/retry');
+}
+
 async function browserTests() {
   const chrome = [process.env.CHROME_BIN, '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
     '/usr/bin/google-chrome', '/usr/bin/chromium', '/usr/bin/chromium-browser'].find(file => file && fs.existsSync(file));
@@ -219,15 +279,26 @@ async function browserTests() {
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   const url = 'http://127.0.0.1:' + server.address().port;
   const browser = spawn(chrome, ['--headless=new', '--no-sandbox', '--disable-background-networking', '--disable-extensions',
-    '--no-first-run', '--remote-debugging-port=0', '--user-data-dir=' + profile, 'about:blank'], { stdio: 'ignore' });
+    '--no-first-run', '--remote-debugging-port=0', '--user-data-dir=' + profile, 'about:blank'], { stdio: ['ignore', 'ignore', 'pipe'] });
+  let stderrTail = Buffer.alloc(0), spawnError;
+  browser.stderr.on('data', chunk => { stderrTail = Buffer.from(Buffer.concat([stderrTail, chunk]).subarray(-4096)); });
+  browser.once('error', cause => { spawnError = cause; });
+  const startupDiagnostic = () => 'exit=' + browser.exitCode + ', signal=' + browser.signalCode
+    + (spawnError ? ', spawn error=' + spawnError.message : '') + '\nChrome stderr tail (max 4096 bytes):\n' + stderrTail.toString('utf8');
   let socket;
   try {
     let port;
-    for (let attempt = 0; attempt < 150; attempt += 1) {
-      try { port = (await fsp.readFile(path.join(profile, 'DevToolsActivePort'), 'utf8')).split('\n')[0]; break; }
-      catch (_) { await delay(40); }
+    const startupDeadline = Date.now() + 30000;
+    while (Date.now() < startupDeadline) {
+      if (spawnError || browser.exitCode !== null || browser.signalCode !== null) {
+        assert.fail('Fresh isolated browser exited before ready.\n' + startupDiagnostic());
+      }
+      try { port = (await fsp.readFile(path.join(profile, 'DevToolsActivePort'), 'utf8')).split('\n')[0]; }
+      catch (_) { /* A cold browser may not have written its debugging port yet. */ }
+      if (port) break;
+      await delay(40);
     }
-    assert.ok(port, 'Fresh isolated browser starts');
+    assert.ok(port, 'Fresh isolated browser starts within 30 seconds.\n' + startupDiagnostic());
     const targets = await (await fetch('http://127.0.0.1:' + port + '/json/list')).json();
     socket = new WebSocket(targets.find(target => target.type === 'page').webSocketDebuggerUrl);
     await new Promise((resolve, reject) => { socket.addEventListener('open', resolve, { once: true }); socket.addEventListener('error', reject, { once: true }); });
@@ -290,6 +361,9 @@ async function browserTests() {
       IDBObjectStore.prototype.put = originalPut;
       const purchaseAndDisplay = await Promise.all([first.purchase('star-chair'), second.setDisplayPlace('shelf', 'rune-quill')]);
       check(purchaseAndDisplay.every(result => result.ok), 'Different documents can buy and move a display without losing either transaction');
+      const placed = await Promise.all([first.setRoomPosition('star-chair', {x:.65,y:.71}), second.setRoomPosition('brass-candlestick', {x:.28,y:.41}), second.credit(5, 'same:finale')]);
+      check(placed.every(result => result.ok), 'IndexedDB merges different item positions and a deduplicated reward');
+      check(first.snapshot().balance === 17, 'Position edits never restore or deduct stale coins');
       await new Promise((resolve, reject) => {
         const upgrade = indexedDB.open('hanzi-magic-shop-v1', 2);
         upgrade.onupgradeneeded = () => upgrade.transaction.abort();
@@ -312,14 +386,17 @@ async function browserTests() {
     assert.equal(reload.balance, 17);
     assert.equal(reload.owned.length, 3);
     assert.equal(reload.displayPlaces.shelf, 'rune-quill');
-    assert.equal(reload.displayPlaces.window, 'brass-candlestick');
+    assert.equal(reload.displayPlaces.window, undefined);
+    assert.deepEqual(reload.roomPositions['star-chair'], {x:.65,y:.71});
+    assert.deepEqual(reload.roomPositions['brass-candlestick'], {x:.28,y:.41});
     console.log('PASS magic-shop-ledger: real IndexedDB quota, independent documents, dedupe, abort, open/versionchange retry, page reload');
   } finally {
     socket?.close(); browser.kill('SIGTERM');
-    await new Promise(resolve => { if (browser.exitCode !== null) resolve(); else { browser.once('exit', resolve); setTimeout(resolve, 2000).unref(); } });
+    await new Promise(resolve => { if (browser.exitCode !== null || browser.signalCode !== null) resolve(); else { browser.once('exit', resolve); setTimeout(resolve, 2000).unref(); } });
     await new Promise(resolve => server.close(resolve));
-    await fsp.rm(profile, { recursive: true, force: true });
+    // Chromium helpers may flush profile files just after its parent exits.
+    await fsp.rm(profile, { recursive: true, force: true, maxRetries: 8, retryDelay: 100 });
   }
 }
 
-(async () => { await fallbackTests(); await displayTests(); await browserTests(); })().catch(error => { console.error(error); process.exitCode = 1; });
+(async () => { await fallbackTests(); await displayTests(); await roomPositionTests(); await browserTests(); })().catch(error => { console.error(error); process.exitCode = 1; });

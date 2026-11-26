@@ -39,7 +39,18 @@
       if (!DISPLAY_PLACES.includes(place) || typeof id !== 'string' || !ids.has(id) || displayed.has(id)) throw fail('corrupt-record');
       displayed.add(id);
     });
-    return { ...clone(record), displayPlaces: clone(displayPlaces) };
+    const roomPositions = record.roomPositions === undefined ? {} : record.roomPositions;
+    if (!roomPositions || typeof roomPositions !== 'object' || Array.isArray(roomPositions)) throw fail('corrupt-record');
+    Object.entries(roomPositions).forEach(([id, position]) => {
+      if (!ids.has(id) || !validPosition(position)) throw fail('corrupt-record');
+    });
+    return { ...clone(record), displayPlaces: clone(displayPlaces), roomPositions: clone(roomPositions) };
+  }
+
+  function validPosition(position) {
+    return position && typeof position === 'object' && !Array.isArray(position)
+      && typeof position.x === 'number' && Number.isFinite(position.x) && position.x >= 0 && position.x <= 1
+      && typeof position.y === 'number' && Number.isFinite(position.y) && position.y >= 0 && position.y <= 1;
   }
 
   function create(options) {
@@ -67,6 +78,7 @@
         balance: record ? record.balance : previewBalance,
         owned: record ? clone(record.owned) : [],
         displayPlaces: record ? clone(record.displayPlaces || {}) : {},
+        roomPositions: record ? clone(record.roomPositions || {}) : {},
         revision: record ? record.revision : 0,
         storage: backend || null, ready: initialized && !error,
         error: error || null,
@@ -92,7 +104,7 @@
       }
       const balance = legacyBalance();
       const now = Date.now();
-      return { schema: 1, balance, owned: [], events: [], displayPlaces: {}, revision: 0,
+      return { schema: 1, balance, owned: [], events: [], displayPlaces: {}, roomPositions: {}, revision: 0,
         migratedLegacyBalance: balance, createdAt: now, updatedAt: now };
     }
 
@@ -329,18 +341,37 @@
         if (!next.owned.some(entry => entry.itemId === item.id)) {
           return { changed: false, result: { ok: false, reason: 'not-owned' } };
         }
-        if (next.displayPlaces[placeId] === item.id) return { changed: false, result: { ok: true } };
+        if (next.displayPlaces[placeId] === item.id && !next.roomPositions[item.id]) return { changed: false, result: { ok: true } };
         Object.keys(next.displayPlaces).forEach(place => {
           if (next.displayPlaces[place] === item.id) delete next.displayPlaces[place];
         });
         next.displayPlaces[placeId] = item.id;
+        delete next.roomPositions[item.id];
+        touch(next);
+        return { changed: true, result: { ok: true } };
+      });
+    }
+
+    function setRoomPosition(itemId, position) {
+      const item = catalog?.get ? catalog.get(itemId) : catalog?.byId?.[itemId];
+      if (!item) return Promise.resolve({ ok: false, reason: 'invalid-item', snapshot: snapshot() });
+      if (!validPosition(position)) return Promise.resolve({ ok: false, reason: 'invalid-room-position', snapshot: snapshot() });
+      // Capture only this item's requested coordinates. The transaction reads the
+      // latest wallet, purchases, other positions and reward IDs before merging.
+      const requested = { x: Math.round(position.x * 100000) / 100000, y: Math.round(position.y * 100000) / 100000 };
+      return enqueue(next => {
+        if (!next.owned.some(entry => entry.itemId === item.id)) return { changed: false, result: { ok: false, reason: 'not-owned' } };
+        const previous = next.roomPositions[item.id];
+        if (previous && previous.x === requested.x && previous.y === requested.y) return { changed: false, result: { ok: true } };
+        next.roomPositions[item.id] = requested;
+        Object.keys(next.displayPlaces).forEach(place => { if (next.displayPlaces[place] === item.id) delete next.displayPlaces[place]; });
         touch(next);
         return { changed: true, result: { ok: true } };
       });
     }
 
     return Object.freeze({
-      ready: () => readyPromise.then(() => snapshot()), retry, snapshot, credit, purchase, setDisplayPlace,
+      ready: () => readyPromise.then(() => snapshot()), retry, snapshot, credit, purchase, setDisplayPlace, setRoomPosition,
       subscribe(fn) { listeners.add(fn); return () => listeners.delete(fn); },
       dispose() {
         disposed = true;

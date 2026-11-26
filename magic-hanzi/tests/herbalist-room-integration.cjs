@@ -127,7 +127,7 @@ async function run() {
     method === 'finale' && !bankEmpty && count === 10 && newlyAwarded === true).length;
   const routes = ['herbs', 'stars', 'giant', 'bridge', 'train', 'tomb', 'sea', 'dunes', 'library', 'ice', 'armor', 'beans', 'rose', 'bagua'];
   assert.deepEqual(Array.from(game.run('Object.keys(HERBALIST_STAGES)')), routes, 'The formal game exposes all fourteen story rooms');
-  assert.equal(game.run('GAME_VERSION'),'2026.11.25.1');
+  assert.equal(game.run('GAME_VERSION'),'2026.11.26.1');
   for(const [stage,arrival] of [['beans',13700],['rose',3800],['bagua',5200]]) {
     assert.equal(game.run(`HERBALIST_STAGES.${stage}.arrival`),arrival,stage+' waits only for its remaining scenery');
     assert.equal(game.run(`HERBALIST_STAGES.${stage}.automaticEnding`),true,stage+' must not replay its automatic ending during travel');

@@ -146,11 +146,12 @@ if (!process.argv.includes('--unit')) {
     .matchAll(/assets\/story\/[a-z0-9-]+\.webp/g)].map(match=>match[0]));
   const expectedContinuationImages=[
     'assets/story/bean-cloud-garden-v1.webp', 'assets/story/heaven-station-v1.webp', 'assets/story/heaven-train-v1.webp',
+    'assets/story/bean-depth-cloud-v1.webp',
     'assets/story/rose-crypt-v1.webp', 'assets/story/rose-awake-face-v1.webp', 'assets/story/rose-bloom-v1.webp',
     'assets/story/rose-leaf-v1.webp',
     'assets/story/bagua-door-closed-v1.webp', 'assets/story/bagua-door-open-v1.webp',
   ];
-  assert.deepEqual(new Set(continuationImages),new Set(expectedContinuationImages),'The three new rooms reference exactly their nine approved images');
+  assert.deepEqual(new Set(continuationImages),new Set(expectedContinuationImages),'The three new rooms reference exactly their ten approved images');
   const offlineBuilder=fs.readFileSync(path.join(root,'tools/build-offline-preview.cjs'),'utf8');
   for(const image of expectedContinuationImages)assert.equal(offlineBuilder.split("'"+image+"'").length-1,1,'Offline preview embeds exactly one '+image);
 

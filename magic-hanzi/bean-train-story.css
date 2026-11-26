@@ -7,6 +7,7 @@
   pointer-events: none;
   background: #101e25;
   --beans-rise: 0;
+  --beans-sky-rise: 0;
 }
 .story-beans[hidden] { display: none !important; }
 .story-beans:not([hidden]) { display: block; }
@@ -28,6 +29,24 @@
   transform: translate(-50%, calc(var(--beans-rise) * 1%));
 }
 .beans-camera-moving .beans-world { transition: transform 1.85s cubic-bezier(.23, .64, .25, 1); }
+.beans-scenery-world { z-index: 0; transform: translate(-50%, calc(var(--beans-sky-rise) * 1%)); }
+.beans-vine-world { z-index: 3; }
+.beans-cloud-field { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.beans-cloud-field-far { z-index: 1; }
+.beans-cloud-field-middle { z-index: 2; }
+.beans-cloud-field-near { z-index: 6; }
+.beans-cloud-plane {
+  position: absolute;
+  aspect-ratio: 3 / 2;
+  background-image: var(--beans-cloud-texture);
+  background-position: center;
+  background-size: contain;
+  background-repeat: no-repeat;
+  transform-origin: center;
+  pointer-events: none;
+}
+.beans-cloud-plane[hidden] { display: none !important; }
+.beans-clouds-moving .beans-cloud-plane:not([hidden]) { will-change: transform, opacity; }
 .beans-garden-art {
   position: absolute;
   inset: 0;
@@ -98,17 +117,9 @@
 .beans-tip-growing { animation: beans-tip-arrive 1.15s both; }
 @keyframes beans-tip-arrive { 0%, 72% { opacity: 0; } 100% { opacity: 1; } }
 .beans-tip-hidden { opacity: 0; }
-.beans-low-mist {
-  position: absolute;
-  inset: 43% -30% 14%;
-  opacity: .5;
-  background: radial-gradient(ellipse at 18% 31%, #cfdddc78, transparent 30%),
-    radial-gradient(ellipse at 76% 58%, #c9dbd673, transparent 29%);
-  filter: blur(16px);
-}
 .beans-station {
   position: absolute;
-  z-index: 3;
+  z-index: 4;
   inset: 0;
   opacity: 0;
   visibility: hidden;
@@ -180,9 +191,12 @@
   position: absolute;
   z-index: 2;
   inset: 32% -30% 18%;
-  background: radial-gradient(ellipse at 80% 55%, #d9e2dfb0, transparent 29%),
-    radial-gradient(ellipse at 23% 65%, #c5d7d966, transparent 28%);
-  filter: blur(17px);
+  opacity: .28;
+  background-image: var(--beans-cloud-texture);
+  background-position: right center;
+  background-size: 110% auto;
+  background-repeat: no-repeat;
+  filter: blur(3px);
   animation: beans-cloud-drift 21s ease-in-out infinite alternate;
 }
 .beans-train { position: absolute; z-index: 4; inset: 0; overflow: visible; }
@@ -198,19 +212,20 @@
   position: absolute;
   z-index: 5;
   inset: 36% -20% 15%;
-  opacity: .7;
-  background: radial-gradient(ellipse at 89% 30%, #c5d6d9a3, transparent 21%),
-    radial-gradient(ellipse at 10% 66%, #c8d5d45c, transparent 30%),
-    radial-gradient(ellipse at 61% 83%, #c6dad66b, transparent 27%);
-  filter: blur(13px);
+  opacity: .38;
+  background-image: var(--beans-cloud-texture);
+  background-position: right center;
+  background-size: 120% auto;
+  background-repeat: no-repeat;
+  filter: blur(2px);
   animation: beans-cloud-drift 17s ease-in-out infinite alternate-reverse;
 }
 .beans-exiting .beans-track-mist { animation: beans-departure-mist 10.5s ease both; }
 @keyframes beans-departure-mist {
-  0% { opacity: .5; transform: translateX(0); }
-  25% { opacity: .42; transform: translateX(-2%); }
-  63% { opacity: .67; transform: translateX(-4%); }
-  100% { opacity: .9; transform: translateX(-6%); }
+  0% { opacity: .3; transform: translateX(0); }
+  25% { opacity: .27; transform: translateX(-2%); }
+  63% { opacity: .42; transform: translateX(-4%); }
+  100% { opacity: .58; transform: translateX(-6%); }
 }
 .beans-platform-lamps { position: absolute; z-index: 5; inset: 0; opacity: .65; }
 .beans-platform-lamps i {
@@ -225,46 +240,16 @@
 }
 .beans-platform-lamps i:nth-child(2) { left: 48%; top: 59.5%; }
 .beans-platform-lamps i:nth-child(3) { left: 73%; top: 60%; }
-.beans-cloud-curtain {
-  position: absolute;
-  z-index: 6;
-  top: -9%;
-  width: 90%;
-  height: 69%;
-  opacity: .88;
-  filter: blur(17px);
-  transition: transform 2.5s ease, opacity 2.5s ease;
-}
-.beans-cloud-left {
-  left: -29%;
-  background: radial-gradient(ellipse at 35% 35%, #d8dedabd, transparent 60%),
-    radial-gradient(ellipse at 71% 45%, #b6c9c9a6, transparent 58%);
-}
-.beans-cloud-right {
-  right: -29%;
-  background: radial-gradient(ellipse at 65% 31%, #d4dcd6c9, transparent 60%),
-    radial-gradient(ellipse at 30% 52%, #acc1c5bd, transparent 58%);
-}
-.beans-ready .beans-cloud-left { transform: translate(-64%, -9%); opacity: .28; }
-.beans-ready .beans-cloud-right { transform: translate(64%, -7%); opacity: .28; }
-.beans-unveiling .beans-cloud-left { animation: beans-cloud-open-left 3.2s both; }
-.beans-unveiling .beans-cloud-right { animation: beans-cloud-open-right 3.2s both; }
-@keyframes beans-cloud-open-left {
-  0%, 22% { transform: translate(0); opacity: .96; }
-  100% { transform: translate(-64%, -9%); opacity: .28; }
-}
-@keyframes beans-cloud-open-right {
-  0%, 22% { transform: translate(0); opacity: .96; }
-  100% { transform: translate(64%, -7%); opacity: .28; }
-}
 .beans-foreground-mist {
   position: absolute;
   z-index: 7;
   inset: 74% -30% -12%;
-  opacity: .55;
-  background: radial-gradient(ellipse at 28% 49%, #ccdad99c, transparent 42%),
-    radial-gradient(ellipse at 76% 61%, #bdcfcbb3, transparent 42%);
-  filter: blur(16px);
+  opacity: .22;
+  background-image: var(--beans-cloud-texture);
+  background-position: center;
+  background-size: 100% auto;
+  background-repeat: no-repeat;
+  filter: blur(3px);
   animation: beans-cloud-drift 19s ease-in-out infinite alternate;
 }
 @keyframes beans-cloud-drift { to { transform: translate(5%, -2%); } }

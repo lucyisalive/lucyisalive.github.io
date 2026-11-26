@@ -20,8 +20,8 @@
   ];
   const PLACES = [
     { id: 'window', name: '窗台', x: 30, y: 39, width: 11 },
-    { id: 'crate', name: '旧木箱', x: 15, y: 66, width: 16 },
-    { id: 'shelf', name: '墙边架', x: 51, y: 50, width: 11 }
+    { id: 'crate', name: '左侧地板', x: 15, y: 66, width: 16 },
+    { id: 'shelf', name: '房间中央', x: 51, y: 50, width: 11 }
   ];
   const ART = ['furniture-atlas.webp', 'room-atlas.webp', 'curios-atlas.webp', 'companions-atlas.webp'];
   const SVG_START = '<svg viewBox="0 0 100 100" aria-hidden="true" focusable="false">';
@@ -91,6 +91,11 @@
     let placing = false;
     let placementNotice = null;
     let displayIsAuthoritative = false;
+    let arranging = false;
+    let dragging = null;
+    let roomSaveNotice = null;
+    let failedRoomMove = null;
+    let ignoreSyntheticClickUntil = 0;
     let state = { balance: 0, owned: [] };
     let unsubscribe;
     let openCollection = false;
@@ -139,20 +144,19 @@
         <div class="magic-house-content">
           <section class="magic-panel magic-room-panel" data-shop-panel="room" aria-label="我的巫师房间">
             <div class="magic-room-toolbar"><span id="magicShopOwnedCount">已收藏 0 / ${items.length}</span>
-              <button id="magicShopEntry" class="magic-button magic-button-primary" type="button">去商店选购 <span aria-hidden="true">→</span></button></div>
+              <div class="magic-room-toolbar-actions"><button id="magicRoomArrange" class="magic-button" type="button" aria-pressed="false">布置房间</button><button id="magicShopEntry" class="magic-button magic-button-primary" type="button">去商店选购 <span aria-hidden="true">→</span></button></div></div>
+            <div class="magic-arrange-guidance" id="magicRoomArrangeGuidance" hidden><p id="magicRoomArrangeHint">按住物品拖到喜欢的位置，松手保存。空白处仍可上下滑动；完成后点物品看小魔法。</p><p id="magicRoomPositionStatus" role="status" aria-live="polite"></p><button type="button" class="magic-button magic-button-small" id="magicRoomPositionRetry" hidden>重试保存位置</button></div>
             <div class="magic-room-stage" id="magicRoomStage" aria-label="可点按藏品的巫师房间">
               <div class="magic-room-background" aria-hidden="true"></div>
-              <div class="magic-old-crate" aria-hidden="true"></div>
-              <div class="magic-wall-shelf" aria-hidden="true"></div>
               <div class="magic-room-objects" id="magicRoomObjects"></div>
-              <div class="magic-room-empty" id="magicRoomEmpty"><strong>小屋等着你的第一件藏品</strong><span>攒下古银币，挑一件喜欢的奇物。<br>小物可以直接摆在窗台或旧木箱上。</span></div>
+              <div class="magic-room-empty" id="magicRoomEmpty"><strong>小屋等着你的第一件藏品</strong><span>攒下古银币，挑一件喜欢的奇物。<br>买下后点「布置房间」，就能拖动摆放。</span></div>
               <p class="magic-room-hint" id="magicRoomHint" hidden>点一下藏品，看看它的小魔法</p>
             </div>
             <p class="magic-live-message" id="magicRoomMagicStatus" aria-live="polite">这里是你的房间，原来的床、木凳和窗户一直都在。</p>
             <div class="magic-collection">
               <button class="magic-collection-toggle" id="magicCollectionToggle" type="button" aria-expanded="false" aria-controls="magicCollectionBody">我的藏品 <span id="magicCollectionCount">0 件</span><span class="magic-chevron" aria-hidden="true">⌄</span></button>
               <div id="magicCollectionBody" hidden>
-                <p class="magic-collection-note">选一件查看、点按施展魔法。桌上小物可以换个陈列位置。</p>
+                <p class="magic-collection-note">选一件查看小魔法，或点「布置这件藏品」把它摆进房间。</p>
                 <div class="magic-collection-list" id="magicCollectionList"></div>
                 <div id="magicRoomInspector" class="magic-room-inspector" hidden></div>
               </div>
@@ -179,8 +183,20 @@
     const el = id => cottage.querySelector('#' + id);
     const tap = (element, handler) => {
       if (!element) return;
-      if (typeof options.onTap === 'function') options.onTap(element, handler);
-      else element.addEventListener('click', handler);
+      let start, moved = false;
+      element.addEventListener('pointerdown', event => { start = { x: event.clientX, y: event.clientY }; moved = false; }, { passive: true });
+      element.addEventListener('pointermove', event => { if (start && Math.hypot(event.clientX - start.x, event.clientY - start.y) > 8) moved = true; }, { passive: true });
+      element.addEventListener('pointercancel', () => { moved = true; }, { passive: true });
+      const activate = event => {
+        if (event?.type === 'click' && event.detail !== 0 && Date.now() < ignoreSyntheticClickUntil) return;
+        if (moved && event?.type !== 'keydown' && !(event?.type === 'click' && event.detail === 0)) return;
+        // A touch pointerup can replace this panel before WebKit emits click.
+        // Suppress that compatibility click even if it targets a NEW card below.
+        if (event?.type === 'pointerup') ignoreSyntheticClickUntil = Date.now() + 450;
+        handler(event);
+      };
+      if (typeof options.onTap === 'function') options.onTap(element, activate);
+      else element.addEventListener('click', activate);
     };
     const ownedIds = () => new Set((Array.isArray(state.owned) ? state.owned : []).map(record =>
       String(typeof record === 'string' ? record : record.itemId || record.id)));
@@ -241,6 +257,7 @@
       el('magicShopStorageAlert').hidden = !ready || healthy();
       el('magicShopStorageCopy').textContent = recovering ? '正在重新读取藏品账本……' : '藏品账本暂时无法保存。重新读取后，还需再次确认兑换。';
       el('magicShopRetryStorage').disabled = recovering;
+      syncArrangeControls();
       if (typeof options.onBalance === 'function') options.onBalance(balance(), state);
     }
 
@@ -259,7 +276,7 @@
 
     function chooseDisplayDefaults() {
       if (displayIsAuthoritative) return;
-      const owned = items.filter(item => owns(item) && smallItem(item));
+      const owned = items.filter(item => owns(item) && smallItem(item) && !state.roomPositions?.[item.id]);
       PLACES.forEach(place => { if (displayed[place.id] && !owns(byId.get(displayed[place.id]) || {})) delete displayed[place.id]; });
       const shown = new Set(Object.values(displayed));
       PLACES.forEach(place => {
@@ -270,25 +287,178 @@
     }
 
     function roomButton(item, position, place) {
-      return '<button type="button" class="magic-room-item magic-room-' + item._effect + '" data-item-id="' + escapeHtml(item.id) + '" data-effect="' + item._effect + '"' +
+      return '<button type="button" class="magic-room-item magic-room-' + item._effect + (arranging && inspected === String(item.id) ? ' is-selected' : '') + '" data-item-id="' + escapeHtml(item.id) + '" data-effect="' + item._effect + '"' +
         (place ? ' data-display-place="' + place + '"' : '') +
-        ' aria-label="' + escapeHtml(item.name) + '，点按施展魔法" style="--room-x:' + position[0] + ';--room-y:' + position[1] + ';--room-w:' + position[2] + ';--room-z:' + position[3] + '">' +
+        ' data-room-x="' + position[0] / 100 + '" data-room-y="' + position[1] / 100 + '" aria-label="' + escapeHtml(item.name) + (arranging ? '，按住拖动摆放，也可用方向键微调' : '，点按施展魔法') + '" style="--room-x:' + position[0] + ';--room-y:' + position[1] + ';--room-w:' + position[2] + ';--room-z:' + position[3] + '">' +
         artMarkup(item, true) + '<span class="magic-room-item-name">' + escapeHtml(item.name) + '</span></button>';
     }
 
+    function roomPlacement(item) {
+      const place = PLACES.find(candidate => displayed[candidate.id] === String(item.id));
+      const initial = POSITIONS[item._index] || (item._effect === 'bird' ? [17, 36, 12, 50] : item._effect === 'cat' ? [67, 88, 21, 55] :
+        place ? [place.x, place.y, place.width, 60] : [50, 68, 14, 60]);
+      const saved = state.roomPositions?.[item.id];
+      return saved ? [saved.x * 100, saved.y * 100, initial[2], item._effect === 'rug' ? 3 : 20 + Math.round(saved.y * 100)] : initial;
+    }
+
+    function syncArrangeControls() {
+      const control = el('magicRoomArrange');
+      if (!control) return;
+      cottage.classList.toggle('is-arranging', arranging);
+      cottage.dataset.roomArranging = String(arranging);
+      control.textContent = arranging ? '完成布置' : '布置房间';
+      control.setAttribute('aria-pressed', String(arranging));
+      control.disabled = placing || !healthy() || !items.some(owns);
+      el('magicRoomArrangeGuidance').hidden = !arranging && !failedRoomMove;
+      el('magicRoomArrangeHint').hidden = !arranging;
+      el('magicRoomPositionStatus').textContent = roomSaveNotice?.message || '只移动藏品，不会消耗古银币。';
+      el('magicRoomPositionStatus').classList.toggle('is-error', Boolean(roomSaveNotice?.error));
+      el('magicRoomPositionRetry').hidden = !failedRoomMove;
+      el('magicRoomPositionRetry').disabled = placing || recovering;
+      el('magicRoomHint').textContent = arranging ? '按住物品拖动，松手保存位置' : '点一下藏品，看看它的小魔法';
+    }
+
+    function cancelRoomDrag() {
+      if (!dragging) return;
+      const active = dragging;
+      dragging = null;
+      try { if (active.button.hasPointerCapture(active.pointerId)) active.button.releasePointerCapture(active.pointerId); } catch (_) {}
+      renderRoom();
+    }
+
+    function setArranging(value) {
+      cancelRoomDrag();
+      arranging = Boolean(value);
+      syncArrangeControls();
+      renderRoom();
+    }
+
+    function clampRoomPoint(point, button, item) {
+      const stage = el('magicRoomStage').getBoundingClientRect();
+      const size = button?.getBoundingClientRect();
+      const width = size?.width || Math.max(44, stage.width * roomPlacement(item)[2] / 100);
+      const height = size?.height || width;
+      const halfX = Math.min(.49, width / (stage.width || 490) / 2);
+      const halfY = Math.min(.49, height / (stage.height || 654) / 2);
+      return { x: Math.max(halfX, Math.min(1 - halfX, point.x)), y: Math.max(halfY, Math.min(1 - halfY, point.y)) };
+    }
+
+    async function saveRoomPosition(item, point) {
+      if (placing || destroyed) return false;
+      placing = true;
+      roomSaveNotice = { message: '正在保存' + item.name + '的位置……', error: false };
+      syncArrangeControls();
+      try {
+        const result = typeof ledger.setRoomPosition === 'function' ? await ledger.setRoomPosition(item.id, point) : null;
+        if (destroyed) return false;
+        placing = false;
+        takeSnapshot(result?.snapshot);
+        if (result?.ok) {
+          failedRoomMove = null;
+          roomSaveNotice = { message: item.name + '的位置已保存。', error: false };
+        } else {
+          failedRoomMove = { itemId: item.id, position: point };
+          roomSaveNotice = { message: '摆放没有保存，原位置保留。请点「重试保存位置」，不会扣币。', error: true };
+        }
+        syncHeader();
+        renderRoom();
+        return Boolean(result?.ok);
+      } catch (_) {
+        if (destroyed) return false;
+        placing = false;
+        takeSnapshot();
+        failedRoomMove = { itemId: item.id, position: point };
+        roomSaveNotice = { message: '摆放没有保存，原位置保留。请点「重试保存位置」，不会扣币。', error: true };
+        syncHeader();
+        renderRoom();
+        return false;
+      }
+    }
+
+    function bindRoomItem(button, item) {
+      let press = null;
+      let ignoreClickUntil = 0;
+      const select = () => {
+        inspected = String(item.id);
+        cottage.querySelectorAll('.magic-room-item.is-selected').forEach(candidate => candidate.classList.remove('is-selected'));
+        button.classList.add('is-selected');
+        roomSaveNotice = { message: '按住' + item.name + '拖动，或用方向键微调位置。', error: false };
+        syncArrangeControls();
+      };
+      button.addEventListener('pointerdown', event => {
+        if (event.isPrimary === false || event.button > 0 || placing) return;
+        press = { x: event.clientX, y: event.clientY, moved: false };
+        if (!arranging || !healthy() || dragging) return;
+        inspected = String(item.id);
+        const stage = el('magicRoomStage').getBoundingClientRect();
+        const rect = button.getBoundingClientRect();
+        dragging = { pointerId: event.pointerId, button, item, start: press,
+          offsetX: event.clientX - rect.x - rect.width / 2, offsetY: event.clientY - rect.y - rect.height / 2,
+          position: { x: (rect.x + rect.width / 2 - stage.x) / stage.width, y: (rect.y + rect.height / 2 - stage.y) / stage.height } };
+        try { button.setPointerCapture(event.pointerId); } catch (_) {}
+        if (event.cancelable) event.preventDefault();
+      });
+      button.addEventListener('pointermove', event => {
+        if (!press) return;
+        if (Math.hypot(event.clientX - press.x, event.clientY - press.y) > 6) press.moved = true;
+        if (!dragging || dragging.button !== button || dragging.pointerId !== event.pointerId || !press.moved) return;
+        if (event.cancelable) event.preventDefault();
+        const stage = el('magicRoomStage').getBoundingClientRect();
+        const point = clampRoomPoint({ x: (event.clientX - stage.x - dragging.offsetX) / stage.width,
+          y: (event.clientY - stage.y - dragging.offsetY) / stage.height }, button, item);
+        dragging.position = point;
+        button.classList.remove('is-playing');
+        button.classList.add('is-dragging');
+        button.style.setProperty('--room-x', point.x * 100);
+        button.style.setProperty('--room-y', point.y * 100);
+        button.dataset.roomX = String(point.x);
+        button.dataset.roomY = String(point.y);
+      });
+      button.addEventListener('pointerup', event => {
+        const tapped = press && !press.moved;
+        const active = dragging?.button === button && dragging.pointerId === event.pointerId ? dragging : null;
+        press = null;
+        ignoreClickUntil = Date.now() + 500;
+        if (active) {
+          dragging = null;
+          try { if (button.hasPointerCapture(event.pointerId)) button.releasePointerCapture(event.pointerId); } catch (_) {}
+          button.classList.remove('is-dragging');
+          if (active.start.moved) { void saveRoomPosition(item, active.position); return; }
+        }
+        if (tapped) { if (arranging) select(); else playMagic(button, item); }
+      });
+      const cancel = () => { press = null; if (dragging?.button === button) cancelRoomDrag(); };
+      button.addEventListener('pointercancel', cancel);
+      button.addEventListener('lostpointercapture', cancel);
+      button.addEventListener('click', event => {
+        if (Date.now() < ignoreClickUntil || placing) return;
+        if (arranging) select(); else playMagic(button, item);
+      });
+      button.addEventListener('keydown', event => {
+        if (!arranging || placing || !healthy() || !['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) return;
+        event.preventDefault();
+        const position = roomPlacement(item);
+        const step = event.shiftKey ? .05 : .02;
+        const point = { x: position[0] / 100, y: position[1] / 100 };
+        point.x += event.key === 'ArrowRight' ? step : event.key === 'ArrowLeft' ? -step : 0;
+        point.y += event.key === 'ArrowDown' ? step : event.key === 'ArrowUp' ? -step : 0;
+        void saveRoomPosition(item, clampRoomPoint(point, button, item));
+      });
+    }
+
     function renderRoom() {
+      if (dragging) return;
       chooseDisplayDefaults();
       const owned = items.filter(owns);
-      const room = owned.filter(item => item._index < 12 || item._index >= 22).map(item => {
-        const position = POSITIONS[item._index] || (item._effect === 'bird' ? [17, 36, 12, 50] : [67, 88, 21, 55]);
-        return roomButton(item, position);
+      const room = owned.filter(item => !smallItem(item) || state.roomPositions?.[item.id]).map(item => {
+        return roomButton(item, roomPlacement(item));
       });
       PLACES.forEach(place => {
         const item = byId.get(displayed[place.id]);
-        if (item && owns(item)) room.push(roomButton(item, [place.x, place.y, place.width, 60], place.id));
+        if (item && owns(item) && !state.roomPositions?.[item.id]) room.push(roomButton(item, roomPlacement(item), place.id));
       });
       el('magicRoomObjects').innerHTML = room.join('');
-      cottage.querySelectorAll('.magic-room-item').forEach(button => tap(button, () => playMagic(button, byId.get(button.dataset.itemId))));
+      cottage.querySelectorAll('.magic-room-item').forEach(button => bindRoomItem(button, byId.get(button.dataset.itemId)));
       el('magicRoomEmpty').hidden = owned.length > 0;
       el('magicRoomHint').hidden = owned.length === 0;
       el('magicCollectionList').innerHTML = owned.map(item => '<button type="button" class="magic-collection-item" data-item-id="' + escapeHtml(item.id) + '" aria-pressed="' + (inspected === String(item.id)) + '">' + artMarkup(item, false) + '<span>' + escapeHtml(item.name) + '</span></button>').join('') || '<p class="magic-no-collection">还没有藏品。去商店看看，15 枚就能挑第一件奇物。</p>';
@@ -310,11 +480,21 @@
       if (inspector.hidden) { inspector.innerHTML = ''; return; }
       const place = PLACES.find(place => displayed[place.id] === String(item.id));
       const notice = placementNotice && placementNotice.itemId === String(item.id) ? placementNotice : null;
-      inspector.innerHTML = '<div class="magic-inspector-main"><button type="button" class="magic-inspector-preview magic-interactive-preview" data-item-id="' + escapeHtml(item.id) + '" data-effect="' + item._effect + '" aria-label="点按' + escapeHtml(item.name) + '施展魔法">' + artMarkup(item, true) + '</button><div><h3>' + escapeHtml(item.name) + '</h3><p>' + escapeHtml(item.magic || item.description || '点按藏品，唤醒它的小魔法。') + '</p><button type="button" class="magic-button magic-button-small" id="magicInspectorPlay">看看小魔法</button></div></div>' +
-        (smallItem(item) ? '<div class="magic-place-options" aria-label="选择陈列位置"><span>摆在' + (place ? '（现在：' + place.name + '）' : '房间里') + '</span>' + PLACES.map(target => '<button type="button" class="magic-place-button" data-place="' + target.id + '" aria-pressed="' + (place && place.id === target.id ? 'true' : 'false') + '"' + (placing || !healthy() ? ' disabled' : '') + '>' + target.name + '</button>').join('') + '</div><p class="magic-place-note' + (notice && notice.error ? ' is-error' : '') + '" id="magicPlacementStatus" aria-live="polite">' + escapeHtml(notice && notice.message || '换位置会保存到房间，并把原来那件收回藏品柜；随时可以再拿出来。') + '</p>' : '<p class="magic-place-note">已经摆在房间的固定位置，点它就会回应你。</p>');
+      inspector.innerHTML = '<div class="magic-inspector-main"><button type="button" class="magic-inspector-preview magic-interactive-preview" data-item-id="' + escapeHtml(item.id) + '" data-effect="' + item._effect + '" aria-label="点按' + escapeHtml(item.name) + '施展魔法">' + artMarkup(item, true) + '</button><div><h3>' + escapeHtml(item.name) + '</h3><p>' + escapeHtml(item.magic || item.description || '点按藏品，唤醒它的小魔法。') + '</p><div class="magic-inspector-actions"><button type="button" class="magic-button magic-button-small" id="magicInspectorPlay">看看小魔法</button><button type="button" class="magic-button magic-button-small" id="magicRoomArrangeItem"' + (placing || !healthy() ? ' disabled' : '') + '>布置这件藏品</button></div></div></div>' +
+        (smallItem(item) ? '<div class="magic-place-options" aria-label="选择陈列位置"><span>快速摆放' + (place ? '（现在：' + place.name + '）' : '') + '</span>' + PLACES.map(target => '<button type="button" class="magic-place-button" data-place="' + target.id + '" aria-pressed="' + (place && place.id === target.id ? 'true' : 'false') + '"' + (placing || !healthy() ? ' disabled' : '') + '>' + target.name + '</button>').join('') + '</div><p class="magic-place-note' + (notice && notice.error ? ' is-error' : '') + '" id="magicPlacementStatus" aria-live="polite">' + escapeHtml(notice && notice.message || '也可以点「布置这件藏品」自由拖动。位置会保存，不消耗银币。') + '</p>' : '<p class="magic-place-note">点「布置这件藏品」，可以把它拖到喜欢的位置；位置会保存。</p>');
       const preview = inspector.querySelector('.magic-inspector-preview');
       tap(preview, () => playMagic(preview, item));
       tap(el('magicInspectorPlay'), () => playMagic(preview, item));
+      tap(el('magicRoomArrangeItem'), async () => {
+        if (placing || !healthy()) return;
+        setArranging(true);
+        if (!Array.from(el('magicRoomObjects').querySelectorAll('[data-item-id]')).some(button => button.dataset.itemId === String(item.id))) {
+          if (!(await saveRoomPosition(item, clampRoomPoint({ x: .5, y: .68 }, null, item)))) return;
+        }
+        el('magicRoomStage').scrollIntoView({ block: 'center', behavior: 'auto' });
+        const target = Array.from(el('magicRoomObjects').querySelectorAll('[data-item-id]')).find(button => button.dataset.itemId === String(item.id));
+        target?.focus({ preventScroll: true });
+      });
       inspector.querySelectorAll('[data-place]').forEach(button => tap(button, async () => {
         if (placing || !healthy()) return;
         const destination = PLACES.find(place => place.id === button.dataset.place);
@@ -424,6 +604,7 @@
 
     function showPanel(next, focusSelector) {
       if (buying && next !== panel) return;
+      if (next !== 'room' && arranging) setArranging(false);
       panel = next;
       cottage.dataset.shopPanel = next;
       cottage.querySelectorAll('[data-shop-panel]').forEach(section => { section.hidden = section.dataset.shopPanel !== next; });
@@ -471,6 +652,7 @@
 
     function onCancel(event) {
       if (buying) { event.preventDefault(); return; }
+      if (arranging) { event.preventDefault(); setArranging(false); return; }
       if (panel !== 'room') {
         event.preventDefault();
         showPanel(panel === 'detail' ? 'shop' : 'room', panel === 'detail' ? '#magicShopBackRoom' : '#magicShopEntry');
@@ -478,6 +660,26 @@
     }
 
     tap(el('magicShopEntry'), openShop);
+    tap(el('magicRoomArrange'), () => setArranging(!arranging));
+    tap(el('magicRoomPositionRetry'), async () => {
+      if (!failedRoomMove || placing || recovering) return;
+      const pending = failedRoomMove;
+      recovering = true;
+      syncArrangeControls();
+      try {
+        const snapshot = await ledger.retry();
+        if (destroyed) return;
+        recovering = false;
+        takeSnapshot(snapshot);
+        syncHeader();
+        if (healthy()) await saveRoomPosition(byId.get(String(pending.itemId)), pending.position);
+        else { roomSaveNotice = { message: '账本还没有恢复，原位置保留。稍后可再重试，不会扣币。', error: true }; syncArrangeControls(); }
+      } catch (_) {
+        recovering = false;
+        roomSaveNotice = { message: '账本还没有恢复，原位置保留。稍后可再重试，不会扣币。', error: true };
+        syncArrangeControls();
+      }
+    });
     tap(el('magicShopBackRoom'), openRoom);
     tap(el('magicShopBackStore'), () => showPanel('shop', '#magicShopBackRoom'));
     tap(el('magicShopRetryStorage'), async () => {
@@ -508,6 +710,16 @@
       renderStore();
     }));
     cottage.addEventListener('cancel', onCancel);
+    const onRoomClose = () => setArranging(false);
+    const onRoomResize = () => { if (dragging) cancelRoomDrag(); };
+    const onRoomTouchMove = event => {
+      // The main writing page blocks document-wide touchmove. A native scroll
+      // inside this dialog must stop before that listener without being canceled.
+      if (event.target?.closest?.('.magic-house-content')) event.stopPropagation();
+    };
+    cottage.addEventListener('close', onRoomClose);
+    cottage.addEventListener('touchmove', onRoomTouchMove, { passive: true });
+    view.addEventListener?.('resize', onRoomResize);
     takeSnapshot();
     refresh();
     showPanel('room');
@@ -534,6 +746,9 @@
         animationTimers = [];
         if (typeof unsubscribe === 'function') unsubscribe();
         cottage.removeEventListener('cancel', onCancel);
+        cottage.removeEventListener('close', onRoomClose);
+        cottage.removeEventListener('touchmove', onRoomTouchMove);
+        view.removeEventListener?.('resize', onRoomResize);
         artBlobUrls.forEach(url => { try { objectUrls.revokeObjectURL(url); } catch (_) {} });
         artBlobUrls.clear();
       }

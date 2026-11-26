@@ -32,7 +32,14 @@ body[data-herb-stage="sea"] .story-sea { display: block; }
 }
 .deep-tomb-frame {
   --guard-frame-height: 100dvh;
-  --guard-spacing: 1;
+  inset: auto;
+  top: 50%;
+  left: 50%;
+  width: min(100%,75dvh);
+  height: auto;
+  aspect-ratio: 3 / 4;
+  margin: 0;
+  transform: translate(-50%,-50%);
 }
 .deep-tomb-world,
 .deep-sea-world,
@@ -50,7 +57,7 @@ body[data-herb-stage="sea"] .story-sea { display: block; }
   position: absolute;
   top: 50%;
   left: 50%;
-  width: max(100%, 75dvh);
+  width: min(100%,calc(var(--guard-frame-height) * .75));
   aspect-ratio: 3 / 4;
   transform: translate(-50%, -50%);
 }
@@ -65,17 +72,19 @@ body[data-herb-stage="sea"] .story-sea { display: block; }
   z-index: var(--guard-depth);
   top: var(--guard-y);
   left: var(--guard-x);
-  width: min(var(--guard-size),
-    calc(var(--guard-frame-height) * var(--guard-clearance) * var(--guard-spacing) * var(--sprite-aspect)));
+  width: var(--guard-size);
   aspect-ratio: var(--sprite-ratio);
-  transform: translate(-50%, -99%);
+  transform: translate(-50%,calc(-1 * var(--sprite-ground)));
 }
 .deep-guard > i {
   position: absolute;
-  inset: 79% 3% -4%;
+  top: calc(var(--sprite-ground) - 2%);
+  left: 3%;
+  width: 94%;
+  height: 6%;
   border-radius: 50%;
   background: radial-gradient(ellipse, #070505ea 17%, #1c0d08cf 45%, transparent 72%);
-  filter: blur(6px);
+  filter: blur(4px);
 }
 .deep-guard:not(.is-stone) > i {
   animation: deep-guard-shadow var(--guard-pace) ease-in-out var(--guard-phase) infinite;
@@ -89,7 +98,7 @@ body[data-herb-stage="sea"] .story-sea { display: block; }
   height: 100%;
 }
 .deep-guard-shape {
-  transform-origin: 50% 92%;
+  transform-origin: 50% var(--sprite-ground);
   filter: drop-shadow(0 0 2px #ffb35e91) drop-shadow(0 4px 3px #070601e2);
   animation: deep-guard-threat var(--guard-pace) ease-in-out var(--guard-phase) infinite;
 }
@@ -303,8 +312,8 @@ body[data-herb-stage="sea"] .story-sea { display: block; }
 
 @keyframes deep-guard-threat {
   0%, 100% { transform: none; }
-  38% { transform: translateY(-1.5%) scale(1.025, 1.04); }
-  48% { transform: translate(var(--guard-lurch), -2.5%) scale(1.045, 1.05); }
+  38% { transform: scale(1.018, 1.025); }
+  48% { transform: translateX(var(--guard-lurch)) scale(1.03, 1.035); }
   61% { transform: translateX(calc(var(--guard-lurch) * .37)) scale(1.06, .97); }
   78% { transform: scaleY(1.025); }
 }
@@ -316,9 +325,9 @@ body[data-herb-stage="sea"] .story-sea { display: block; }
 }
 @keyframes deep-eagle-rise {
   0%, 100% { transform: none; }
-  41% { transform: translateY(3%) scaleY(.95); }
-  52% { transform: translate(var(--guard-lurch), -5%) scale(1.05, 1.075); }
-  67% { transform: translateY(-3%) scale(1.04, 1.05); }
+  41% { transform: scaleY(.96); }
+  52% { transform: translateX(var(--guard-lurch)) scale(1.035, 1.045); }
+  67% { transform: scale(1.02, 1.025); }
 }
 @keyframes deep-guard-shadow {
   0%, 100% { transform: scale(1); opacity: .76; }
@@ -422,9 +431,19 @@ body[data-herb-stage="sea"] .story-sea { display: block; }
     top: calc(12% + var(--note-y) * .43);
     width: clamp(19px, 5.5vmin, 33px);
   }
-  body[data-herb-mode="playing"].herb-writing .deep-guard {
-    --guard-spacing: .65;
-    top: calc(7% + var(--guard-y) * .65);
+  body[data-herb-mode="playing"].herb-writing .deep-tomb-frame {
+    top: 3dvh;
+    width: min(calc(100% - 20px),34.5dvh);
+    height: 23dvh;
+    aspect-ratio: auto;
+    transform: translateX(-50%);
+    border-radius: 12px;
+  }
+  body[data-herb-mode="playing"].herb-writing .deep-tomb-set {
+    top: auto;
+    bottom: 0;
+    width: 100%;
+    transform: translateX(-50%);
   }
 }
 @media (min-width: 740px), (min-width: 660px) and (orientation: landscape) {
@@ -437,7 +456,8 @@ body[data-herb-stage="sea"] .story-sea { display: block; }
     border-radius: 18px;
     box-shadow: 0 15px 46px #080d0ec9;
   }
-  body[data-herb-mode="playing"] .deep-tomb-set { width: max(100%, calc(var(--herb-bench-height) * .75)); }
+  body[data-herb-mode="playing"] .story-tomb:not(.is-leaving) .deep-tomb-frame { transform: none; aspect-ratio: auto; }
+  body[data-herb-mode="playing"] .deep-tomb-set { width: min(100%, calc(var(--herb-bench-height) * .75)); }
   body[data-herb-mode="playing"] .deep-tomb-frame { --guard-frame-height: var(--herb-bench-height); }
 }
 @media (prefers-reduced-motion: reduce) {

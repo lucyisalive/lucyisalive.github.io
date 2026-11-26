@@ -3,7 +3,7 @@
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
-<meta name="game-version" content="2026.11.25.1">
+<meta name="game-version" content="2026.11.26.1">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>魔法闯关汉字游戏</title>
 <style data-source="game-feedback.css">
@@ -2694,7 +2694,14 @@ body[data-herb-stage="sea"] .story-sea { display: block; }
 }
 .deep-tomb-frame {
   --guard-frame-height: 100dvh;
-  --guard-spacing: 1;
+  inset: auto;
+  top: 50%;
+  left: 50%;
+  width: min(100%,75dvh);
+  height: auto;
+  aspect-ratio: 3 / 4;
+  margin: 0;
+  transform: translate(-50%,-50%);
 }
 .deep-tomb-world,
 .deep-sea-world,
@@ -2712,7 +2719,7 @@ body[data-herb-stage="sea"] .story-sea { display: block; }
   position: absolute;
   top: 50%;
   left: 50%;
-  width: max(100%, 75dvh);
+  width: min(100%,calc(var(--guard-frame-height) * .75));
   aspect-ratio: 3 / 4;
   transform: translate(-50%, -50%);
 }
@@ -2727,17 +2734,19 @@ body[data-herb-stage="sea"] .story-sea { display: block; }
   z-index: var(--guard-depth);
   top: var(--guard-y);
   left: var(--guard-x);
-  width: min(var(--guard-size),
-    calc(var(--guard-frame-height) * var(--guard-clearance) * var(--guard-spacing) * var(--sprite-aspect)));
+  width: var(--guard-size);
   aspect-ratio: var(--sprite-ratio);
-  transform: translate(-50%, -99%);
+  transform: translate(-50%,calc(-1 * var(--sprite-ground)));
 }
 .deep-guard > i {
   position: absolute;
-  inset: 79% 3% -4%;
+  top: calc(var(--sprite-ground) - 2%);
+  left: 3%;
+  width: 94%;
+  height: 6%;
   border-radius: 50%;
   background: radial-gradient(ellipse, #070505ea 17%, #1c0d08cf 45%, transparent 72%);
-  filter: blur(6px);
+  filter: blur(4px);
 }
 .deep-guard:not(.is-stone) > i {
   animation: deep-guard-shadow var(--guard-pace) ease-in-out var(--guard-phase) infinite;
@@ -2751,7 +2760,7 @@ body[data-herb-stage="sea"] .story-sea { display: block; }
   height: 100%;
 }
 .deep-guard-shape {
-  transform-origin: 50% 92%;
+  transform-origin: 50% var(--sprite-ground);
   filter: drop-shadow(0 0 2px #ffb35e91) drop-shadow(0 4px 3px #070601e2);
   animation: deep-guard-threat var(--guard-pace) ease-in-out var(--guard-phase) infinite;
 }
@@ -2965,8 +2974,8 @@ body[data-herb-stage="sea"] .story-sea { display: block; }
 
 @keyframes deep-guard-threat {
   0%, 100% { transform: none; }
-  38% { transform: translateY(-1.5%) scale(1.025, 1.04); }
-  48% { transform: translate(var(--guard-lurch), -2.5%) scale(1.045, 1.05); }
+  38% { transform: scale(1.018, 1.025); }
+  48% { transform: translateX(var(--guard-lurch)) scale(1.03, 1.035); }
   61% { transform: translateX(calc(var(--guard-lurch) * .37)) scale(1.06, .97); }
   78% { transform: scaleY(1.025); }
 }
@@ -2978,9 +2987,9 @@ body[data-herb-stage="sea"] .story-sea { display: block; }
 }
 @keyframes deep-eagle-rise {
   0%, 100% { transform: none; }
-  41% { transform: translateY(3%) scaleY(.95); }
-  52% { transform: translate(var(--guard-lurch), -5%) scale(1.05, 1.075); }
-  67% { transform: translateY(-3%) scale(1.04, 1.05); }
+  41% { transform: scaleY(.96); }
+  52% { transform: translateX(var(--guard-lurch)) scale(1.035, 1.045); }
+  67% { transform: scale(1.02, 1.025); }
 }
 @keyframes deep-guard-shadow {
   0%, 100% { transform: scale(1); opacity: .76; }
@@ -3084,9 +3093,19 @@ body[data-herb-stage="sea"] .story-sea { display: block; }
     top: calc(12% + var(--note-y) * .43);
     width: clamp(19px, 5.5vmin, 33px);
   }
-  body[data-herb-mode="playing"].herb-writing .deep-guard {
-    --guard-spacing: .65;
-    top: calc(7% + var(--guard-y) * .65);
+  body[data-herb-mode="playing"].herb-writing .deep-tomb-frame {
+    top: 3dvh;
+    width: min(calc(100% - 20px),34.5dvh);
+    height: 23dvh;
+    aspect-ratio: auto;
+    transform: translateX(-50%);
+    border-radius: 12px;
+  }
+  body[data-herb-mode="playing"].herb-writing .deep-tomb-set {
+    top: auto;
+    bottom: 0;
+    width: 100%;
+    transform: translateX(-50%);
   }
 }
 @media (min-width: 740px), (min-width: 660px) and (orientation: landscape) {
@@ -3099,7 +3118,8 @@ body[data-herb-stage="sea"] .story-sea { display: block; }
     border-radius: 18px;
     box-shadow: 0 15px 46px #080d0ec9;
   }
-  body[data-herb-mode="playing"] .deep-tomb-set { width: max(100%, calc(var(--herb-bench-height) * .75)); }
+  body[data-herb-mode="playing"] .story-tomb:not(.is-leaving) .deep-tomb-frame { transform: none; aspect-ratio: auto; }
+  body[data-herb-mode="playing"] .deep-tomb-set { width: min(100%, calc(var(--herb-bench-height) * .75)); }
   body[data-herb-mode="playing"] .deep-tomb-frame { --guard-frame-height: var(--herb-bench-height); }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -4064,6 +4084,7 @@ body[data-herb-stage="sea"] .story-sea { display: block; }
   pointer-events: none;
   background: #101e25;
   --beans-rise: 0;
+  --beans-sky-rise: 0;
 }
 .story-beans[hidden] { display: none !important; }
 .story-beans:not([hidden]) { display: block; }
@@ -4085,6 +4106,24 @@ body[data-herb-stage="sea"] .story-sea { display: block; }
   transform: translate(-50%, calc(var(--beans-rise) * 1%));
 }
 .beans-camera-moving .beans-world { transition: transform 1.85s cubic-bezier(.23, .64, .25, 1); }
+.beans-scenery-world { z-index: 0; transform: translate(-50%, calc(var(--beans-sky-rise) * 1%)); }
+.beans-vine-world { z-index: 3; }
+.beans-cloud-field { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.beans-cloud-field-far { z-index: 1; }
+.beans-cloud-field-middle { z-index: 2; }
+.beans-cloud-field-near { z-index: 6; }
+.beans-cloud-plane {
+  position: absolute;
+  aspect-ratio: 3 / 2;
+  background-image: var(--beans-cloud-texture);
+  background-position: center;
+  background-size: contain;
+  background-repeat: no-repeat;
+  transform-origin: center;
+  pointer-events: none;
+}
+.beans-cloud-plane[hidden] { display: none !important; }
+.beans-clouds-moving .beans-cloud-plane:not([hidden]) { will-change: transform, opacity; }
 .beans-garden-art {
   position: absolute;
   inset: 0;
@@ -4155,17 +4194,9 @@ body[data-herb-stage="sea"] .story-sea { display: block; }
 .beans-tip-growing { animation: beans-tip-arrive 1.15s both; }
 @keyframes beans-tip-arrive { 0%, 72% { opacity: 0; } 100% { opacity: 1; } }
 .beans-tip-hidden { opacity: 0; }
-.beans-low-mist {
-  position: absolute;
-  inset: 43% -30% 14%;
-  opacity: .5;
-  background: radial-gradient(ellipse at 18% 31%, #cfdddc78, transparent 30%),
-    radial-gradient(ellipse at 76% 58%, #c9dbd673, transparent 29%);
-  filter: blur(16px);
-}
 .beans-station {
   position: absolute;
-  z-index: 3;
+  z-index: 4;
   inset: 0;
   opacity: 0;
   visibility: hidden;
@@ -4237,9 +4268,12 @@ body[data-herb-stage="sea"] .story-sea { display: block; }
   position: absolute;
   z-index: 2;
   inset: 32% -30% 18%;
-  background: radial-gradient(ellipse at 80% 55%, #d9e2dfb0, transparent 29%),
-    radial-gradient(ellipse at 23% 65%, #c5d7d966, transparent 28%);
-  filter: blur(17px);
+  opacity: .28;
+  background-image: var(--beans-cloud-texture);
+  background-position: right center;
+  background-size: 110% auto;
+  background-repeat: no-repeat;
+  filter: blur(3px);
   animation: beans-cloud-drift 21s ease-in-out infinite alternate;
 }
 .beans-train { position: absolute; z-index: 4; inset: 0; overflow: visible; }
@@ -4255,19 +4289,20 @@ body[data-herb-stage="sea"] .story-sea { display: block; }
   position: absolute;
   z-index: 5;
   inset: 36% -20% 15%;
-  opacity: .7;
-  background: radial-gradient(ellipse at 89% 30%, #c5d6d9a3, transparent 21%),
-    radial-gradient(ellipse at 10% 66%, #c8d5d45c, transparent 30%),
-    radial-gradient(ellipse at 61% 83%, #c6dad66b, transparent 27%);
-  filter: blur(13px);
+  opacity: .38;
+  background-image: var(--beans-cloud-texture);
+  background-position: right center;
+  background-size: 120% auto;
+  background-repeat: no-repeat;
+  filter: blur(2px);
   animation: beans-cloud-drift 17s ease-in-out infinite alternate-reverse;
 }
 .beans-exiting .beans-track-mist { animation: beans-departure-mist 10.5s ease both; }
 @keyframes beans-departure-mist {
-  0% { opacity: .5; transform: translateX(0); }
-  25% { opacity: .42; transform: translateX(-2%); }
-  63% { opacity: .67; transform: translateX(-4%); }
-  100% { opacity: .9; transform: translateX(-6%); }
+  0% { opacity: .3; transform: translateX(0); }
+  25% { opacity: .27; transform: translateX(-2%); }
+  63% { opacity: .42; transform: translateX(-4%); }
+  100% { opacity: .58; transform: translateX(-6%); }
 }
 .beans-platform-lamps { position: absolute; z-index: 5; inset: 0; opacity: .65; }
 .beans-platform-lamps i {
@@ -4282,46 +4317,16 @@ body[data-herb-stage="sea"] .story-sea { display: block; }
 }
 .beans-platform-lamps i:nth-child(2) { left: 48%; top: 59.5%; }
 .beans-platform-lamps i:nth-child(3) { left: 73%; top: 60%; }
-.beans-cloud-curtain {
-  position: absolute;
-  z-index: 6;
-  top: -9%;
-  width: 90%;
-  height: 69%;
-  opacity: .88;
-  filter: blur(17px);
-  transition: transform 2.5s ease, opacity 2.5s ease;
-}
-.beans-cloud-left {
-  left: -29%;
-  background: radial-gradient(ellipse at 35% 35%, #d8dedabd, transparent 60%),
-    radial-gradient(ellipse at 71% 45%, #b6c9c9a6, transparent 58%);
-}
-.beans-cloud-right {
-  right: -29%;
-  background: radial-gradient(ellipse at 65% 31%, #d4dcd6c9, transparent 60%),
-    radial-gradient(ellipse at 30% 52%, #acc1c5bd, transparent 58%);
-}
-.beans-ready .beans-cloud-left { transform: translate(-64%, -9%); opacity: .28; }
-.beans-ready .beans-cloud-right { transform: translate(64%, -7%); opacity: .28; }
-.beans-unveiling .beans-cloud-left { animation: beans-cloud-open-left 3.2s both; }
-.beans-unveiling .beans-cloud-right { animation: beans-cloud-open-right 3.2s both; }
-@keyframes beans-cloud-open-left {
-  0%, 22% { transform: translate(0); opacity: .96; }
-  100% { transform: translate(-64%, -9%); opacity: .28; }
-}
-@keyframes beans-cloud-open-right {
-  0%, 22% { transform: translate(0); opacity: .96; }
-  100% { transform: translate(64%, -7%); opacity: .28; }
-}
 .beans-foreground-mist {
   position: absolute;
   z-index: 7;
   inset: 74% -30% -12%;
-  opacity: .55;
-  background: radial-gradient(ellipse at 28% 49%, #ccdad99c, transparent 42%),
-    radial-gradient(ellipse at 76% 61%, #bdcfcbb3, transparent 42%);
-  filter: blur(16px);
+  opacity: .22;
+  background-image: var(--beans-cloud-texture);
+  background-position: center;
+  background-size: 100% auto;
+  background-repeat: no-repeat;
+  filter: blur(3px);
   animation: beans-cloud-drift 19s ease-in-out infinite alternate;
 }
 @keyframes beans-cloud-drift { to { transform: translate(5%, -2%); } }
@@ -4360,7 +4365,7 @@ body[data-herb-stage="sea"] .story-sea { display: block; }
   pointer-events: none;
 }
 .story-rose[hidden],.story-bagua[hidden] { display: none !important; }
-.story-rose { --rb-face-x: 50%; --rb-face-y: 33.5%; --rb-face-width: 30%; --rb-face-height: 15%; background: #100e14; }
+.story-rose { background: #100e14; }
 .story-bagua { --rb-seal-x: 50%; --rb-seal-y: 48.7%; --rb-seal-size: 65%; background: #0c1316; }
 .rb-frame {
   position: absolute;
@@ -4383,10 +4388,10 @@ body[data-herb-stage="sea"] .story-sea { display: block; }
 .rb-rose-lantern-light { position: absolute; z-index: 2; inset: 0; background: radial-gradient(ellipse at 18% 55%,#cd915611,transparent 40%),radial-gradient(ellipse at 78% 53%,#be8d5b13,transparent 36%); mix-blend-mode: screen; }
 .rb-vines { position: absolute; z-index: 5; inset: 0; width: 100%; height: 100%; overflow: visible; }
 .rb-vines-left,.rb-vines-right { transform-box: view-box; transform-origin: 50% 76%; transition: transform .65s cubic-bezier(.18,.8,.28,1); }
-.rb-vine,.rb-face-branch { --rb-leaf: #544337; --rb-leaf-vein: #a28a6257; --rb-stem: #6b5440; }
-.rb-vine.is-restored,.rb-face-branch.is-restored { --rb-leaf: #345b3a; --rb-leaf-vein: #c0c48c70; --rb-stem: #60774a; }
-.rb-vine-shadow { fill: none; stroke: #181514e8; stroke-width: 9; stroke-linecap: round; stroke-linejoin: round; }
-.rb-vine-stem { fill: none; stroke: var(--rb-stem); stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; transition: stroke 1s ease; }
+.rb-vine { --rb-leaf: #544337; --rb-leaf-vein: #a28a6257; --rb-stem: #6b5440; }
+.rb-vine.is-restored { --rb-leaf: #345b3a; --rb-leaf-vein: #c0c48c70; --rb-stem: #60774a; }
+.rb-vine-shadow { fill: none; stroke: #181514e8; stroke-width: 7; stroke-linecap: round; stroke-linejoin: round; }
+.rb-vine-stem { fill: none; stroke: var(--rb-stem); stroke-width: 3.7; stroke-linecap: round; stroke-linejoin: round; transition: stroke 1s ease; }
 .rb-leaf { filter: drop-shadow(1px 2px 1px #090d0bb0); }
 .rb-leaf path:first-child { fill: var(--rb-leaf); stroke: #151f1880; stroke-width: .8; transition: fill 1s ease; }
 .rb-leaf .rb-leaf-sheen { fill: #b6bf8920; stroke: none; }
@@ -4406,25 +4411,8 @@ body[data-herb-stage="sea"] .story-sea { display: block; }
 .rb-rose-real { display: none; }
 .story-rose.has-bloom-art .rb-rose-real { display: block; filter: drop-shadow(1px 3px 3px #100b14c9); }
 .story-rose.has-bloom-art .rb-rose-vector { display: none; }
-.rb-face-vines {
-  position: absolute;
-  z-index: 6;
-  left: var(--rb-face-x);
-  top: var(--rb-face-y);
-  width: var(--rb-face-width);
-  height: var(--rb-face-height);
-  overflow: visible;
-  transform: translate(-50%,-50%);
-  filter: drop-shadow(0 3px 3px #070a0eaa);
-}
-.rb-face-left,.rb-face-right { transform-box: view-box; transform-origin: 50% 50%; transition: transform .62s cubic-bezier(.16,.84,.25,1),opacity .8s ease; }
-.rb-face-vines .rb-vine-shadow { stroke-width: 4.2; }
-.rb-face-vines .rb-vine-stem { stroke-width: 2.2; }
-.story-rose.is-vines-open .rb-vines-left { transform: translate(-10%,1%) rotate(-2deg); }
-.story-rose.is-vines-open .rb-vines-right { transform: translate(10%,1%) rotate(2deg); }
-.story-rose.is-vines-open .rb-face-vines { z-index: 4; }
-.story-rose.is-vines-open .rb-face-left { transform: translate(-90%,5%) rotate(-8deg); opacity: .5; }
-.story-rose.is-vines-open .rb-face-right { transform: translate(90%,5%) rotate(8deg); opacity: .5; }
+.story-rose.is-vines-open .rb-vines-left { transform: translate(-43%,1%) rotate(-2deg); }
+.story-rose.is-vines-open .rb-vines-right { transform: translate(43%,1%) rotate(2deg); }
 .rb-rose-pollen { position: absolute; z-index: 7; inset: 0; }
 .rb-rose-pollen i { position: absolute; left: var(--rb-particle-x); top: var(--rb-particle-y); width: 2px; height: 2px; border-radius: 50%; opacity: 0; background: #ebd3a5; box-shadow: 0 0 5px #d5bd81; }
 .story-rose.is-ending .rb-rose-pollen i { animation: rb-pollen 2.3s ease-out calc(1.3s + var(--rb-particle-delay)) both; }
@@ -4498,6 +4486,7 @@ body[data-herb-stage="sea"] .story-sea { display: block; }
   max-width: none;
   max-height: calc(100dvh - 20px);
   overflow: hidden;
+  touch-action: pan-y;
   padding: 0;
   color: var(--shop-paper);
   background: #1b1c25;
@@ -4512,7 +4501,7 @@ body[data-herb-stage="sea"] .story-sea { display: block; }
 .magic-shop-enabled button { font: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
 .magic-shop-enabled button:focus-visible { outline: 3px solid #fce0a1; outline-offset: 3px; }
 .magic-shop-enabled button:disabled { cursor: default; opacity: .7; }
-.magic-house-shell { height: 100%; display: flex; flex-direction: column; }
+.magic-house-shell { height: 100%; min-height: 0; display: flex; flex-direction: column; overflow: hidden; touch-action: pan-y; }
 .magic-house-header {
   display: flex;
   justify-content: space-between;
@@ -4530,7 +4519,7 @@ body[data-herb-stage="sea"] .story-sea { display: block; }
 .magic-wallet small { display: block; margin-top: 2px; font-size: 10px; letter-spacing: .13em; color: var(--shop-muted); }
 .magic-coin { position: relative; display: inline-block; width: 20px; height: 20px; border: 2px solid #e0c082; border-radius: 50%; box-shadow: inset 0 0 0 2px #796d53, inset 0 0 0 4px #bcb29a, 0 2px 4px #0006; background: radial-gradient(circle at 32% 24%, #e5dfcc, #a89d82 61%, #686957); vertical-align: middle; flex: 0 0 auto; }
 .magic-coin::before { content: ''; position: absolute; inset: 5px; border: 1px solid #6b6855; transform: rotate(45deg); }
-.magic-house-content { flex: 1 1 auto; min-height: 0; overflow: auto; overscroll-behavior: contain; scrollbar-color: #847051 #1a1c25; scrollbar-width: thin; }
+.magic-house-content { flex: 1 1 0%; height: 0; min-height: 0; overflow-x: hidden; overflow-y: auto; touch-action: pan-y; -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain; scrollbar-color: #847051 #1a1c25; scrollbar-width: thin; }
 .magic-storage-alert { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex: 0 0 auto; padding: 9px 15px; border-bottom: 1px solid #d2a26766; background: #503c2d; }
 .magic-shop-enabled .magic-storage-alert p { margin: 0; color: #ffdfba; font-size: 11px; line-height: 1.5; }
 .magic-storage-alert .magic-button { flex: 0 0 auto; color: #ffebca; font-size: 11px; }
@@ -4547,21 +4536,25 @@ body[data-herb-stage="sea"] .story-sea { display: block; }
 .magic-text-button:hover { color: #fff1cf; text-decoration: underline; text-underline-offset: 4px; }
 
 /* The room keeps the original portrait background. All positions share its coordinates. */
-.magic-room-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 18px; background: #252331; border-bottom: 1px solid #bb985b50; }
+.magic-room-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 18px; background: #252331; border-bottom: 1px solid #bb985b50; }
+.magic-room-toolbar-actions { display: flex; align-items: center; gap: 8px; margin-left: auto; }
 .magic-room-toolbar > span { color: #d9c5a1; font-size: 13px; white-space: nowrap; }
 .magic-room-toolbar .magic-button { min-height: 44px; padding: 9px 17px; font-size: 15px; }
 .magic-room-panel { background: radial-gradient(ellipse at 50% 48%, #46372d, #211f29 78%); }
+.magic-arrange-guidance { padding: 11px 18px; border-bottom: 1px solid #c5a66c70; background: #353143; }
+.magic-shop-enabled .magic-arrange-guidance p { margin: 0 0 5px; color: #f1ddba; font-size: 12px; line-height: 1.6; }
+.magic-shop-enabled .magic-arrange-guidance p:last-child { margin-bottom: 0; }
+.magic-shop-enabled .magic-arrange-guidance .is-error { color: #ffd0aa; }
+.magic-arrange-guidance .magic-button { margin-top: 6px; }
 .magic-room-stage { position: relative; width: min(100%,490px,max(280px,calc(75dvh - 247.5px))); aspect-ratio: 1086/1448; margin: 0 auto; overflow: hidden; isolation: isolate; background: #62442a; box-shadow: 0 0 22px #0006; }
 .magic-room-background { position: absolute; inset: 0; z-index: 0; background: #62442a url("assets/herbalist/cottage.webp") center/100% 100% no-repeat; }
 .magic-room-background::after { content: ''; position: absolute; inset: 0; background: linear-gradient(#1b112211, transparent 60%, #17101b22); pointer-events: none; }
 .magic-room-objects { position: absolute; inset: 0; }
-.magic-old-crate { position: absolute; left: 5%; top: 65%; width: 21%; height: 8%; z-index: 15; border: 2px solid #68452e; border-radius: 3px; background: repeating-linear-gradient(0deg, #805533 0 18%, #5f3d2c 19% 21%, #87613e 22% 40%); transform: perspective(300px) rotateY(7deg); box-shadow: inset 3px 0 #b1834a44, 3px 7px 7px #35241977; }
-.magic-old-crate::before, .magic-old-crate::after { content: ''; position: absolute; top: -2px; bottom: -2px; width: 9%; border: 1px solid #362b22; background: linear-gradient(90deg, #554c39, #8f7b51, #4c4436); }
-.magic-old-crate::before { left: 15%; }.magic-old-crate::after { right: 15%; }
-.magic-wall-shelf { position: absolute; top: 52%; left: 44%; width: 17%; height: 1.2%; z-index: 20; background: linear-gradient(#a57944, #543a2c); border-bottom: 3px solid #3e2c25; box-shadow: 0 5px 9px #39282088; }
-.magic-wall-shelf::before, .magic-wall-shelf::after { content: ''; position: absolute; top: 100%; width: 7%; height: 220%; background: #5d412d; transform: skewX(-20deg); }
-.magic-wall-shelf::before { left: 10%; }.magic-wall-shelf::after { right: 10%; }
 .magic-room-item { position: absolute; left: calc(var(--room-x)*1%); top: calc(var(--room-y)*1%); width: max(44px, calc(var(--room-w)*1%)); aspect-ratio: 1; min-height: 44px; z-index: var(--room-z, 30); transform: translate(-50%, -50%); padding: 0; border: 0; border-radius: 20%; color: #ffe7ad; background: transparent; }
+.magic-shop-enabled.is-arranging .magic-room-item { touch-action: none; cursor: grab; outline: 1px dashed #fff0b5ab; outline-offset: -4px; background: #ead6a009; }
+.magic-shop-enabled.is-arranging .magic-room-item.is-selected { z-index: 9000; outline: 2px solid #e9ce94; }
+.magic-shop-enabled.is-arranging .magic-room-item.is-dragging { z-index: 10000; cursor: grabbing; outline: 2px solid #fff0b5; background: #ead6a021; }
+.magic-shop-enabled.is-arranging .magic-room-item-name { display: block; }
 .magic-room-item .magic-item-art { filter: drop-shadow(2px 5px 3px #26152577); }
 .magic-room-item:focus-visible { outline-offset: -3px; border-radius: 10%; }
 .magic-room-item:hover > .magic-item-art { filter: drop-shadow(0 0 5px #ffdf8e99) drop-shadow(2px 5px 3px #26152577); }
@@ -4586,6 +4579,7 @@ body[data-herb-stage="sea"] .story-sea { display: block; }
 .magic-shop-enabled .magic-no-collection { grid-column: 1/-1; color: #d6c5a9; font-size: 13px; }
 .magic-room-inspector { margin-top: 13px; padding: 12px; border: 1px solid #a184585e; border-radius: 8px; background: #191c26; }
 .magic-inspector-main { display: grid; grid-template-columns: 105px 1fr; gap: 12px; align-items: center; }
+.magic-inspector-actions { display: flex; flex-wrap: wrap; gap: 7px; }
 .magic-inspector-main h3 { margin: 0 0 6px; font: 700 18px/1.3 var(--herb-serif, serif); color: #f7e3bc; }
 .magic-shop-enabled .magic-inspector-main p { margin: 0 0 10px; font-size: 12px; line-height: 1.6; color: #d9c9af; }
 .magic-inspector-preview { position: relative; width: 105px; height: 120px; padding: 0; border: 1px solid #b0936050; border-radius: 7px; background: radial-gradient(ellipse at 50% 60%, #54415a60, #161a2600 75%); }
@@ -5132,7 +5126,7 @@ body[data-herb-stage="sea"] .story-sea { display: block; }
         </details>
       </div>
     </section>
-    <p class="hint-text" id="gameVersion">版本 2026.11.25.1</p>
+    <p class="hint-text" id="gameVersion">版本 2026.11.26.1</p>
   </div>
 </div>
 
@@ -10058,13 +10052,14 @@ window.HANZI_GLYPH_CATALOG={"version":"41b38d977b270e08ea493526a4ee0f8643a59bbf2
     [12, 59], [20, 47], [29, 56], [38, 42], [46, 49],
     [54, 36], [62, 43], [71, 30], [80, 36], [88, 25]
   ];
-  // Left rank centers and floor positions, from the entrance toward the door.
-  // The right rank mirrors these coordinates. Each row has its own depth clearance.
+  // Both ranks share the artwork's 3:4 floor coordinates. The large entrance
+  // pair recedes in five regular steps toward the door, keeping a clear aisle.
   const GUARD_ROWS = [
-    [13, 79.2, 13.5, .065], [19.5, 71.7, 11.6, .053],
-    [24.8, 65.6, 10.1, .042], [29, 60.7, 8.8, .034],
-    [32.4, 56.7, 7.7, .033]
+    [18.5, 94.5, 32], [23.9, 84.5, 25],
+    [28, 75.8, 19.3], [31.3, 69.1, 15],
+    [34, 64, 11.7]
   ];
+  const GUARD_GROUND = [98.5, 96.5, 98.5, 98, 99.5, 97.5, 96, 96, 98, 97];
   const GUARD_SPREAD = [9, 5, 7, 8, 5, 7, 10, 7, 4, 8];
   const GUARD_ATLASES = [
     { url: 'assets/story/fierce-guards-a.webp', width: 1536, height: 1024 },
@@ -10121,7 +10116,7 @@ window.HANZI_GLYPH_CATALOG={"version":"41b38d977b270e08ea493526a4ee0f8643a59bbf2
 
   function guardianMarkup(guardian, index) {
     const row = Math.floor(index / 2);
-    const [x, y, size, clearance] = GUARD_ROWS[row];
+    const [x, y, size] = GUARD_ROWS[row];
     const [spriteX, spriteY, spriteWidth, spriteHeight, eyeX, eyeY] = GUARD_SPRITES[index];
     const atlas = GUARD_ATLASES[Math.floor(index / 5)];
     const onRight = index % 2 === 1;
@@ -10129,7 +10124,6 @@ window.HANZI_GLYPH_CATALOG={"version":"41b38d977b270e08ea493526a4ee0f8643a59bbf2
       --guard-x:${onRight ? 100 - x : x}%;
       --guard-y:${y}%;
       --guard-size:${size}%;
-      --guard-clearance:${clearance};
       --guard-depth:${GUARD_ROWS.length - row};
       --guard-phase:${(index * -.71).toFixed(2)}s;
       --guard-pace:${(4.1 + index * .17).toFixed(2)}s;
@@ -10139,10 +10133,11 @@ window.HANZI_GLYPH_CATALOG={"version":"41b38d977b270e08ea493526a4ee0f8643a59bbf2
       --sprite-size:${atlas.width / spriteWidth * 100}% ${atlas.height / spriteHeight * 100}%;
       --sprite-ratio:${spriteWidth} / ${spriteHeight};
       --sprite-aspect:${(spriteWidth / spriteHeight).toFixed(4)};
+      --sprite-ground:${GUARD_GROUND[index]}%;
       --sprite-facing:${onRight ? -1 : 1};
       --sprite-eye-x:${eyeX}%;
       --sprite-eye-y:${eyeY}%`;
-    return `<div class="deep-guard" data-species="${guardian.name}" data-atlas="${Math.floor(index / 5)}" style="${style}"><i></i><div class="deep-guard-shape"><canvas width="216" height="176"></canvas><span></span></div><b></b></div>`;
+    return `<div class="deep-guard" data-species="${guardian.name}" data-rank="${row+1}" data-atlas="${Math.floor(index / 5)}" style="${style}"><i></i><div class="deep-guard-shape"><canvas width="216" height="176"></canvas><span></span></div><b></b></div>`;
   }
 
   function create({ document: doc }) {
@@ -10158,8 +10153,8 @@ window.HANZI_GLYPH_CATALOG={"version":"41b38d977b270e08ea493526a4ee0f8643a59bbf2
               <div class="deep-flooded-stair"></div>
               <i class="deep-door-leaf"></i><i class="deep-door-leaf"></i>
             </div>
+            <div class="deep-guards">${GUARDIANS.map(guardianMarkup).join('')}</div>
           </div>
-          <div class="deep-guards">${GUARDIANS.map(guardianMarkup).join('')}</div>
         </div>
         <div class="deep-tomb-dive"></div>
       </div>`;
@@ -11171,6 +11166,68 @@ function updateArmorBindings(chains,count,changed) {
   ];
   const TRAIN_WIDTH = .86;
   const RAIL_ANCHOR = 535 / 724 * 100;
+  const CLOUD_STEP_TIME = 2350;
+  const CLOUD_ARRIVAL_TIME = 2900;
+  const CLOUD_STATION_HEIGHT = 11.3;
+  // The offline builder embeds this literal once. Every cloud shares one short
+  // Blob URL, instead of copying a large data URI into fifteen moving layers.
+  const CLOUD_IMAGE_SOURCE = 'assets/story/bean-depth-cloud-v1.webp';
+  const cloudImageUrls = new Map();
+  const CLOUD_DEPTHS = {
+    far: { speed: .16, width: 1.22, opacity: .3, scale: .86, drift: .018, blur: 1.4 },
+    middle: { speed: .39, width: 1.3, opacity: .49, scale: .96, drift: .052, blur: .65 },
+    near: { speed: 1.1, width: 1.82, opacity: .86, scale: 1.04, drift: .13, blur: .2 }
+  };
+  // These clouds occupy different heights. They pass the camera once, rather
+  // than looping on a screen-bound decorative drift or moving with the backdrop.
+  const CLOUD_BANDS = [
+    { depth: 'far', height: -1.1, x: .1, turn: -5 },
+    { depth: 'far', height: 2.6, x: .91, turn: 4, flip: true },
+    { depth: 'far', height: 6.2, x: .12, turn: -3 },
+    { depth: 'far', height: 9.8, x: .9, turn: 5, flip: true },
+    { depth: 'middle', height: .1, x: -.1, turn: -7, flip: true },
+    { depth: 'middle', height: 2.4, x: .98, turn: 6 },
+    { depth: 'middle', height: 4.8, x: .08, turn: -3 },
+    { depth: 'middle', height: 7.1, x: 1.03, turn: 8, flip: true },
+    { depth: 'middle', height: 9.7, x: .15, turn: -5 },
+    { depth: 'near', height: .55, x: .17, turn: 4 },
+    { depth: 'near', height: 2.55, x: .84, turn: -6, flip: true },
+    { depth: 'near', height: 4.55, x: .22, turn: 7 },
+    { depth: 'near', height: 6.55, x: .9, turn: -2, flip: true },
+    { depth: 'near', height: 8.55, x: .13, turn: 5 },
+    { depth: 'near', height: 9.9, x: .5, turn: -3, flip: true }
+  ];
+  const clamp = value => Math.max(0, Math.min(1, value));
+
+  function cloudImageUrl(doc) {
+    const source = CLOUD_IMAGE_SOURCE;
+    if (!/^data:image\/[^,]+;base64,/i.test(source)) return source;
+    const cached = cloudImageUrls.get(source);
+    if (cached) { cached.references++; return cached.url; }
+    try {
+      const view = doc.defaultView || window;
+      const comma = source.indexOf(',');
+      const binary = view.atob(source.slice(comma + 1));
+      const bytes = new Uint8Array(binary.length);
+      for (let index = 0; index < binary.length; index++) bytes[index] = binary.charCodeAt(index);
+      const blob = new view.Blob([bytes], { type: source.slice(5, comma).split(';')[0] });
+      const url = view.URL.createObjectURL(blob);
+      cloudImageUrls.set(source, { url, references: 1, objectUrls: view.URL });
+      return url;
+    } catch (_) { return source; }
+  }
+
+  function releaseCloudImage() {
+    const cached = cloudImageUrls.get(CLOUD_IMAGE_SOURCE);
+    if (!cached || --cached.references > 0) return;
+    try { cached.objectUrls.revokeObjectURL(cached.url); } catch (_) {}
+    cloudImageUrls.delete(CLOUD_IMAGE_SOURCE);
+  }
+
+  function cloudField(depth) {
+    return `<div class="beans-cloud-field beans-cloud-field-${depth}">${CLOUD_BANDS.map((cloud, index) =>
+      cloud.depth === depth ? `<div class="beans-cloud-plane" data-cloud="${index}" data-depth="${depth}" data-height="${cloud.height}"></div>` : '').join('')}</div>`;
+  }
 
   function vineSegment(index) {
     const [x0, y0] = VINE_POINTS[index];
@@ -11203,11 +11260,15 @@ function updateArmorBindings(chains,count,changed) {
     scene.className = 'story-scene story-beans';
     scene.hidden = true;
     scene.setAttribute('aria-hidden', 'true');
+    scene.style.setProperty('--beans-cloud-texture', `url("${cloudImageUrl(doc)}")`);
     scene.innerHTML = `
       <div class="beans-frame">
-        <div class="beans-world">
+        <div class="beans-world beans-scenery-world">
           <div class="beans-garden-art"></div>
           <div class="beans-height-haze"></div>
+        </div>
+        ${cloudField('far')}${cloudField('middle')}
+        <div class="beans-world beans-vine-world">
           <svg class="beans-vine" viewBox="0 0 900 1600" preserveAspectRatio="none">
             <defs>
               <linearGradient id="beansStem" x1="0" x2="1">
@@ -11228,7 +11289,6 @@ function updateArmorBindings(chains,count,changed) {
               <path d="M-1-5C-25-7-33-23-29-36C-9-35 1-21-1-5Z"/>
             </g>
           </svg>
-          <div class="beans-low-mist"></div>
         </div>
         <div class="beans-station">
          <div class="beans-station-view">
@@ -11246,8 +11306,7 @@ function updateArmorBindings(chains,count,changed) {
           <div class="beans-track-mist"></div>
          </div>
         </div>
-        <div class="beans-cloud-curtain beans-cloud-left"></div>
-        <div class="beans-cloud-curtain beans-cloud-right"></div>
+        ${cloudField('near')}
         <div class="beans-foreground-mist"></div>
         <div class="beans-frame-shade"></div>
       </div>`;
@@ -11257,14 +11316,18 @@ function updateArmorBindings(chains,count,changed) {
     const tip = scene.querySelector('.beans-vine-tip');
     const cars = Array.from(scene.querySelectorAll('.beans-car'));
     const firstSprite = scene.querySelector('.beans-car-sprite');
+    const cloudPlanes = Array.from(scene.querySelectorAll('.beans-cloud-plane'));
     const timers = new Set();
     let shownCount = -1;
     let active = false;
     let frameRequest = null;
+    let cloudFrameRequest = null;
+    let cloudHeight = 0;
     let exitProgress = 0;
     let spriteAspect = 3;
     let frameAspect = 3 / 4;
-    const reduced = () => Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches);
+    const motionPreference = window.matchMedia?.('(prefers-reduced-motion: reduce)');
+    const reduced = () => Boolean(motionPreference?.matches);
     const now = () => window.performance?.now?.() ?? Date.now();
     const requestFrame = callback => window.requestAnimationFrame(callback);
 
@@ -11282,6 +11345,55 @@ function updateArmorBindings(chains,count,changed) {
       timers.clear();
       if (frameRequest !== null) window.cancelAnimationFrame(frameRequest);
       frameRequest = null;
+      if (cloudFrameRequest !== null) window.cancelAnimationFrame(cloudFrameRequest);
+      cloudFrameRequest = null;
+      scene.classList.remove('beans-clouds-moving');
+    }
+
+    function placeClouds(height) {
+      cloudHeight = height;
+      scene.dataset.cloudHeight = height.toFixed(3);
+      cloudPlanes.forEach(plane => {
+        const band = CLOUD_BANDS[Number(plane.dataset.cloud)];
+        const depth = CLOUD_DEPTHS[band.depth];
+        const distance = height - band.height;
+        const y = .48 + distance * depth.speed;
+        const entry = clamp((y + .72) / .45);
+        const exit = clamp((1.85 - y) / .55);
+        const close = band.depth === 'near';
+        const perspective = close ? .72 + .37 * clamp((distance + .65) / 1.25) : .94 + .08 * clamp((distance + 2) / 4);
+        const scale = depth.scale * perspective;
+        const afterPass = close ? 1 - .48 * clamp((distance - .1) / .8) : 1;
+        const opacity = depth.opacity * entry * exit * afterPass;
+        plane.hidden = opacity < .002 || y < -1 || y > 2.2;
+        plane.style.left = `${(band.x + distance * depth.drift * (band.flip ? -1 : 1)) * 100}%`;
+        plane.style.top = `${y * 100}%`;
+        plane.style.width = `${depth.width * 100}%`;
+        plane.style.opacity = String(opacity);
+        plane.style.transform = `translate(-50%, -50%) rotate(${band.turn}deg) scale(${band.flip ? -scale : scale}, ${scale})`;
+        plane.style.filter = `blur(${depth.blur + (close ? Math.max(0, distance) * .8 : 0)}px) brightness(${close ? .98 : .86}) saturate(.78)`;
+        plane.classList.toggle('is-passing-camera', close && Math.abs(distance) < .4);
+      });
+    }
+
+    function moveClouds(target, duration) {
+      const start = cloudHeight;
+      const startedAt = now();
+      scene.classList.add('beans-clouds-moving');
+      function animate(time) {
+        const fraction = clamp((time - startedAt) / duration);
+        // Smooth arrival preserves the sense of weight without stopping all
+        // layers together. Their depth-specific speeds remain independent.
+        const eased = fraction * fraction * (3 - 2 * fraction);
+        placeClouds(start + (target - start) * eased);
+        if (fraction < 1 && active && !doc.hidden) cloudFrameRequest = requestFrame(animate);
+        else {
+          cloudFrameRequest = null;
+          scene.classList.remove('beans-clouds-moving');
+          placeClouds(target);
+        }
+      }
+      cloudFrameRequest = requestFrame(animate);
     }
 
     function measure() {
@@ -11343,20 +11455,23 @@ function updateArmorBindings(chains,count,changed) {
       placeTrain(1);
     }
 
-    function resetExit() {
+    function resetExit(keepCloudPosition = false) {
       cancelMotion();
-      scene.classList.remove('beans-exiting', 'beans-departed', 'beans-unveiling');
+      scene.classList.remove('beans-exiting', 'beans-departed', 'beans-unveiling', 'beans-camera-moving');
       scene.dataset.exit = 'parked';
       segments.forEach(segment => segment.classList.remove('is-growing'));
       tip.classList.remove('beans-tip-growing');
       measure();
       placeTrain(0);
+      if (!keepCloudPosition) placeClouds(shownCount === 10 ? CLOUD_STATION_HEIGHT : Math.max(0, shownCount));
+      if (doc.hidden && shownCount === 10) setDeparted();
     }
 
     function playExit(stage) {
       if (stage !== 'beans' || !active || shownCount !== 10) return 0;
-      resetExit();
-      if (reduced()) {
+      resetExit(true);
+      placeClouds(CLOUD_STATION_HEIGHT);
+      if (reduced() || doc.hidden) {
         setDeparted();
         return 0;
       }
@@ -11391,10 +11506,11 @@ function updateArmorBindings(chains,count,changed) {
       const wasActive = active;
       active = true;
       scene.hidden = false;
-      resetExit();
-      const growing = animate && next > Math.max(0, previous) && !reduced();
+      resetExit(true);
+      const growing = animate && next > Math.max(0, previous) && !reduced() && !doc.hidden;
       scene.dataset.count = String(next);
       scene.style.setProperty('--beans-rise', String(next * 3.8));
+      scene.style.setProperty('--beans-sky-rise', String(next * 2.5));
       scene.classList.toggle('beans-ready', next === 10);
       scene.classList.toggle('beans-camera-moving', growing && wasActive);
       segments.forEach((segment, index) => {
@@ -11406,6 +11522,11 @@ function updateArmorBindings(chains,count,changed) {
       tip.classList.toggle('beans-tip-hidden', next === 10);
       if (growing && next < 10) tip.classList.add('beans-tip-growing');
       shownCount = next;
+      const cloudTarget = next === 10 ? CLOUD_STATION_HEIGHT : next;
+      if (growing) {
+        if (!wasActive) placeClouds(Math.max(0, next - 1));
+        moveClouds(cloudTarget, next === 10 ? CLOUD_ARRIVAL_TIME : CLOUD_STEP_TIME);
+      } else placeClouds(cloudTarget);
       if (next === 10) {
         if (growing) {
           scene.classList.add('beans-unveiling');
@@ -11425,6 +11546,19 @@ function updateArmorBindings(chains,count,changed) {
     if (firstSprite.complete) imageReady();
     function onResize() { measure(); placeTrain(exitProgress); }
     window.addEventListener('resize', onResize);
+    function settleMotion() {
+      if (!active) return;
+      cancelMotion();
+      scene.classList.remove('beans-camera-moving', 'beans-unveiling');
+      segments.forEach(segment => segment.classList.remove('is-growing'));
+      tip.classList.remove('beans-tip-growing');
+      placeClouds(shownCount === 10 ? CLOUD_STATION_HEIGHT : Math.max(0, shownCount));
+      if (shownCount === 10) setDeparted();
+    }
+    function onVisibility() { if (doc.hidden) settleMotion(); }
+    function onMotionPreference() { if (reduced()) settleMotion(); }
+    doc.addEventListener('visibilitychange', onVisibility);
+    motionPreference?.addEventListener?.('change', onMotionPreference);
 
     return {
       render, playExit, resetExit,
@@ -11436,6 +11570,9 @@ function updateArmorBindings(chains,count,changed) {
       destroy() {
         cancelMotion();
         window.removeEventListener('resize', onResize);
+        doc.removeEventListener('visibilitychange', onVisibility);
+        motionPreference?.removeEventListener?.('change', onMotionPreference);
+        releaseCloudImage();
         scene.remove();
       }
     };
@@ -11485,33 +11622,39 @@ function updateArmorBindings(chains,count,changed) {
   }
 
   let instance = 0;
+  // Every one of the ten long stems travels across the open coffin and the
+  // sleeper. There is one shared tangle over the whole body, no face overlay.
   const VINES = [
-    {side:'left', path:'M116 782 C82 690 193 647 144 558 S98 367 176 268', flower:[176,268], leaves:[[126,702,-48],[145,647,30],[145,565,-32],[119,486,-58],[127,410,22],[148,335,-48]]},
-    {side:'right',path:'M505 774 C534 686 418 626 464 548 S504 362 423 254',flower:[423,254],leaves:[[484,702,44],[462,636,-35],[469,562,32],[479,478,52],[473,395,-25],[448,324,48]]},
-    {side:'left', path:'M91 726 C182 680 86 554 155 493 S202 401 161 369',flower:[161,369],leaves:[[123,686,50],[131,624,-45],[121,561,-50],[153,497,30],[182,441,-20],[175,390,-48]]},
-    {side:'right',path:'M517 726 C433 655 516 562 449 495 S412 428 446 388',flower:[446,388],leaves:[[488,683,-45],[478,614,48],[485,552,40],[446,495,-28],[423,445,25],[436,410,45]]},
-    {side:'left', path:'M128 792 C202 728 95 673 180 612 S225 533 169 498',flower:[169,498],leaves:[[157,756,48],[173,712,-25],[151,670,-55],[183,609,42],[208,563,-25],[193,526,-45]]},
-    {side:'right',path:'M487 791 C418 725 511 668 431 603 S398 541 443 508',flower:[443,508],leaves:[[459,751,-38],[447,704,38],[464,655,45],[429,602,-38],[413,559,25],[429,529,48]]},
-    {side:'left', path:'M89 787 C149 748 174 769 197 710 S202 668 215 645',flower:[215,645],leaves:[[139,759,-32],[173,747,34],[190,717,-35],[199,682,40]]},
-    {side:'right',path:'M512 790 C461 742 427 780 401 717 S407 682 388 655',flower:[388,655],leaves:[[467,761,42],[435,750,-42],[408,721,35],[401,685,-42]]},
-    {side:'left', path:'M96 639 C92 528 161 535 173 435 S203 341 237 333',flower:[237,333],leaves:[[109,569,-45],[152,517,35],[172,449,-40],[181,392,30],[210,346,-30]]},
-    {side:'right',path:'M516 652 C510 551 445 536 436 445 S404 369 368 366',flower:[368,366],leaves:[[494,582,43],[454,526,-40],[437,458,38],[425,404,-35],[395,374,38]]}
-  ];
-
-  const FACE_BRANCHES = {
-    left:[
-      'M-18 152C2 111 42 148 75 106S144 80 152 37',
-      'M-12 45C34 17 47 76 91 58S137 74 177 106',
-      'M17 176C14 128 67 127 82 84S106 19 137 12',
-      'M-19 93C25 84 21 47 66 30S92 59 116 45'
-    ],
-    right:[
-      'M256 146C219 126 229 79 185 88S125 132 103 95',
-      'M254 37C218 62 202 27 167 48S130 66 93 41',
-      'M217 180C225 143 178 159 171 119S146 62 113 20',
-      'M255 102C211 113 202 69 187 42S145 22 145 7'
-    ]
-  };
+    {side:'left',start:[92,758],curves:[[110,637,460,604,391,489],[322,374,156,342,400,258]]},
+    {side:'right',start:[505,774],curves:[[487,636,138,629,215,498],[291,368,449,345,204,270]]},
+    {side:'left',start:[76,642],curves:[[229,738,459,661,373,547],[287,433,107,388,421,365]]},
+    {side:'right',start:[517,647],curves:[[369,730,126,672,224,557],[322,442,484,399,183,376]]},
+    {side:'left',start:[115,512],curves:[[300,417,492,487,372,609],[252,731,126,743,409,697]]},
+    {side:'right',start:[490,515],curves:[[310,425,104,477,223,607],[342,737,480,741,191,700]]},
+    {side:'left',start:[135,248],curves:[[245,290,388,220,442,291],[485,460,130,486,416,540]]},
+    {side:'right',start:[468,230],curves:[[355,312,190,228,154,302],[105,467,487,495,183,547]]},
+    {side:'left',start:[140,365],curves:[[405,389,150,203,425,245],[506,377,188,588,391,445]]},
+    {side:'right',start:[463,362],curves:[[206,393,459,209,177,251],[100,384,419,593,209,448]]}
+  ].map((vine,index)=> {
+    const leaves=[];
+    let start=vine.start;
+    for(const curve of vine.curves) {
+      const [x1,y1,x2,y2,x3,y3]=curve;
+      const estimate=(Math.hypot(x1-start[0],y1-start[1])+Math.hypot(x2-x1,y2-y1)+Math.hypot(x3-x2,y3-y2))*.72;
+      const steps=Math.max(6,Math.round(estimate/27));
+      for(let step=1;step<=steps;step++) {
+        const t=step/(steps+1),u=1-t;
+        const x=u*u*u*start[0]+3*u*u*t*x1+3*u*t*t*x2+t*t*t*x3;
+        const y=u*u*u*start[1]+3*u*u*t*y1+3*u*t*t*y2+t*t*t*y3;
+        const dx=3*u*u*(x1-start[0])+6*u*t*(x2-x1)+3*t*t*(x3-x2);
+        const dy=3*u*u*(y1-start[1])+6*u*t*(y2-y1)+3*t*t*(y3-y2);
+        const angle=Math.atan2(dy,dx)*180/Math.PI+((step+index)%2?140:-30);
+        leaves.push([x.toFixed(2),y.toFixed(2),angle.toFixed(2),.65+(step+index)%4*.07]);
+      }
+      start=[x3,y3];
+    }
+    return {...vine,path:'M'+vine.start.join(' ')+vine.curves.map(curve=>'C'+curve.join(' ')).join(' '),flower:start,leaves};
+  });
 
   // Lines are stored from the outside/top line to the inside/bottom line.
   // Each of the eight standard trigrams occurs exactly once. Their lighting
@@ -11542,34 +11685,25 @@ function updateArmorBindings(chains,count,changed) {
     </defs>`;
   }
 
-  function vineMarkup(id,side,art) {
+  function vineMarkup(side,art) {
     return VINES.map((vine,index)=> {
       if(vine.side!==side)return '';
-      const [x,y]=vine.flower;
       return `<g class="rb-vine" data-vine-index="${index}">
         <path class="rb-vine-shadow" d="${vine.path}"/><path class="rb-vine-stem" d="${vine.path}"/>
-        ${vine.leaves.map(([lx,ly,a],i)=>leaf(art,lx,ly,a,.72+i%3*.12)).join('')}
-        ${vine.leaves.filter((_,i)=>i%2===0).map(([lx,ly],i)=>`<path class="rb-thorn" d="M${lx} ${ly}l${i%2?-10:10}-16 2 20Z"/>`).join('')}
-        <g class="rb-flower" data-rose-index="${index}" transform="translate(${x} ${y}) rotate(${index%2?14:-13})">
-          <g class="rb-rose-bud"><path d="M-9 9C-20-5-14-23-5-26C6-33 18-18 13-7L7 10Z"/><path d="M-12 5L-20-10-6-4 0 14 8-4 20-11 11 9 0 19Z"/><path class="rb-bud-crease" d="M-4-20Q7-13 2 9M-10-13Q-2-9-3 6"/></g>
-          <g class="rb-rose-open"><use class="rb-rose-vector" href="#${id}-rose"/><image class="rb-rose-real" href="${art.bloom}" x="-49" y="-49" width="98" height="98" preserveAspectRatio="xMidYMid meet"/></g>
-        </g>
+        ${vine.leaves.map(([lx,ly,a,scale])=>leaf(art,lx,ly,a,scale)).join('')}
+        ${vine.leaves.filter((_,i)=>i%3===0).map(([lx,ly],i)=>`<path class="rb-thorn" d="M${lx} ${ly}l${i%2?-3:3}-5 1 7Z"/>`).join('')}
       </g>`;
     }).join('');
   }
 
-  function faceVines(side,art) {
-    // Dense interlaced dead leaves cover the face until the tenth flower has
-    // opened. They stay in place while individual branches regain their green.
-    const left=side==='left';
-    return Array.from({length:5},(_,i)=> {
-      const x=left?28+i*22:212-i*22,y=25+i*27,index=i*2+(left?0:1);
-      const curtain=Array.from({length:6},(_,j)=> {
-        const offset=Math.sin(i*2.7+j*1.8)*12,drift=Math.cos(i*3+j*1.9)*9;
-        return leaf(art,(left?15+j*22:225-j*22)+drift,36+i*25+offset,(left?65:-65)+Math.cos(i+j*2)*24,.92+(i+j)%3*.12);
-      }).join('');
-      const path=FACE_BRANCHES[side][i];
-      return `<g class="rb-face-branch" data-vine-index="${index}">${curtain}${path?`<path class="rb-vine-shadow" d="${path}"/><path class="rb-vine-stem" d="${path}"/>`:''}${leaf(art,x,y+24,left?65:-65,1.1)}${leaf(art,x+(left?34:-34),y+26,left?115:-115,.95)}${leaf(art,x+(left?60:-60),y+20,left?65:-65,.8)}</g>`;
+  function flowerMarkup(id,side,art) {
+    return VINES.map((vine,index)=> {
+      if(vine.side!==side)return '';
+      const [x,y]=vine.flower;
+      return `<g class="rb-flower" data-rose-index="${index}" transform="translate(${x} ${y}) rotate(${index%2?14:-13})">
+        <g class="rb-rose-bud"><path d="M-9 9C-20-5-14-23-5-26C6-33 18-18 13-7L7 10Z"/><path d="M-12 5L-20-10-6-4 0 14 8-4 20-11 11 9 0 19Z"/><path class="rb-bud-crease" d="M-4-20Q7-13 2 9M-10-13Q-2-9-3 6"/></g>
+        <g class="rb-rose-open"><use class="rb-rose-vector" href="#${id}-rose"/><image class="rb-rose-real" href="${art.bloom}" x="-49" y="-49" width="98" height="98" preserveAspectRatio="xMidYMid meet"/></g>
+      </g>`;
     }).join('');
   }
 
@@ -11604,8 +11738,7 @@ function updateArmorBindings(chains,count,changed) {
     rose.innerHTML=`<div class="rb-frame rb-rose-frame"><div class="rb-rose-world">
       <div class="rb-rose-fallback"></div><img class="rb-scene-art rb-rose-sleeping" src="${art.sleeping}" alt="" draggable="false"><img class="rb-scene-art rb-rose-awake" src="${art.awake}" alt="" draggable="false">
       <div class="rb-rose-lantern-light"></div>
-      <svg class="rb-vines" viewBox="0 0 600 800" preserveAspectRatio="none" aria-hidden="true">${roseDefinitions(id)}<g class="rb-vines-left">${vineMarkup(id,'left',art)}</g><g class="rb-vines-right">${vineMarkup(id,'right',art)}</g></svg>
-      <svg class="rb-face-vines" viewBox="0 0 240 170" preserveAspectRatio="none" aria-hidden="true"><g class="rb-face-left">${faceVines('left',art)}</g><g class="rb-face-right">${faceVines('right',art)}</g></svg>
+      <svg class="rb-vines" viewBox="0 0 600 800" preserveAspectRatio="none" aria-hidden="true">${roseDefinitions(id)}<g class="rb-vines-left">${vineMarkup('left',art)}</g><g class="rb-vines-right">${vineMarkup('right',art)}</g><g class="rb-vines-left rb-flower-layer">${flowerMarkup(id,'left',art)}</g><g class="rb-vines-right rb-flower-layer">${flowerMarkup(id,'right',art)}</g></svg>
       <div class="rb-rose-pollen">${Array.from({length:14},(_,i)=>`<i style="--rb-particle-x:${15+i*37%72}%;--rb-particle-y:${28+i*19%57}%;--rb-particle-delay:${i*.07}s"></i>`).join('')}</div>
       <div class="rb-rose-air"></div><div class="rb-frame-shade"></div>
     </div></div>`;
@@ -11837,7 +11970,18 @@ function updateArmorBindings(chains,count,changed) {
       if (!DISPLAY_PLACES.includes(place) || typeof id !== 'string' || !ids.has(id) || displayed.has(id)) throw fail('corrupt-record');
       displayed.add(id);
     });
-    return { ...clone(record), displayPlaces: clone(displayPlaces) };
+    const roomPositions = record.roomPositions === undefined ? {} : record.roomPositions;
+    if (!roomPositions || typeof roomPositions !== 'object' || Array.isArray(roomPositions)) throw fail('corrupt-record');
+    Object.entries(roomPositions).forEach(([id, position]) => {
+      if (!ids.has(id) || !validPosition(position)) throw fail('corrupt-record');
+    });
+    return { ...clone(record), displayPlaces: clone(displayPlaces), roomPositions: clone(roomPositions) };
+  }
+
+  function validPosition(position) {
+    return position && typeof position === 'object' && !Array.isArray(position)
+      && typeof position.x === 'number' && Number.isFinite(position.x) && position.x >= 0 && position.x <= 1
+      && typeof position.y === 'number' && Number.isFinite(position.y) && position.y >= 0 && position.y <= 1;
   }
 
   function create(options) {
@@ -11865,6 +12009,7 @@ function updateArmorBindings(chains,count,changed) {
         balance: record ? record.balance : previewBalance,
         owned: record ? clone(record.owned) : [],
         displayPlaces: record ? clone(record.displayPlaces || {}) : {},
+        roomPositions: record ? clone(record.roomPositions || {}) : {},
         revision: record ? record.revision : 0,
         storage: backend || null, ready: initialized && !error,
         error: error || null,
@@ -11890,7 +12035,7 @@ function updateArmorBindings(chains,count,changed) {
       }
       const balance = legacyBalance();
       const now = Date.now();
-      return { schema: 1, balance, owned: [], events: [], displayPlaces: {}, revision: 0,
+      return { schema: 1, balance, owned: [], events: [], displayPlaces: {}, roomPositions: {}, revision: 0,
         migratedLegacyBalance: balance, createdAt: now, updatedAt: now };
     }
 
@@ -12127,18 +12272,37 @@ function updateArmorBindings(chains,count,changed) {
         if (!next.owned.some(entry => entry.itemId === item.id)) {
           return { changed: false, result: { ok: false, reason: 'not-owned' } };
         }
-        if (next.displayPlaces[placeId] === item.id) return { changed: false, result: { ok: true } };
+        if (next.displayPlaces[placeId] === item.id && !next.roomPositions[item.id]) return { changed: false, result: { ok: true } };
         Object.keys(next.displayPlaces).forEach(place => {
           if (next.displayPlaces[place] === item.id) delete next.displayPlaces[place];
         });
         next.displayPlaces[placeId] = item.id;
+        delete next.roomPositions[item.id];
+        touch(next);
+        return { changed: true, result: { ok: true } };
+      });
+    }
+
+    function setRoomPosition(itemId, position) {
+      const item = catalog?.get ? catalog.get(itemId) : catalog?.byId?.[itemId];
+      if (!item) return Promise.resolve({ ok: false, reason: 'invalid-item', snapshot: snapshot() });
+      if (!validPosition(position)) return Promise.resolve({ ok: false, reason: 'invalid-room-position', snapshot: snapshot() });
+      // Capture only this item's requested coordinates. The transaction reads the
+      // latest wallet, purchases, other positions and reward IDs before merging.
+      const requested = { x: Math.round(position.x * 100000) / 100000, y: Math.round(position.y * 100000) / 100000 };
+      return enqueue(next => {
+        if (!next.owned.some(entry => entry.itemId === item.id)) return { changed: false, result: { ok: false, reason: 'not-owned' } };
+        const previous = next.roomPositions[item.id];
+        if (previous && previous.x === requested.x && previous.y === requested.y) return { changed: false, result: { ok: true } };
+        next.roomPositions[item.id] = requested;
+        Object.keys(next.displayPlaces).forEach(place => { if (next.displayPlaces[place] === item.id) delete next.displayPlaces[place]; });
         touch(next);
         return { changed: true, result: { ok: true } };
       });
     }
 
     return Object.freeze({
-      ready: () => readyPromise.then(() => snapshot()), retry, snapshot, credit, purchase, setDisplayPlace,
+      ready: () => readyPromise.then(() => snapshot()), retry, snapshot, credit, purchase, setDisplayPlace, setRoomPosition,
       subscribe(fn) { listeners.add(fn); return () => listeners.delete(fn); },
       dispose() {
         disposed = true;
@@ -12179,8 +12343,8 @@ function updateArmorBindings(chains,count,changed) {
   ];
   const PLACES = [
     { id: 'window', name: '窗台', x: 30, y: 39, width: 11 },
-    { id: 'crate', name: '旧木箱', x: 15, y: 66, width: 16 },
-    { id: 'shelf', name: '墙边架', x: 51, y: 50, width: 11 }
+    { id: 'crate', name: '左侧地板', x: 15, y: 66, width: 16 },
+    { id: 'shelf', name: '房间中央', x: 51, y: 50, width: 11 }
   ];
   const ART = ['furniture-atlas.webp', 'room-atlas.webp', 'curios-atlas.webp', 'companions-atlas.webp'];
   const SVG_START = '<svg viewBox="0 0 100 100" aria-hidden="true" focusable="false">';
@@ -12250,6 +12414,11 @@ function updateArmorBindings(chains,count,changed) {
     let placing = false;
     let placementNotice = null;
     let displayIsAuthoritative = false;
+    let arranging = false;
+    let dragging = null;
+    let roomSaveNotice = null;
+    let failedRoomMove = null;
+    let ignoreSyntheticClickUntil = 0;
     let state = { balance: 0, owned: [] };
     let unsubscribe;
     let openCollection = false;
@@ -12298,20 +12467,19 @@ function updateArmorBindings(chains,count,changed) {
         <div class="magic-house-content">
           <section class="magic-panel magic-room-panel" data-shop-panel="room" aria-label="我的巫师房间">
             <div class="magic-room-toolbar"><span id="magicShopOwnedCount">已收藏 0 / ${items.length}</span>
-              <button id="magicShopEntry" class="magic-button magic-button-primary" type="button">去商店选购 <span aria-hidden="true">→</span></button></div>
+              <div class="magic-room-toolbar-actions"><button id="magicRoomArrange" class="magic-button" type="button" aria-pressed="false">布置房间</button><button id="magicShopEntry" class="magic-button magic-button-primary" type="button">去商店选购 <span aria-hidden="true">→</span></button></div></div>
+            <div class="magic-arrange-guidance" id="magicRoomArrangeGuidance" hidden><p id="magicRoomArrangeHint">按住物品拖到喜欢的位置，松手保存。空白处仍可上下滑动；完成后点物品看小魔法。</p><p id="magicRoomPositionStatus" role="status" aria-live="polite"></p><button type="button" class="magic-button magic-button-small" id="magicRoomPositionRetry" hidden>重试保存位置</button></div>
             <div class="magic-room-stage" id="magicRoomStage" aria-label="可点按藏品的巫师房间">
               <div class="magic-room-background" aria-hidden="true"></div>
-              <div class="magic-old-crate" aria-hidden="true"></div>
-              <div class="magic-wall-shelf" aria-hidden="true"></div>
               <div class="magic-room-objects" id="magicRoomObjects"></div>
-              <div class="magic-room-empty" id="magicRoomEmpty"><strong>小屋等着你的第一件藏品</strong><span>攒下古银币，挑一件喜欢的奇物。<br>小物可以直接摆在窗台或旧木箱上。</span></div>
+              <div class="magic-room-empty" id="magicRoomEmpty"><strong>小屋等着你的第一件藏品</strong><span>攒下古银币，挑一件喜欢的奇物。<br>买下后点「布置房间」，就能拖动摆放。</span></div>
               <p class="magic-room-hint" id="magicRoomHint" hidden>点一下藏品，看看它的小魔法</p>
             </div>
             <p class="magic-live-message" id="magicRoomMagicStatus" aria-live="polite">这里是你的房间，原来的床、木凳和窗户一直都在。</p>
             <div class="magic-collection">
               <button class="magic-collection-toggle" id="magicCollectionToggle" type="button" aria-expanded="false" aria-controls="magicCollectionBody">我的藏品 <span id="magicCollectionCount">0 件</span><span class="magic-chevron" aria-hidden="true">⌄</span></button>
               <div id="magicCollectionBody" hidden>
-                <p class="magic-collection-note">选一件查看、点按施展魔法。桌上小物可以换个陈列位置。</p>
+                <p class="magic-collection-note">选一件查看小魔法，或点「布置这件藏品」把它摆进房间。</p>
                 <div class="magic-collection-list" id="magicCollectionList"></div>
                 <div id="magicRoomInspector" class="magic-room-inspector" hidden></div>
               </div>
@@ -12338,8 +12506,20 @@ function updateArmorBindings(chains,count,changed) {
     const el = id => cottage.querySelector('#' + id);
     const tap = (element, handler) => {
       if (!element) return;
-      if (typeof options.onTap === 'function') options.onTap(element, handler);
-      else element.addEventListener('click', handler);
+      let start, moved = false;
+      element.addEventListener('pointerdown', event => { start = { x: event.clientX, y: event.clientY }; moved = false; }, { passive: true });
+      element.addEventListener('pointermove', event => { if (start && Math.hypot(event.clientX - start.x, event.clientY - start.y) > 8) moved = true; }, { passive: true });
+      element.addEventListener('pointercancel', () => { moved = true; }, { passive: true });
+      const activate = event => {
+        if (event?.type === 'click' && event.detail !== 0 && Date.now() < ignoreSyntheticClickUntil) return;
+        if (moved && event?.type !== 'keydown' && !(event?.type === 'click' && event.detail === 0)) return;
+        // A touch pointerup can replace this panel before WebKit emits click.
+        // Suppress that compatibility click even if it targets a NEW card below.
+        if (event?.type === 'pointerup') ignoreSyntheticClickUntil = Date.now() + 450;
+        handler(event);
+      };
+      if (typeof options.onTap === 'function') options.onTap(element, activate);
+      else element.addEventListener('click', activate);
     };
     const ownedIds = () => new Set((Array.isArray(state.owned) ? state.owned : []).map(record =>
       String(typeof record === 'string' ? record : record.itemId || record.id)));
@@ -12400,6 +12580,7 @@ function updateArmorBindings(chains,count,changed) {
       el('magicShopStorageAlert').hidden = !ready || healthy();
       el('magicShopStorageCopy').textContent = recovering ? '正在重新读取藏品账本……' : '藏品账本暂时无法保存。重新读取后，还需再次确认兑换。';
       el('magicShopRetryStorage').disabled = recovering;
+      syncArrangeControls();
       if (typeof options.onBalance === 'function') options.onBalance(balance(), state);
     }
 
@@ -12418,7 +12599,7 @@ function updateArmorBindings(chains,count,changed) {
 
     function chooseDisplayDefaults() {
       if (displayIsAuthoritative) return;
-      const owned = items.filter(item => owns(item) && smallItem(item));
+      const owned = items.filter(item => owns(item) && smallItem(item) && !state.roomPositions?.[item.id]);
       PLACES.forEach(place => { if (displayed[place.id] && !owns(byId.get(displayed[place.id]) || {})) delete displayed[place.id]; });
       const shown = new Set(Object.values(displayed));
       PLACES.forEach(place => {
@@ -12429,25 +12610,178 @@ function updateArmorBindings(chains,count,changed) {
     }
 
     function roomButton(item, position, place) {
-      return '<button type="button" class="magic-room-item magic-room-' + item._effect + '" data-item-id="' + escapeHtml(item.id) + '" data-effect="' + item._effect + '"' +
+      return '<button type="button" class="magic-room-item magic-room-' + item._effect + (arranging && inspected === String(item.id) ? ' is-selected' : '') + '" data-item-id="' + escapeHtml(item.id) + '" data-effect="' + item._effect + '"' +
         (place ? ' data-display-place="' + place + '"' : '') +
-        ' aria-label="' + escapeHtml(item.name) + '，点按施展魔法" style="--room-x:' + position[0] + ';--room-y:' + position[1] + ';--room-w:' + position[2] + ';--room-z:' + position[3] + '">' +
+        ' data-room-x="' + position[0] / 100 + '" data-room-y="' + position[1] / 100 + '" aria-label="' + escapeHtml(item.name) + (arranging ? '，按住拖动摆放，也可用方向键微调' : '，点按施展魔法') + '" style="--room-x:' + position[0] + ';--room-y:' + position[1] + ';--room-w:' + position[2] + ';--room-z:' + position[3] + '">' +
         artMarkup(item, true) + '<span class="magic-room-item-name">' + escapeHtml(item.name) + '</span></button>';
     }
 
+    function roomPlacement(item) {
+      const place = PLACES.find(candidate => displayed[candidate.id] === String(item.id));
+      const initial = POSITIONS[item._index] || (item._effect === 'bird' ? [17, 36, 12, 50] : item._effect === 'cat' ? [67, 88, 21, 55] :
+        place ? [place.x, place.y, place.width, 60] : [50, 68, 14, 60]);
+      const saved = state.roomPositions?.[item.id];
+      return saved ? [saved.x * 100, saved.y * 100, initial[2], item._effect === 'rug' ? 3 : 20 + Math.round(saved.y * 100)] : initial;
+    }
+
+    function syncArrangeControls() {
+      const control = el('magicRoomArrange');
+      if (!control) return;
+      cottage.classList.toggle('is-arranging', arranging);
+      cottage.dataset.roomArranging = String(arranging);
+      control.textContent = arranging ? '完成布置' : '布置房间';
+      control.setAttribute('aria-pressed', String(arranging));
+      control.disabled = placing || !healthy() || !items.some(owns);
+      el('magicRoomArrangeGuidance').hidden = !arranging && !failedRoomMove;
+      el('magicRoomArrangeHint').hidden = !arranging;
+      el('magicRoomPositionStatus').textContent = roomSaveNotice?.message || '只移动藏品，不会消耗古银币。';
+      el('magicRoomPositionStatus').classList.toggle('is-error', Boolean(roomSaveNotice?.error));
+      el('magicRoomPositionRetry').hidden = !failedRoomMove;
+      el('magicRoomPositionRetry').disabled = placing || recovering;
+      el('magicRoomHint').textContent = arranging ? '按住物品拖动，松手保存位置' : '点一下藏品，看看它的小魔法';
+    }
+
+    function cancelRoomDrag() {
+      if (!dragging) return;
+      const active = dragging;
+      dragging = null;
+      try { if (active.button.hasPointerCapture(active.pointerId)) active.button.releasePointerCapture(active.pointerId); } catch (_) {}
+      renderRoom();
+    }
+
+    function setArranging(value) {
+      cancelRoomDrag();
+      arranging = Boolean(value);
+      syncArrangeControls();
+      renderRoom();
+    }
+
+    function clampRoomPoint(point, button, item) {
+      const stage = el('magicRoomStage').getBoundingClientRect();
+      const size = button?.getBoundingClientRect();
+      const width = size?.width || Math.max(44, stage.width * roomPlacement(item)[2] / 100);
+      const height = size?.height || width;
+      const halfX = Math.min(.49, width / (stage.width || 490) / 2);
+      const halfY = Math.min(.49, height / (stage.height || 654) / 2);
+      return { x: Math.max(halfX, Math.min(1 - halfX, point.x)), y: Math.max(halfY, Math.min(1 - halfY, point.y)) };
+    }
+
+    async function saveRoomPosition(item, point) {
+      if (placing || destroyed) return false;
+      placing = true;
+      roomSaveNotice = { message: '正在保存' + item.name + '的位置……', error: false };
+      syncArrangeControls();
+      try {
+        const result = typeof ledger.setRoomPosition === 'function' ? await ledger.setRoomPosition(item.id, point) : null;
+        if (destroyed) return false;
+        placing = false;
+        takeSnapshot(result?.snapshot);
+        if (result?.ok) {
+          failedRoomMove = null;
+          roomSaveNotice = { message: item.name + '的位置已保存。', error: false };
+        } else {
+          failedRoomMove = { itemId: item.id, position: point };
+          roomSaveNotice = { message: '摆放没有保存，原位置保留。请点「重试保存位置」，不会扣币。', error: true };
+        }
+        syncHeader();
+        renderRoom();
+        return Boolean(result?.ok);
+      } catch (_) {
+        if (destroyed) return false;
+        placing = false;
+        takeSnapshot();
+        failedRoomMove = { itemId: item.id, position: point };
+        roomSaveNotice = { message: '摆放没有保存，原位置保留。请点「重试保存位置」，不会扣币。', error: true };
+        syncHeader();
+        renderRoom();
+        return false;
+      }
+    }
+
+    function bindRoomItem(button, item) {
+      let press = null;
+      let ignoreClickUntil = 0;
+      const select = () => {
+        inspected = String(item.id);
+        cottage.querySelectorAll('.magic-room-item.is-selected').forEach(candidate => candidate.classList.remove('is-selected'));
+        button.classList.add('is-selected');
+        roomSaveNotice = { message: '按住' + item.name + '拖动，或用方向键微调位置。', error: false };
+        syncArrangeControls();
+      };
+      button.addEventListener('pointerdown', event => {
+        if (event.isPrimary === false || event.button > 0 || placing) return;
+        press = { x: event.clientX, y: event.clientY, moved: false };
+        if (!arranging || !healthy() || dragging) return;
+        inspected = String(item.id);
+        const stage = el('magicRoomStage').getBoundingClientRect();
+        const rect = button.getBoundingClientRect();
+        dragging = { pointerId: event.pointerId, button, item, start: press,
+          offsetX: event.clientX - rect.x - rect.width / 2, offsetY: event.clientY - rect.y - rect.height / 2,
+          position: { x: (rect.x + rect.width / 2 - stage.x) / stage.width, y: (rect.y + rect.height / 2 - stage.y) / stage.height } };
+        try { button.setPointerCapture(event.pointerId); } catch (_) {}
+        if (event.cancelable) event.preventDefault();
+      });
+      button.addEventListener('pointermove', event => {
+        if (!press) return;
+        if (Math.hypot(event.clientX - press.x, event.clientY - press.y) > 6) press.moved = true;
+        if (!dragging || dragging.button !== button || dragging.pointerId !== event.pointerId || !press.moved) return;
+        if (event.cancelable) event.preventDefault();
+        const stage = el('magicRoomStage').getBoundingClientRect();
+        const point = clampRoomPoint({ x: (event.clientX - stage.x - dragging.offsetX) / stage.width,
+          y: (event.clientY - stage.y - dragging.offsetY) / stage.height }, button, item);
+        dragging.position = point;
+        button.classList.remove('is-playing');
+        button.classList.add('is-dragging');
+        button.style.setProperty('--room-x', point.x * 100);
+        button.style.setProperty('--room-y', point.y * 100);
+        button.dataset.roomX = String(point.x);
+        button.dataset.roomY = String(point.y);
+      });
+      button.addEventListener('pointerup', event => {
+        const tapped = press && !press.moved;
+        const active = dragging?.button === button && dragging.pointerId === event.pointerId ? dragging : null;
+        press = null;
+        ignoreClickUntil = Date.now() + 500;
+        if (active) {
+          dragging = null;
+          try { if (button.hasPointerCapture(event.pointerId)) button.releasePointerCapture(event.pointerId); } catch (_) {}
+          button.classList.remove('is-dragging');
+          if (active.start.moved) { void saveRoomPosition(item, active.position); return; }
+        }
+        if (tapped) { if (arranging) select(); else playMagic(button, item); }
+      });
+      const cancel = () => { press = null; if (dragging?.button === button) cancelRoomDrag(); };
+      button.addEventListener('pointercancel', cancel);
+      button.addEventListener('lostpointercapture', cancel);
+      button.addEventListener('click', event => {
+        if (Date.now() < ignoreClickUntil || placing) return;
+        if (arranging) select(); else playMagic(button, item);
+      });
+      button.addEventListener('keydown', event => {
+        if (!arranging || placing || !healthy() || !['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) return;
+        event.preventDefault();
+        const position = roomPlacement(item);
+        const step = event.shiftKey ? .05 : .02;
+        const point = { x: position[0] / 100, y: position[1] / 100 };
+        point.x += event.key === 'ArrowRight' ? step : event.key === 'ArrowLeft' ? -step : 0;
+        point.y += event.key === 'ArrowDown' ? step : event.key === 'ArrowUp' ? -step : 0;
+        void saveRoomPosition(item, clampRoomPoint(point, button, item));
+      });
+    }
+
     function renderRoom() {
+      if (dragging) return;
       chooseDisplayDefaults();
       const owned = items.filter(owns);
-      const room = owned.filter(item => item._index < 12 || item._index >= 22).map(item => {
-        const position = POSITIONS[item._index] || (item._effect === 'bird' ? [17, 36, 12, 50] : [67, 88, 21, 55]);
-        return roomButton(item, position);
+      const room = owned.filter(item => !smallItem(item) || state.roomPositions?.[item.id]).map(item => {
+        return roomButton(item, roomPlacement(item));
       });
       PLACES.forEach(place => {
         const item = byId.get(displayed[place.id]);
-        if (item && owns(item)) room.push(roomButton(item, [place.x, place.y, place.width, 60], place.id));
+        if (item && owns(item) && !state.roomPositions?.[item.id]) room.push(roomButton(item, roomPlacement(item), place.id));
       });
       el('magicRoomObjects').innerHTML = room.join('');
-      cottage.querySelectorAll('.magic-room-item').forEach(button => tap(button, () => playMagic(button, byId.get(button.dataset.itemId))));
+      cottage.querySelectorAll('.magic-room-item').forEach(button => bindRoomItem(button, byId.get(button.dataset.itemId)));
       el('magicRoomEmpty').hidden = owned.length > 0;
       el('magicRoomHint').hidden = owned.length === 0;
       el('magicCollectionList').innerHTML = owned.map(item => '<button type="button" class="magic-collection-item" data-item-id="' + escapeHtml(item.id) + '" aria-pressed="' + (inspected === String(item.id)) + '">' + artMarkup(item, false) + '<span>' + escapeHtml(item.name) + '</span></button>').join('') || '<p class="magic-no-collection">还没有藏品。去商店看看，15 枚就能挑第一件奇物。</p>';
@@ -12469,11 +12803,21 @@ function updateArmorBindings(chains,count,changed) {
       if (inspector.hidden) { inspector.innerHTML = ''; return; }
       const place = PLACES.find(place => displayed[place.id] === String(item.id));
       const notice = placementNotice && placementNotice.itemId === String(item.id) ? placementNotice : null;
-      inspector.innerHTML = '<div class="magic-inspector-main"><button type="button" class="magic-inspector-preview magic-interactive-preview" data-item-id="' + escapeHtml(item.id) + '" data-effect="' + item._effect + '" aria-label="点按' + escapeHtml(item.name) + '施展魔法">' + artMarkup(item, true) + '</button><div><h3>' + escapeHtml(item.name) + '</h3><p>' + escapeHtml(item.magic || item.description || '点按藏品，唤醒它的小魔法。') + '</p><button type="button" class="magic-button magic-button-small" id="magicInspectorPlay">看看小魔法</button></div></div>' +
-        (smallItem(item) ? '<div class="magic-place-options" aria-label="选择陈列位置"><span>摆在' + (place ? '（现在：' + place.name + '）' : '房间里') + '</span>' + PLACES.map(target => '<button type="button" class="magic-place-button" data-place="' + target.id + '" aria-pressed="' + (place && place.id === target.id ? 'true' : 'false') + '"' + (placing || !healthy() ? ' disabled' : '') + '>' + target.name + '</button>').join('') + '</div><p class="magic-place-note' + (notice && notice.error ? ' is-error' : '') + '" id="magicPlacementStatus" aria-live="polite">' + escapeHtml(notice && notice.message || '换位置会保存到房间，并把原来那件收回藏品柜；随时可以再拿出来。') + '</p>' : '<p class="magic-place-note">已经摆在房间的固定位置，点它就会回应你。</p>');
+      inspector.innerHTML = '<div class="magic-inspector-main"><button type="button" class="magic-inspector-preview magic-interactive-preview" data-item-id="' + escapeHtml(item.id) + '" data-effect="' + item._effect + '" aria-label="点按' + escapeHtml(item.name) + '施展魔法">' + artMarkup(item, true) + '</button><div><h3>' + escapeHtml(item.name) + '</h3><p>' + escapeHtml(item.magic || item.description || '点按藏品，唤醒它的小魔法。') + '</p><div class="magic-inspector-actions"><button type="button" class="magic-button magic-button-small" id="magicInspectorPlay">看看小魔法</button><button type="button" class="magic-button magic-button-small" id="magicRoomArrangeItem"' + (placing || !healthy() ? ' disabled' : '') + '>布置这件藏品</button></div></div></div>' +
+        (smallItem(item) ? '<div class="magic-place-options" aria-label="选择陈列位置"><span>快速摆放' + (place ? '（现在：' + place.name + '）' : '') + '</span>' + PLACES.map(target => '<button type="button" class="magic-place-button" data-place="' + target.id + '" aria-pressed="' + (place && place.id === target.id ? 'true' : 'false') + '"' + (placing || !healthy() ? ' disabled' : '') + '>' + target.name + '</button>').join('') + '</div><p class="magic-place-note' + (notice && notice.error ? ' is-error' : '') + '" id="magicPlacementStatus" aria-live="polite">' + escapeHtml(notice && notice.message || '也可以点「布置这件藏品」自由拖动。位置会保存，不消耗银币。') + '</p>' : '<p class="magic-place-note">点「布置这件藏品」，可以把它拖到喜欢的位置；位置会保存。</p>');
       const preview = inspector.querySelector('.magic-inspector-preview');
       tap(preview, () => playMagic(preview, item));
       tap(el('magicInspectorPlay'), () => playMagic(preview, item));
+      tap(el('magicRoomArrangeItem'), async () => {
+        if (placing || !healthy()) return;
+        setArranging(true);
+        if (!Array.from(el('magicRoomObjects').querySelectorAll('[data-item-id]')).some(button => button.dataset.itemId === String(item.id))) {
+          if (!(await saveRoomPosition(item, clampRoomPoint({ x: .5, y: .68 }, null, item)))) return;
+        }
+        el('magicRoomStage').scrollIntoView({ block: 'center', behavior: 'auto' });
+        const target = Array.from(el('magicRoomObjects').querySelectorAll('[data-item-id]')).find(button => button.dataset.itemId === String(item.id));
+        target?.focus({ preventScroll: true });
+      });
       inspector.querySelectorAll('[data-place]').forEach(button => tap(button, async () => {
         if (placing || !healthy()) return;
         const destination = PLACES.find(place => place.id === button.dataset.place);
@@ -12583,6 +12927,7 @@ function updateArmorBindings(chains,count,changed) {
 
     function showPanel(next, focusSelector) {
       if (buying && next !== panel) return;
+      if (next !== 'room' && arranging) setArranging(false);
       panel = next;
       cottage.dataset.shopPanel = next;
       cottage.querySelectorAll('[data-shop-panel]').forEach(section => { section.hidden = section.dataset.shopPanel !== next; });
@@ -12630,6 +12975,7 @@ function updateArmorBindings(chains,count,changed) {
 
     function onCancel(event) {
       if (buying) { event.preventDefault(); return; }
+      if (arranging) { event.preventDefault(); setArranging(false); return; }
       if (panel !== 'room') {
         event.preventDefault();
         showPanel(panel === 'detail' ? 'shop' : 'room', panel === 'detail' ? '#magicShopBackRoom' : '#magicShopEntry');
@@ -12637,6 +12983,26 @@ function updateArmorBindings(chains,count,changed) {
     }
 
     tap(el('magicShopEntry'), openShop);
+    tap(el('magicRoomArrange'), () => setArranging(!arranging));
+    tap(el('magicRoomPositionRetry'), async () => {
+      if (!failedRoomMove || placing || recovering) return;
+      const pending = failedRoomMove;
+      recovering = true;
+      syncArrangeControls();
+      try {
+        const snapshot = await ledger.retry();
+        if (destroyed) return;
+        recovering = false;
+        takeSnapshot(snapshot);
+        syncHeader();
+        if (healthy()) await saveRoomPosition(byId.get(String(pending.itemId)), pending.position);
+        else { roomSaveNotice = { message: '账本还没有恢复，原位置保留。稍后可再重试，不会扣币。', error: true }; syncArrangeControls(); }
+      } catch (_) {
+        recovering = false;
+        roomSaveNotice = { message: '账本还没有恢复，原位置保留。稍后可再重试，不会扣币。', error: true };
+        syncArrangeControls();
+      }
+    });
     tap(el('magicShopBackRoom'), openRoom);
     tap(el('magicShopBackStore'), () => showPanel('shop', '#magicShopBackRoom'));
     tap(el('magicShopRetryStorage'), async () => {
@@ -12667,6 +13033,16 @@ function updateArmorBindings(chains,count,changed) {
       renderStore();
     }));
     cottage.addEventListener('cancel', onCancel);
+    const onRoomClose = () => setArranging(false);
+    const onRoomResize = () => { if (dragging) cancelRoomDrag(); };
+    const onRoomTouchMove = event => {
+      // The main writing page blocks document-wide touchmove. A native scroll
+      // inside this dialog must stop before that listener without being canceled.
+      if (event.target?.closest?.('.magic-house-content')) event.stopPropagation();
+    };
+    cottage.addEventListener('close', onRoomClose);
+    cottage.addEventListener('touchmove', onRoomTouchMove, { passive: true });
+    view.addEventListener?.('resize', onRoomResize);
     takeSnapshot();
     refresh();
     showPanel('room');
@@ -12693,6 +13069,9 @@ function updateArmorBindings(chains,count,changed) {
         animationTimers = [];
         if (typeof unsubscribe === 'function') unsubscribe();
         cottage.removeEventListener('cancel', onCancel);
+        cottage.removeEventListener('close', onRoomClose);
+        cottage.removeEventListener('touchmove', onRoomTouchMove);
+        view.removeEventListener?.('resize', onRoomResize);
         artBlobUrls.forEach(url => { try { objectUrls.revokeObjectURL(url); } catch (_) {} });
         artBlobUrls.clear();
       }
@@ -13577,7 +13956,7 @@ function defaultBank(){
 // set — the change would reach nobody who actually uses the game.
 const BANK_VERSION = 5;
 const ROUND_GOAL = 10;
-const GAME_VERSION = '2026.11.25.1';
+const GAME_VERSION = '2026.11.26.1';
 
 let state = {
   bank: defaultBank(),

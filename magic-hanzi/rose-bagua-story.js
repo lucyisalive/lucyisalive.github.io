@@ -37,33 +37,39 @@
   }
 
   let instance = 0;
+  // Every one of the ten long stems travels across the open coffin and the
+  // sleeper. There is one shared tangle over the whole body, no face overlay.
   const VINES = [
-    {side:'left', path:'M116 782 C82 690 193 647 144 558 S98 367 176 268', flower:[176,268], leaves:[[126,702,-48],[145,647,30],[145,565,-32],[119,486,-58],[127,410,22],[148,335,-48]]},
-    {side:'right',path:'M505 774 C534 686 418 626 464 548 S504 362 423 254',flower:[423,254],leaves:[[484,702,44],[462,636,-35],[469,562,32],[479,478,52],[473,395,-25],[448,324,48]]},
-    {side:'left', path:'M91 726 C182 680 86 554 155 493 S202 401 161 369',flower:[161,369],leaves:[[123,686,50],[131,624,-45],[121,561,-50],[153,497,30],[182,441,-20],[175,390,-48]]},
-    {side:'right',path:'M517 726 C433 655 516 562 449 495 S412 428 446 388',flower:[446,388],leaves:[[488,683,-45],[478,614,48],[485,552,40],[446,495,-28],[423,445,25],[436,410,45]]},
-    {side:'left', path:'M128 792 C202 728 95 673 180 612 S225 533 169 498',flower:[169,498],leaves:[[157,756,48],[173,712,-25],[151,670,-55],[183,609,42],[208,563,-25],[193,526,-45]]},
-    {side:'right',path:'M487 791 C418 725 511 668 431 603 S398 541 443 508',flower:[443,508],leaves:[[459,751,-38],[447,704,38],[464,655,45],[429,602,-38],[413,559,25],[429,529,48]]},
-    {side:'left', path:'M89 787 C149 748 174 769 197 710 S202 668 215 645',flower:[215,645],leaves:[[139,759,-32],[173,747,34],[190,717,-35],[199,682,40]]},
-    {side:'right',path:'M512 790 C461 742 427 780 401 717 S407 682 388 655',flower:[388,655],leaves:[[467,761,42],[435,750,-42],[408,721,35],[401,685,-42]]},
-    {side:'left', path:'M96 639 C92 528 161 535 173 435 S203 341 237 333',flower:[237,333],leaves:[[109,569,-45],[152,517,35],[172,449,-40],[181,392,30],[210,346,-30]]},
-    {side:'right',path:'M516 652 C510 551 445 536 436 445 S404 369 368 366',flower:[368,366],leaves:[[494,582,43],[454,526,-40],[437,458,38],[425,404,-35],[395,374,38]]}
-  ];
-
-  const FACE_BRANCHES = {
-    left:[
-      'M-18 152C2 111 42 148 75 106S144 80 152 37',
-      'M-12 45C34 17 47 76 91 58S137 74 177 106',
-      'M17 176C14 128 67 127 82 84S106 19 137 12',
-      'M-19 93C25 84 21 47 66 30S92 59 116 45'
-    ],
-    right:[
-      'M256 146C219 126 229 79 185 88S125 132 103 95',
-      'M254 37C218 62 202 27 167 48S130 66 93 41',
-      'M217 180C225 143 178 159 171 119S146 62 113 20',
-      'M255 102C211 113 202 69 187 42S145 22 145 7'
-    ]
-  };
+    {side:'left',start:[92,758],curves:[[110,637,460,604,391,489],[322,374,156,342,400,258]]},
+    {side:'right',start:[505,774],curves:[[487,636,138,629,215,498],[291,368,449,345,204,270]]},
+    {side:'left',start:[76,642],curves:[[229,738,459,661,373,547],[287,433,107,388,421,365]]},
+    {side:'right',start:[517,647],curves:[[369,730,126,672,224,557],[322,442,484,399,183,376]]},
+    {side:'left',start:[115,512],curves:[[300,417,492,487,372,609],[252,731,126,743,409,697]]},
+    {side:'right',start:[490,515],curves:[[310,425,104,477,223,607],[342,737,480,741,191,700]]},
+    {side:'left',start:[135,248],curves:[[245,290,388,220,442,291],[485,460,130,486,416,540]]},
+    {side:'right',start:[468,230],curves:[[355,312,190,228,154,302],[105,467,487,495,183,547]]},
+    {side:'left',start:[140,365],curves:[[405,389,150,203,425,245],[506,377,188,588,391,445]]},
+    {side:'right',start:[463,362],curves:[[206,393,459,209,177,251],[100,384,419,593,209,448]]}
+  ].map((vine,index)=> {
+    const leaves=[];
+    let start=vine.start;
+    for(const curve of vine.curves) {
+      const [x1,y1,x2,y2,x3,y3]=curve;
+      const estimate=(Math.hypot(x1-start[0],y1-start[1])+Math.hypot(x2-x1,y2-y1)+Math.hypot(x3-x2,y3-y2))*.72;
+      const steps=Math.max(6,Math.round(estimate/27));
+      for(let step=1;step<=steps;step++) {
+        const t=step/(steps+1),u=1-t;
+        const x=u*u*u*start[0]+3*u*u*t*x1+3*u*t*t*x2+t*t*t*x3;
+        const y=u*u*u*start[1]+3*u*u*t*y1+3*u*t*t*y2+t*t*t*y3;
+        const dx=3*u*u*(x1-start[0])+6*u*t*(x2-x1)+3*t*t*(x3-x2);
+        const dy=3*u*u*(y1-start[1])+6*u*t*(y2-y1)+3*t*t*(y3-y2);
+        const angle=Math.atan2(dy,dx)*180/Math.PI+((step+index)%2?140:-30);
+        leaves.push([x.toFixed(2),y.toFixed(2),angle.toFixed(2),.65+(step+index)%4*.07]);
+      }
+      start=[x3,y3];
+    }
+    return {...vine,path:'M'+vine.start.join(' ')+vine.curves.map(curve=>'C'+curve.join(' ')).join(' '),flower:start,leaves};
+  });
 
   // Lines are stored from the outside/top line to the inside/bottom line.
   // Each of the eight standard trigrams occurs exactly once. Their lighting
@@ -94,34 +100,25 @@
     </defs>`;
   }
 
-  function vineMarkup(id,side,art) {
+  function vineMarkup(side,art) {
     return VINES.map((vine,index)=> {
       if(vine.side!==side)return '';
-      const [x,y]=vine.flower;
       return `<g class="rb-vine" data-vine-index="${index}">
         <path class="rb-vine-shadow" d="${vine.path}"/><path class="rb-vine-stem" d="${vine.path}"/>
-        ${vine.leaves.map(([lx,ly,a],i)=>leaf(art,lx,ly,a,.72+i%3*.12)).join('')}
-        ${vine.leaves.filter((_,i)=>i%2===0).map(([lx,ly],i)=>`<path class="rb-thorn" d="M${lx} ${ly}l${i%2?-10:10}-16 2 20Z"/>`).join('')}
-        <g class="rb-flower" data-rose-index="${index}" transform="translate(${x} ${y}) rotate(${index%2?14:-13})">
-          <g class="rb-rose-bud"><path d="M-9 9C-20-5-14-23-5-26C6-33 18-18 13-7L7 10Z"/><path d="M-12 5L-20-10-6-4 0 14 8-4 20-11 11 9 0 19Z"/><path class="rb-bud-crease" d="M-4-20Q7-13 2 9M-10-13Q-2-9-3 6"/></g>
-          <g class="rb-rose-open"><use class="rb-rose-vector" href="#${id}-rose"/><image class="rb-rose-real" href="${art.bloom}" x="-49" y="-49" width="98" height="98" preserveAspectRatio="xMidYMid meet"/></g>
-        </g>
+        ${vine.leaves.map(([lx,ly,a,scale])=>leaf(art,lx,ly,a,scale)).join('')}
+        ${vine.leaves.filter((_,i)=>i%3===0).map(([lx,ly],i)=>`<path class="rb-thorn" d="M${lx} ${ly}l${i%2?-3:3}-5 1 7Z"/>`).join('')}
       </g>`;
     }).join('');
   }
 
-  function faceVines(side,art) {
-    // Dense interlaced dead leaves cover the face until the tenth flower has
-    // opened. They stay in place while individual branches regain their green.
-    const left=side==='left';
-    return Array.from({length:5},(_,i)=> {
-      const x=left?28+i*22:212-i*22,y=25+i*27,index=i*2+(left?0:1);
-      const curtain=Array.from({length:6},(_,j)=> {
-        const offset=Math.sin(i*2.7+j*1.8)*12,drift=Math.cos(i*3+j*1.9)*9;
-        return leaf(art,(left?15+j*22:225-j*22)+drift,36+i*25+offset,(left?65:-65)+Math.cos(i+j*2)*24,.92+(i+j)%3*.12);
-      }).join('');
-      const path=FACE_BRANCHES[side][i];
-      return `<g class="rb-face-branch" data-vine-index="${index}">${curtain}${path?`<path class="rb-vine-shadow" d="${path}"/><path class="rb-vine-stem" d="${path}"/>`:''}${leaf(art,x,y+24,left?65:-65,1.1)}${leaf(art,x+(left?34:-34),y+26,left?115:-115,.95)}${leaf(art,x+(left?60:-60),y+20,left?65:-65,.8)}</g>`;
+  function flowerMarkup(id,side,art) {
+    return VINES.map((vine,index)=> {
+      if(vine.side!==side)return '';
+      const [x,y]=vine.flower;
+      return `<g class="rb-flower" data-rose-index="${index}" transform="translate(${x} ${y}) rotate(${index%2?14:-13})">
+        <g class="rb-rose-bud"><path d="M-9 9C-20-5-14-23-5-26C6-33 18-18 13-7L7 10Z"/><path d="M-12 5L-20-10-6-4 0 14 8-4 20-11 11 9 0 19Z"/><path class="rb-bud-crease" d="M-4-20Q7-13 2 9M-10-13Q-2-9-3 6"/></g>
+        <g class="rb-rose-open"><use class="rb-rose-vector" href="#${id}-rose"/><image class="rb-rose-real" href="${art.bloom}" x="-49" y="-49" width="98" height="98" preserveAspectRatio="xMidYMid meet"/></g>
+      </g>`;
     }).join('');
   }
 
@@ -156,8 +153,7 @@
     rose.innerHTML=`<div class="rb-frame rb-rose-frame"><div class="rb-rose-world">
       <div class="rb-rose-fallback"></div><img class="rb-scene-art rb-rose-sleeping" src="${art.sleeping}" alt="" draggable="false"><img class="rb-scene-art rb-rose-awake" src="${art.awake}" alt="" draggable="false">
       <div class="rb-rose-lantern-light"></div>
-      <svg class="rb-vines" viewBox="0 0 600 800" preserveAspectRatio="none" aria-hidden="true">${roseDefinitions(id)}<g class="rb-vines-left">${vineMarkup(id,'left',art)}</g><g class="rb-vines-right">${vineMarkup(id,'right',art)}</g></svg>
-      <svg class="rb-face-vines" viewBox="0 0 240 170" preserveAspectRatio="none" aria-hidden="true"><g class="rb-face-left">${faceVines('left',art)}</g><g class="rb-face-right">${faceVines('right',art)}</g></svg>
+      <svg class="rb-vines" viewBox="0 0 600 800" preserveAspectRatio="none" aria-hidden="true">${roseDefinitions(id)}<g class="rb-vines-left">${vineMarkup('left',art)}</g><g class="rb-vines-right">${vineMarkup('right',art)}</g><g class="rb-vines-left rb-flower-layer">${flowerMarkup(id,'left',art)}</g><g class="rb-vines-right rb-flower-layer">${flowerMarkup(id,'right',art)}</g></svg>
       <div class="rb-rose-pollen">${Array.from({length:14},(_,i)=>`<i style="--rb-particle-x:${15+i*37%72}%;--rb-particle-y:${28+i*19%57}%;--rb-particle-delay:${i*.07}s"></i>`).join('')}</div>
       <div class="rb-rose-air"></div><div class="rb-frame-shade"></div>
     </div></div>`;

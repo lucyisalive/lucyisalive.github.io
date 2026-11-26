@@ -44,6 +44,7 @@ const assets = [
   'assets/story/castle-armor-standing-v2.webp',
   'assets/story/castle-armor-kneeling-v3.webp',
   'assets/story/bean-cloud-garden-v1.webp',
+  'assets/story/bean-depth-cloud-v1.webp',
   'assets/story/heaven-station-v1.webp',
   'assets/story/heaven-train-v1.webp',
   'assets/story/rose-crypt-v1.webp',
