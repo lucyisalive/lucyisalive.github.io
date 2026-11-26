@@ -1,8 +1,8 @@
 const fs=require('fs'),vm=require('vm'),assert=require('assert'),path=require('path');
 const root=path.resolve(__dirname,'..');
 const source=fs.readFileSync(path.join(root,'game-feedback.js'),'utf8');
-function environment({audio=true,reduced=false,resumeReject=false,resumeLater=false,primeReject=false}={}){
- let now=0,nextTimer=0;const timers=new Map(),oscillators=[],contexts=[],gains=[];
+function environment({audio=true,reduced=false,resumeReject=false,resumeLater=false,primeReject=false,assetWait=false,assetReject=false}={}){
+ let now=0,nextTimer=0;const timers=new Map(),oscillators=[],contexts=[],gains=[],bufferSources=[],assetFetches=[],assetReplies=[],decodes=[];
  class Element{
   constructor(tag){this.tagName=tag;this.children=[];this.parentNode=null;this.hidden=false;this.attrs={};this.textContent='';this.className='';this.style={setProperty(k,v){this[k]=v;}};this.listeners={};const self=this;this.classList={add(...names){self.className=[...new Set(self.className.split(/\s+/).filter(Boolean).concat(names))].join(' ')},remove(...names){self.className=self.className.split(/\s+/).filter(x=>!names.includes(x)).join(' ')},contains(name){return self.className.split(/\s+/).includes(name)}};}
   get isConnected(){return this===body || Boolean(this.parentNode&&this.parentNode.isConnected)}
@@ -20,6 +20,7 @@ function environment({audio=true,reduced=false,resumeReject=false,resumeLater=fa
   addEventListener(k,fn){(this.listeners[k]||(this.listeners[k]=[])).push(fn)},
   setTimeout(fn,ms){timers.set(++nextTimer,{fn,at:now+ms});return nextTimer},
   clearTimeout(id){timers.delete(id)},matchMedia:()=>({matches:reduced})};
+ window.fetch=async url=>{assetFetches.push(url);if(assetReject)throw Error('missing audio');if(assetWait)await new Promise(resolve=>assetReplies.push(resolve));return {ok:true,arrayBuffer:async()=>new Uint8Array([82,73,70,70]).buffer};};
  class Param{constructor(){this.value=1;this.ramps=[];}setValueAtTime(v,t){this.value=v;}linearRampToValueAtTime(v,t){this.ramps.push({value:v,at:t});}exponentialRampToValueAtTime(v,t){this.ramps.push({value:v,at:t});}cancelScheduledValues(t){}}
  class AudioContext{
   constructor(){
@@ -29,7 +30,8 @@ function environment({audio=true,reduced=false,resumeReject=false,resumeLater=fa
   }
   get currentTime(){return now/1000}
   createGain(){const node={gain:new Param(),connect(){},disconnect(){}};gains.push(node);return node;}
-  createBufferSource(){return {connect(){},disconnect(){},start(){}}}
+  createBufferSource(){const n={stops:[],connect(){},disconnect(){},start(at){this.began=at;},stop(at){this.stops.push(at);}};bufferSources.push(n);return n;}
+  decodeAudioData(bytes){decodes.push(bytes);return Promise.resolve({duration:1.834422,kind:'fairy'});}
   createBuffer(){
    if(primeReject)throw Error('Silent source unavailable');
    return {};
@@ -55,7 +57,7 @@ function environment({audio=true,reduced=false,resumeReject=false,resumeLater=fa
  }
  if(audio)window.AudioContext=AudioContext;
  vm.runInNewContext(source,{window,document,Promise,Set,Math,Array,Object,Boolean});
- return {api:window.HanziGameFeedback,window,document,body,tile,door,timers,oscillators,contexts,gains,findClass(cls){let found=[];function walk(n){if(n.classList.contains(cls))found.push(n);n.children.forEach(walk)}walk(body);return found},advance(ms){const until=now+ms;for(;;){const entries=[...timers].filter(([,x])=>x.at<=until).sort((a,b)=>a[1].at-b[1].at);if(!entries.length)break;const[id,x]=entries[0];timers.delete(id);now=x.at;x.fn()}now=until}};
+ return {api:window.HanziGameFeedback,window,document,body,tile,door,timers,oscillators,contexts,gains,bufferSources,assetFetches,decodes,deliverAssets(){assetReplies.splice(0).forEach(resolve=>resolve());},findClass(cls){let found=[];function walk(n){if(n.classList.contains(cls))found.push(n);n.children.forEach(walk)}walk(body);return found},advance(ms){const until=now+ms;for(;;){const entries=[...timers].filter(([,x])=>x.at<=until).sort((a,b)=>a[1].at-b[1].at);if(!entries.length)break;const[id,x]=entries[0];timers.delete(id);now=x.at;x.fn()}now=until}};
 }
 (async()=>{
  const basic=environment({audio:false});assert.equal(await basic.api.unlock(),false);basic.api.playCorrect();assert.equal(basic.findClass('hg-feedback-star').length,12);assert.equal(basic.findClass('hg-feedback-ring').length,1);basic.api.playWrong();assert.equal(basic.api.celebrate('慧'),2400);assert.equal(basic.findClass('hg-feedback-message')[0].textContent,'今天这个字学会啦，改天再考。');assert.equal(basic.findClass('hg-feedback-character')[0].textContent,'慧');assert.equal(basic.findClass('hg-feedback-banner')[0].hidden,false);basic.advance(2390);assert.equal(basic.findClass('hg-feedback-banner')[0].hidden,true);assert.equal(basic.findClass('hg-feedback-star').length,0);assert.equal(basic.timers.size,0);
@@ -131,6 +133,39 @@ function environment({audio=true,reduced=false,resumeReject=false,resumeLater=fa
  assert.equal(suspendedBirds.api.playClockbirdChorus(),0);
  suspendedBirds.contexts[0].finishResume();await birdUnlock;
  assert.equal(suspendedBirds.oscillators.length,0,'A suspended birdsong never replays after unlock');
+ // A bundled line shares the effects context; preloading never unlocks audio.
+ const fairy=environment();assert.equal(fairy.api.playFairyFound(),0);
+ assert.equal(await fairy.api.prepareFairyFound(),false);assert.equal(fairy.contexts.length,0);
+ assert.equal(fairy.assetFetches.length,1);
+ await fairy.api.unlock();assert.equal(await fairy.api.prepareFairyFound(),true);
+ await fairy.api.prepareFairyFound();assert.equal(fairy.assetFetches.length,1);assert.equal(fairy.decodes.length,1);
+ fairy.api.playCorrect();fairy.api.celebrate('蝶');const fairyChimes=fairy.oscillators.slice();
+ assert.equal(fairy.api.playFairyFound(),1900);
+ const spoken=fairy.bufferSources.filter(n=>n.buffer?.kind==='fairy');assert.equal(spoken.length,1);
+ assert.ok(spoken[0].stops[0]<2.0);assert.equal(fairy.contexts.length,1);
+ fairy.api.stopFairyFound();assert.equal(spoken[0].stops.length,2);
+ assert.ok(fairyChimes.every(n=>n.stops.length===1),'Stopping the voice retains grading chimes');
+ fairy.api.stopFairyFound();assert.equal(spoken[0].stops.length,2);
+ fairy.api.setMuted(true);assert.equal(fairy.api.playFairyFound(),0);
+ fairy.api.setMuted(false);fairy.document.hidden=true;assert.equal(fairy.api.playFairyFound(),0);
+ assert.equal(fairy.bufferSources.filter(n=>n.buffer?.kind==='fairy').length,1);
+ fairy.document.hidden=false;fairy.api.playFairyFound();const hiddenVoice=fairy.bufferSources.at(-1);
+ fairy.document.hidden=true;fairy.document.listeners.visibilitychange[0]();assert.equal(hiddenVoice.stops.length,2);
+ const fairyWait=environment({resumeLater:true}),fairyResume=fairyWait.api.unlock();
+ await fairyWait.api.prepareFairyFound();fairyWait.api.playFairyFound();fairyWait.advance(120);
+ assert.equal(fairyWait.bufferSources.filter(n=>n.buffer?.kind==='fairy').length,0);
+ fairyWait.contexts[0].finishResume();await fairyResume;
+ assert.equal(fairyWait.bufferSources.filter(n=>n.buffer?.kind==='fairy').length,1,'Short iPad resume still plays once');
+ const lateFairy=environment({assetWait:true});await lateFairy.api.unlock();
+ lateFairy.api.playFairyFound();await Promise.resolve();await Promise.resolve();lateFairy.advance(600);
+ lateFairy.deliverAssets();for(let i=0;i<12;i++)await Promise.resolve();
+ assert.equal(lateFairy.bufferSources.filter(n=>n.buffer?.kind==='fairy').length,0,'A late download never speaks after the scene has moved on');
+ const cancelledFairy=environment({assetWait:true});await cancelledFairy.api.unlock();
+ cancelledFairy.api.playFairyFound();await Promise.resolve();await Promise.resolve();cancelledFairy.api.stopFairyFound();
+ cancelledFairy.deliverAssets();for(let i=0;i<12;i++)await Promise.resolve();
+ assert.equal(cancelledFairy.bufferSources.filter(n=>n.buffer?.kind==='fairy').length,0,'Leaving cancels a pending voice decode');
+ const absentFairy=environment({assetReject:true});await absentFairy.api.unlock();assert.equal(await absentFairy.api.prepareFairyFound(),false);
+ absentFairy.api.playCorrect();assert.equal(absentFairy.oscillators.length,6,'Missing dialogue never disables ordinary feedback');
  const blocked=environment({resumeReject:true});assert.equal(await blocked.api.unlock(),false);blocked.api.playCorrect();assert.equal(blocked.oscillators.length,0);
 
  const noPrime=environment({primeReject:true});
@@ -219,6 +254,6 @@ function environment({audio=true,reduced=false,resumeReject=false,resumeLater=fa
  assert.equal(late.contexts[0].state,'running');
 
  const fallback=environment({audio:false});fallback.tile.rect={left:0,top:0,width:0,height:0};fallback.api.playCorrect();assert.equal(fallback.findClass('hg-feedback-ring')[0].style.left,'65px');
- const results={checks:'unsupported audio, priming failure, rejected and delayed resume, bounded chimes, Pencil unlock and speech exclusion, background recreation, schedules, handoff, bounded stone-door tones, bounded nightingale chorus and shared context, muted/hidden audio, visual cleanup, repeated celebration, reduced motion, door fallback',correctAudioEndSeconds:correctEnd,victoryAudioEndSeconds:Math.max(...victoryNodes.map(n=>n.stops[0])),wrongAudioEndSeconds:Math.max(...wrongNodes.map(n=>n.stops[0])),status:'passed'};
+ const results={checks:'unsupported audio, priming failure, rejected and delayed resume, bounded chimes, Pencil unlock and speech exclusion, background recreation, schedules, handoff, bounded stone-door tones, bounded nightingale chorus, bundled fairy dialogue and shared context, muted/hidden audio, visual cleanup, repeated celebration, reduced motion, door fallback',correctAudioEndSeconds:correctEnd,victoryAudioEndSeconds:Math.max(...victoryNodes.map(n=>n.stops[0])),wrongAudioEndSeconds:Math.max(...wrongNodes.map(n=>n.stops[0])),status:'passed'};
  fs.mkdirSync(path.join(root,'work/feedback'),{recursive:true});fs.writeFileSync(path.join(root,'work/feedback/check-results.json'),JSON.stringify(results,null,2)+'\n');console.log(JSON.stringify(results,null,2));
 })().catch(e=>{console.error(e);process.exit(1)});

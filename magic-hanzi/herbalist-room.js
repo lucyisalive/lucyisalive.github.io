@@ -193,7 +193,79 @@
       demoHint: '帽子、外衣、裤子和两只鞋，一件一件穿齐。',
       demoFinished: '十件衣物都穿好了。两个小精灵睁眼相望，踮脚沿桌面走向窗边，悄悄溜走。',
       reward: '一件衣物穿好了，小精灵还在静静等待。', completion: '两个小精灵穿戴整齐，终于活了过来，互相看了一眼，悄悄溜走了。',
-      next: '回到草药房', nextStage: 'herbs', interval: 1500, arrival: 8800, automaticEnding: true,
+      next: '前往午夜动物园', nextStage: 'zoo', interval: 1500, arrival: 8800, automaticEnding: true,
+    },
+    zoo: {
+      number: '第十八关', title: '午夜猛兽动物园', unit: '个打开的笼子',
+      intro: '深夜的动物园里，十个笼子藏在月色中。钥匙就在眼前。',
+      task: '每通过一个字，用钥匙打开一笼，一只猛兽就跑出来。',
+      start: '打开午夜动物园', step: '打开一个笼子', auto: '播放到午夜派对', retry: '重新打开笼子',
+      demoHint: '近处的笼子大，远处的笼子小；每只动物都有自己的动作。',
+      demoFinished: '十只猛兽都出来了。灯串亮起，午夜派对开始了！',
+      reward: '钥匙转动，一只猛兽从打开的笼子里跑了出来。', completion: '十个笼子全打开了，灯光一齐亮起，猛兽们开始午夜派对！',
+      next: '前往梦中的花园', nextStage: 'butterfly', interval: 2100, arrival: 6400, automaticEnding: true,
+    },
+    butterfly: {
+      number: '第十九关', title: '梦中的蝴蝶仙子', unit: '层退去的迷障',
+      intro: '你梦见一只神奇的蝴蝶。醒来后，循着梦中的微光走进花园。',
+      task: '每通过一个字，一层迷障退去。穿过十层，就能找到它。',
+      start: '寻找梦中的蝴蝶', step: '退去一层迷障', auto: '播放到找到花朵', retry: '重新寻找仙子',
+      demoHint: '灌木、篱笆和雾幕深处，有一点蝶翼般的光。',
+      demoFinished: '这朵花一动不动。抓住这只装成花朵的小精灵吧！',
+      reward: '又一层迷障退去，花园深处更清楚了。', completion: '十层迷障都退去了。这朵花有些特别——抓住装成花的小精灵吧！',
+      next: '抓住装成花的小精灵', nextStage: 'laser', interval: 1700, arrival: 2400, interactiveEnding: true,
+      endingNext: '前往古墓光网', endingDetail: '仙子扑闪翅膀现身，指着你笑：哈哈哈，你找到我啦！',
+    },
+    laser: {
+      number: '第二十关', title: '古墓光网', unit: '道穿过的光网',
+      intro: '古墓深处的通道里，十道交叉光网挡住了藏宝箱。',
+      task: '每通过一个字，眼前的光网让出通道，你就向前穿过一层。',
+      start: '穿越古墓光网', step: '穿过一道光网', auto: '播放到打开宝箱', retry: '重新穿越光网',
+      demoHint: '看近处光束从眼前掠过，远处的石柱和宝箱逐渐靠近。',
+      demoFinished: '来到宝箱前，箱盖打开。墓穴突然巨震，箭阵从四周射来！',
+      reward: '光网短暂让开，你又向墓穴深处前进了一层。', completion: '十层光网穿过了。宝箱刚打开，墓穴便巨震起来，箭阵齐射！',
+      next: '举剑挡住箭阵', nextStage: 'arrows', interval: 1500, arrival: 8000, automaticEnding: true, continuousNext: true,
+    },
+    arrows: {
+      number: '第二十一关', title: '古墓挥剑挡箭', unit: '支挡开的箭',
+      intro: '打开的宝箱前，箭阵悬在半空。握住剑，挡开迎面而来的箭。',
+      task: '每通过一个字，挥剑挡开一支箭。安心写字，箭会等你准备好。',
+      start: '握剑挡箭', step: '挡开一支箭', auto: '播放到取出地图', retry: '重新格挡箭阵',
+      demoHint: '看看剑锋怎样迎上箭杆，把它挡向镜头两侧。',
+      demoFinished: '最后一支箭飞开，震动平息。箱里有一张地图，取出摊开竟是空白的。',
+      reward: '剑锋一闪，一支迎面而来的箭被挡飞了。', completion: '十支箭都挡开了。箱里那张地图取出摊开后，竟然一片空白。',
+      next: '解开空白地图', nextStage: 'map', interval: 1500, arrival: 6500, automaticEnding: true, continuousNext: true,
+    },
+    map: {
+      number: '第二十二关', title: '十片藏宝图', unit: '块显现的地图',
+      intro: '这就是刚从古墓宝箱取出的那张空白地图。纸面正在微微发光。',
+      task: '每通过一个字，纸上就多出一块拼图般的海图。',
+      start: '唤出藏宝图', step: '显现一块海图', auto: '播放到海盗船', retry: '重新显现海图',
+      demoHint: '同一张纸上，岛屿、海岸和航线逐块接起来。',
+      demoFinished: '十块海图齐了！发光的航线化成海面，把你带到真正的海盗船甲板。',
+      reward: '纸上又显出一块海图，航线渐渐完整了。', completion: '十块地图全部显现，航线发光，带你进入月色里的海盗船。',
+      next: '唤醒海盗船长', nextStage: 'pirate', interval: 1500, arrival: 9000, automaticEnding: true, continuousNext: true,
+    },
+    pirate: {
+      number: '第二十三关', title: '骷髅海盗船长', unit: '组拼好的骨架',
+      intro: '甲板的舵轮前，一件旧船长外套空空地垂着。骨架部件正在等待归位。',
+      task: '每通过一个字，拼上一组骨架。最后的骷髅头会唤醒船长。',
+      start: '拼回海盗船长', step: '拼上一组骨架', auto: '播放到海盗船启航', retry: '重新唤醒船长',
+      demoHint: '骨架逐组接合，外套和三角帽仍在静静等待。',
+      demoFinished: '船长苏醒，穿好外套、戴上帽子，转身掌舵。帆展开，海盗船驶入月海！',
+      reward: '一组骨架准确接上，船长渐渐完整了。', completion: '骷髅船长活过来了！他转身掌舵，扬帆带你驶向月色中的海面。',
+      next: '前往层层果核', nextStage: 'seed', interval: 1500, arrival: 12000, automaticEnding: true,
+    },
+    seed: {
+      number: '第二十四关', title: '果核里的沙粒星球', unit: '层打开的果核',
+      intro: '古老的工作台上，一枚果核藏着比它更小的秘密。',
+      task: '每通过一个字，打开一层更小的果核。十层之后，会剩下什么？',
+      start: '打开层层果核', step: '打开一层果核', auto: '播放到最后的沙粒', retry: '重新打开果核',
+      demoHint: '镜头越靠越近，内层的果核却越来越小。',
+      demoFinished: '只剩下一粒极小的沙子。轻点它，看看里面藏着什么。',
+      reward: '果核打开，里面还有更小的一层。', completion: '十层果核全部打开，只剩一粒细沙。轻点它，去看看这粒沙子里的世界。',
+      next: '轻点这粒沙子', nextStage: 'herbs', interval: 1500, arrival: 1300, interactiveEnding: true,
+      endingNext: '回到草药房', endingDetail: '细沙里竟是一颗星球！抵达沙星，眼前有一株等待照料的玫瑰花苞。沙星玫瑰的故事待续。',
     },
   };
 
@@ -226,7 +298,7 @@
       </div>`;
     body.insertBefore(backdrop, body.firstChild);
     function createVisual(module) {
-      try { return module?.create({ document: doc }); }
+      try { return module?.create({ document: doc, onActionRequest: requestSceneAction }); }
       catch (_) { return undefined; }
     }
     const observatory = createVisual(doc.defaultView?.HanziObservatory);
@@ -245,6 +317,9 @@
       { stages: ['goose'], name: 'HanziGooseStory' },
       { stages: ['clockbird'], name: 'HanziClockbirdStory' },
       { stages: ['elves'], name: 'HanziElvesStory' },
+      { stages: ['zoo', 'butterfly'], name: 'HanziWildGardenStory' },
+      { stages: ['laser', 'arrows', 'map', 'pirate'], name: 'HanziTombPirateStory' },
+      { stages: ['seed'], name: 'HanziSeedPlanetStory' },
     ];
 
     const hud = doc.createElement('div');
@@ -342,6 +417,7 @@
     let activeExit;
     let endingShown = false;
     let arrivalUntil = 0;
+    let finishInteractive = null;
     let autoPlaying = false;
     let writing = true;
     let storage;
@@ -525,9 +601,29 @@
       backdrop.classList.toggle('herb-complete', fill === ROOM_SIZE);
     }
 
+    function currentVisual() {
+      return visuals[displayStage] || additions.find(entry => entry.stages.includes(displayStage))?.visual;
+    }
+
+    function sceneEndingComplete() {
+      try { return currentVisual()?.isEndingComplete?.(displayStage) === true; }
+      catch (_) { return false; }
+    }
+
+    function requestSceneAction(requestedStage) {
+      if (requestedStage !== displayStage || !STAGES[displayStage].interactiveEnding) return;
+      if (mode !== 'demo' && mode !== 'playing') return;
+      if (mode === 'playing' && writing) return;
+      if ((mode === 'demo' ? demoFill : actualFill) !== ROOM_SIZE) return;
+      finishEnding();
+    }
+
     function renderProgress(value, animate = false) {
       const count = Math.min(ROOM_SIZE, Math.max(0, value));
-      if (renderedStage === displayStage && renderedCount === count) return;
+      if (renderedStage === displayStage && renderedCount === count) {
+        if (count === ROOM_SIZE && STAGES[displayStage].interactiveEnding && sceneEndingComplete()) endingShown = true;
+        return;
+      }
       if (renderedStage !== displayStage || count < ROOM_SIZE) arrivalUntil = 0;
       renderedStage = displayStage;
       renderedCount = count;
@@ -551,6 +647,7 @@
         try { entry.visual?.render(displayStage, count, animate); }
         catch (_) { /* A missing scene must not interrupt a question or saving. */ }
       });
+      if (count === ROOM_SIZE && STAGES[displayStage].interactiveEnding && sceneEndingComplete()) endingShown = true;
     }
 
     function display(next) {
@@ -609,6 +706,7 @@
     }
 
     function resetCurtain(keepExit = false) {
+      finishInteractive = null;
       clearTimeout(fadeTimer);
       curtain.classList.remove('herb-fade', 'herb-crossing');
       if (!keepExit) resetExit();
@@ -647,8 +745,10 @@
         return;
       }
       const crossingWall = displayStage === 'herbs' && nextStage === 'stars';
+      const continuous = animateExit && STAGES[displayStage].continuousNext && STAGES[displayStage].nextStage === nextStage;
       setMode('travel');
       function beginFade() {
+        if (continuous) { reveal(); return; }
         curtain.getBoundingClientRect();
         curtain.classList.add(crossingWall && animateExit ? 'herb-crossing' : 'herb-fade');
         fadeTimer = setTimeout(reveal, crossingWall && animateExit ? 704 : 245);
@@ -669,10 +769,13 @@
       if (!story.endingNext) return false;
       if (mode === 'travel') return true;
       if (endingShown) return false;
+      const expectedStage = displayStage;
       endingShown = true;
       const previousMode = mode;
       setMode('travel');
       function finish() {
+        finishInteractive = null;
+        if (displayStage !== expectedStage) return;
         setMode(previousMode);
         if (previousMode === 'demo') {
           updateDemoControls();
@@ -685,6 +788,7 @@
           restart.focus({ preventScroll: true });
         }
       }
+      if (story.interactiveEnding) finishInteractive = finish;
       function begin() {
         const duration = playExit();
         if (duration && !reducedMotion()) fadeTimer = setTimeout(finish, duration);
@@ -695,6 +799,23 @@
       else begin();
       return true;
     }
+
+    function settleInteractiveControls() {
+      if (finishInteractive) { clearTimeout(fadeTimer); finishInteractive(); }
+      if (!STAGES[displayStage].interactiveEnding || renderedCount !== ROOM_SIZE) return;
+      if (sceneEndingComplete()) {
+        endingShown = true;
+        if (mode === 'demo') updateDemoControls();
+        else if (mode === 'playing' && actualFill === ROOM_SIZE) get('restartBtn').textContent = STAGES[displayStage].endingNext;
+      }
+    }
+    doc.addEventListener?.('visibilitychange', () => {
+      if (doc.hidden) settleInteractiveControls();
+      else setTimeout(settleInteractiveControls, 0);
+    });
+    const storyMotion = doc.defaultView?.matchMedia?.('(prefers-reduced-motion: reduce)');
+    const onStoryMotion = () => { if (storyMotion.matches) { settleInteractiveControls(); setTimeout(settleInteractiveControls, 0); } };
+    storyMotion?.addEventListener?.('change', onStoryMotion);
 
     function surface() { return displayStage === 'sea' && finishEnding(); }
 
@@ -805,9 +926,13 @@
       updateMastered(masteredCount);
       actualFill = count;
       const actualFinished = !bankEmpty && count >= ROOM_SIZE;
-      get('restartBtn').textContent = actualFinished ? STAGES[stage].next : '继续练这一关';
       if (actualFinished && newlyAwarded) updateCoins(LEVEL_COIN, rewardEvent?.('complete', count));
       if (mode === 'playing' || mode === 'intro') renderProgress(actualFill);
+      get('restartBtn').textContent = actualFinished ? (endingShown && STAGES[stage].endingNext ? STAGES[stage].endingNext : STAGES[stage].next) : '继续练这一关';
+      if (actualFinished && endingShown && STAGES[stage].interactiveEnding) {
+        const detail = get('finaleDetail');
+        detail.textContent = [STAGES[stage].endingDetail, ...String(detail.textContent || '').split('\n').slice(1)].join('\n');
+      }
     }
 
     function nextLevel(nextStage) {

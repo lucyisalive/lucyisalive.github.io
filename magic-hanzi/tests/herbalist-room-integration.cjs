@@ -25,11 +25,11 @@ const rewardMethods = ['pass', 'finale'];
 // checks that the new long ending only delays the visual transition, while
 // learning/reward callers return immediately and a departure never replays it.
 function verifyAutomaticEndings() {
-  function roomFixture({reduced=false,missing=false}={}) {
+  function roomFixture({reduced=false,missing=false,completeScene=false}={}) {
     let now=0,timerId=0;
-    const timers=new Map(),storage=new Map(),created=[],renders=[],exits=[];
+    const timers=new Map(),storage=new Map(),created=[],renders=[],exits=[],actions=new Map();
     class Node {
-      constructor(tag='div') { this.tagName=tag;this.children=[];this.parentNode=null;this.dataset={};this.attrs={};this.className='';this.hidden=false;this.listeners={};this.style={setProperty(k,v){this[k]=v;}};this.classList={
+      constructor(tag='div') { this.tagName=tag;this.children=[];this.parentNode=null;this.dataset={};this.attrs={};this.className='';this.textContent='';this.hidden=false;this.listeners={};this.style={setProperty(k,v){this[k]=v;}};this.classList={
         contains:name=>this.className.split(/\s+/).includes(name),
         add:(...names)=>{this.className=[...new Set(this.className.split(/\s+/).filter(Boolean).concat(names))].join(' ');},
         remove:(...names)=>{this.className=this.className.split(/\s+/).filter(x=>!names.includes(x)).join(' ');},
@@ -50,14 +50,14 @@ function verifyAutomaticEndings() {
     const body=new Node('body');body.innerHTML='<header class="topbar"></header><button id="restartBtn"></button><button id="submitBtn"></button><p id="finaleDetail"></p>';
     const window={matchMedia:()=>({matches:reduced}),addEventListener(){},localStorage:{getItem:k=>storage.get(k)??null,setItem:(k,v)=>storage.set(k,v),removeItem:k=>storage.delete(k),key:i=>[...storage.keys()][i],get length(){return storage.size;}}};
     const document={body,defaultView:window,createElement:tag=>new Node(tag),querySelector:s=>body.querySelector(s),getElementById:id=>body.querySelector('#'+id),addEventListener(){}};
-    for(const name of ['HanziDuneStory','HanziLibraryStory','HanziIceArmorStory','HanziBeanTrainStory','HanziRoseBaguaStory','HanziGooseStory','HanziClockbirdStory','HanziElvesStory'])if(!missing)window[name]={create(){created.push(name);return {render(...args){renders.push([name,...args]);},playExit(stage){exits.push(stage);return 1000;},resetExit(){}};}};
+    for(const name of ['HanziDuneStory','HanziLibraryStory','HanziIceArmorStory','HanziBeanTrainStory','HanziRoseBaguaStory','HanziGooseStory','HanziClockbirdStory','HanziElvesStory','HanziWildGardenStory','HanziTombPirateStory','HanziSeedPlanetStory'])if(!missing)window[name]={create(options){created.push(name);actions.set(name,options.onActionRequest);return {isEndingComplete:stage=>completeScene&&stage==='seed',render(...args){renders.push([name,...args]);},playExit(stage){exits.push(stage);return 1000;},resetExit(){}};}};
     class ClockDate extends Date { static now(){return now;} }
     const context=vm.createContext({window,document,Date:ClockDate,setTimeout(fn,ms){timers.set(++timerId,{fn,at:now+ms});return timerId;},clearTimeout:id=>timers.delete(id)});
     vm.runInContext(fs.readFileSync(path.join(__dirname,'../herbalist-room.js'),'utf8'),context);
     const room=window.HanziHerbalist.create({document,onTap(node,fn){node.tap=fn;}});
-    return {room,document,body,storage,created,renders,exits,advance(ms){const until=now+ms;for(;;){const due=[...timers].filter(([,t])=>t.at<=until).sort((a,b)=>a[1].at-b[1].at);if(!due.length)break;const[id,t]=due[0];timers.delete(id);now=t.at;t.fn();}now=until;}};
+    return {room,document,body,storage,created,renders,exits,actions,advance(ms){const until=now+ms;for(;;){const due=[...timers].filter(([,t])=>t.at<=until).sort((a,b)=>a[1].at-b[1].at);if(!due.length)break;const[id,t]=due[0];timers.delete(id);now=t.at;t.fn();}now=until;}};
   }
-  const durations={beans:13700,rose:3800,bagua:5200,goose:9000,clockbird:11000,elves:8800},next={beans:'rose',rose:'bagua',bagua:'goose',goose:'clockbird',clockbird:'elves',elves:'herbs'};
+  const durations={beans:13700,rose:3800,bagua:5200,goose:9000,clockbird:11000,elves:8800,zoo:6400,laser:8000,arrows:6500,map:9000,pirate:12000},next={beans:'rose',rose:'bagua',bagua:'goose',goose:'clockbird',clockbird:'elves',elves:'zoo',zoo:'butterfly',laser:'arrows',arrows:'map',map:'pirate',pirate:'seed'};
   for(const [stage,duration] of Object.entries(durations))for(const reduced of [false,true])for(const missing of [false,true]) {
     const e=roomFixture({reduced,missing});
     assert.deepEqual(e.created,[],'New scenery stays off the original startup path');
@@ -71,11 +71,12 @@ function verifyAutomaticEndings() {
       assert.equal(e.body.dataset.herbStage,stage,'The visual waits without blocking the next-round caller');
       e.advance(duration-1);
       assert.equal(e.body.dataset.herbStage,stage,stage+' keeps its full automatic ending');
-      e.advance(246);
+      if(['laser','arrows','map'].includes(stage)){e.advance(1);assert.equal(e.body.dataset.herbStage,next[stage],'A continuous story link reveals its identical next frame without a black curtain');}
+      else e.advance(246);
     }
     assert.equal(e.body.dataset.herbStage,next[stage]);
     assert.deepEqual(e.exits,[],stage+' travel never calls playExit for the automatic ending');
-    if(!missing)assert.ok(e.renders.some(([name,renderStage])=>name===({beans:'HanziBeanTrainStory',rose:'HanziRoseBaguaStory',bagua:'HanziRoseBaguaStory',goose:'HanziGooseStory',clockbird:'HanziClockbirdStory',elves:'HanziElvesStory'}[stage]) && renderStage===next[stage]),'Previously created scenes still render the next stage so they can hide');
+    if(!missing)assert.ok(e.renders.some(([name,renderStage])=>name===({beans:'HanziBeanTrainStory',rose:'HanziRoseBaguaStory',bagua:'HanziRoseBaguaStory',goose:'HanziGooseStory',clockbird:'HanziClockbirdStory',elves:'HanziElvesStory',zoo:'HanziWildGardenStory',laser:'HanziTombPirateStory',arrows:'HanziTombPirateStory',map:'HanziTombPirateStory',pirate:'HanziTombPirateStory'}[stage]) && renderStage===next[stage]),'Previously created scenes still render the next stage so they can hide');
     const restored=roomFixture({reduced,missing});
     restored.room.restoreStage(stage,10,true);restored.room.nextLevel(next[stage]);
     restored.advance(245);
@@ -83,13 +84,38 @@ function verifyAutomaticEndings() {
     assert.equal(restored.storage.get('hanzi-herbalist-wallet-v1'),undefined,'Restoring does not issue old rewards');
     assert.deepEqual(restored.exits,[]);
   }
+  // Completed-word interaction is visual only. It may be activated by the
+  // flower/grain target or by the existing completion button, never by ink.
+  for(const [stage,arrival,nextStage,name] of [
+    ['butterfly',2400,'laser','HanziWildGardenStory'],
+    ['seed',1300,'herbs','HanziSeedPlanetStory']
+  ])for(const reduced of [false,true])for(const missing of [false,true]) {
+    const e=roomFixture({reduced,missing});e.room.restoreStage(stage,9,true);
+    e.room.pass(10,0);e.room.finale(false,10,0,true);
+    assert.equal(e.storage.get('hanzi-herbalist-wallet-v1'),'6','Interaction never delays saved pass/settlement');
+    e.actions.get(name)?.(stage);assert.deepEqual(e.exits,[],'Scene targets never intercept active handwriting');
+    e.room.showWriting(false);
+    if(missing)assert.equal(e.room.finishEnding(),true);else e.actions.get(name)(stage);
+    assert.equal(e.body.dataset.herbStage,stage);
+    if(!reduced){e.advance(arrival-1);assert.deepEqual(e.exits,[]);e.advance(1002);}else e.advance(1);
+    assert.equal(e.body.dataset.herbMode,'playing');
+    assert.equal(e.room.finishEnding(),false,'A completed interaction is not replayed');
+    assert.equal(e.storage.get('hanzi-herbalist-wallet-v1'),'6','The interaction adds no coins');
+    e.room.finale(false,10,0,false);
+    assert.match(e.document.getElementById('restartBtn').textContent,stage==='seed'?/草药房/:/古墓/,'A later finale keeps the post-interaction label');
+    e.room.nextLevel(nextStage);e.advance(246);assert.equal(e.body.dataset.herbStage,nextStage);
+  }
+  const complete=roomFixture({completeScene:true});complete.room.restoreStage('seed',10,true);
+  complete.room.restoreStage('seed',10,true);complete.document.getElementById('finaleDetail').textContent='旧完成文案\n奖励仍保留';
+  complete.room.finale(false,10,0,false);assert.match(complete.document.getElementById('finaleDetail').textContent,/玫瑰.*待续/);assert.match(complete.document.getElementById('finaleDetail').textContent,/奖励仍保留/);assert.equal(complete.room.finishEnding(),false,'Restored arrived seed scene continues without a repeated click');
+  assert.match(complete.document.getElementById('restartBtn').textContent,/草药房/);assert.equal(complete.storage.get('hanzi-herbalist-wallet-v1'),undefined);
 }
 
 async function run() {
   verifyAutomaticEndings();
   const calls = [], endings = [];
   const methods = ['showWriting', 'arrive', 'pass', 'finale'];
-  const endingStages = new Set(['sea', 'dunes', 'library', 'ice']);
+  const endingStages = new Set(['sea', 'dunes', 'library', 'ice', 'butterfly', 'seed']);
   const room = { create({document, onTap}) {
     assert.ok(document.body);
     assert.equal(typeof onTap, 'function');
@@ -125,10 +151,10 @@ async function run() {
   const passAwards = () => calls.filter(([method]) => method === 'pass').length;
   const levelAwards = () => calls.filter(([method, bankEmpty, count, mastered, newlyAwarded]) =>
     method === 'finale' && !bankEmpty && count === 10 && newlyAwarded === true).length;
-  const routes = ['herbs', 'stars', 'giant', 'bridge', 'train', 'tomb', 'sea', 'dunes', 'library', 'ice', 'armor', 'beans', 'rose', 'bagua', 'goose', 'clockbird', 'elves'];
-  assert.deepEqual(Array.from(game.run('Object.keys(HERBALIST_STAGES)')), routes, 'The formal game exposes all seventeen story rooms');
-  assert.equal(game.run('GAME_VERSION'),'2026.11.26.2');
-  for(const [stage,arrival] of [['beans',13700],['rose',3800],['bagua',5200],['goose',9000],['clockbird',11000],['elves',8800]]) {
+  const routes = ['herbs', 'stars', 'giant', 'bridge', 'train', 'tomb', 'sea', 'dunes', 'library', 'ice', 'armor', 'beans', 'rose', 'bagua', 'goose', 'clockbird', 'elves', 'zoo', 'butterfly', 'laser', 'arrows', 'map', 'pirate', 'seed'];
+  assert.deepEqual(Array.from(game.run('Object.keys(HERBALIST_STAGES)')), routes, 'The formal game exposes all twenty-four story rooms');
+  assert.equal(game.run('GAME_VERSION'),'2026.11.26.3');
+  for(const [stage,arrival] of [['beans',13700],['rose',3800],['bagua',5200],['goose',9000],['clockbird',11000],['elves',8800],['zoo',6400],['laser',8000],['arrows',6500],['map',9000],['pirate',12000]]) {
     assert.equal(game.run(`HERBALIST_STAGES.${stage}.arrival`),arrival,stage+' waits only for its remaining scenery');
     assert.equal(game.run(`HERBALIST_STAGES.${stage}.automaticEnding`),true,stage+' must not replay its automatic ending during travel');
     assert.equal(game.run(`HERBALIST_STAGES.${stage}.endingNext`),undefined,stage+' transitions directly after the automatic ending');
@@ -210,10 +236,17 @@ async function run() {
     ['bagua', 'goose', /封印/, /太极|石门/],
     ['goose', 'clockbird', /黏|队伍/, /金鹅|长队|公主/],
     ['clockbird', 'elves', /部件|夜莺/, /夜莺|晨光/],
-    ['elves', 'herbs', /衣物|小精灵/, /小精灵|苏醒|溜走/],
+    ['elves', 'zoo', /衣物|小精灵/, /小精灵|苏醒|溜走/],
+    ['zoo', 'butterfly', /钥匙|猛兽|笼/, /派对|灯/],
+    ['butterfly', 'laser', /迷障|花园/, /仙子|花/],
+    ['laser', 'arrows', /光网|古墓/, /宝箱|箭阵/],
+    ['arrows', 'map', /箭|剑/, /地图|空白/],
+    ['map', 'pirate', /海图|航线/, /地图|海盗船/],
+    ['pirate', 'seed', /骨架|船长/, /船长|扬帆/],
+    ['seed', 'herbs', /果核/, /细沙|沙子/],
   ];
   for (const [stage, next, passMessage, finishedMessage] of remainingStages) {
-    const addedRoom = ['dunes', 'library', 'ice', 'armor', 'beans', 'rose', 'bagua', 'goose', 'clockbird', 'elves'].includes(stage);
+    const addedRoom = ['dunes', 'library', 'ice', 'armor', 'beans', 'rose', 'bagua', 'goose', 'clockbird', 'elves', 'zoo', 'butterfly', 'laser', 'arrows', 'map', 'pirate', 'seed'].includes(stage);
     assert.equal(game.run('state.herbalistStage'), stage);
     const saved = JSON.parse(game.storage.get('hanzi-magic-herbalist-state-v1'));
     const passesBeforeReload = passAwards(), bonusesBeforeReload = levelAwards();
@@ -262,7 +295,7 @@ async function run() {
       await submitReference();
       assert.match(game.run('resultBanner.textContent'), passMessage);
     }
-    if(['beans','rose','bagua','goose','clockbird','elves'].includes(stage)) {
+    if(['beans','rose','bagua','goose','clockbird','elves','zoo','laser','arrows','map','pirate'].includes(stage)) {
       const immediateSave=JSON.parse(game.storage.get('hanzi-magic-herbalist-state-v1'));
       assert.equal(immediateSave.herbalistStage,stage);
       assert.ok(immediateSave.bank.some(item=>item.passedDays?.length),'The tenth formal pass saves learning before scenery finishes');
@@ -312,9 +345,9 @@ async function run() {
     assert.deepEqual(calls.filter(([method]) => method === 'nextLevel').at(-1), ['nextLevel', next]);
     assert.equal(levelAwards(), bonusesBefore + 1);
   }
-  assert.equal(levelAwards(), 17, 'One bonus per room across the complete seventeen-room route');
+  assert.equal(levelAwards(), 24, 'One bonus per room across the complete twenty-four-room route');
   assert.ok(game.network.every(call => call.kind !== 'unexpected'));
-  console.log('Story rooms: seventeen-stage route, teaching/retest rewards, partial/completed restoration, two-step endings, and once-only bonuses passed.');
+  console.log('Story rooms: twenty-four-stage route, teaching/retest rewards, partial/completed restoration, two-step endings, and once-only bonuses passed.');
 }
 
 run().catch(error => { console.error(error); process.exitCode = 1; });

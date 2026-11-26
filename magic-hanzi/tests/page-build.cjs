@@ -12,7 +12,7 @@ assert.equal(CSS_FILE, 'game-feedback.css', 'Keep the existing singular CSS expo
 assert.deepEqual(CSS_FILES, [CSS_FILE, 'mountain-journey.css', 'herbalist-room.css', 'observatory.css',
   'giant-kitchen.css', 'bridge-train.css', 'tomb-mermaid.css',
   'dune-story.css', 'library-story.css', 'ice-armor-story.css',
-  'bean-train-story.css', 'rose-bagua-story.css', 'goose-story.css', 'clockbird-story.css', 'elves-story.css', 'magic-shop.css']);
+  'bean-train-story.css', 'rose-bagua-story.css', 'goose-story.css', 'clockbird-story.css', 'elves-story.css', 'wild-garden-story.css', 'tomb-pirate-story.css', 'seed-planet-story.css', 'magic-shop.css']);
 for (const file of CSS_FILES) assets[file] = '.sample { color: red; }';
 // Include closing tags inside JS and CSS strings, where packaging must escape
 // the HTML terminator without changing the string value used by the program.
@@ -161,6 +161,16 @@ if (!process.argv.includes('--unit')) {
   const expectedFairytaleImages=["assets/story/goose-courtyard-v1.webp", "assets/story/golden-goose-v1.webp", "assets/story/goose-followers-a-v1.webp", "assets/story/goose-followers-b-v1.webp", "assets/story/goose-princess-v1.webp", "assets/story/clockwork-workshop-v1.webp", "assets/story/clockwork-nightingale-v1.webp", "assets/story/nightingale-flock-v1.webp", "assets/story/elves-tailor-workshop-v1.webp", "assets/story/elves-base-v1.webp", "assets/story/elves-dressed-v1.webp", "assets/story/elves-awake-v1.webp", "assets/story/elves-sneak-atlas-v1.webp"];
   assert.deepEqual(new Set(fairytaleImages),new Set(expectedFairytaleImages),'The three fairy-tale rooms reference exactly their thirteen selected assets');
   for(const image of expectedFairytaleImages)assert.equal(offlineBuilder.split("'"+image+"'").length-1,1,'Offline preview embeds exactly one '+image);
+
+  const nightFiles=['wild-garden-story.js','wild-garden-story.css','tomb-pirate-story.js','tomb-pirate-story.css','seed-planet-story.js','seed-planet-story.css'];
+  const nightImages=nightFiles.flatMap(file=>[...fs.readFileSync(path.join(root,file),'utf8').matchAll(/assets\/story\/[a-z0-9-]+\.webp/g)].map(m=>m[0]));
+  const expectedNightImages=["assets/story/midnight-menagerie-v1.webp", "assets/story/butterfly-secret-garden-v1.webp", "assets/story/garden-hedge-screen-v1.webp", "assets/story/fairy-disguise-flower-v1.webp", "assets/story/butterfly-fairy-laugh-v1.webp", "assets/story/tomb-depth-corridor-v1.webp", "assets/story/tomb-treasure-chest-v1.webp", "assets/story/tomb-sword-hand-v1.webp", "assets/story/pirate-map-blank-v1.webp", "assets/story/pirate-map-complete-v1.webp", "assets/story/pirate-moon-deck-v1.webp", "assets/story/pirate-sail-v1.webp", "assets/story/pirate-skeleton-v1.webp", "assets/story/pirate-empty-coat-v1.webp", "assets/story/pirate-captain-awake-v1.webp", "assets/story/seed-workbench-v1.webp", "assets/story/seed-walnut-v1.webp", "assets/story/seed-walnut-halves-v1.webp", "assets/story/seed-sand-planet-v1.webp", "assets/story/seed-sand-rose-arrival-v1.webp", "assets/story/fierce-guards-a.webp", "assets/story/fierce-guards-b.webp"];
+  assert.deepEqual(new Set(nightImages),new Set(expectedNightImages),'Seven stories use twenty selected new images and two preserved animal atlases');
+  for(const image of expectedNightImages)assert.equal(offlineBuilder.split("'"+image+"'").length-1,1,'Offline embeds each new/reused image once: '+image);
+  const fairyVoice=fs.readFileSync(path.join(root,'assets/story/fairy-found-v1.wav'));
+  assert.equal(fairyVoice.subarray(0,4).toString(),'RIFF');assert.equal(fairyVoice.subarray(8,12).toString(),'WAVE');
+  assert.ok(fairyVoice.length>4000&&fairyVoice.length<200000,'Dialogue is a short bundled PCM voice');
+  assert.equal(offlineBuilder.split("'assets/story/fairy-found-v1.wav'").length-1,1);
 
   for (const image of new Set([...mountainImages, ...roomImages, ...observatoryImages, ...storyImages, ...scriptImages])) {
     const url = new URL(image, 'https://lucyisalive.github.io/');

@@ -11,6 +11,14 @@
   const timers = new Set();
   const voices = new Set();
   const clockbirdVoices = new Set();
+  const fairyVoices = new Set();
+  const FAIRY_VOICE_ASSET = 'assets/story/fairy-found-v1.wav';
+  let fairyBytesPromise = null;
+  let fairyBuffer = null;
+  let fairyBufferContext = null;
+  let fairyDecodePromise = null;
+  let fairyDecodeContext = null;
+  let fairyEpoch = 0;
   let context = null;
   let master = null;
   let resuming = null;
@@ -186,6 +194,8 @@
     });
     voices.clear();
     clockbirdVoices.clear();
+    fairyVoices.clear();
+    fairyEpoch++;
   }
 
   function startSound(preserveExisting) {
@@ -316,6 +326,88 @@
       if (overtone) clockbirdVoices.add(overtone);
     });
     return 6000;
+  }
+
+  function prepareFairyFound() {
+    // Fetch only after this optional scene is visited. Loading artwork/voice
+    // never creates or resumes an audio context or touches the speech service.
+    if (!fairyBytesPromise) {
+      if (typeof window.fetch !== 'function') return Promise.resolve(false);
+      fairyBytesPromise = Promise.resolve().then(function () {
+        return window.fetch(FAIRY_VOICE_ASSET);
+      }).then(function (response) {
+        if (!response.ok) throw new Error('Optional fairy voice unavailable');
+        return response.arrayBuffer();
+      }).catch(function () { fairyBytesPromise = null; return null; });
+    }
+    const audio = context;
+    return fairyBytesPromise.then(function (bytes) {
+      if (!bytes || !audio || audio !== context || audio.state === 'closed') return false;
+      if (fairyBuffer && fairyBufferContext === audio) return true;
+      if (fairyDecodePromise && fairyDecodeContext === audio) return fairyDecodePromise;
+      fairyDecodeContext = audio;
+      fairyDecodePromise = new Promise(function (resolve, reject) {
+        try {
+          const decoding = audio.decodeAudioData(bytes.slice(0), resolve, reject);
+          decoding?.then?.(resolve, reject);
+        } catch (error) { reject(error); }
+      }).then(function (buffer) {
+        if (audio !== context || audio.state === 'closed') return false;
+        fairyBuffer = buffer; fairyBufferContext = audio;
+        return true;
+      }).catch(function () { return false; }).finally(function () {
+        if (fairyDecodeContext === audio) fairyDecodePromise = null;
+      });
+      return fairyDecodePromise;
+    });
+  }
+
+  function stopFairyFound() {
+    fairyEpoch++;
+    fairyVoices.forEach(function (voice) {
+      try {
+        const now = context ? context.currentTime : 0;
+        voice.gain.gain.cancelScheduledValues(now);
+        voice.gain.gain.setValueAtTime(voice.gain.gain.value, now);
+        voice.gain.gain.linearRampToValueAtTime(0, now + 0.012);
+        voice.oscillator.stop(now + 0.015);
+      } catch (_) {}
+      voices.delete(voice);
+    });
+    fairyVoices.clear();
+  }
+
+  function playFairyFound() {
+    if (muted || document.hidden || !context || context.state === 'closed') return 0;
+    stopFairyFound();
+    const ticket = fairyEpoch;
+    const requestedAt = window.performance?.now?.() ?? Date.now();
+    function playReady() {
+      const now = window.performance?.now?.() ?? Date.now();
+      if (ticket !== fairyEpoch || now - requestedAt > RESULT_SOUND_WAIT_MS ||
+          !fairyBuffer || fairyBufferContext !== context) return;
+      const start = startSound(true);
+      if (start == null) return;
+      let source = null, gain = null;
+      try {
+        source = context.createBufferSource(); source.buffer = fairyBuffer;
+        gain = context.createGain(); gain.gain.setValueAtTime(0.8, start);
+        source.connect(gain); gain.connect(master);
+        const voice = { oscillator: source, gain: gain };
+        voices.add(voice); fairyVoices.add(voice);
+        source.onended = function () {
+          voices.delete(voice); fairyVoices.delete(voice);
+          try { source.disconnect(); gain.disconnect(); } catch (_) {}
+        };
+        source.start(start); source.stop(start + fairyBuffer.duration + 0.025);
+      } catch (_) {
+        try { source?.disconnect(); gain?.disconnect(); } catch (_) {}
+      }
+    }
+    const requestReady = function () { playResultSound(playReady, true); };
+    if (fairyBuffer && fairyBufferContext === context) requestReady();
+    else void prepareFairyFound().then(requestReady).catch(function () {});
+    return 1900;
   }
 
   function targetRect() {
@@ -470,6 +562,9 @@
     playStoneDoor: playStoneDoor,
     playClockbirdChorus: playClockbirdChorus,
     stopClockbirdChorus: stopClockbirdChorus,
+    prepareFairyFound: prepareFairyFound,
+    playFairyFound: playFairyFound,
+    stopFairyFound: stopFairyFound,
     celebrate: celebrate,
     reset: reset,
     setMuted: setMuted,

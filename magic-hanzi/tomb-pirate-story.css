@@ -1,0 +1,144 @@
+.story-tomb-pirate { position: fixed; z-index: 0; inset: 0; overflow: hidden; isolation: isolate; pointer-events: none; background: #080f14; --tp-cave-zoom: 1; --tp-chest-size: 7.5%; --tp-chest-foot: 52%; --tp-step-bob: 0%; --tp-parry-x: 52.5%; --tp-parry-y: 49.2%; }
+.story-tomb-pirate[hidden] { display: none !important; }
+.story-tomb-pirate:not([hidden]) { display: block; }
+.tp-frame { position: absolute; top: 50%; left: 50%; width: min(100%,75dvh); aspect-ratio: 3 / 4; overflow: hidden; transform: translate(-50%,-50%); box-shadow: 0 0 100px 30px #0009; perspective: 800px; }
+.tp-frame img { user-select: none; -webkit-user-drag: none; }
+.tp-frame img[hidden] { display: none !important; }
+.tp-cave-stage,.tp-corridor-world,.tp-corridor-art,.tp-corridor-fallback,.tp-deck-stage,.tp-deck-world,.tp-deck-art,.tp-deck-fallback { position: absolute; inset: 0; width: 100%; height: 100%; }
+.tp-cave-stage { transform: translateY(var(--tp-step-bob)); }
+.tp-corridor-world { transform: scale(var(--tp-cave-zoom)); transform-origin: 50% 51%; }
+.tp-corridor-art,.tp-deck-art { object-fit: fill; }
+.tp-corridor-fallback { background: repeating-linear-gradient(90deg,transparent 0 21%,#8892870c 21% 23%,transparent 23% 25%),radial-gradient(ellipse at 50% 43%,#61523d 0%,#252c2c 26%,#101d23 60%,#070c10 100%); }
+.tp-torch-light { position: absolute; inset: 0; background: radial-gradient(ellipse at 12% 48%,#d39a401f,transparent 25%),radial-gradient(ellipse at 86% 41%,#dcb65a21,transparent 25%); mix-blend-mode: screen; }
+.tp-chest-anchor,.tp-chest-lip { position: absolute; left: 50%; top: var(--tp-chest-foot); width: var(--tp-chest-size); aspect-ratio: 3 / 4; transform: translate(-50%,-100%); }
+.tp-chest-anchor { z-index: 12; filter: drop-shadow(0 8px 7px #0306089c); }
+.tp-chest-frame { position: absolute; inset: 0; overflow: hidden; }
+.tp-chest-frame img { position: absolute; top: 0; left: 0; width: 200%; height: 100%; max-width: none; }
+.tp-chest-open { opacity: 0; transform: translateY(1%); transition: opacity .7s ease,transform 1.3s ease; }
+.tp-chest-open img,.tp-chest-lip img { left: -100%; }
+.tp-chest-closed { opacity: 1; transition: opacity .65s ease; }
+.is-chest-open .tp-chest-open { opacity: 1; transform: none; }
+.is-chest-open .tp-chest-closed { opacity: 0; }
+.tp-chest-lip { z-index: 19; clip-path: inset(61% 0 0); opacity: 0; pointer-events: none; }
+.is-chest-open .tp-chest-lip { opacity: 1; }
+.tp-chest-light { position: absolute; inset: 43% 19% 12%; opacity: 0; background: radial-gradient(ellipse,#dfc1877d,transparent 67%); mix-blend-mode: screen; transition: opacity 1.5s ease; }
+.is-chest-open .tp-chest-light { opacity: .55; }
+.tp-laser-volume { position: absolute; z-index: 20; inset: 0; perspective: 600px; perspective-origin: 50% 51%; transform-style: preserve-3d; }
+.tp-laser-plane { position: absolute; inset: 4% -10% -4%; transform-style: preserve-3d; backface-visibility: hidden; }
+.tp-laser-plane[hidden] { display: none !important; }
+.tp-laser-plane svg { width: 100%; height: 100%; overflow: visible; }
+.tp-beam-halo { stroke: var(--tp-beam); stroke-width: .65; opacity: .25; }
+.tp-beam-core { stroke: #ffedc8; stroke-width: .13; opacity: .92; }
+.tp-beam-frame { fill: none; stroke: var(--tp-beam); stroke-width: .25; opacity: .65; }
+.tp-tomb-dust { position: absolute; z-index: 35; inset: 0; opacity: 0; pointer-events: none; }
+.tp-tomb-dust i { position: absolute; left: var(--tp-dust-x); top: -3%; width: 3px; height: 5px; border-radius: 30%; background: #bca77a83; }
+.is-quaking .tp-cave-stage { animation: tp-tomb-quake 1.8s linear both; }
+.is-quaking .tp-tomb-dust { opacity: 1; }
+.is-quaking .tp-tomb-dust i { animation: tp-falling-dust 1.4s ease-in var(--tp-dust-delay) both; }
+.tp-arrow-field { position: absolute; z-index: 36; inset: 0; perspective: 700px; opacity: 0; transition: opacity .25s ease; }
+.has-arrows .tp-arrow-field { opacity: 1; }
+.tp-arrow { position: absolute; width: 42%; aspect-ratio: 190 / 24; transform: translate(-50%,-50%) rotate(var(--tp-arrow-turn)) rotateY(var(--tp-arrow-lean)); filter: drop-shadow(0 2px 2px #000a); }
+.tp-arrow[hidden] { display: none !important; }
+.tp-arrow-motion { position: absolute; inset: 0; transform-style: preserve-3d; }
+.tp-arrow svg { width: 100%; height: 100%; overflow: visible; }
+.tp-arrow-fletching { fill: #7f7562; stroke: #d3c7a4; stroke-width: .8; }
+.tp-arrow-feather { fill: none; stroke: #393c38; stroke-width: .9; }
+.tp-arrow-wood { fill: #6d5131; stroke: #9e8052; stroke-width: .8; }
+.tp-arrow-shaft-light { fill: none; stroke: #e1c99c; stroke-width: 1; opacity: .7; }
+.tp-arrow-head { fill: #566564; stroke: #bac4b9; stroke-width: .8; }
+.tp-arrow-head-light { fill: #c3cbc0; opacity: .7; }
+.is-volley .tp-arrow-motion { animation: tp-volley-flight 1.25s cubic-bezier(.1,.5,.2,1) var(--tp-arrow-delay) both; }
+.tp-arrow.is-targeted { animation: tp-arrow-target .34s ease-in both; }
+.tp-arrow.is-deflected { animation: tp-arrow-deflect .72s ease-out both; }
+.tp-sword-hand { position: absolute; z-index: 45; left: 39%; top: 43%; width: 72%; aspect-ratio: 1; opacity: 0; transform: translate(20%,28%) rotate(11deg); transform-origin: 81% 82%; transition: opacity .35s ease; }
+.tp-sword-hand img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 3px 3px #020507a8); }
+.has-sword .tp-sword-hand { opacity: 1; }
+.is-parrying .tp-sword-hand { animation: tp-sword-parry 1.08s cubic-bezier(.2,.65,.25,1) both; }
+.tp-parry-impact { position: absolute; z-index: 48; left: var(--tp-parry-x); top: var(--tp-parry-y); width: 30px; height: 30px; transform: translate(-50%,-50%); opacity: 0; }
+.tp-parry-impact i { position: absolute; inset: 20%; background: #f1df9b; border-radius: 50%; box-shadow: 0 0 14px 4px #edc87b99; }
+.tp-parry-impact b { position: absolute; left: 50%; top: 50%; width: var(--tp-spark-length); height: 1px; background: #f2ce85; transform-origin: 0 50%; transform: rotate(var(--tp-spark-angle)); }
+.is-parrying .tp-parry-impact { animation: tp-impact-flash .55s ease-out .34s both; }
+.is-parrying .tp-parry-impact b { animation: tp-parry-spark .5s ease-out .34s both; }
+.tp-map-object { position: absolute; z-index: 34; left: 50%; top: 55%; width: 86%; aspect-ratio: 3 / 2; transform: translate(-50%,-50%); opacity: 0; filter: drop-shadow(0 14px 13px #0009); transform-style: preserve-3d; }
+.tp-map-object > img,.tp-map-piece,.tp-map-piece img { position: absolute; inset: 0; width: 100%; height: 100%; }
+.tp-map-object img { object-fit: fill; }
+.is-paper-inside .tp-map-object { z-index: 15; top: 54.5%; width: 26%; opacity: 1; transform: translate(-50%,-50%) rotateX(62deg) rotateZ(-7deg); }
+.is-paper-held .tp-map-object { opacity: 1; }
+.is-lifting-paper .tp-map-object { animation: tp-take-map 2.7s cubic-bezier(.2,.65,.3,1) both; }
+.is-paper-held .tp-corridor-world { filter: brightness(.58) blur(2px); }
+.tp-map-piece { opacity: 0; mask-image: var(--tp-paper-mask); mask-size: 100% 100%; mask-repeat: no-repeat; }
+.tp-map-piece.is-revealed { opacity: 1; }
+.tp-map-piece.is-new { animation: tp-map-ink-appears 1.3s ease-out both; }
+.tp-map-ink-glow { position: absolute; inset: 8% 8%; border-radius: 42%; opacity: 0; background: radial-gradient(ellipse,#e6d4a058,transparent 65%); box-shadow: 0 0 24px #d1c5842e; mix-blend-mode: screen; }
+.is-map-glowing .tp-map-ink-glow { animation: tp-map-glow 1.3s ease-out both; }
+.is-map-diving .tp-map-object { animation: tp-map-dive 4.4s cubic-bezier(.4,.05,.5,1) both; }
+.tp-sea-gate { position: absolute; z-index: 39; inset: -5%; opacity: 0; background: radial-gradient(ellipse at 50% 45%,#6e94989c,#25454ee6 45%,#102730 75%); mask-image: radial-gradient(ellipse,#000 38%,transparent 70%); transform: scale(.1); }
+.tp-sea-gate svg { width: 100%; height: 100%; }
+.tp-sea-gate path { fill: none; stroke: #c3d1ba; stroke-width: 2; opacity: var(--tp-wave-opacity); }
+.is-sea-crossing .tp-sea-gate { animation: tp-sea-crossing 2.4s ease-out both; }
+.is-sea-crossing .tp-sea-gate path { animation: tp-water-flow 2.1s ease-in-out var(--tp-wave-delay) infinite alternate; }
+.tp-deck-stage { z-index: 28; opacity: 0; visibility: hidden; overflow: hidden; }
+.tp-deck-fallback { background: linear-gradient(#172c36,#31424a 39%,#69523a 45%,#332b24 100%); }
+.tp-deck-world { transform-origin: 50% 52%; }
+.is-deck-arriving .tp-deck-stage { visibility: visible; animation: tp-deck-arrival 2s ease-out both; }
+.is-on-deck .tp-deck-stage { opacity: 1; visibility: visible; }
+.is-on-deck .tp-cave-stage,.is-on-deck .tp-map-object,.is-on-deck .tp-sea-gate { display: none; }
+.tp-sea-drift { position: absolute; z-index: 2; inset: 35% -20% 32%; opacity: .3; background: repeating-radial-gradient(ellipse at 50% 100%,transparent 0 14px,#adc5c117 15px 17px,transparent 18px 40px); mask-image: linear-gradient(transparent,#000 35%,transparent); }
+.tp-sail { position: absolute; z-index: 5; left: 35%; top: 1%; width: 64%; height: 32%; transform: translateX(-50%); transform-origin: 50% 5%; clip-path: inset(0 0 82%); transition: clip-path 2.3s cubic-bezier(.2,.7,.3,1); }
+.tp-sail img { width: 100%; height: 100%; object-fit: contain; }
+.is-sail-open .tp-sail { clip-path: inset(0); }
+.tp-empty-coat,.tp-loose-hat { position: absolute; z-index: 13; left: 50%; top: 32.5%; width: 38.2%; height: 38.2%; transform: translateX(-50%); }
+.tp-empty-coat { clip-path: inset(18.2% 0 0); }
+.tp-empty-coat > img,.tp-loose-hat > img { width: 100%; height: 100%; object-fit: fill; }
+.tp-loose-hat { z-index: 18; clip-path: inset(0 0 81.8%); transform: translate(15%,-16%); transition: transform 1.05s cubic-bezier(.4,.05,.5,1); }
+.is-hat-dropping .tp-loose-hat { transform: translateX(-50%); }
+.is-coat-filling .tp-empty-coat { animation: tp-coat-fills 1.4s ease both; }
+.tp-skeleton-assembly { position: absolute; z-index: 16; left: 28%; top: 34%; width: 43%; height: 43%; transform: translateX(-50%); transform-origin: 50% 65%; }
+.tp-bone-part,.tp-skeleton-whole { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; }
+.tp-bone-part img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: fill; }
+.tp-bone-part.is-assembled { opacity: 1; }
+.tp-bone-part.is-new { animation: tp-bone-assembles 1.15s cubic-bezier(.15,.7,.25,1) both; }
+.has-all-bones .tp-skeleton-whole { opacity: 1; }
+.has-all-bones .tp-bone-part { opacity: 0; }
+.tp-soul-light { position: absolute; inset: 0; opacity: 0; background: radial-gradient(ellipse at 50% 30%,#8eb9a53d,transparent 58%); mix-blend-mode: screen; }
+.has-all-bones .tp-soul-light { opacity: .7; }
+.is-inhabiting .tp-skeleton-assembly { animation: tp-skeleton-inhabits 1.5s cubic-bezier(.3,.2,.45,1) both; }
+.tp-captain { position: absolute; z-index: 19; left: 50%; top: 30.3%; width: 52%; height: 52%; transform: translateX(-50%); opacity: 0; transition: opacity .9s ease; }
+.tp-captain-frame { position: absolute; inset: 0; overflow: hidden; }
+.tp-captain-frame img { position: absolute; top: 0; left: 0; width: 200%; height: 100%; max-width: none; }
+.tp-captain-steering { opacity: 0; }
+.tp-captain-steering img { left: -100%; }
+.is-captain-awake .tp-captain { opacity: 1; }
+.is-captain-awake .tp-empty-coat,.is-captain-awake .tp-loose-hat,.is-captain-awake .tp-skeleton-assembly { opacity: 0; transition: opacity .8s ease; }
+.is-captain-turning .tp-captain-front { animation: tp-captain-turn 1.1s ease-in-out both; }
+.is-captain-steering .tp-captain-front { opacity: 0; }
+.is-captain-steering .tp-captain-steering { opacity: 1; }
+.tp-rigging-light { position: absolute; z-index: 25; inset: 0; background: linear-gradient(115deg,transparent 49.8%,#e1d0a414 50%,transparent 50.2%); opacity: .5; }
+.is-sailing .tp-deck-world { animation: tp-ship-sailing 6.6s ease-in-out infinite; }
+.is-sailing .tp-sea-drift { animation: tp-sea-underway 5s linear infinite; }
+.is-sailing .tp-sail { animation: tp-sail-billows 4.3s ease-in-out infinite alternate; }
+.tp-frame-shade { position: absolute; z-index: 60; inset: 0; background: linear-gradient(#030a1640,transparent 23% 76%,#06131b88),linear-gradient(90deg,#020a142e,transparent 18% 82%,#020a142e); }
+@keyframes tp-tomb-quake { 0%,100% { transform: none; } 7%,31%,57% { transform: translate(-.7%,.3%) rotate(-.25deg); } 14%,45%,70% { transform: translate(.8%,-.4%) rotate(.28deg); } 23%,63%,84% { transform: translate(-.5%,-.2%); } }
+@keyframes tp-falling-dust { from { transform: translateY(0) rotate(0); opacity: 0; } 12% { opacity: .8; } to { transform: translate(25px,650px) rotate(85deg); opacity: 0; } }
+@keyframes tp-volley-flight { from { transform: translateZ(-1500px) scale(.12); opacity: 0; } 18% { opacity: 1; } to { transform: translateZ(0) scale(1); opacity: 1; } }
+@keyframes tp-arrow-target { from { left: var(--tp-arrow-x); top: var(--tp-arrow-y); transform: translate(-50%,-50%) rotate(var(--tp-arrow-turn)) rotateY(var(--tp-arrow-lean)); } to { left: var(--tp-parry-x); top: var(--tp-parry-y); transform: translate(-50%,-50%) rotate(var(--tp-arrow-turn)) rotateY(var(--tp-arrow-lean)) scale(1.3); } }
+@keyframes tp-arrow-deflect { from { left: var(--tp-parry-x); top: var(--tp-parry-y); transform: translate(-50%,-50%) rotate(var(--tp-arrow-turn)) rotateY(var(--tp-arrow-lean)) scale(1.3); opacity: 1; } to { left: var(--tp-arrow-exit-x); top: 22%; transform: translate(-50%,-50%) rotate(calc(var(--tp-arrow-turn) + 115deg)) scale(.7); opacity: 0; } }
+@keyframes tp-sword-parry { 0%,100% { transform: translate(20%,28%) rotate(11deg); } 30% { transform: translate(-45%,-14%) rotate(28deg); } 46% { transform: translate(-49%,-18%) rotate(40deg); } 64% { transform: translate(-20%,5%) rotate(19deg); } }
+@keyframes tp-impact-flash { 0% { opacity: 0; transform: translate(-50%,-50%) scale(.2); } 18% { opacity: .9; transform: translate(-50%,-50%) scale(1.15); } 100% { opacity: 0; transform: translate(-50%,-50%) scale(.5); } }
+@keyframes tp-parry-spark { from { transform: rotate(var(--tp-spark-angle)) translateX(0); opacity: 1; } to { transform: rotate(var(--tp-spark-angle)) translateX(24px); opacity: 0; } }
+@keyframes tp-take-map { from { top: 54.5%; width: 26%; transform: translate(-50%,-50%) rotateX(62deg) rotateZ(-7deg); } 40% { top: 46%; width: 50%; transform: translate(-50%,-50%) rotateX(35deg) rotateZ(3deg); } to { top: 55%; width: 86%; transform: translate(-50%,-50%); } }
+@keyframes tp-map-ink-appears { from { opacity: 0; filter: brightness(1.85) sepia(.7); } 35% { opacity: .45; } to { opacity: 1; filter: none; } }
+@keyframes tp-map-glow { from { opacity: 0; transform: scale(.8); } to { opacity: 1; transform: scale(1.15); } }
+@keyframes tp-map-dive { 0% { transform: translate(-50%,-50%) scale(1); } 25% { transform: translate(-50%,-50%) scale(1.3); } 68% { opacity: 1; transform: translate(-50%,-48%) scale(6); } 100% { opacity: 0; transform: translate(-50%,-46%) scale(14); } }
+@keyframes tp-sea-crossing { 0% { opacity: 0; transform: scale(.2); } 38% { opacity: .95; transform: scale(1.7); } 75% { opacity: 1; transform: scale(2.8); } 100% { opacity: 0; transform: scale(3); } }
+@keyframes tp-water-flow { from { transform: translateX(-8%); } to { transform: translateX(8%); } }
+@keyframes tp-deck-arrival { from { opacity: 0; transform: translateY(14%) scale(1.15); } to { opacity: 1; transform: none; } }
+@keyframes tp-bone-assembles { from { opacity: 0; transform: translate(var(--tp-bone-from-x),var(--tp-bone-from-y)) rotate(var(--tp-bone-turn)) scale(.7); } 20% { opacity: 1; } 77% { transform: translate(1%,-1%) rotate(-3deg) scale(1.03); } to { opacity: 1; transform: none; } }
+@keyframes tp-skeleton-inhabits { from { transform: translateX(-50%); opacity: 1; } 75% { opacity: .75; } to { transform: translateX(1.2%); opacity: 0; } }
+@keyframes tp-coat-fills { 0% { transform: translateX(-50%) scaleX(.88); } 38% { transform: translateX(-50%) scaleX(1.09); } 70% { transform: translateX(-50%) scaleX(.98); } 100% { transform: translateX(-50%); } }
+@keyframes tp-captain-turn { from { opacity: 1; transform: rotateY(0); } 60% { opacity: 1; } to { opacity: 0; transform: rotateY(82deg); } }
+@keyframes tp-ship-sailing { 0%,100% { transform: rotate(-.55deg) translateY(.25%); } 50% { transform: rotate(.65deg) translateY(-.35%); } }
+@keyframes tp-sea-underway { from { transform: translateX(0) scale(1); } to { transform: translateX(-6%) scale(1.04); } }
+@keyframes tp-sail-billows { from { transform: translateX(-50%) rotateX(-2deg) skewY(-.5deg); } to { transform: translateX(-50%) rotateX(3deg) skewY(.8deg); } }
+.story-tomb-pirate.is-instant *, .story-tomb-pirate.is-suspended * { animation: none !important; transition: none !important; }
+@media (prefers-reduced-motion: reduce) { .story-tomb-pirate *, .story-tomb-pirate *::before, .story-tomb-pirate *::after { animation: none !important; transition: none !important; } }

@@ -1,0 +1,349 @@
+{
+  "mode": "built-in image_gen",
+  "scope": "Seven new stories,20 new images, two preserved fierce-guard atlases, one bundled dialogue.",
+  "prompts": [
+    {
+      "key": "seed-workbench-v1",
+      "prompt": "Use case illustration-story. Full3:4 portrait realistic classical magical still-life ENVIRONMENT for a game, original finely painted old walnut wooden workbench in an ancient wizard's study, deeply mysterious indigo brown and restrained amber lamplight, rich authentic material, not cartoon/plastic. A broad EMPTY tabletop occupies the central/lower two thirds; leave x22–78% y30–80% absolutely clear for one magical walnut which the game will overlay at center x50% y56%. Perspective coherent, warm light from upper LEFT, darker right, deep shelves/drapery only around outer edges. A single fine sewing needle and a small plain parchment corner at far left outer edge as scale references, subtle antique brass rim/candle out of central view. No nuts/fruit/seeds/sand/planet/people/animals/letters/numbers/UI/watermark. No pile of clutter over the empty center; exquisite sophisticated classical fairy-tale atmosphere.",
+      "transparent": false,
+      "referencedAssets": []
+    },
+    {
+      "key": "seed-walnut-v1",
+      "prompt": "Use case illustration-story. Exactly ONE complete closed natural WALNUT shell cutout on genuinely TRANSPARENT background, wide3:2 canvas1536x1024. Large walnut centered, three-quarter view, vertical natural seam clearly readable, organic deeply wrinkled brown shell, intricate real woody ridges, old amber and antique bronze-brown color with warm light from upperLEFT and cool indigo shadow on right. Full walnut fits within x25–75%, y15–85% with generous alpha0 margin. Painterly realistic classical fairy-tale detail, no face, opening, kernel exposed, magic logos, sparkles or outside glow. Physical walnut opaque, everything else truly alpha0, no table/floor/castshadow/background/checkerboard/text/UI/watermark. This object will be nested and scaled to show smaller shells inside, so keep a strong readable continuous seam and complete clean silhouette.",
+      "transparent": true,
+      "referencedAssets": []
+    },
+    {
+      "key": "seed-sand-planet-v1",
+      "prompt": "Use case illustration-story. Full3:4 portrait original classical painted fantasy view from deep space toward a SMALL SAND PLANET. One complete sandy ochre/antique-gold sphere centered x50% y52%, diameter72% imagewidth, generous dark space around it. Real spherical curvature, subtly detailed sweeping dunes and dry ridges on surface, soft atmosphere at rim, warm distant light from upperLEFT so bright golden crescent/hemisphere top-left and deep umber shadow lower-right. Backdrop is dark indigo starfield, sparse delicate stars, mysterious and poetic, NOT colorful science-fiction neon. No rings, spaceships, buildings, astronauts, people, faces, moons, flowers, glassdome, lettering, UI or watermark. No Little Prince character or recognizable illustrated-book composition. The game will zoom continuously from a tiny grain into this orb and then into a sand surface; leave sphere large/readable with coherent fine sand textures.",
+      "transparent": false,
+      "referencedAssets": []
+    },
+    {
+      "key": "midnight-menagerie-v1",
+      "prompt": "Use case illustration-story. Full3:4 portrait ENVIRONMENT of an antique midnight zoo that secretly becomes a magical fairground. A broad cobblestone avenue runs from foreground y95% into a small EMPTY circular stage at center x50% y43%; coherent strong near/middle/far perspective. Trees, wrought iron ornamental arches and old lantern posts frame the upper/outer edges. BOTH sides of avenue and lower front must have generous EMPTY ground terraces for ten cages and animals added later, no fixed cages, animals, statues, people or carnival ride blocking the playing area. Stage empty. Existing hanging festoon cables above may be dark and unlit; the game will illuminate its own golden bulbs at completion. Night sky deep navy, very restrained cool moonlight, mysterious quiet before a party. Original classical realistic hand-painted fairy-tale game art, rich old textures, deep indigo shadows, restrained antique gold light, sophisticated and mysterious, never pastel cartoon/plastic. No text, labels, letters, numbers, UI or watermark.",
+      "transparent": false,
+      "referencedAssets": []
+    },
+    {
+      "key": "butterfly-secret-garden-v1",
+      "prompt": "Use case illustration-story. Full3:4 portrait ENVIRONMENT of a secret classical enchanted garden just before dawn. Central stone/dirt path begins at foreground y94% and winds gently toward a distant small EMPTY flowerbed clearing at x52% y36–43%. Clear near/middle/far depth and a magical sense of a much larger garden beyond. Dark old trees and distant clipped topiary frame outeredges, subtle dew on low plants, indigo moonlight with restrained pearly pink/silver predawn glow. Leave the central path x22–78% open across all depths so the game can add ten removable hedges/gates/mist barriers. NO fairy, butterflies, main individual flower, people, fences/gates across path or foreground bush obscuring the route. No maze from an existing film. Original classical realistic hand-painted fairy-tale game art, rich old textures, deep indigo shadows, restrained antique gold light, sophisticated and mysterious, never pastel cartoon/plastic. No text, labels, letters, numbers, UI or watermark.",
+      "transparent": false,
+      "referencedAssets": []
+    },
+    {
+      "key": "garden-hedge-screen-v1",
+      "prompt": "Use case illustration-story. Exactly ONE wide horizontal dense garden HEDGE SCREEN cutout on genuinely TRANSPARENT1536x1024 canvas. A single irregular clump of old dark green broadleaf shrubs with interwoven delicate stems and some tiny muted blossoms, outer edges organic and complete on allfour sides, no flat clipped canvas edges. The plant takes x8–92% y20–85%, many fine leaves readable, darker bottom cool indigo shadows and faint silver moonlight upper edges, luxurious botanical painted texture. No ground, dirt base, pot, sky, scenery rectangle, otherobjects, lights, fairy, insects, exteriorhaze/shadow. Physical foliage opaque and natural gaps/edges alpha transparent. The game will split this clump into two sides to open passages. Original classical realistic hand-painted fairy-tale game art, rich old textures, deep indigo shadows, restrained antique gold light, sophisticated and mysterious, never pastel cartoon/plastic. No text, labels, letters, numbers, UI or watermark.",
+      "transparent": true,
+      "referencedAssets": []
+    },
+    {
+      "key": "fairy-disguise-flower-v1",
+      "prompt": "Use case illustration-story. Exactly ONE elegant magical flower cutout, perfectly STILL and disguising an unseen tiny fairy; no visible face, limbs or person. One pale dusty-violet and pearl-silver blossom at top of a slender natural dark green stem, TWO delicate green leaves; full flower head, entire stem and leaf tips completely inside3:4 portrait transparent canvas with generous empty alpha0 margin. Bloom's petal shapes subtly suggest folded butterfly wings but remain convincingly a real flower. Classical botanical realism, sophisticated muted purple not candy pastel, dew beads, warm-pearl rim and indigo shadow. No roots/soil/pot/ground/castshadow/background/glow/sparkles/otherflowers/insects. Original classical realistic hand-painted fairy-tale game art, rich old textures, deep indigo shadows, restrained antique gold light, sophisticated and mysterious, never pastel cartoon/plastic. No text, labels, letters, numbers, UI or watermark.",
+      "transparent": true,
+      "referencedAssets": []
+    },
+    {
+      "key": "butterfly-fairy-laugh-v1",
+      "prompt": "Use case illustration-story. Exactly ONE original tiny ADULT female butterfly-wing fairy fullbody on genuinely TRANSPARENT3:4 portrait canvas. Slender graceful adult proportions, refined playful realistic face, smiling/laughing in delighted discovery while pointing one hand TOWARD THE VIEWER. Otherarm extended lightly for balance. Complete head/hands/fingers/feet and FOUR large delicate butterfly wings entirely withinframe with transparent margins. Wings in dusty violet, pearl silver and deep indigo veining; modest long layered leaf/petal dress in same muted violet/silver, dark chestnut hair loosely arranged with tiny petals. Strongly reads as SMALL HUMAN with real butterfly wings, not an insect body, baby doll/chibi, cartoon or any famous fairy character. Slight upward spring pose with bent knee, wholebody remains graceful. Soft moonlight, detailed painterly silk/botanical realism. No flower disguise attached, scene, groundshadow, exteriorglowhaze, bubble, words or watermark. Original classical realistic hand-painted fairy-tale game art, rich old textures, deep indigo shadows, restrained antique gold light, sophisticated and mysterious, never pastel cartoon/plastic. No text, labels, letters, numbers, UI or watermark.",
+      "transparent": true,
+      "referencedAssets": []
+    },
+    {
+      "key": "tomb-depth-corridor-v1",
+      "prompt": "Use case illustration-story. Full3:4 portrait ENVIRONMENT, first-person view along a deep ancient stone tomb corridor with convincing central perspective, vanishing point x50% y43%. Large near rough-stone doorframe/pillars at sides, successive evenly spaced arches/stone ribs retreating in depth, floor block seams converge toward a distant EMPTY low stone plinth at end. Near stone must look much larger than far stone. Dark aged basalt/grey limestone, bronze inlays, very restrained amber walllamps and cool blue depth haze, adventurous mysterious interior. NO lasers/lightnet/colored beam/treasurechest/arrows/sword/people/animal/statues blockingpath. Keep broad central route and far plinth clear; game will overlay ten depths of light nets and a chest. No writing/hieroglyph-like text. Original classical realistic hand-painted fairy-tale game art, rich old textures, deep indigo shadows, restrained antique gold light, sophisticated and mysterious, never pastel cartoon/plastic. No text, labels, letters, numbers, UI or watermark.",
+      "transparent": false,
+      "referencedAssets": []
+    },
+    {
+      "key": "tomb-treasure-chest-v1",
+      "prompt": "Use case illustration-story. Production sprite atlas genuinely TRANSPARENT1536x1024, TWO equal vertical cells each768x1024. Same ONE classical dark walnut and aged bronze treasure chest in both cells, frontal slightly downward first-person angle, symmetric hinged domed lid, clear iron/brass straps and lock. LEFTcell CLOSED chest, RIGHTcell SAME chest OPEN lid lifted backward about100degrees. EXACT SAME bottom box pixel size, position, front face and foot baseline in eachcell, chest centered x50% with floor atlocal y900, enough transparent margin. Open lid entirely inside rightcell, interior EMPTY dark velvet/wood cavity for a map the game will add; no coins/jewels/map/content. Chest body x100–668 eachcell, closedtopabouty520, openlidtopy250. Wholefeet/hinges/lidfit, cleanalphagaps, no objects crossing divider. No background/ground/castshadow/exteriorglow or visible grid. Original classical realistic hand-painted fairy-tale game art, rich old textures, deep indigo shadows, restrained antique gold light, sophisticated and mysterious, never pastel cartoon/plastic. No text, labels, letters, numbers, UI or watermark.",
+      "transparent": true,
+      "referencedAssets": []
+    },
+    {
+      "key": "tomb-sword-hand-v1",
+      "prompt": "Use case illustration-story. ONE illustrated FIRST-PERSON sword-wielding right hand with a black wizard robe sleeve, full cutout on genuinely TRANSPARENT1536x1024 canvas. Viewer sees only hand gripping an antique silver longsword hilt, sleeve comes from lowerRIGHT but ends with soft complete cloth edge insidecanvas. Sword blade extends diagonally from lowerRIGHT toward upperLEFT, ENTIRE blade tip and pommel and hand in frame with generous transparent margin. Natural small youthful hand proportions, no whole person, non-photographic painted fantasy illustration. Elegant slightly tarnished steel, dark leather grip, restrained antique bronze crossguard, subtle cool highlight. Designed to rotate and swipe to knock arrows aside. No blood, injury, threatening otherperson, text, ground, scene, shadowhaze. Original classical realistic hand-painted fairy-tale game art, rich old textures, deep indigo shadows, restrained antique gold light, sophisticated and mysterious, never pastel cartoon/plastic. No text, labels, letters, numbers, UI or watermark.",
+      "transparent": true,
+      "referencedAssets": []
+    },
+    {
+      "key": "pirate-map-blank-v1",
+      "prompt": "Use case illustration-story. Exactly ONE large EMPTY old treasure-map parchment sheet cutout on genuinely TRANSPARENT1536x1024 landscapecanvas. Broad roughlyrectangular aged ivory/tan paper with four complete slightly irregular worn edges, subtle creases, warm candlelight from upperLEFT and coolindigo shadowright. Sheet fills x10–90% y12–88%, wholecorners insideframe, largely FRONT-ON slight natural undulation but no strong perspective so it can overlay in a chest or be held flat in frontofcamera. Center completely BLANK, NO ink drawing, symbols, coastline, compass, letters, numbers or watermark. Physical paper opaque, all outside genuinely alpha0, no tabletop, ground, castshadow, hands or backgroundhaze. Original refined realistic classical painted texture. Original classical realistic hand-painted fairy-tale game art, rich old textures, deep indigo shadows, restrained antique gold light, sophisticated and mysterious, never pastel cartoon/plastic. No text, labels, letters, numbers, UI or watermark.",
+      "transparent": true,
+      "referencedAssets": []
+    },
+    {
+      "key": "pirate-moon-deck-v1",
+      "prompt": "Use case illustration-story. Full3:4 portrait ENVIRONMENT aboard an ORIGINAL old wooden pirate sailing ship on moonlit sea, first-person looking toward stern helm. Real ship's wooden wheel mounted in central midground at x50% y59%, clear OPEN captain-standing region x32–68% y38–87%, empty deck foreground, realistic converging woodplanks. Distant horizon visible beyond low sternrail aroundy43%, dark indigo sea with soft silver moonlit waves, old mast/rigging framing sides. Sails are FURLED/TIED and largely outside upperframe or subtle narrowrolls; do not paint a big fixed full sail since the game will unfold separate sail art later. No captain, skeleton, people, treasurechest, map or creature. Spacious legible helm area, antique classical fantasy adventure, no pirate text/sigils/skull flags. Original classical realistic hand-painted fairy-tale game art, rich old textures, deep indigo shadows, restrained antique gold light, sophisticated and mysterious, never pastel cartoon/plastic. No text, labels, letters, numbers, UI or watermark.",
+      "transparent": false,
+      "referencedAssets": []
+    },
+    {
+      "key": "pirate-sail-v1",
+      "prompt": "Use case illustration-story. Exactly ONE complete old square-rig sailing ship SAIL with its horizontal dark wooden yard and a few fine rigging ropes, isolated on genuinely TRANSPARENT1536x1024. Pale aged ivory linen with subtle patched seams, slightly wind-billowed, not tornhorror, broadtrapezoid sail occupying x12–88% y13–88%, all cloth corners and rope ends complete with margin. Silver-blue moonlight along folds, restrained warmbronze rim, classical realistic painted shipmaterial. No mast through center, hull, deck, sea, sky, symbols, writing, skullflags, background, groundshadow or exteriorglow. The game will animate cloth from narrow furledstrip to expandedsail, so clear fabric folds and a strong topyard are useful. Original classical realistic hand-painted fairy-tale game art, rich old textures, deep indigo shadows, restrained antique gold light, sophisticated and mysterious, never pastel cartoon/plastic. No text, labels, letters, numbers, UI or watermark.",
+      "transparent": true,
+      "referencedAssets": []
+    },
+    {
+      "key": "pirate-skeleton-v1",
+      "prompt": "Use case illustration-story. Exactly ONE complete anatomically coherent ADULT HUMAN SKELETON front view, fullbody cutout on genuinely TRANSPARENT3:4 portrait canvas. Neutral upright pose, arms slightly away from torso and elbows lightly bent, all fingers/feet/skull/ribs/pelvis visible and entirely withinframe with generous alpha0 gaps aroundlimbs and edges. Consistent realistic adult proportions, complete clean bone groups easy to divide into head/torso/arms/hands/pelvis/legs/feet for10-step assembly. Old ivory bone with coolindigo shadows and warm antiquebrass rimlight, classical painted pirate adventure atmosphere, a friendly curious skull expression, no gore/wounds/horror effect/weapon. No clothes/hat/stand/ground/castshadow/background/glow/text. Original classical realistic hand-painted fairy-tale game art, rich old textures, deep indigo shadows, restrained antique gold light, sophisticated and mysterious, never pastel cartoon/plastic. No text, labels, letters, numbers, UI or watermark.",
+      "transparent": true,
+      "referencedAssets": []
+    },
+    {
+      "key": "pirate-empty-coat-v1",
+      "prompt": "Use case illustration-story. ONE EMPTY antique PIRATE CAPTAIN'S LONG COAT and its matching separate TRICORN HAT, cutouts on genuinely TRANSPARENT3:4 portrait canvas. Coat hangs naturally upright with sleeves slightly spread, clearly HOLLOW with no body, head, hands, skeleton or feet inside. Deep navy/indigo heavywool, muted burgundy lining, restrained antique gold embroidery and brass buttons, oldleather shoulderbelt/belt, classical realistic painted fabric. Coat occupies x18–82% y35–92%, hat is separate above it centeredx50% y15–25% with clear transparent gap, all full silhouettes insideframe. No hanger/mannequin/stand/ground/castshadow/exteriorglow/background, no logo/skull/text. This exact clothing identity will later be worn by a friendly skeleton captain. Original classical realistic hand-painted fairy-tale game art, rich old textures, deep indigo shadows, restrained antique gold light, sophisticated and mysterious, never pastel cartoon/plastic. No text, labels, letters, numbers, UI or watermark.",
+      "transparent": true,
+      "referencedAssets": []
+    },
+    {
+      "key": "seed-walnut-halves-v1",
+      "prompt": "Use case precise-object-edit. Reference is the exact closed walnut identity, shell texture and light. Create a genuinely TRANSPARENT1536x1024 TWO-CELL sprite atlas, LEFT half on left768x1024 cell, RIGHT half on rightcell. Show this SAME walnut opened cleanly along the long seam into TWO EMPTY HOLLOW SHELL HALVES. Both shells' concave inner wood surfaces visible toward viewer, left shell tips a littleleft and right shell tips a littleright, symmetrical corresponding halves, fullcurvedrim/intactwrinkledouter surface readable. No edible kernel inside, no other nested nut yet (game will add). Samephysicalscale/height and lowerbaseline in bothcells, entire shellpercell inside transparent margins, NO touching/crossingdivider. Classical painted realism amberbrown highlightsupperLEFT, indigo rightshadow. Outside physical shells truly alpha0, no background/ground/castshadow/exteriorglow/checkerboard/text/grid.",
+      "transparent": true,
+      "referencedAssets": [
+        "exec-caa1c018-4a55-426e-ab94-1aefc5801a76.png"
+      ]
+    },
+    {
+      "key": "seed-sand-rose-arrival-v1",
+      "prompt": "Use case illustration-story, environment viewpoint transformation. Reference image establishes SAME sandy planet's ochre/antiquegold dunes, dark indigo universe, upperLEFT warm light and classical detailed painted texture. Now create a NEW3:4 portrait view STANDING ON THE SURFACE of that planet. Wide quiet barren dune landscape, low gently curved planetary horizon atabouty40%, deep indigo starfield beyond, no big planet orb in the sky. In clear foreground atx58% y67–76% grows EXACTLY ONE small but readable RED ROSE BUD on a slendergreenstem with2–3leaves, rooted directly in the sand, closed/unopened bud, static and needingcare, no pot or glassdome. No person/fox/asteroidcharacters/building/spacecraft/otherflowers/text/UI/watermark. Light direction and sandcolor exactlyharmonize withreference so zoom fromorbit can blend continuously to this ground scene. Sophisticated lonely and romantic alienworld, not cheerfulcartoon or reproduction of anyexistingbookillustration.",
+      "transparent": false,
+      "referencedAssets": [
+        "exec-6304a37c-6dc6-4a6f-bab8-2a5883767f36.png"
+      ]
+    },
+    {
+      "key": "pirate-map-complete-v1",
+      "prompt": "Use case precise-object-edit. Edit target this EXACT blank parchment PNG. Preserve the whole1536x1024 canvas, paper's pixel placement/size/outline/corners, everyfold/tear/crease/lighting and its alpha transparency as closely as possible. Change ONLY the previously BLANK INTERIOR by drawing an exquisite old pirate sea CHART in darksepia/antiqueindigo ink. Hand-drawn island coasts near left and right edges, gentlysketched waves, a meandering dotted navigationroute across broad central SEA, small restrained compassrose upperLEFT. Leave center sea large and open so the game can zoom into it. No written letters/labels/numbers, skullsymbols, extraobjects, hands, table, background or glow. Keep ink fine/legible, not blacksolidcartoon. True transparent outside the original paper; no moving/resizing/reframing paper. The game must overlay this on the exactblank sheet in ten disjoint puzzle-shaped revealedareas.",
+      "transparent": true,
+      "referencedAssets": [
+        "exec-874524dc-6bb1-4735-a3d4-5baf1dc68b68.png"
+      ]
+    },
+    {
+      "key": "pirate-captain-awake-v1",
+      "prompt": "Use case compositing identity-preserve. Reference1 is this exact adult skeleton identity/boneface, reference2 supplies EXACT darknavy captaincoat with burgundylining, antiqugold embroidery/leatherbelt and separate featheredtricornhat. Make ONE genuinely TRANSPARENT1536x1024 production atlas with TWO equal verticalcells768x1024 each, containing SAME complete fullbody SKELETON PIRATE CAPTAIN in TWO POSES. Wear exactlyreferencecoat+hat, darkbreeches and oldbrownboots; skull and skeletonhandsremainvisible, friendly magical adventure smile, no flesh/gore/weapon. LEFTcell faces VIEWER in relaxed upright just-awakened stance, onehand lightly raised greeting, whole head/feather/coat/hands/bootswithin cell. RIGHTcell has SAME captain turned around, THREE-QUARTER BACK view facing away toward shiphelm, botharms bentforward with hands positioned to hold an invisible wheel atwaistlevel; NO actual wheel painted, gamebackground supplies it. Bothfigures SAME physicalscale, fullheight aboutlocaly70–955, identical bootsolebaseline, generous transparentgaps aroundcomplete silhouettes and between cells. No crossingdivider, no background/ship/deck/ground/castshadow/glow, text/grid/labels. Preserve detailed classical realistic handpainted style and correct adult anatomy, muted indigo moonlight and restrained warm rimlight.",
+      "transparent": true,
+      "referencedAssets": [
+        "exec-ad2ebce9-82c0-444a-b9e5-60a4e94a7cf4.png",
+        "exec-09b6bf9d-0ef3-40f7-99d6-ba5c8da78ca1.png"
+      ]
+    }
+  ],
+  "selectedFiles": [
+    {
+      "key": "seed-workbench-v1",
+      "width": 1086,
+      "height": 1448,
+      "bytes": 1804426,
+      "sha256": "a8c4d26eaf2aaf6bfa1e14b7adcaeffdd856c2e8250877eb6e5a70213b77818e",
+      "alpha0": 0,
+      "alpha240plus": 1572528,
+      "conversion": "lossless WebP; exact RGBA identical"
+    },
+    {
+      "key": "seed-walnut-v1",
+      "width": 1536,
+      "height": 1024,
+      "bytes": 1303128,
+      "sha256": "9435a83533d7591692ffe26613d27df512267b44a18d61344c07dfc421c78264",
+      "alpha0": 1053676,
+      "alpha240plus": 503083,
+      "conversion": "lossless WebP; exact RGBA identical"
+    },
+    {
+      "key": "seed-sand-planet-v1",
+      "width": 1086,
+      "height": 1448,
+      "bytes": 1568844,
+      "sha256": "f569baa1cb6ae6e1dca21916e405c47c28c0cc78f19db831048febed6d07150e",
+      "alpha0": 0,
+      "alpha240plus": 1572528,
+      "conversion": "lossless WebP; exact RGBA identical"
+    },
+    {
+      "key": "midnight-menagerie-v1",
+      "width": 1086,
+      "height": 1448,
+      "bytes": 2346690,
+      "sha256": "df7c2ea9c0ba1da36d97ea0b05e28eff133006d6b87860b69da24c5dc0ba674c",
+      "alpha0": 0,
+      "alpha240plus": 1572528,
+      "conversion": "lossless WebP; exact RGBA identical"
+    },
+    {
+      "key": "butterfly-secret-garden-v1",
+      "width": 1086,
+      "height": 1448,
+      "bytes": 2298010,
+      "sha256": "6fc701865b5b59b189eb2b0cb3273049f029caeb5dd3b8d10457cc07ceb9d3f7",
+      "alpha0": 0,
+      "alpha240plus": 1572528,
+      "conversion": "lossless WebP; exact RGBA identical"
+    },
+    {
+      "key": "garden-hedge-screen-v1",
+      "width": 1536,
+      "height": 1024,
+      "bytes": 1996340,
+      "sha256": "04f13e6c56a00eb76140c69196730517eed08aeef43477bc49c7ea3366c294d2",
+      "alpha0": 523735,
+      "alpha240plus": 871144,
+      "conversion": "lossless WebP; exact RGBA identical"
+    },
+    {
+      "key": "fairy-disguise-flower-v1",
+      "width": 1086,
+      "height": 1448,
+      "bytes": 627800,
+      "sha256": "3a2cd667c685a70930cd0a6604d6b6ad6a2906a4983acecd54adde8ca3f09591",
+      "alpha0": 1227862,
+      "alpha240plus": 300426,
+      "conversion": "lossless WebP; exact RGBA identical"
+    },
+    {
+      "key": "butterfly-fairy-laugh-v1",
+      "width": 1086,
+      "height": 1448,
+      "bytes": 1336060,
+      "sha256": "481811cc01b22a47e0aed0badd6ab3bc79fea1289949ade5c1d2c56cb8a07871",
+      "alpha0": 776024,
+      "alpha240plus": 712046,
+      "conversion": "lossless WebP; exact RGBA identical"
+    },
+    {
+      "key": "tomb-depth-corridor-v1",
+      "width": 1086,
+      "height": 1448,
+      "bytes": 1933154,
+      "sha256": "b3eac36425cabff9926a5346cbee3b0271955bd83032f44acd130581b1945e2d",
+      "alpha0": 0,
+      "alpha240plus": 1572528,
+      "conversion": "lossless WebP; exact RGBA identical"
+    },
+    {
+      "key": "tomb-treasure-chest-v1",
+      "width": 1536,
+      "height": 1024,
+      "bytes": 1567158,
+      "sha256": "0c4032d8646f6e9377912989c6ae1398c3af73ec2557f69eac3175b690568d9f",
+      "alpha0": 706484,
+      "alpha240plus": 843926,
+      "conversion": "lossless WebP; exact RGBA identical"
+    },
+    {
+      "key": "tomb-sword-hand-v1",
+      "width": 1536,
+      "height": 1024,
+      "bytes": 933430,
+      "sha256": "fd9010f6aa52f4d03a080f31395c2b0533e4518e4cb4701c3f3341034e412ccc",
+      "alpha0": 1282599,
+      "alpha240plus": 263263,
+      "conversion": "lossless WebP; exact RGBA identical"
+    },
+    {
+      "key": "pirate-map-blank-v1",
+      "width": 1536,
+      "height": 1024,
+      "bytes": 2044084,
+      "sha256": "d2a36de15edbeddda7bc2dfe5dbc35850753477912d3793025965ab054c9e5c5",
+      "alpha0": 304812,
+      "alpha240plus": 1240126,
+      "conversion": "lossless WebP; exact RGBA identical"
+    },
+    {
+      "key": "pirate-moon-deck-v1",
+      "width": 1086,
+      "height": 1448,
+      "bytes": 1976608,
+      "sha256": "62b3887c3de2f32ae340019c3f3775c1f65df790a33a48f204fc3bf8fa0adb4e",
+      "alpha0": 0,
+      "alpha240plus": 1572528,
+      "conversion": "lossless WebP; exact RGBA identical"
+    },
+    {
+      "key": "pirate-sail-v1",
+      "width": 1536,
+      "height": 1024,
+      "bytes": 1878156,
+      "sha256": "ae1429787d4e65f2daacf2f89fcace84e07e4a53511e2ba6840373833b83029a",
+      "alpha0": 586132,
+      "alpha240plus": 927250,
+      "conversion": "lossless WebP; exact RGBA identical"
+    },
+    {
+      "key": "pirate-skeleton-v1",
+      "width": 1086,
+      "height": 1448,
+      "bytes": 632280,
+      "sha256": "7cccdffee6539974d98f468bd887ecc9b7a1ecce1224f6164523fd13d1dedecb",
+      "alpha0": 1224922,
+      "alpha240plus": 240913,
+      "conversion": "lossless WebP; exact RGBA identical"
+    },
+    {
+      "key": "pirate-empty-coat-v1",
+      "width": 1086,
+      "height": 1448,
+      "bytes": 1176410,
+      "sha256": "9765619f1eb3141d7b2a567b0a23e6b41ef6b758f397223c11655428f9ec1514",
+      "alpha0": 814298,
+      "alpha240plus": 724538,
+      "conversion": "lossless WebP; exact RGBA identical"
+    },
+    {
+      "key": "seed-walnut-halves-v1",
+      "width": 1536,
+      "height": 1024,
+      "bytes": 1749304,
+      "sha256": "f6ff5ec6f3e6b7dc637c8ecf6c563d25a81e7591113cef634545d4b472f2d79a",
+      "alpha0": 706458,
+      "alpha240plus": 842592,
+      "conversion": "lossless WebP; exact RGBA identical"
+    },
+    {
+      "key": "seed-sand-rose-arrival-v1",
+      "width": 1086,
+      "height": 1448,
+      "bytes": 1722510,
+      "sha256": "66f41c131850e652a3b60d41f9ee5d3f1a4ad29e810cf7a946d0eab4e8e75025",
+      "alpha0": 0,
+      "alpha240plus": 1572528,
+      "conversion": "lossless WebP; exact RGBA identical"
+    },
+    {
+      "key": "pirate-map-complete-v1",
+      "width": 1536,
+      "height": 1024,
+      "bytes": 2081466,
+      "sha256": "7e70671613776e508a96f975d317f93d8fb5fcf6c282af368cbe118423b1bb95",
+      "alpha0": 305895,
+      "alpha240plus": 1239728,
+      "conversion": "lossless WebP; exact RGBA identical"
+    },
+    {
+      "key": "pirate-captain-awake-v1",
+      "width": 1536,
+      "height": 1024,
+      "bytes": 1368024,
+      "sha256": "69d6d8ea6be7310879d32170d62476ff6b852d5fafa246f08d6e0129075e138c",
+      "alpha0": 1053583,
+      "alpha240plus": 458908,
+      "conversion": "lossless WebP; exact RGBA identical"
+    }
+  ],
+  "voice": {
+    "sampleRate": 22050,
+    "frames": 40449,
+    "durationSeconds": 1.834421768707483,
+    "channels": 1,
+    "sampleWidth": 2,
+    "text": "哈哈哈，你找到我啦！",
+    "method": "本机已安装系统合成语音",
+    "voice": "Tingting zh_CN",
+    "rate": 190,
+    "sha256": "c4bf7de5b7a171801c3f9eea57b42fd5d891e746af90ae5939f99b6813a12dd5"
+  }
+}

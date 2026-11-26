@@ -3,7 +3,7 @@
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
-<meta name="game-version" content="2026.11.26.2">
+<meta name="game-version" content="2026.11.26.3">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>魔法闯关汉字游戏</title>
 <style data-source="game-feedback.css">
@@ -4798,6 +4798,366 @@ body[data-herb-stage="sea"] .story-sea { display: block; }
 }
 
 </style>
+<style data-source="wild-garden-story.css">
+.story-zoo, .story-butterfly { position: fixed; inset: 0; z-index: 0; isolation: isolate; overflow: hidden; pointer-events: none; background: #101a22; }
+.story-zoo[hidden], .story-butterfly[hidden] { display: none !important; }
+.story-zoo:not([hidden]), .story-butterfly:not([hidden]) { display: block; }
+.story-zoo *, .story-butterfly * { pointer-events: none; }
+.wg-frame { --wg-frame-height: 100dvh; box-sizing: border-box; position: absolute; inset: 0; width: min(100%, 94dvh, 1100px); margin-inline: auto; overflow: hidden; background: #111c24; box-shadow: 0 0 95px 35px #0a151e; }
+.wg-ambience { position: absolute; inset: -4%; filter: blur(38px) brightness(.48); opacity: .8; }
+.wg-zoo-ambience { background: var(--wg-zoo-art) center / cover no-repeat; }
+.wg-garden-ambience { background: var(--wg-garden-art) center / cover no-repeat; }
+.wg-world-position { position: absolute; left: 50%; top: 50%; width: min(100%, calc(var(--wg-frame-height) * .75)); aspect-ratio: 3 / 4; transform: translate(-50%, -50%); }
+.wg-zoo-world, .wg-garden-world { position: absolute; inset: 0; overflow: hidden; isolation: isolate; }
+.wg-zoo-art, .wg-garden-art { position: absolute; inset: 0; background-position: center; background-size: 100% 100%; background-repeat: no-repeat; -webkit-mask-image: linear-gradient(transparent, #000 2% 98%, transparent); mask-image: linear-gradient(transparent, #000 2% 98%, transparent); }
+.wg-zoo-art { background-image: var(--wg-zoo-art), linear-gradient(#111e32, #233235 48%, #272c27); }
+.wg-garden-art { background-image: var(--wg-garden-art), linear-gradient(#1e2c43, #354b43 51%, #1e342b); transform-origin: 50% 42%; }
+.wg-zoo-stage-glow { position: absolute; inset: 26% 16% 38%; opacity: var(--wg-party-glow, 0); background: radial-gradient(ellipse at 50% 53%, #efc67742, transparent 62%); mix-blend-mode: screen; }
+.wg-party-ready .wg-zoo-art { filter: brightness(1.1) saturate(1.08); }
+.wg-zoo-lights { position: absolute; z-index: 3; inset: 0; width: 100%; height: 100%; }
+.wg-light-string path { fill: none; stroke: #253334; stroke-width: 1.5; }
+.wg-light-string circle { fill: #e6b96b; opacity: calc(.04 + var(--wg-string-light, 0) * .96); filter: drop-shadow(0 0 4px #f6d58b); }
+.wg-zoo-cages, .wg-zoo-animals { position: absolute; inset: 0; }
+.wg-cage { position: absolute; aspect-ratio: 1.1; transform: translate(-50%, -100%) scaleX(var(--wg-cage-facing, 1)); perspective: 520px; }
+.wg-cage-shell, .wg-cage-door svg { width: 100%; height: 100%; overflow: visible; }
+.wg-cage-roof { fill: #26302e92; stroke: #717265; stroke-width: 2.6; }
+.wg-cage-side { fill: #17242039; stroke: #6d7064; stroke-width: 2.5; }
+.wg-cage-back { fill: none; stroke: #58685b69; stroke-width: 1.6; }
+.wg-cage-frame { fill: none; stroke: #827960; stroke-width: 4; stroke-linejoin: round; filter: drop-shadow(1px 1px 1px #050d13); }
+.wg-cage-door { position: absolute; left: 6.3%; top: 17.5%; width: 73%; height: 79.5%; transform-origin: left center; transform: rotateY(var(--wg-door-angle, 0deg)); transform-style: preserve-3d; backface-visibility: visible; }
+.wg-cage-bars { fill: none; stroke: #7b7d6b; stroke-width: 3.6; filter: drop-shadow(1px 1px 1px #030c13); }
+.wg-cage-lock path { fill: none; stroke: #c6a45a; stroke-width: 5; }
+.wg-cage-lock rect { fill: #8b6931; stroke: #d1ae69; stroke-width: 1.5; }
+.wg-cage-lock .wg-lock-keyhole { stroke: #17221f; stroke-width: 4; }
+.wg-lock-shackle { transform-origin: 143px 85px; }
+.wg-cage.is-unlocked .wg-lock-shackle { transform: translateY(-5px) rotate(-21deg); }
+.wg-cage.is-open .wg-cage-lock { opacity: .35; }
+.wg-cage.is-open { opacity: .48; }
+.wg-zoo-animal { position: absolute; aspect-ratio: var(--wg-animal-ratio); transform: translate(-50%, -100%); }
+.wg-animal-ground { position: absolute; left: 2%; right: 2%; top: 87%; height: 18%; border-radius: 50%; background: radial-gradient(ellipse, #050d13b5, transparent 70%); filter: blur(4px); }
+.wg-animal-pose { position: absolute; inset: 0; transform: scaleX(var(--wg-facing, 1)); transform-origin: 50% 96%; filter: brightness(.8) drop-shadow(0 4px 3px #040d1388); }
+.wg-animal-skin { position: absolute; inset: 0; background-image: var(--wg-animal-atlas); background-position: var(--wg-sprite-position); background-size: var(--wg-sprite-size); background-repeat: no-repeat; }
+.wg-animal-body { clip-path: polygon(0 0, 100% 0, 100% 76%, 0 76%); }
+.wg-animal-hind { clip-path: polygon(0 74%, 48% 74%, 48% 100%, 0 100%); transform-origin: 32% 74%; }
+.wg-animal-front { clip-path: polygon(47% 74%, 100% 74%, 100% 100%, 47% 100%); transform-origin: 73% 74%; }
+.wg-zoo-animal.is-freed .wg-animal-pose { animation: wg-beast-idle var(--wg-beast-pace) var(--wg-beast-phase) ease-in-out infinite alternate; filter: brightness(.98) drop-shadow(0 5px 3px #040d1388); }
+@keyframes wg-beast-idle { from { transform: scaleX(var(--wg-facing, 1)) translateX(-3px) rotate(-.5deg); } to { transform: scaleX(var(--wg-facing, 1)) translateX(3px) rotate(.5deg); } }
+.wg-zoo-animal.is-running .wg-animal-pose { animation: wg-beast-bound .32s ease-in-out infinite; }
+.wg-zoo-animal.is-running .wg-animal-hind { animation: wg-hind-stride .32s ease-in-out infinite alternate; }
+.wg-zoo-animal.is-running .wg-animal-front { animation: wg-front-stride .32s ease-in-out infinite alternate; }
+@keyframes wg-beast-bound { 0%, 100% { transform: scaleX(var(--wg-facing, 1)) translateY(0) rotate(-1deg); } 50% { transform: scaleX(var(--wg-facing, 1)) translateY(-6px) rotate(1.2deg); } }
+@keyframes wg-hind-stride { from { transform: rotate(-7deg) translateX(-2px); } to { transform: rotate(6deg) translateX(2px); } }
+@keyframes wg-front-stride { from { transform: rotate(7deg) translateX(2px); } to { transform: rotate(-6deg) translateX(-2px); } }
+.wg-zoo-animal.is-partying .wg-animal-pose { animation: wg-party-step 1.4s var(--wg-beast-phase) ease-in-out infinite; filter: brightness(1.06) drop-shadow(0 4px 3px #040d1370); }
+@keyframes wg-party-step { 0%, 100% { transform: scaleX(var(--wg-facing, 1)) translateY(0) rotate(-1.3deg); } 28% { transform: scaleX(var(--wg-facing, 1)) translateY(-4px) rotate(1.4deg); } 55% { transform: scaleX(var(--wg-facing, 1)) translateY(0) rotate(1deg); } 76% { transform: scaleX(var(--wg-facing, 1)) translateY(-2px) rotate(-1.4deg); } }
+.wg-animal-bear.is-partying .wg-animal-pose, .wg-animal-rhinoceros.is-partying .wg-animal-pose { animation-duration: 2.1s; }
+.wg-animal-crocodile.is-partying .wg-animal-pose { animation: wg-beast-idle 2.8s ease-in-out infinite alternate; }
+.wg-animal-eagle.is-partying .wg-animal-pose { animation-duration: .9s; }
+.wg-zoo-key { position: absolute; z-index: 1500; aspect-ratio: 180 / 85; filter: drop-shadow(0 0 7px #efcb7870); transform-origin: 94.444% 40.588%; }
+.wg-zoo-key[hidden] { display: none !important; }
+.wg-zoo-key svg { width: 100%; height: 100%; }
+.wg-zoo-sparks { position: absolute; z-index: 4; inset: 0; opacity: 0; }
+.wg-party-ready .wg-zoo-sparks { opacity: .7; }
+.wg-zoo-sparks i { position: absolute; width: 2px; height: 4px; background: #e4cc91; box-shadow: 0 0 5px #ebc56c77; animation: wg-party-spark 4s calc(var(--spark-i) * -.32s) linear infinite; }
+@keyframes wg-party-spark { 0% { opacity: 0; transform: translateY(-10px) rotate(0); } 25% { opacity: .85; } 100% { opacity: 0; transform: translate(18px, 16dvh) rotate(170deg); } }
+.wg-garden-atmosphere { position: absolute; inset: 0; background: linear-gradient(#17243b21, transparent 35% 82%, #0d201f38); }
+.wg-barrier-field { position: absolute; z-index: 3; inset: 0; overflow: hidden; }
+.wg-garden-barrier { position: absolute; aspect-ratio: 3 / 2; transform-origin: 50% 100%; perspective: 800px; }
+.wg-garden-barrier[hidden] { display: none !important; }
+.wg-hedge-piece { position: absolute; inset: 0; transform-style: preserve-3d; }
+.wg-hedge-left { clip-path: polygon(0 0, 50.3% 0, 50.3% 100%, 0 100%); transform: translateX(calc(var(--wg-hedge-opening, 0) * -78%)) rotateY(calc(var(--wg-hedge-opening, 0) * 31deg)); transform-origin: left center; }
+.wg-hedge-right { clip-path: polygon(49.7% 0, 100% 0, 100% 100%, 49.7% 100%); transform: translateX(calc(var(--wg-hedge-opening, 0) * 78%)) rotateY(calc(var(--wg-hedge-opening, 0) * -31deg)); transform-origin: right center; }
+.wg-hedge-texture { position: absolute; inset: 0; background: var(--wg-hedge-art) center / contain no-repeat; transform: scaleX(var(--wg-hedge-flip, 1)); filter: hue-rotate(var(--wg-hedge-hue)) brightness(.72) drop-shadow(0 6px 4px #05171988); }
+.wg-barrier-kind-1 .wg-hedge-texture { filter: hue-rotate(var(--wg-hedge-hue)) brightness(.88) drop-shadow(0 6px 4px #05171988); }
+.wg-barrier-kind-2 .wg-hedge-texture { filter: hue-rotate(var(--wg-hedge-hue)) brightness(.79) saturate(.84) drop-shadow(0 6px 4px #05171988); }
+.wg-hedge-shadow { position: absolute; left: 3%; right: 3%; bottom: 1%; height: 12%; border-radius: 50%; background: radial-gradient(ellipse, #041a1788, transparent 70%); filter: blur(5px); }
+.wg-hedge-fence { position: absolute; inset: 0; width: 100%; height: 100%; opacity: .64; }
+.wg-fence-rail, .wg-fence-picket { fill: none; stroke: #726744; stroke-width: 4; stroke-linecap: round; }
+.wg-barrier-kind-0 .wg-hedge-fence { opacity: .2; }
+.wg-barrier-kind-1 .wg-fence-picket { stroke: #3e4d47; stroke-width: 6; }
+.wg-barrier-kind-2 .wg-fence-picket { stroke: #71603e; stroke-width: 8; }
+.wg-flower { position: absolute; z-index: 2; left: 57%; top: 45%; width: 14%; aspect-ratio: 3 / 4; transform: translate(-50%, -100%); opacity: 0; }
+.wg-flower img { display: block; width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 3px 3px #051d2099); }
+.wg-flower img[hidden] { display: none !important; }
+.wg-fairy { position: absolute; z-index: 5; left: 57%; top: 45%; width: 29%; aspect-ratio: 1; transform: translate(-50%, -100%); transform-origin: 50% 88%; opacity: 0; filter: drop-shadow(0 5px 5px #15353366); }
+.wg-fairy-sprite { display: block; width: 100%; height: 100%; overflow: visible; }
+.wg-fairy-wing { transform-box: view-box; transform-origin: 50% 32%; }
+.wg-fairy-alive .wg-fairy-left-wing { animation: wg-fairy-left-beat .4s ease-in-out infinite alternate; }
+.wg-fairy-alive .wg-fairy-right-wing { animation: wg-fairy-right-beat .4s ease-in-out infinite alternate; }
+@keyframes wg-fairy-left-beat { to { transform: rotate(4deg) scaleX(.72); } }
+@keyframes wg-fairy-right-beat { to { transform: rotate(-4deg) scaleX(.72); } }
+.wg-fairy-speech { position: absolute; z-index: 7; left: 57%; top: 18%; transform: translateX(-50%); padding: 10px 16px; white-space: nowrap; border: 1px solid #d6c79c9c; border-radius: 5px 14px 14px; background: #eee6cee6; box-shadow: 0 3px 14px #13282e4d; color: #3f4438; font-family: "Songti SC", "STSong", serif; font-size: clamp(16px, 2.3dvh, 24px); letter-spacing: .05em; opacity: 0; }
+.wg-dream { position: absolute; z-index: 12; inset: 0; overflow: hidden; background: radial-gradient(ellipse at 50% 44%, #6b668849, #0c1427c9 65%); opacity: 0; }
+.wg-dream-butterfly { position: absolute; z-index: 3; left: 50%; top: 40%; width: 54%; aspect-ratio: 1; transform: translate(-50%, -50%); filter: drop-shadow(0 0 13px #d5bce682); }
+.wg-dream-butterfly svg { width: 100%; height: 100%; }
+.wg-dream-body, .wg-dream-head { fill: #786883; stroke: #d6bdde; stroke-width: 3; }
+.wg-dream-antennae { fill: none; stroke: #d6bdde; stroke-width: 5; stroke-linecap: round; }
+.wg-dream-wing { transform-box: view-box; transform-origin: 50% 32%; }
+.wg-dream-left { animation: wg-fairy-left-beat .7s ease-in-out infinite alternate; }
+.wg-dream-right { animation: wg-fairy-right-beat .7s ease-in-out infinite alternate; }
+.wg-dream-eyelid { position: absolute; z-index: 2; left: -15%; right: -15%; height: 51%; background: #060c18; }
+.wg-dream-eyelid-top { top: 0; border-radius: 0 0 50% 50%; transform: translateY(calc(var(--wg-waking, 0) * -110%)); }
+.wg-dream-eyelid-bottom { bottom: 0; border-radius: 50% 50% 0 0; transform: translateY(calc(var(--wg-waking, 0) * 110%)); }
+.wg-frame-shade { position: absolute; z-index: 20; inset: 0; background: linear-gradient(#08131d3d, transparent 23% 79%, #081a226b), linear-gradient(90deg, #08131d47, transparent 12% 88%, #08131d47); }
+.wg-flower-hit { position: fixed; z-index: 6; display: block; margin: 0; padding: 0; border: 0; border-radius: 45%; background: transparent; cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+.wg-flower-hit[hidden] { display: none !important; }
+.wg-flower-hit:focus-visible { outline: 2px solid #d1c28b; outline-offset: 4px; }
+body.herb-writing .wg-flower-hit, body.has-herbalist[data-herb-mode="intro"] .wg-flower-hit, body.has-herbalist[data-herb-mode="travel"] .wg-flower-hit { display: none !important; pointer-events: none !important; }
+.wg-reduced *, .story-zoo[hidden] *, .story-butterfly[hidden] * { animation-play-state: paused !important; }
+@media (max-width: 739px) and (orientation: portrait), (max-width: 659px) {
+  body.has-herbalist[data-herb-mode="playing"].herb-writing :is(.story-zoo, .story-butterfly) .wg-frame {
+    inset: auto; top: 3dvh; left: 50%; width: min(calc(100% - 20px), 34.5dvh); height: 23dvh;
+    transform: translateX(-50%); margin: 0; border-radius: 12px;
+  }
+  body.has-herbalist[data-herb-mode="playing"].herb-writing :is(.story-zoo, .story-butterfly) .wg-world-position {
+    top: auto; bottom: 0; width: 100%; transform: translateX(-50%);
+  }
+}
+@media (min-width: 740px), (min-width: 660px) and (orientation: landscape) {
+  body.has-herbalist[data-herb-mode="playing"] :is(.story-zoo, .story-butterfly) .wg-frame {
+    inset: var(--herb-bench-top) auto auto max(0px, calc(50% - (var(--herb-canvas-column) + var(--herb-lane-gap) + var(--herb-bench-width)) / 2));
+    width: var(--herb-bench-width); height: var(--herb-bench-height); --wg-frame-height: var(--herb-bench-height);
+    margin: 0; border: 1px solid var(--herb-line); border-radius: 18px; box-shadow: 0 15px 46px #080d0ec9;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .story-zoo *, .story-butterfly * { animation: none !important; transition: none !important; }
+}
+
+</style>
+<style data-source="tomb-pirate-story.css">
+.story-tomb-pirate { position: fixed; z-index: 0; inset: 0; overflow: hidden; isolation: isolate; pointer-events: none; background: #080f14; --tp-cave-zoom: 1; --tp-chest-size: 7.5%; --tp-chest-foot: 52%; --tp-step-bob: 0%; --tp-parry-x: 52.5%; --tp-parry-y: 49.2%; }
+.story-tomb-pirate[hidden] { display: none !important; }
+.story-tomb-pirate:not([hidden]) { display: block; }
+.tp-frame { position: absolute; top: 50%; left: 50%; width: min(100%,75dvh); aspect-ratio: 3 / 4; overflow: hidden; transform: translate(-50%,-50%); box-shadow: 0 0 100px 30px #0009; perspective: 800px; }
+.tp-frame img { user-select: none; -webkit-user-drag: none; }
+.tp-frame img[hidden] { display: none !important; }
+.tp-cave-stage,.tp-corridor-world,.tp-corridor-art,.tp-corridor-fallback,.tp-deck-stage,.tp-deck-world,.tp-deck-art,.tp-deck-fallback { position: absolute; inset: 0; width: 100%; height: 100%; }
+.tp-cave-stage { transform: translateY(var(--tp-step-bob)); }
+.tp-corridor-world { transform: scale(var(--tp-cave-zoom)); transform-origin: 50% 51%; }
+.tp-corridor-art,.tp-deck-art { object-fit: fill; }
+.tp-corridor-fallback { background: repeating-linear-gradient(90deg,transparent 0 21%,#8892870c 21% 23%,transparent 23% 25%),radial-gradient(ellipse at 50% 43%,#61523d 0%,#252c2c 26%,#101d23 60%,#070c10 100%); }
+.tp-torch-light { position: absolute; inset: 0; background: radial-gradient(ellipse at 12% 48%,#d39a401f,transparent 25%),radial-gradient(ellipse at 86% 41%,#dcb65a21,transparent 25%); mix-blend-mode: screen; }
+.tp-chest-anchor,.tp-chest-lip { position: absolute; left: 50%; top: var(--tp-chest-foot); width: var(--tp-chest-size); aspect-ratio: 3 / 4; transform: translate(-50%,-100%); }
+.tp-chest-anchor { z-index: 12; filter: drop-shadow(0 8px 7px #0306089c); }
+.tp-chest-frame { position: absolute; inset: 0; overflow: hidden; }
+.tp-chest-frame img { position: absolute; top: 0; left: 0; width: 200%; height: 100%; max-width: none; }
+.tp-chest-open { opacity: 0; transform: translateY(1%); transition: opacity .7s ease,transform 1.3s ease; }
+.tp-chest-open img,.tp-chest-lip img { left: -100%; }
+.tp-chest-closed { opacity: 1; transition: opacity .65s ease; }
+.is-chest-open .tp-chest-open { opacity: 1; transform: none; }
+.is-chest-open .tp-chest-closed { opacity: 0; }
+.tp-chest-lip { z-index: 19; clip-path: inset(61% 0 0); opacity: 0; pointer-events: none; }
+.is-chest-open .tp-chest-lip { opacity: 1; }
+.tp-chest-light { position: absolute; inset: 43% 19% 12%; opacity: 0; background: radial-gradient(ellipse,#dfc1877d,transparent 67%); mix-blend-mode: screen; transition: opacity 1.5s ease; }
+.is-chest-open .tp-chest-light { opacity: .55; }
+.tp-laser-volume { position: absolute; z-index: 20; inset: 0; perspective: 600px; perspective-origin: 50% 51%; transform-style: preserve-3d; }
+.tp-laser-plane { position: absolute; inset: 4% -10% -4%; transform-style: preserve-3d; backface-visibility: hidden; }
+.tp-laser-plane[hidden] { display: none !important; }
+.tp-laser-plane svg { width: 100%; height: 100%; overflow: visible; }
+.tp-beam-halo { stroke: var(--tp-beam); stroke-width: .65; opacity: .25; }
+.tp-beam-core { stroke: #ffedc8; stroke-width: .13; opacity: .92; }
+.tp-beam-frame { fill: none; stroke: var(--tp-beam); stroke-width: .25; opacity: .65; }
+.tp-tomb-dust { position: absolute; z-index: 35; inset: 0; opacity: 0; pointer-events: none; }
+.tp-tomb-dust i { position: absolute; left: var(--tp-dust-x); top: -3%; width: 3px; height: 5px; border-radius: 30%; background: #bca77a83; }
+.is-quaking .tp-cave-stage { animation: tp-tomb-quake 1.8s linear both; }
+.is-quaking .tp-tomb-dust { opacity: 1; }
+.is-quaking .tp-tomb-dust i { animation: tp-falling-dust 1.4s ease-in var(--tp-dust-delay) both; }
+.tp-arrow-field { position: absolute; z-index: 36; inset: 0; perspective: 700px; opacity: 0; transition: opacity .25s ease; }
+.has-arrows .tp-arrow-field { opacity: 1; }
+.tp-arrow { position: absolute; width: 42%; aspect-ratio: 190 / 24; transform: translate(-50%,-50%) rotate(var(--tp-arrow-turn)) rotateY(var(--tp-arrow-lean)); filter: drop-shadow(0 2px 2px #000a); }
+.tp-arrow[hidden] { display: none !important; }
+.tp-arrow-motion { position: absolute; inset: 0; transform-style: preserve-3d; }
+.tp-arrow svg { width: 100%; height: 100%; overflow: visible; }
+.tp-arrow-fletching { fill: #7f7562; stroke: #d3c7a4; stroke-width: .8; }
+.tp-arrow-feather { fill: none; stroke: #393c38; stroke-width: .9; }
+.tp-arrow-wood { fill: #6d5131; stroke: #9e8052; stroke-width: .8; }
+.tp-arrow-shaft-light { fill: none; stroke: #e1c99c; stroke-width: 1; opacity: .7; }
+.tp-arrow-head { fill: #566564; stroke: #bac4b9; stroke-width: .8; }
+.tp-arrow-head-light { fill: #c3cbc0; opacity: .7; }
+.is-volley .tp-arrow-motion { animation: tp-volley-flight 1.25s cubic-bezier(.1,.5,.2,1) var(--tp-arrow-delay) both; }
+.tp-arrow.is-targeted { animation: tp-arrow-target .34s ease-in both; }
+.tp-arrow.is-deflected { animation: tp-arrow-deflect .72s ease-out both; }
+.tp-sword-hand { position: absolute; z-index: 45; left: 39%; top: 43%; width: 72%; aspect-ratio: 1; opacity: 0; transform: translate(20%,28%) rotate(11deg); transform-origin: 81% 82%; transition: opacity .35s ease; }
+.tp-sword-hand img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 3px 3px #020507a8); }
+.has-sword .tp-sword-hand { opacity: 1; }
+.is-parrying .tp-sword-hand { animation: tp-sword-parry 1.08s cubic-bezier(.2,.65,.25,1) both; }
+.tp-parry-impact { position: absolute; z-index: 48; left: var(--tp-parry-x); top: var(--tp-parry-y); width: 30px; height: 30px; transform: translate(-50%,-50%); opacity: 0; }
+.tp-parry-impact i { position: absolute; inset: 20%; background: #f1df9b; border-radius: 50%; box-shadow: 0 0 14px 4px #edc87b99; }
+.tp-parry-impact b { position: absolute; left: 50%; top: 50%; width: var(--tp-spark-length); height: 1px; background: #f2ce85; transform-origin: 0 50%; transform: rotate(var(--tp-spark-angle)); }
+.is-parrying .tp-parry-impact { animation: tp-impact-flash .55s ease-out .34s both; }
+.is-parrying .tp-parry-impact b { animation: tp-parry-spark .5s ease-out .34s both; }
+.tp-map-object { position: absolute; z-index: 34; left: 50%; top: 55%; width: 86%; aspect-ratio: 3 / 2; transform: translate(-50%,-50%); opacity: 0; filter: drop-shadow(0 14px 13px #0009); transform-style: preserve-3d; }
+.tp-map-object > img,.tp-map-piece,.tp-map-piece img { position: absolute; inset: 0; width: 100%; height: 100%; }
+.tp-map-object img { object-fit: fill; }
+.is-paper-inside .tp-map-object { z-index: 15; top: 54.5%; width: 26%; opacity: 1; transform: translate(-50%,-50%) rotateX(62deg) rotateZ(-7deg); }
+.is-paper-held .tp-map-object { opacity: 1; }
+.is-lifting-paper .tp-map-object { animation: tp-take-map 2.7s cubic-bezier(.2,.65,.3,1) both; }
+.is-paper-held .tp-corridor-world { filter: brightness(.58) blur(2px); }
+.tp-map-piece { opacity: 0; mask-image: var(--tp-paper-mask); mask-size: 100% 100%; mask-repeat: no-repeat; }
+.tp-map-piece.is-revealed { opacity: 1; }
+.tp-map-piece.is-new { animation: tp-map-ink-appears 1.3s ease-out both; }
+.tp-map-ink-glow { position: absolute; inset: 8% 8%; border-radius: 42%; opacity: 0; background: radial-gradient(ellipse,#e6d4a058,transparent 65%); box-shadow: 0 0 24px #d1c5842e; mix-blend-mode: screen; }
+.is-map-glowing .tp-map-ink-glow { animation: tp-map-glow 1.3s ease-out both; }
+.is-map-diving .tp-map-object { animation: tp-map-dive 4.4s cubic-bezier(.4,.05,.5,1) both; }
+.tp-sea-gate { position: absolute; z-index: 39; inset: -5%; opacity: 0; background: radial-gradient(ellipse at 50% 45%,#6e94989c,#25454ee6 45%,#102730 75%); mask-image: radial-gradient(ellipse,#000 38%,transparent 70%); transform: scale(.1); }
+.tp-sea-gate svg { width: 100%; height: 100%; }
+.tp-sea-gate path { fill: none; stroke: #c3d1ba; stroke-width: 2; opacity: var(--tp-wave-opacity); }
+.is-sea-crossing .tp-sea-gate { animation: tp-sea-crossing 2.4s ease-out both; }
+.is-sea-crossing .tp-sea-gate path { animation: tp-water-flow 2.1s ease-in-out var(--tp-wave-delay) infinite alternate; }
+.tp-deck-stage { z-index: 28; opacity: 0; visibility: hidden; overflow: hidden; }
+.tp-deck-fallback { background: linear-gradient(#172c36,#31424a 39%,#69523a 45%,#332b24 100%); }
+.tp-deck-world { transform-origin: 50% 52%; }
+.is-deck-arriving .tp-deck-stage { visibility: visible; animation: tp-deck-arrival 2s ease-out both; }
+.is-on-deck .tp-deck-stage { opacity: 1; visibility: visible; }
+.is-on-deck .tp-cave-stage,.is-on-deck .tp-map-object,.is-on-deck .tp-sea-gate { display: none; }
+.tp-sea-drift { position: absolute; z-index: 2; inset: 35% -20% 32%; opacity: .3; background: repeating-radial-gradient(ellipse at 50% 100%,transparent 0 14px,#adc5c117 15px 17px,transparent 18px 40px); mask-image: linear-gradient(transparent,#000 35%,transparent); }
+.tp-sail { position: absolute; z-index: 5; left: 35%; top: 1%; width: 64%; height: 32%; transform: translateX(-50%); transform-origin: 50% 5%; clip-path: inset(0 0 82%); transition: clip-path 2.3s cubic-bezier(.2,.7,.3,1); }
+.tp-sail img { width: 100%; height: 100%; object-fit: contain; }
+.is-sail-open .tp-sail { clip-path: inset(0); }
+.tp-empty-coat,.tp-loose-hat { position: absolute; z-index: 13; left: 50%; top: 32.5%; width: 38.2%; height: 38.2%; transform: translateX(-50%); }
+.tp-empty-coat { clip-path: inset(18.2% 0 0); }
+.tp-empty-coat > img,.tp-loose-hat > img { width: 100%; height: 100%; object-fit: fill; }
+.tp-loose-hat { z-index: 18; clip-path: inset(0 0 81.8%); transform: translate(15%,-16%); transition: transform 1.05s cubic-bezier(.4,.05,.5,1); }
+.is-hat-dropping .tp-loose-hat { transform: translateX(-50%); }
+.is-coat-filling .tp-empty-coat { animation: tp-coat-fills 1.4s ease both; }
+.tp-skeleton-assembly { position: absolute; z-index: 16; left: 28%; top: 34%; width: 43%; height: 43%; transform: translateX(-50%); transform-origin: 50% 65%; }
+.tp-bone-part,.tp-skeleton-whole { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; }
+.tp-bone-part img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: fill; }
+.tp-bone-part.is-assembled { opacity: 1; }
+.tp-bone-part.is-new { animation: tp-bone-assembles 1.15s cubic-bezier(.15,.7,.25,1) both; }
+.has-all-bones .tp-skeleton-whole { opacity: 1; }
+.has-all-bones .tp-bone-part { opacity: 0; }
+.tp-soul-light { position: absolute; inset: 0; opacity: 0; background: radial-gradient(ellipse at 50% 30%,#8eb9a53d,transparent 58%); mix-blend-mode: screen; }
+.has-all-bones .tp-soul-light { opacity: .7; }
+.is-inhabiting .tp-skeleton-assembly { animation: tp-skeleton-inhabits 1.5s cubic-bezier(.3,.2,.45,1) both; }
+.tp-captain { position: absolute; z-index: 19; left: 50%; top: 30.3%; width: 52%; height: 52%; transform: translateX(-50%); opacity: 0; transition: opacity .9s ease; }
+.tp-captain-frame { position: absolute; inset: 0; overflow: hidden; }
+.tp-captain-frame img { position: absolute; top: 0; left: 0; width: 200%; height: 100%; max-width: none; }
+.tp-captain-steering { opacity: 0; }
+.tp-captain-steering img { left: -100%; }
+.is-captain-awake .tp-captain { opacity: 1; }
+.is-captain-awake .tp-empty-coat,.is-captain-awake .tp-loose-hat,.is-captain-awake .tp-skeleton-assembly { opacity: 0; transition: opacity .8s ease; }
+.is-captain-turning .tp-captain-front { animation: tp-captain-turn 1.1s ease-in-out both; }
+.is-captain-steering .tp-captain-front { opacity: 0; }
+.is-captain-steering .tp-captain-steering { opacity: 1; }
+.tp-rigging-light { position: absolute; z-index: 25; inset: 0; background: linear-gradient(115deg,transparent 49.8%,#e1d0a414 50%,transparent 50.2%); opacity: .5; }
+.is-sailing .tp-deck-world { animation: tp-ship-sailing 6.6s ease-in-out infinite; }
+.is-sailing .tp-sea-drift { animation: tp-sea-underway 5s linear infinite; }
+.is-sailing .tp-sail { animation: tp-sail-billows 4.3s ease-in-out infinite alternate; }
+.tp-frame-shade { position: absolute; z-index: 60; inset: 0; background: linear-gradient(#030a1640,transparent 23% 76%,#06131b88),linear-gradient(90deg,#020a142e,transparent 18% 82%,#020a142e); }
+@keyframes tp-tomb-quake { 0%,100% { transform: none; } 7%,31%,57% { transform: translate(-.7%,.3%) rotate(-.25deg); } 14%,45%,70% { transform: translate(.8%,-.4%) rotate(.28deg); } 23%,63%,84% { transform: translate(-.5%,-.2%); } }
+@keyframes tp-falling-dust { from { transform: translateY(0) rotate(0); opacity: 0; } 12% { opacity: .8; } to { transform: translate(25px,650px) rotate(85deg); opacity: 0; } }
+@keyframes tp-volley-flight { from { transform: translateZ(-1500px) scale(.12); opacity: 0; } 18% { opacity: 1; } to { transform: translateZ(0) scale(1); opacity: 1; } }
+@keyframes tp-arrow-target { from { left: var(--tp-arrow-x); top: var(--tp-arrow-y); transform: translate(-50%,-50%) rotate(var(--tp-arrow-turn)) rotateY(var(--tp-arrow-lean)); } to { left: var(--tp-parry-x); top: var(--tp-parry-y); transform: translate(-50%,-50%) rotate(var(--tp-arrow-turn)) rotateY(var(--tp-arrow-lean)) scale(1.3); } }
+@keyframes tp-arrow-deflect { from { left: var(--tp-parry-x); top: var(--tp-parry-y); transform: translate(-50%,-50%) rotate(var(--tp-arrow-turn)) rotateY(var(--tp-arrow-lean)) scale(1.3); opacity: 1; } to { left: var(--tp-arrow-exit-x); top: 22%; transform: translate(-50%,-50%) rotate(calc(var(--tp-arrow-turn) + 115deg)) scale(.7); opacity: 0; } }
+@keyframes tp-sword-parry { 0%,100% { transform: translate(20%,28%) rotate(11deg); } 30% { transform: translate(-45%,-14%) rotate(28deg); } 46% { transform: translate(-49%,-18%) rotate(40deg); } 64% { transform: translate(-20%,5%) rotate(19deg); } }
+@keyframes tp-impact-flash { 0% { opacity: 0; transform: translate(-50%,-50%) scale(.2); } 18% { opacity: .9; transform: translate(-50%,-50%) scale(1.15); } 100% { opacity: 0; transform: translate(-50%,-50%) scale(.5); } }
+@keyframes tp-parry-spark { from { transform: rotate(var(--tp-spark-angle)) translateX(0); opacity: 1; } to { transform: rotate(var(--tp-spark-angle)) translateX(24px); opacity: 0; } }
+@keyframes tp-take-map { from { top: 54.5%; width: 26%; transform: translate(-50%,-50%) rotateX(62deg) rotateZ(-7deg); } 40% { top: 46%; width: 50%; transform: translate(-50%,-50%) rotateX(35deg) rotateZ(3deg); } to { top: 55%; width: 86%; transform: translate(-50%,-50%); } }
+@keyframes tp-map-ink-appears { from { opacity: 0; filter: brightness(1.85) sepia(.7); } 35% { opacity: .45; } to { opacity: 1; filter: none; } }
+@keyframes tp-map-glow { from { opacity: 0; transform: scale(.8); } to { opacity: 1; transform: scale(1.15); } }
+@keyframes tp-map-dive { 0% { transform: translate(-50%,-50%) scale(1); } 25% { transform: translate(-50%,-50%) scale(1.3); } 68% { opacity: 1; transform: translate(-50%,-48%) scale(6); } 100% { opacity: 0; transform: translate(-50%,-46%) scale(14); } }
+@keyframes tp-sea-crossing { 0% { opacity: 0; transform: scale(.2); } 38% { opacity: .95; transform: scale(1.7); } 75% { opacity: 1; transform: scale(2.8); } 100% { opacity: 0; transform: scale(3); } }
+@keyframes tp-water-flow { from { transform: translateX(-8%); } to { transform: translateX(8%); } }
+@keyframes tp-deck-arrival { from { opacity: 0; transform: translateY(14%) scale(1.15); } to { opacity: 1; transform: none; } }
+@keyframes tp-bone-assembles { from { opacity: 0; transform: translate(var(--tp-bone-from-x),var(--tp-bone-from-y)) rotate(var(--tp-bone-turn)) scale(.7); } 20% { opacity: 1; } 77% { transform: translate(1%,-1%) rotate(-3deg) scale(1.03); } to { opacity: 1; transform: none; } }
+@keyframes tp-skeleton-inhabits { from { transform: translateX(-50%); opacity: 1; } 75% { opacity: .75; } to { transform: translateX(1.2%); opacity: 0; } }
+@keyframes tp-coat-fills { 0% { transform: translateX(-50%) scaleX(.88); } 38% { transform: translateX(-50%) scaleX(1.09); } 70% { transform: translateX(-50%) scaleX(.98); } 100% { transform: translateX(-50%); } }
+@keyframes tp-captain-turn { from { opacity: 1; transform: rotateY(0); } 60% { opacity: 1; } to { opacity: 0; transform: rotateY(82deg); } }
+@keyframes tp-ship-sailing { 0%,100% { transform: rotate(-.55deg) translateY(.25%); } 50% { transform: rotate(.65deg) translateY(-.35%); } }
+@keyframes tp-sea-underway { from { transform: translateX(0) scale(1); } to { transform: translateX(-6%) scale(1.04); } }
+@keyframes tp-sail-billows { from { transform: translateX(-50%) rotateX(-2deg) skewY(-.5deg); } to { transform: translateX(-50%) rotateX(3deg) skewY(.8deg); } }
+.story-tomb-pirate.is-instant *, .story-tomb-pirate.is-suspended * { animation: none !important; transition: none !important; }
+@media (prefers-reduced-motion: reduce) { .story-tomb-pirate *, .story-tomb-pirate *::before, .story-tomb-pirate *::after { animation: none !important; transition: none !important; } }
+
+</style>
+<style data-source="seed-planet-story.css">
+.story-seed { position: fixed;z-index: 0;inset: 0;display: block;overflow: hidden;isolation: isolate;pointer-events: none;background: #0e1116; }
+.story-seed[hidden] { display: none !important; }
+.seed-frame { position: absolute;top: 50%;left: 50%;width: min(100%,75dvh);aspect-ratio: 3 / 4;overflow: hidden;transform: translate(-50%,-50%);box-shadow: 0 0 100px 28px #0009; }
+.sp-workbench,.sp-scene-art,.sp-bench-fallback,.sp-kernels,.sp-space,.sp-space-fallback,.sp-ground,.sp-ground-fallback { position: absolute;inset: 0;width: 100%;height: 100%; }
+.sp-scene-art { display: block;object-fit: fill;user-select: none;-webkit-user-drag: none; }
+.sp-scene-art[hidden] { display: none; }
+.sp-workbench { z-index: 0;transform: scale(var(--sp-bench-zoom,1));transform-origin: 50% 56%;filter: blur(var(--sp-bench-blur,0px));transition: transform 1.2s ease,filter 1.2s ease; }
+.sp-bench-fallback { background: radial-gradient(ellipse at 50% 56%,#84623b45,transparent 50%),repeating-linear-gradient(3deg,#31251e 0 2px,#3e3023 3px 7px,#35291e 9px 44px); }
+.sp-focus-shade { position: absolute;inset: 0;background: radial-gradient(ellipse 35% 27% at 50% 56%,transparent,#130e0a3a 75%,#100e12a1 140%); }
+.sp-kernels { z-index: 2; }
+.sp-layer { position: absolute;left: 50%;top: 56%;width: var(--sp-width,34%);aspect-ratio: 778 / 887;transform: translate(-50%,-100%);transition: width 1.2s cubic-bezier(.22,.74,.3,1); }
+.sp-layer.is-current::before { content: '';position: absolute;left: 17%;bottom: -1.5%;width: 66%;height: 5%;border-radius: 50%;background: radial-gradient(ellipse,#100905a8,transparent 71%);filter: blur(3px); }
+.sp-layer.is-unseen { visibility: hidden; }
+.sp-whole,.sp-halves,.sp-object-art,.sp-walnut-fallback { position: absolute;inset: 0;width: 100%;height: 100%; }
+.sp-whole { opacity: 1;overflow: hidden;transition: opacity .23s ease .1s; }
+.sp-object-art { object-fit: contain;opacity: 0;filter: brightness(calc(1 - var(--sp-depth) * .018)); }
+.has-walnut-art .sp-walnut-art { opacity: 1; }
+.sp-walnut-art { width: 197.42931%;height: 115.44532%;left: -46.65810%;top: -8.00451%;right: auto;bottom: auto;object-fit: fill; }
+.has-walnut-art .sp-walnut-fallback { display: none; }
+.sp-walnut-fallback { border-radius: 43% 47% 44% 48%;background: repeating-radial-gradient(ellipse at 43% 24%,#977042 0 3px,#5d3c25 4px 6px,#b38a56 7px 10px);box-shadow: inset -8px -7px 14px #251910b0,inset 3px 4px 9px #e3bd7c55,2px 7px 9px #090705ba; }
+.sp-walnut-fallback::after { content: '';position: absolute;top: 1%;bottom: 1%;left: 48%;width: 2%;border-left: 2px solid #3d281db0;transform: rotate(-7deg); }
+.sp-halves { opacity: 0;transition: opacity .18s ease .08s; }
+.sp-half { position: absolute;top: 0;width: 84.5%;height: 100%;transition: transform 1.1s cubic-bezier(.22,.72,.3,1);filter: drop-shadow(1px 5px 5px #100b079e); }
+.sp-half-left { left: 0;transform-origin: 95% 50%; }
+.sp-half-right { left: 14.8%;width: 85.7%;transform-origin: 5% 50%; }
+.sp-half-fallback,.sp-half-art { position: absolute;inset: 0;display: block; }
+.sp-half-fallback { border: 4px solid #76502d;border-radius: 55% 46% 55% 48%;background: radial-gradient(ellipse at 55% 50%,#39291c 10%,#9d7342 53%,#d1a770 73%,#5e3e28 79%);box-shadow: inset 0 0 7px #1c1511; }
+.sp-half-art { opacity: 0;background: var(--sp-halves-art) var(--sp-half-x) var(--sp-half-y) / var(--sp-half-size) no-repeat; }
+.sp-half-left { --sp-half-x: 8.03674%;--sp-half-y: 53.33333%;--sp-half-size: 230.97744% 113.27434%; }
+.sp-half-right { --sp-half-x: 91.90751%;--sp-half-y: 53.71901%;--sp-half-size: 228.91207% 113.39978%; }
+.has-halves-art .sp-half-art { opacity: 1; }
+.has-halves-art .sp-half-fallback { display: none; }
+.sp-layer.is-opened .sp-whole { opacity: 0; }
+.sp-layer.is-opened .sp-halves { opacity: 1; }
+.sp-layer.is-opened .sp-half-left { transform: translateX(-84%) rotate(-25deg); }
+.sp-layer.is-opened .sp-half-right { transform: translateX(84%) rotate(25deg); }
+.sp-grain { position: absolute;z-index: 30;left: 50%;top: 56%;width: .72%;aspect-ratio: 1;opacity: 0;transform: translate(-50%,-50%); }
+.sp-grain-core { position: absolute;inset: 0;border-radius: 37% 58% 40% 52% / 45% 34% 60% 40%;background: radial-gradient(circle at 25% 28%,#f0d59b80 0 3%,transparent 8%),radial-gradient(circle at 17% 63%,#59421e50 0 2%,transparent 5%),radial-gradient(circle at 72% 32%,#e4c18b5e 0 3%,transparent 7%),radial-gradient(circle at 48% 76%,#66482142 0 2%,transparent 5%),radial-gradient(circle at 64% 59%,#f1d1973b 0 3%,transparent 6%),radial-gradient(ellipse at 46% 40%,#cda967 5%,#b18a4c 39%,#795932 73%,#352b20 100%);box-shadow: inset 1px 1px 1px #e5c58a80,inset -1px -1px 1px #322b2180; }
+.sp-grain-glow { position: absolute;inset: -100%;border-radius: 50%;background: radial-gradient(ellipse,#ffdf9d6b,transparent 68%);box-shadow: 0 0 9px #e8c57c28; }
+.story-seed.is-awaiting .sp-grain { opacity: 1; }
+.seed-grain-action { position: fixed;z-index: 6;width: 64px;height: 64px;padding: 0;border: 0;border-radius: 50%;transform: translate(-50%,-50%);background: transparent;cursor: pointer;-webkit-tap-highlight-color: transparent; }
+.seed-grain-action[hidden] { display: none !important; }
+.seed-grain-action:focus-visible { outline: 2px solid #eed299;outline-offset: 2px;background: #ffe3a416; }
+body[data-herb-mode="playing"].herb-writing .seed-grain-action { display: none !important;pointer-events: none; }
+.sp-space { z-index: 4;opacity: 0;transform-origin: 50% 50%;transform: translateY(6%) scale(.01);-webkit-mask-image: radial-gradient(ellipse 50% 50% at 50% 50%,#000 92%,transparent 100%);mask-image: radial-gradient(ellipse 50% 50% at 50% 50%,#000 92%,transparent 100%); }
+.sp-space-fallback { background: #040a14; }
+.sp-space-fallback::before { content: '';position: absolute;left: 14%;top: 25%;width: 72%;aspect-ratio: 1;border-radius: 50%;background: radial-gradient(ellipse at 33% 25%,#d4bc87,#ae8b50 37%,#80613b 59%,#191a1b 84%);box-shadow: -5px 0 12px #edd8aa47,inset -20px -15px 25px #040912bd; }
+.sp-space-fallback i { position: absolute;inset: 0;background: radial-gradient(circle at 13% 15%,#dbe7f2 0 1px,transparent 2px),radial-gradient(circle at 82% 13%,#dbe7f2 0 1px,transparent 2px),radial-gradient(circle at 93% 74%,#dbe7f2 0 1px,transparent 2px); }
+.sp-planet-art { opacity: 0; }
+.has-planet-art .sp-planet-art { opacity: 1; }
+.sp-ground { z-index: 6;opacity: 0;transform: scale(1.16) translateY(3%);filter: blur(5px); }
+.sp-ground-fallback { background: linear-gradient(#080f1c 0%,#1a2231 34%,#63533e 41%,#a98b5c 45%,#8f7048 100%); }
+.sp-ground-fallback::before { content: '';position: absolute;inset: 40% -10% -10%;border-radius: 50% 40% 0 0 / 10% 14% 0 0;background: repeating-radial-gradient(ellipse at 25% 17%,#9d815400 0 16px,#c2a56b22 20px 22px,#9d815400 28px 42px); }
+.sp-ground-art { opacity: 0; }
+.has-ground-art .sp-ground-art { opacity: 1; }
+.has-ground-art .sp-rose-fallback { display: none; }
+.sp-rose-fallback { position: absolute;left: 58%;top: 66%;width: 8%;height: 13%;transform: translate(-50%,-50%); }
+.sp-rose-fallback::before { content: '';position: absolute;top: 11%;bottom: 0;left: 49%;width: 2px;background: #526044;transform: rotate(-5deg); }
+.sp-rose-fallback i { position: absolute;left: 37%;top: 0;width: 25%;height: 25%;border-radius: 40% 40% 46% 46%;background: linear-gradient(80deg,#4b1822,#a64851 42%,#631c30 78%);transform: rotate(-8deg);box-shadow: 0 1px 2px #30211c9e; }
+.sp-rose-fallback b { position: absolute;left: 50%;top: 48%;width: 44%;height: 15%;border-radius: 90% 0 90% 0;transform: rotate(-25deg);background: #536449; }
+.sp-descent-haze { position: absolute;z-index: 7;inset: 0;opacity: 0;background: radial-gradient(ellipse,#dcc39399,#b49a786e 62%,#5c554247);filter: blur(5px); }
+.sp-frame-shade { position: absolute;z-index: 40;inset: 0;background: linear-gradient(#040d1652,transparent 27% 79%,#07101b7d); }
+.story-seed.is-travelling .sp-workbench { animation: sp-bench-recedes 10.5s ease-in-out both; }
+.story-seed.is-travelling .sp-kernels { animation: sp-shells-recede 10.5s ease-in-out both; }
+.story-seed.is-travelling .sp-grain { animation: sp-grain-expands 10.5s cubic-bezier(.35,.1,.5,1) both; }
+.story-seed.is-travelling .sp-grain-core { animation: sp-grain-rounds 10.5s ease both; }
+.story-seed.is-travelling .sp-grain-glow { animation: sp-grain-glow-recedes 10.5s linear both; }
+.story-seed.is-travelling .sp-space { animation: sp-space-approach 10.5s ease-in-out both; }
+.story-seed.is-travelling .sp-ground { animation: sp-ground-arrival 10.5s ease-in-out both; }
+.story-seed.is-travelling .sp-descent-haze { animation: sp-descent-haze 10.5s ease-in-out both; }
+.story-seed.is-arrived :is(.sp-workbench,.sp-kernels,.sp-grain,.sp-space) { opacity: 0;visibility: hidden;animation: none; }
+.story-seed.is-arrived .sp-ground { opacity: 1;transform: none;filter: none;animation: none; }
+.story-seed.is-arrived .sp-descent-haze { opacity: 0;animation: none; }
+.story-seed.is-setting * { transition: none !important;animation: none !important; }
+@keyframes sp-bench-recedes { 0% { opacity: 1; } 10% { opacity: .9; } 25%,100% { opacity: 0;transform: scale(4);filter: blur(5px); } }
+@keyframes sp-shells-recede { 0% { opacity: 1;transform: scale(1); } 20%,100% { opacity: 0;transform: scale(3); } }
+@keyframes sp-grain-expands { 0% { opacity: 1;transform: translate(-50%,-50%) scale(1); } 12% { opacity: 1;transform: translate(-50%,-50%) scale(8); } 26% { opacity: 1;transform: translate(-50%,-50%) scale(40); } 34%,100% { opacity: 0;transform: translate(-50%,-50%) scale(66); } }
+@keyframes sp-grain-rounds { 0% { border-radius: 37% 58% 40% 52% / 45% 34% 60% 40%; } 28%,100% { border-radius: 50%; } }
+@keyframes sp-grain-glow-recedes { 0% { opacity: 1; } 10%,100% { opacity: 0; } }
+@keyframes sp-space-approach { 0%,12% { opacity: 0;transform: translateY(6%) scale(.06); } 26% { opacity: .9;transform: translateY(6%) scale(.31); } 34% { opacity: 1;transform: translateY(6%) scale(.52); } 42%,49% { opacity: 1;transform: translateY(0) scale(1); } 76% { opacity: 1;transform: translateY(0) scale(5.5); } 90%,100% { opacity: 0;transform: translateY(-1%) scale(7.5); } }
+@keyframes sp-ground-arrival { 0%,68% { opacity: 0;transform: scale(1.16) translateY(3%);filter: blur(5px); } 80% { opacity: .55;transform: scale(1.09) translateY(1.5%);filter: blur(2px); } 96%,100% { opacity: 1;transform: none;filter: none; } }
+@keyframes sp-descent-haze { 0%,63% { opacity: 0; } 73% { opacity: .75; } 86% { opacity: .24; } 100% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .story-seed *, .story-seed *::before,.story-seed *::after { animation: none !important;transition: none !important; } }
+
+</style>
 <style data-source="magic-shop.css">
 /* A single native dialog holds room, shop and one-item confirmation. */
 .herb-cottage.magic-shop-enabled {
@@ -5452,7 +5812,7 @@ body[data-herb-stage="sea"] .story-sea { display: block; }
         </details>
       </div>
     </section>
-    <p class="hint-text" id="gameVersion">版本 2026.11.26.2</p>
+    <p class="hint-text" id="gameVersion">版本 2026.11.26.3</p>
   </div>
 </div>
 
@@ -7665,6 +8025,14 @@ window.HANZI_CURRICULUM = {
   const timers = new Set();
   const voices = new Set();
   const clockbirdVoices = new Set();
+  const fairyVoices = new Set();
+  const FAIRY_VOICE_ASSET = 'assets/story/fairy-found-v1.wav';
+  let fairyBytesPromise = null;
+  let fairyBuffer = null;
+  let fairyBufferContext = null;
+  let fairyDecodePromise = null;
+  let fairyDecodeContext = null;
+  let fairyEpoch = 0;
   let context = null;
   let master = null;
   let resuming = null;
@@ -7840,6 +8208,8 @@ window.HANZI_CURRICULUM = {
     });
     voices.clear();
     clockbirdVoices.clear();
+    fairyVoices.clear();
+    fairyEpoch++;
   }
 
   function startSound(preserveExisting) {
@@ -7970,6 +8340,88 @@ window.HANZI_CURRICULUM = {
       if (overtone) clockbirdVoices.add(overtone);
     });
     return 6000;
+  }
+
+  function prepareFairyFound() {
+    // Fetch only after this optional scene is visited. Loading artwork/voice
+    // never creates or resumes an audio context or touches the speech service.
+    if (!fairyBytesPromise) {
+      if (typeof window.fetch !== 'function') return Promise.resolve(false);
+      fairyBytesPromise = Promise.resolve().then(function () {
+        return window.fetch(FAIRY_VOICE_ASSET);
+      }).then(function (response) {
+        if (!response.ok) throw new Error('Optional fairy voice unavailable');
+        return response.arrayBuffer();
+      }).catch(function () { fairyBytesPromise = null; return null; });
+    }
+    const audio = context;
+    return fairyBytesPromise.then(function (bytes) {
+      if (!bytes || !audio || audio !== context || audio.state === 'closed') return false;
+      if (fairyBuffer && fairyBufferContext === audio) return true;
+      if (fairyDecodePromise && fairyDecodeContext === audio) return fairyDecodePromise;
+      fairyDecodeContext = audio;
+      fairyDecodePromise = new Promise(function (resolve, reject) {
+        try {
+          const decoding = audio.decodeAudioData(bytes.slice(0), resolve, reject);
+          decoding?.then?.(resolve, reject);
+        } catch (error) { reject(error); }
+      }).then(function (buffer) {
+        if (audio !== context || audio.state === 'closed') return false;
+        fairyBuffer = buffer; fairyBufferContext = audio;
+        return true;
+      }).catch(function () { return false; }).finally(function () {
+        if (fairyDecodeContext === audio) fairyDecodePromise = null;
+      });
+      return fairyDecodePromise;
+    });
+  }
+
+  function stopFairyFound() {
+    fairyEpoch++;
+    fairyVoices.forEach(function (voice) {
+      try {
+        const now = context ? context.currentTime : 0;
+        voice.gain.gain.cancelScheduledValues(now);
+        voice.gain.gain.setValueAtTime(voice.gain.gain.value, now);
+        voice.gain.gain.linearRampToValueAtTime(0, now + 0.012);
+        voice.oscillator.stop(now + 0.015);
+      } catch (_) {}
+      voices.delete(voice);
+    });
+    fairyVoices.clear();
+  }
+
+  function playFairyFound() {
+    if (muted || document.hidden || !context || context.state === 'closed') return 0;
+    stopFairyFound();
+    const ticket = fairyEpoch;
+    const requestedAt = window.performance?.now?.() ?? Date.now();
+    function playReady() {
+      const now = window.performance?.now?.() ?? Date.now();
+      if (ticket !== fairyEpoch || now - requestedAt > RESULT_SOUND_WAIT_MS ||
+          !fairyBuffer || fairyBufferContext !== context) return;
+      const start = startSound(true);
+      if (start == null) return;
+      let source = null, gain = null;
+      try {
+        source = context.createBufferSource(); source.buffer = fairyBuffer;
+        gain = context.createGain(); gain.gain.setValueAtTime(0.8, start);
+        source.connect(gain); gain.connect(master);
+        const voice = { oscillator: source, gain: gain };
+        voices.add(voice); fairyVoices.add(voice);
+        source.onended = function () {
+          voices.delete(voice); fairyVoices.delete(voice);
+          try { source.disconnect(); gain.disconnect(); } catch (_) {}
+        };
+        source.start(start); source.stop(start + fairyBuffer.duration + 0.025);
+      } catch (_) {
+        try { source?.disconnect(); gain?.disconnect(); } catch (_) {}
+      }
+    }
+    const requestReady = function () { playResultSound(playReady, true); };
+    if (fairyBuffer && fairyBufferContext === context) requestReady();
+    else void prepareFairyFound().then(requestReady).catch(function () {});
+    return 1900;
   }
 
   function targetRect() {
@@ -8124,6 +8576,9 @@ window.HANZI_CURRICULUM = {
     playStoneDoor: playStoneDoor,
     playClockbirdChorus: playClockbirdChorus,
     stopClockbirdChorus: stopClockbirdChorus,
+    prepareFairyFound: prepareFairyFound,
+    playFairyFound: playFairyFound,
+    stopFairyFound: stopFairyFound,
     celebrate: celebrate,
     reset: reset,
     setMuted: setMuted,
@@ -13024,6 +13479,1033 @@ function updateArmorBindings(chains,count,changed) {
 })(window);
 
 </script>
+<script data-source="wild-garden-story.js">
+(function (window) {
+  'use strict';
+
+  const TIMES = Object.freeze({ release: 1900, zoo: 6400, barrier: 1500, flower: 2400, fairy: 4200, dream: 1800 });
+  // One literal per image lets the offline builder embed each source once.
+  const ASSETS = Object.freeze({
+    zoo: 'assets/story/midnight-menagerie-v1.webp',
+    beastsA: 'assets/story/fierce-guards-a.webp',
+    beastsB: 'assets/story/fierce-guards-b.webp',
+    garden: 'assets/story/butterfly-secret-garden-v1.webp',
+    hedge: 'assets/story/garden-hedge-screen-v1.webp',
+    flower: 'assets/story/fairy-disguise-flower-v1.webp',
+    fairy: 'assets/story/butterfly-fairy-laugh-v1.webp'
+  });
+  const imageUrls = new Map();
+  let instance = 0;
+  const clamp = value => Math.max(0, Math.min(1, value));
+  const ease = value => { const n = clamp(value); return n * n * (3 - 2 * n); };
+  const lerp = (a, b, n) => a + (b - a) * n;
+  const CAGE_ROWS = [[13, 90, 23], [18, 80, 19], [23, 71, 16], [29, 64, 13], [34, 58, 10]];
+  const BEASTS = [
+    { name: 'lion', title: '狮子', crop: [0, 26, 505, 454], free: [34, 86, 18.5], party: [31, 86, 17] },
+    { name: 'tiger', title: '老虎', crop: [513, 129, 504, 332], free: [66, 85, 18], party: [74, 82, 15] },
+    { name: 'wolf', title: '灰狼', crop: [1045, 27, 491, 436], free: [43, 91, 16], party: [42, 87, 15] },
+    { name: 'bear', title: '棕熊', crop: [4, 549, 500, 459], free: [59, 90, 18], party: [59, 87, 16] },
+    { name: 'panther', title: '黑豹', crop: [512, 582, 518, 400], free: [35, 76, 16], party: [35, 76, 15] },
+    { name: 'hyena', title: '鬣狗', crop: [25, 75, 483, 372], free: [66, 74, 15], party: [65, 76, 14] },
+    { name: 'crocodile', title: '鳄鱼', crop: [510, 162, 514, 248], free: [50, 81, 18], party: [50, 95, 20] },
+    { name: 'boar', title: '野猪', crop: [1038, 66, 492, 368], free: [53, 72, 15], party: [51, 76, 14] },
+    { name: 'rhinoceros', title: '犀牛', crop: [3, 579, 510, 380], free: [45, 62, 15], party: [45, 65, 14] },
+    { name: 'eagle', title: '鹰', crop: [517, 552, 506, 429], free: [56, 56, 12], party: [54, 52, 10] }
+  ];
+  const FAERY_REGIONS = {
+    left: '0,0 500,0 500,650 0,650',
+    right: '500,0 1000,0 1000,650 500,650',
+    body: '340,0 610,0 620,160 590,250 625,285 705,345 820,400 870,405 870,470 800,470 640,395 610,390 650,580 655,760 580,1000 350,1000 280,940 225,880 195,760 195,650 230,550 340,450 390,390 380,250 350,160'
+  };
+
+  function acquireImage(source, doc) {
+    if (!/^data:image\/[^,]+;base64,/i.test(source)) return source;
+    const cached = imageUrls.get(source);
+    if (cached) { cached.references++; return cached.url; }
+    try {
+      const view = doc.defaultView || window;
+      const comma = source.indexOf(',');
+      const binary = view.atob(source.slice(comma + 1));
+      const bytes = new Uint8Array(binary.length);
+      for (let index = 0; index < binary.length; index++) bytes[index] = binary.charCodeAt(index);
+      const url = view.URL.createObjectURL(new view.Blob([bytes], { type: source.slice(5, comma).split(';')[0] }));
+      imageUrls.set(source, { url, objectUrls: view.URL, references: 1 });
+      return url;
+    } catch (_) { return source; }
+  }
+  function releaseImage(source) {
+    const cached = imageUrls.get(source);
+    if (!cached || --cached.references > 0) return;
+    try { cached.objectUrls.revokeObjectURL(cached.url); } catch (_) {}
+    imageUrls.delete(source);
+  }
+  function cageMarkup(index) {
+    const [x, y, size] = CAGE_ROWS[Math.floor(index / 2)];
+    return `<div class="wg-cage" data-cage="${index}" style="left:${index % 2 ? 100 - x : x}%;top:${y}%;width:${size}%;z-index:${Math.round(y * 10) + 5};--wg-cage-facing:${index % 2 ? -1 : 1}">
+      <svg class="wg-cage-shell" viewBox="0 0 220 200"><path class="wg-cage-roof" d="M14 35L52 8H207L174 35Z"/><path class="wg-cage-side" d="M174 35L207 8V169L174 194Z"/>
+        <path class="wg-cage-back" d="M52 8V169H207M77 11V169M106 11V169M135 11V169M164 11V169M192 11V169M53 54H206M53 113H206"/>
+        <path class="wg-cage-frame" d="M14 35H174V194H14ZM14 35L52 8H207V169L174 194M14 194H174M20 29H173"/></svg>
+      <div class="wg-cage-door"><svg viewBox="0 0 180 180"><path class="wg-cage-frame" d="M5 5H174V174H5Z"/>
+        <path class="wg-cage-bars" d="M26 8V171M51 8V171M76 8V171M101 8V171M126 8V171M151 8V171M8 58H171M8 121H171"/>
+        <g class="wg-cage-lock"><path class="wg-lock-shackle" d="M131 85V78C131 62 154 62 154 78V85"/><rect x="127" y="84" width="31" height="27" rx="3"/><path class="wg-lock-keyhole" d="M143 93v10"/></g></svg></div>
+    </div>`;
+  }
+  function beastMarkup(beast, index) {
+    const [x, y, width, height] = beast.crop;
+    const atlas = index < 5 ? 'A' : 'B';
+    return `<div class="wg-zoo-animal wg-animal-${beast.name}" data-beast="${index}" data-species="${beast.name}" data-species-title="${beast.title}" style="--wg-animal-ratio:${width / height};--wg-sprite-size:${1536 / width * 100}% ${1024 / height * 100}%;--wg-sprite-position:${x / (1536 - width) * 100}% ${y / (1024 - height) * 100}%;--wg-animal-atlas:var(--wg-beasts${atlas});--wg-beast-phase:${-index * .43}s;--wg-beast-pace:${5.4 + index * .27}s">
+      <i class="wg-animal-ground"></i><div class="wg-animal-pose"><div class="wg-animal-body wg-animal-skin"></div><div class="wg-animal-hind wg-animal-skin"></div><div class="wg-animal-front wg-animal-skin"></div></div></div>`;
+  }
+  function barrierMarkup(index) {
+    return `<div class="wg-garden-barrier wg-barrier-kind-${index % 3}" data-barrier="${index}" style="z-index:${110 - index};--wg-hedge-flip:${index % 2 ? -1 : 1};--wg-hedge-hue:${index * 2 - 8}deg">
+      <i class="wg-hedge-shadow"></i>${['left', 'right'].map(side => `<div class="wg-hedge-piece wg-hedge-${side}"><div class="wg-hedge-texture"></div><svg class="wg-hedge-fence" viewBox="0 0 1000 600"><path class="wg-fence-rail" d="M-40 515Q500 450 1040 515M-40 567Q500 507 1040 567"/>
+        ${Array.from({ length: 15 }, (_, n) => `<path class="wg-fence-picket" d="M${n * 74 - 18} 600V${360 + n % 3 * 24}l-9-17 9-17 9 17-9 17"/>`).join('')}</svg></div>`).join('')}</div>`;
+  }
+  function lightStringMarkup(index) {
+    const row = Math.floor(index / 4);
+    const segment = index % 4;
+    const sections = row === 2 ? 2 : 4;
+    const from = 100 + row * 40;
+    const to = 925 - row * 35;
+    const x0 = lerp(from, to, segment / sections);
+    const x1 = lerp(from, to, (segment + 1) / sections);
+    const y = x => 165 + row * 103 + Math.sin(x / 1000 * Math.PI) * (115 - row * 12);
+    return `<g class="wg-light-string" data-light-string="${index}"><path d="M${x0} ${y(x0)}Q${(x0 + x1) / 2} ${y((x0 + x1) / 2)} ${x1} ${y(x1)}"/>${[.13, .45, .78].map(part => { const x = lerp(x0, x1, part); return `<circle cx="${x}" cy="${y(x) + 7}" r="${4.3 + row * .5}"/>`; }).join('')}</g>`;
+  }
+
+  function create({ document: doc, onActionRequest } = {}) {
+    const id = `wild-garden-${++instance}`;
+    const art = Object.fromEntries(Object.entries(ASSETS).map(([key, source]) => [key, acquireImage(source, doc)]));
+    const zoo = doc.createElement('div');
+    const garden = doc.createElement('div');
+    zoo.className = 'story-scene story-zoo';
+    garden.className = 'story-scene story-butterfly';
+    [zoo, garden].forEach(scene => { scene.hidden = true; scene.setAttribute('aria-hidden', 'true'); });
+    zoo.style.setProperty('--wg-zoo-art', `url("${art.zoo}")`);
+    zoo.style.setProperty('--wg-beastsA', `url("${art.beastsA}")`);
+    zoo.style.setProperty('--wg-beastsB', `url("${art.beastsB}")`);
+    garden.style.setProperty('--wg-garden-art', `url("${art.garden}")`);
+    garden.style.setProperty('--wg-hedge-art', `url("${art.hedge}")`);
+    zoo.innerHTML = `<div class="wg-frame wg-zoo-frame"><div class="wg-ambience wg-zoo-ambience"></div><div class="wg-world-position"><div class="wg-zoo-world">
+      <div class="wg-zoo-art"></div><div class="wg-zoo-stage-glow"></div>
+      <svg class="wg-zoo-lights" viewBox="0 0 1000 1400" preserveAspectRatio="none">${Array.from({ length: 10 }, (_, index) => lightStringMarkup(index)).join('')}</svg>
+      <div class="wg-zoo-cages">${BEASTS.map((_, index) => cageMarkup(index)).join('')}</div>
+      <div class="wg-zoo-animals">${BEASTS.map(beastMarkup).join('')}</div>
+      <div class="wg-zoo-key"><svg viewBox="0 0 180 85"><defs><linearGradient id="${id}-key" x1="0" x2="0" y2="1"><stop stop-color="#f3d799"/><stop offset=".42" stop-color="#b8893c"/><stop offset=".63" stop-color="#e1bf71"/><stop offset="1" stop-color="#725021"/></linearGradient></defs><path fill="url(#${id}-key)" stroke="#4b351b" stroke-width="2" d="M51 10a31 31 0 1 0 0 62a31 31 0 0 0 29-20h42v16h15V52h14V40h19V29H80A31 31 0 0 0 51 10Zm0 15a16 16 0 1 1 0 32a16 16 0 0 1 0-32Z"/></svg></div>
+      <div class="wg-zoo-sparks">${Array.from({ length: 12 }, (_, index) => `<i style="--spark-i:${index};left:${13 + index * 6.7}%;top:${30 + index % 3 * 5}%"></i>`).join('')}</div>
+    </div></div><div class="wg-frame-shade"></div></div>`;
+    garden.innerHTML = `<div class="wg-frame wg-garden-frame"><div class="wg-ambience wg-garden-ambience"></div><div class="wg-world-position"><div class="wg-garden-world">
+      <div class="wg-garden-art"></div><div class="wg-garden-atmosphere"></div>
+      <div class="wg-flower"><img src="${art.flower}" alt="" draggable="false"></div>
+      <div class="wg-barrier-field">${Array.from({ length: 10 }, (_, index) => barrierMarkup(index)).join('')}</div>
+      <div class="wg-fairy"><svg class="wg-fairy-sprite" viewBox="0 0 1000 1000"><defs>${Object.entries(FAERY_REGIONS).map(([key, points]) => `<mask id="${id}-fairy-${key}" maskUnits="userSpaceOnUse" x="0" y="0" width="1000" height="1000" style="mask-type:luminance"><polygon points="${points}" fill="white"/>${key === 'body' ? '' : `<polygon points="${FAERY_REGIONS.body}" fill="black"/>`}</mask>`).join('')}<mask id="${id}-dream-wing" maskUnits="userSpaceOnUse" x="0" y="0" width="1000" height="1000" style="mask-type:luminance"><polygon points="120,0 340,55 430,190 470,320 420,370 365,450 295,530 170,545 140,450 170,335 140,250" fill="white"/><polygon points="${FAERY_REGIONS.body}" fill="black"/></mask></defs>
+        <g class="wg-fairy-wing wg-fairy-left-wing"><image href="${art.fairy}" width="1000" height="1000" preserveAspectRatio="xMidYMid meet" mask="url(#${id}-fairy-left)"/></g>
+        <g class="wg-fairy-wing wg-fairy-right-wing"><image href="${art.fairy}" width="1000" height="1000" preserveAspectRatio="xMidYMid meet" mask="url(#${id}-fairy-right)"/></g>
+        <image href="${art.fairy}" width="1000" height="1000" preserveAspectRatio="xMidYMid meet" mask="url(#${id}-fairy-body)"/></svg></div>
+      <div class="wg-fairy-speech">你找到我啦！</div>
+      <div class="wg-dream"><div class="wg-dream-butterfly"><svg viewBox="0 0 1000 1000"><g class="wg-dream-wing wg-dream-left"><g transform="translate(35 0)"><image href="${art.fairy}" width="1000" height="1000" preserveAspectRatio="xMidYMid meet" mask="url(#${id}-dream-wing)"/></g></g><g class="wg-dream-wing wg-dream-right"><g transform="translate(1000 0) scale(-1 1)"><g transform="translate(35 0)"><image href="${art.fairy}" width="1000" height="1000" preserveAspectRatio="xMidYMid meet" mask="url(#${id}-dream-wing)"/></g></g></g><path class="wg-dream-body" d="M500 252C484 340 483 470 500 607C517 470 515 340 500 252Z"/><circle class="wg-dream-head" cx="500" cy="263" r="11"/><path class="wg-dream-antennae" d="M496 267Q479 229 466 218M504 267Q521 229 534 218"/></svg></div><i class="wg-dream-eyelid wg-dream-eyelid-top"></i><i class="wg-dream-eyelid wg-dream-eyelid-bottom"></i></div>
+    </div></div><div class="wg-frame-shade"></div></div>`;
+    doc.body.insertBefore(zoo, doc.body.firstChild);
+    doc.body.insertBefore(garden, doc.body.firstChild);
+    const hitTarget = doc.createElement('button');
+    hitTarget.type = 'button';
+    hitTarget.className = 'wg-flower-hit';
+    hitTarget.hidden = true;
+    hitTarget.setAttribute('aria-label', '抓住装成花的小精灵');
+    hitTarget.title = '抓住装成花的小精灵';
+    doc.body.appendChild(hitTarget);
+    const cages = Array.from(zoo.querySelectorAll('.wg-cage'));
+    const animals = Array.from(zoo.querySelectorAll('.wg-zoo-animal'));
+    const strings = Array.from(zoo.querySelectorAll('.wg-light-string'));
+    const key = zoo.querySelector('.wg-zoo-key');
+    const barriers = Array.from(garden.querySelectorAll('.wg-garden-barrier'));
+    const flower = garden.querySelector('.wg-flower');
+    const fairy = garden.querySelector('.wg-fairy');
+    const speech = garden.querySelector('.wg-fairy-speech');
+    const dream = garden.querySelector('.wg-dream');
+    const gardenArt = garden.querySelector('.wg-garden-art');
+    const preference = window.matchMedia?.('(prefers-reduced-motion: reduce)');
+    const reduced = () => Boolean(preference?.matches);
+    const clock = () => window.performance?.now?.() ?? Date.now();
+    const counts = { zoo: 0, butterfly: 0 };
+    const releaseStarts = Array(10).fill(null);
+    const unlockedSound = Array(10).fill(false);
+    let currentStage = '';
+    let frameRequest = null;
+    let zooPartyStart = null;
+    let gardenMove = null;
+    let camera = 0;
+    let flowerStart = null;
+    let fairyStart = null;
+    let dreamStart = null;
+    let fairyCaught = false;
+    let partySound = false;
+    let destroyed = false;
+    const phases = { zoo: 'cages', butterfly: 'garden' };
+
+    function sound(method, ...args) {
+      try { const result = window.HanziGameFeedback?.[method]?.(...args); result?.catch?.(() => {}); } catch (_) {}
+    }
+    function setPhase(stage, phase) {
+      phases[stage] = phase;
+      (stage === 'zoo' ? zoo : garden).dataset.phase = phase;
+      if (stage === 'butterfly') syncHit();
+    }
+    function clearMotion() {
+      if (frameRequest !== null) window.cancelAnimationFrame(frameRequest);
+      frameRequest = null;
+      zooPartyStart = null;
+      gardenMove = null;
+      flowerStart = null;
+      fairyStart = null;
+      dreamStart = null;
+      releaseStarts.fill(null);
+      animals.forEach(animal => animal.classList.remove('is-running'));
+    }
+    function syncHit() {
+      const awaiting = currentStage === 'butterfly' && counts.butterfly === 10 && phases.butterfly === 'flower-await' && !doc.hidden;
+      hitTarget.hidden = !awaiting;
+      hitTarget.disabled = !awaiting;
+      if (!awaiting) return;
+      const box = flower.getBoundingClientRect();
+      const width = Math.max(64, Math.min(120, box.width));
+      const height = Math.max(80, Math.min(155, box.height));
+      hitTarget.style.left = `${box.left + box.width / 2 - width / 2}px`;
+      hitTarget.style.top = `${box.top + box.height / 2 - height / 2}px`;
+      hitTarget.style.width = `${width}px`;
+      hitTarget.style.height = `${height}px`;
+    }
+    function cagePosition(index) {
+      const [x, y, size] = CAGE_ROWS[Math.floor(index / 2)];
+      return [index % 2 ? 100 - x : x, y - size * .035, size * .79];
+    }
+    function drawZoo(time = clock(), settled = false) {
+      const partyElapsed = zooPartyStart === null ? counts.zoo === 10 ? TIMES.zoo : -1 : Math.max(0, time - zooPartyStart);
+      const party = counts.zoo === 10 && partyElapsed >= 0;
+      const joining = party ? ease((partyElapsed - 2800) / 2700) : 0;
+      let moving = false;
+      animals.forEach((animal, index) => {
+        const beast = BEASTS[index];
+        const released = index < counts.zoo;
+        const elapsed = released && releaseStarts[index] !== null && !settled ? time - releaseStarts[index] : released ? TIMES.release : 0;
+        const door = released ? ease((elapsed - 720) / 600) : 0;
+        const running = released && elapsed < TIMES.release && !settled;
+        const run = released ? ease((elapsed - 1050) / (TIMES.release - 1050)) : 0;
+        const caged = cagePosition(index);
+        const free = beast.free;
+        let x = lerp(caged[0], free[0], run) + Math.sin(run * Math.PI) * (index % 2 ? -3 : 3);
+        let y = lerp(caged[1], free[1], run) - Math.sin(run * Math.PI) * 1.5;
+        let size = lerp(caged[2], free[2], run);
+        if (party && released) { x = lerp(x, beast.party[0], joining); y = lerp(y, beast.party[1], joining); size = lerp(size, beast.party[2], joining); }
+        animal.style.left = `${x}%`;
+        animal.style.top = `${y}%`;
+        animal.style.width = `${size}%`;
+        animal.style.zIndex = String(Math.round(y * 10) + (running || released ? 9 : 2));
+        animal.style.setProperty('--wg-facing', String(x < 50 ? 1 : -1));
+        animal.classList.toggle('is-freed', released);
+        animal.classList.toggle('is-running', running && elapsed > 1000);
+        animal.classList.toggle('is-partying', party && partyElapsed > 2900);
+        cages[index].style.setProperty('--wg-door-angle', `${-107 * door}deg`);
+        cages[index].classList.toggle('is-open', released && door > .9);
+        cages[index].classList.toggle('is-unlocked', released && elapsed >= 680);
+        if (running) moving = true;
+        if (running && elapsed >= 680 && !unlockedSound[index]) { unlockedSound[index] = true; sound('playZooUnlock', index); }
+      });
+      const newest = counts.zoo - 1;
+      const keyElapsed = newest >= 0 && releaseStarts[newest] !== null && !settled ? time - releaseStarts[newest] : TIMES.release;
+      key.hidden = newest < 0 || keyElapsed > 1000;
+      if (!key.hidden) {
+        const [rowX, cageY, size] = CAGE_ROWS[Math.floor(newest / 2)];
+        const cx = newest % 2 ? 100 - rowX : rowX;
+        // The key's tip, not its centre, lands on the closed door's keyhole.
+        // Turning completes before the door starts moving away on its hinge.
+        const holeX = cx + size * .141 * (newest % 2 ? -1 : 1);
+        const holeY = cageY - size * .269;
+        const flying = ease(keyElapsed / 430);
+        key.style.left = `${lerp(50, holeX, flying)}%`;
+        key.style.top = `${lerp(83, holeY, flying) - Math.sin(flying * Math.PI) * 8}%`;
+        key.style.width = `${lerp(10, size * .30, flying)}%`;
+        key.style.opacity = String(1 - ease((keyElapsed - 730) / 270));
+        key.style.transform = `translate(-94.444%, -40.588%) rotate(${lerp(-25, 0, flying) + 90 * ease((keyElapsed - 430) / 240)}deg)`;
+      }
+      strings.forEach((string, index) => {
+        const light = party ? ease((partyElapsed - 1900 - index * 75) / 650) : 0;
+        string.style.setProperty('--wg-string-light', String(light));
+      });
+      zoo.style.setProperty('--wg-party-glow', String(party ? ease((partyElapsed - 2100) / 1300) : 0));
+      zoo.classList.toggle('wg-party-ready', party && partyElapsed >= 2900);
+      if (party && partyElapsed >= 2200 && !partySound && zooPartyStart !== null && !settled) { partySound = true; sound('playZooParty'); }
+      if (party && partyElapsed < TIMES.zoo && !settled) { moving = true; setPhase('zoo', partyElapsed < 2000 ? 'last-release' : partyElapsed < 3800 ? 'lights-on' : 'party'); }
+      else setPhase('zoo', party ? 'finished' : 'cages');
+      return moving;
+    }
+    function drawGardenCamera(progress) {
+      camera = progress;
+      garden.dataset.camera = progress.toFixed(3);
+      gardenArt.style.transform = `translateY(${progress * .45}%) scale(${1 + progress * .018})`;
+      barriers.forEach((barrier, index) => {
+        const distance = Math.max(.22, (index - progress) * 1.6 + 1.1);
+        const scale = Math.min(3, 1.45 / (.68 * distance + .6));
+        const base = .4 + .55 / (.5 * distance + .6);
+        const opened = ease(progress - index);
+        const opacity = 1 - ease((opened - .36) / .64);
+        barrier.hidden = opened >= .999;
+        barrier.style.width = `${123 * scale}%`;
+        barrier.style.left = `${50 + (index % 2 ? 1 : -1) * 1.2 / distance}%`;
+        barrier.style.top = `${base * 100}%`;
+        barrier.style.opacity = String(opacity);
+        barrier.style.transform = `translate(-50%, -100%) rotate(${(index % 3 - 1) * 1.3}deg)`;
+        barrier.style.setProperty('--wg-hedge-opening', String(opened));
+      });
+    }
+    function flowerPose(progress) {
+      const p = ease(progress);
+      flower.style.opacity = String(p);
+      flower.style.transform = 'translate(-50%, -100%)';
+    }
+    function fairyPose(progress) {
+      const p = clamp(progress);
+      const reveal = ease(p * TIMES.fairy / 1250);
+      flower.style.opacity = String(1 - ease(p * TIMES.fairy / 750));
+      fairy.style.opacity = String(reveal);
+      fairy.style.transform = `translate(-50%, -100%) translateY(${(1 - reveal) * 18}%) scale(${.34 + .66 * reveal})`;
+      speech.style.opacity = String(ease((p * TIMES.fairy - 700) / 750));
+      garden.classList.toggle('wg-fairy-alive', reveal > .1);
+      garden.classList.toggle('wg-fairy-finished', p === 1);
+      setPhase('butterfly', p === 1 ? 'finished' : 'fairy-reveal');
+    }
+    function waitingFlower() {
+      drawGardenCamera(10);
+      flowerPose(1);
+      fairy.style.opacity = '0';
+      speech.style.opacity = '0';
+      garden.classList.remove('wg-fairy-alive', 'wg-fairy-finished');
+      setPhase('butterfly', 'flower-await');
+    }
+    function settle() {
+      const revealing = fairyStart !== null || phases.butterfly === 'fairy-reveal';
+      clearMotion();
+      sound('stopFairyFound');
+      zoo.classList.toggle('wg-reduced', reduced() || doc.hidden);
+      garden.classList.toggle('wg-reduced', reduced() || doc.hidden);
+      drawZoo(clock(), true);
+      dream.style.opacity = '0';
+      if (revealing) fairyCaught = true;
+      if (counts.butterfly === 10) { if (fairyCaught) { drawGardenCamera(10); fairyPose(1); } else waitingFlower(); }
+      else {
+        drawGardenCamera(counts.butterfly);
+        flower.style.opacity = '0';
+        fairy.style.opacity = '0';
+        speech.style.opacity = '0';
+        garden.classList.remove('wg-fairy-alive', 'wg-fairy-finished');
+        setPhase('butterfly', 'garden');
+      }
+      syncHit();
+    }
+    function tick(time) {
+      frameRequest = null;
+      if (doc.hidden || (currentStage !== 'zoo' && currentStage !== 'butterfly')) { settle(); return; }
+      let moving = false;
+      if (currentStage === 'zoo') moving = drawZoo(time);
+      else {
+        if (dreamStart !== null) {
+          const p = clamp((time - dreamStart) / TIMES.dream);
+          dream.style.opacity = String(1 - ease((p - .58) / .42));
+          dream.style.setProperty('--wg-waking', String(ease((p - .3) / .7)));
+          if (p < 1) moving = true;
+          else { dreamStart = null; setPhase('butterfly', 'garden'); }
+        }
+        if (gardenMove) {
+          const p = ease((time - gardenMove.start) / gardenMove.duration);
+          drawGardenCamera(lerp(gardenMove.from, gardenMove.to, p));
+          if (p < 1) moving = true;
+          else gardenMove = null;
+        }
+        if (flowerStart !== null) {
+          const p = clamp((time - flowerStart) / TIMES.flower);
+          flowerPose(ease((p - .46) / .54));
+          if (p < 1) moving = true;
+          else { flowerStart = null; waitingFlower(); }
+        }
+        if (fairyStart !== null) {
+          const p = clamp((time - fairyStart) / TIMES.fairy);
+          fairyPose(p);
+          if (p < 1) moving = true;
+          else { fairyStart = null; fairyCaught = true; fairyPose(1); }
+        }
+      }
+      if (moving) frameRequest = window.requestAnimationFrame(tick);
+    }
+    function run() { if (frameRequest === null) frameRequest = window.requestAnimationFrame(tick); }
+    function resetExit() { settle(); }
+
+    function render(stage, count, animate = false) {
+      if (stage === 'butterfly') sound('prepareFairyFound');
+      const valid = stage === 'zoo' || stage === 'butterfly';
+      const switching = currentStage !== stage;
+      if (!valid) {
+        if (currentStage === 'zoo' || currentStage === 'butterfly') settle();
+        currentStage = stage;
+        zoo.hidden = true;
+        garden.hidden = true;
+        syncHit();
+        return;
+      }
+      const next = Math.max(0, Math.min(10, Math.floor(Number(count) || 0)));
+      const previous = counts[stage];
+      if (!switching && next === previous) { syncHit(); return; }
+      if (switching || next < previous || (stage === 'butterfly' && fairyStart !== null)) sound('stopFairyFound');
+      if (switching || next < previous || !animate || reduced() || stage === 'butterfly') clearMotion();
+      currentStage = stage;
+      zoo.hidden = stage !== 'zoo';
+      garden.hidden = stage !== 'butterfly';
+      counts[stage] = next;
+      (stage === 'zoo' ? zoo : garden).dataset.count = String(next);
+      zoo.classList.toggle('wg-reduced', reduced() || doc.hidden);
+      garden.classList.toggle('wg-reduced', reduced() || doc.hidden);
+      const changing = animate && next > previous && !reduced() && !doc.hidden;
+      if (stage === 'zoo') {
+        if (next < 10) zooPartyStart = null;
+        if (!changing || switching) { releaseStarts.fill(null); unlockedSound.fill(false); }
+        if (changing) {
+          const now = clock();
+          for (let index = previous; index < next; index++) { releaseStarts[index] = now; unlockedSound[index] = false; }
+          if (next === 10) { zooPartyStart = now; partySound = false; }
+          drawZoo(now);
+          run();
+        } else drawZoo(clock(), true);
+      } else {
+        if (next < 10) fairyCaught = false;
+        garden.classList.remove('wg-fairy-alive', 'wg-fairy-finished');
+        fairy.style.opacity = '0';
+        speech.style.opacity = '0';
+        flower.style.opacity = '0';
+        dream.style.opacity = '0';
+        if (next === 10 && fairyCaught) { drawGardenCamera(10); fairyPose(1); }
+        else if (next === 10 && !changing) waitingFlower();
+        else {
+          const now = clock();
+          if (changing) {
+            if (switching) camera = Math.max(0, next - 1);
+            gardenMove = { from: camera, to: next, start: now, duration: next === 10 ? TIMES.flower : TIMES.barrier };
+            if (next === 10) { flowerStart = now; setPhase('butterfly', 'flower-arriving'); }
+            else setPhase('butterfly', 'garden');
+          } else drawGardenCamera(next);
+          if (switching && next === 0 && !reduced() && !doc.hidden) {
+            dreamStart = now;
+            dream.style.opacity = '1';
+            dream.style.setProperty('--wg-waking', '0');
+            setPhase('butterfly', 'dream');
+          } else if (next < 10) setPhase('butterfly', 'garden');
+          if (changing || dreamStart !== null) run();
+        }
+      }
+      syncHit();
+    }
+    function playExit(stage) {
+      if (stage === 'zoo' && currentStage === 'zoo' && counts.zoo === 10) {
+        if (phases.zoo === 'finished') return 0;
+        return Math.max(0, TIMES.zoo - (clock() - (zooPartyStart ?? clock())));
+      }
+      if (stage !== 'butterfly' || currentStage !== 'butterfly' || counts.butterfly !== 10 || fairyCaught || phases.butterfly === 'finished') return 0;
+      if (fairyStart !== null) return Math.max(0, TIMES.fairy - (clock() - fairyStart));
+      clearMotion();
+      drawGardenCamera(10);
+      flowerPose(1);
+      if (doc.hidden) { fairyCaught = true; fairyPose(1); return 0; }
+      sound('playFairyFound');
+      setPhase('butterfly', 'fairy-reveal');
+      if (reduced()) { fairyCaught = true; fairyPose(1); return 0; }
+      fairyStart = clock();
+      fairyPose(0);
+      run();
+      return TIMES.fairy;
+    }
+    function handleFlower(event) {
+      if (!isAwaitingAction('butterfly') || doc.hidden || doc.body.classList.contains('herb-writing')) return;
+      event.preventDefault();
+      event.stopPropagation();
+      if (typeof onActionRequest === 'function') { try { onActionRequest('butterfly'); } catch (_) {} }
+      else playExit('butterfly');
+    }
+    function isAwaitingAction(stage) { return stage === 'butterfly' && currentStage === stage && counts.butterfly === 10 && phases.butterfly === 'flower-await'; }
+    function isEndingComplete(stage) { return (stage === 'zoo' || stage === 'butterfly') && counts[stage] === 10 && phases[stage] === 'finished'; }
+    function onVisibility() { if (doc.hidden) settle(); else { zoo.classList.toggle('wg-reduced', reduced()); garden.classList.toggle('wg-reduced', reduced()); syncHit(); } }
+    function onPreference() { if (reduced()) settle(); else { zoo.classList.remove('wg-reduced'); garden.classList.remove('wg-reduced'); } }
+    hitTarget.addEventListener('click', handleFlower);
+    doc.addEventListener('visibilitychange', onVisibility);
+    preference?.addEventListener?.('change', onPreference);
+    window.addEventListener('resize', syncHit);
+    const flowerImage = flower.querySelector('img');
+    flowerImage.addEventListener('load', syncHit);
+    flowerImage.addEventListener('error', () => { flowerImage.hidden = true; syncHit(); });
+    drawZoo(clock(), true);
+    drawGardenCamera(0);
+    return {
+      render, playExit, resetExit, isAwaitingAction, isEndingComplete,
+      getHint(stage) { return stage === 'butterfly' && counts.butterfly === 10 ? fairyCaught ? '你找到我啦！' : '这朵花一动不动……抓住装成花的小精灵。' : ''; },
+      arrivalTime(stage) { return stage === 'zoo' ? TIMES.zoo : stage === 'butterfly' ? TIMES.flower : 0; },
+      actionTime(stage) { return stage === 'butterfly' ? TIMES.fairy : 0; },
+      automaticEnding(stage) { return stage === 'zoo'; },
+      get flowerHitTarget() { return hitTarget; },
+      destroy() {
+        if (destroyed) return;
+        destroyed = true;
+        clearMotion();
+        sound('stopFairyFound');
+        hitTarget.removeEventListener('click', handleFlower);
+        doc.removeEventListener('visibilitychange', onVisibility);
+        preference?.removeEventListener?.('change', onPreference);
+        window.removeEventListener('resize', syncHit);
+        Object.values(ASSETS).forEach(releaseImage);
+        zoo.remove(); garden.remove(); hitTarget.remove();
+      }
+    };
+  }
+
+  window.HanziWildGardenStory = { create };
+})(window);
+
+</script>
+<script data-source="tomb-pirate-story.js">
+(function (window) {
+  'use strict';
+
+  // The caller owns all answers, progress, rewards, and persistence.
+  const ENDINGS = Object.freeze({ laser: 8000, arrows: 6500, map: 9000, pirate: 12000 });
+  const STEP_TIME = 1800;
+  const ASSETS = Object.freeze({
+    corridor: 'assets/story/tomb-depth-corridor-v1.webp',
+    chest: 'assets/story/tomb-treasure-chest-v1.webp',
+    sword: 'assets/story/tomb-sword-hand-v1.webp',
+    blankMap: 'assets/story/pirate-map-blank-v1.webp',
+    completeMap: 'assets/story/pirate-map-complete-v1.webp',
+    deck: 'assets/story/pirate-moon-deck-v1.webp',
+    sail: 'assets/story/pirate-sail-v1.webp',
+    skeleton: 'assets/story/pirate-skeleton-v1.webp',
+    coat: 'assets/story/pirate-empty-coat-v1.webp',
+    captain: 'assets/story/pirate-captain-awake-v1.webp'
+  });
+  const imageCache = new Map();
+  let instance = 0;
+
+  function acquireImage(source, doc) {
+    const src = String(source), cached = imageCache.get(src);
+    if (cached) { cached.users++; return cached.url; }
+    if (!/^data:image\/[^,]+;base64,/i.test(src)) return src;
+    try {
+      const view = doc.defaultView || window;
+      const decode = view.atob || window.atob, BlobType = view.Blob || window.Blob, urls = view.URL || window.URL;
+      if (typeof decode !== 'function' || typeof BlobType !== 'function' || typeof urls?.createObjectURL !== 'function') return src;
+      const comma = src.indexOf(','), binary = decode.call(view, src.slice(comma + 1)), bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      const url = urls.createObjectURL(new BlobType([bytes], { type: src.slice(5, comma).split(';')[0] }));
+      if (typeof url !== 'string' || !url) throw new Error('Artwork URL unavailable');
+      imageCache.set(src, { url, users: 1, urls });
+      return url;
+    } catch (_) { return src; }
+  }
+  function releaseImage(source) {
+    const cached = imageCache.get(String(source));
+    if (!cached || --cached.users > 0) return;
+    try { cached.urls.revokeObjectURL?.(cached.url); } catch (_) {}
+    imageCache.delete(String(source));
+  }
+
+  const ARROWS = [
+    [12, 31, 32, -48], [88, 36, 153, 48], [19, 64, -28, -35], [82, 66, -154, 35],
+    [35, 21, 66, -32], [66, 24, 115, 32], [7, 49, 8, -60], [94, 50, 174, 60],
+    [39, 77, -66, -30], [61, 75, -116, 30]
+  ];
+  const BONES = [
+    { name: '骨盆', polygon: '33% 36%,67% 36%,68% 53%,32% 53%' },
+    { name: '左侧大腿骨', polygon: '32% 50%,50% 50%,50% 71%,30% 71%' },
+    { name: '左侧小腿与脚骨', polygon: '22% 67%,50% 67%,50% 100%,20% 100%' },
+    { name: '右侧大腿骨', polygon: '50% 50%,69% 50%,70% 71%,50% 71%' },
+    { name: '右侧小腿与脚骨', polygon: '50% 67%,77% 67%,80% 100%,50% 100%' },
+    { name: '胸腔肋骨', polygon: '32% 18%,68% 18%,68% 38%,32% 38%' },
+    { name: '左侧手臂与手骨', polygon: '0% 17%,35% 17%,35% 57%,0% 57%' },
+    { name: '右侧手臂与手骨', polygon: '65% 17%,100% 17%,100% 57%,65% 57%' },
+    { name: '颈椎与肩骨', polygon: '28% 14.5%,73% 14.5%,73% 20%,28% 20%' },
+    { name: '骷髅头', polygon: '35% 0%,65% 0%,65% 14.5%,35% 14.5%' }
+  ];
+  const MAP_MIDDLE = [51, 48, 53, 47, 52, 50];
+  function mapPolygon(row, column) {
+    const x0 = column * 20, x1 = (column + 1) * 20;
+    const left = row === 0 ? [[x0, 0], [x0 - (column ? 2 : 0), 18], [x0 + (column ? 2 : 0), 30], [x0, MAP_MIDDLE[column]]]
+      : [[x0, MAP_MIDDLE[column]], [x0 + (column ? 2 : 0), 69], [x0 - (column ? 2 : 0), 82], [x0, 100]];
+    const right = row === 0 ? [[x1, 0], [x1 - (column < 4 ? 2 : 0), 18], [x1 + (column < 4 ? 2 : 0), 30], [x1, MAP_MIDDLE[column + 1]]]
+      : [[x1, MAP_MIDDLE[column + 1]], [x1 + (column < 4 ? 2 : 0), 69], [x1 - (column < 4 ? 2 : 0), 82], [x1, 100]];
+    return [left[0], ...right, ...left.slice(1).reverse()].map(([x, y]) => x + '% ' + y + '%').join(',');
+  }
+  function laserMarkup(id, index) {
+    // Horizontal/vertical crossbars make each transverse plane legible. The
+    // diagonals add crossed beams without turning the whole tunnel into rays.
+    const beams = [[0, 22, 100, 22], [0, 49, 100, 49], [0, 76, 100, 76], [24, 0, 24, 100], [50, 0, 50, 100], [76, 0, 76, 100], [0, 0, 100, 100], [100, 0, 0, 100]];
+    const colors = ['#c98a62', '#83c4cc', '#ba8ea4', '#d2bc7c'];
+    return `<div class="tp-laser-plane" data-laser-index="${index}" style="--tp-beam:${colors[index % colors.length]}"><svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><defs><mask id="${id}-gap-${index}" maskUnits="userSpaceOnUse" x="-10" y="-10" width="120" height="120"><rect x="-10" y="-10" width="120" height="120" fill="white"/><rect class="tp-laser-gap" x="50" y="15" width="0" height="76" rx="3" fill="black"/></mask></defs><g mask="url(#${id}-gap-${index})" transform="rotate(${index % 3 * 4 - 4} 50 50)"><rect class="tp-beam-frame" x="4" y="4" width="92" height="92" rx=".5"/>${beams.map(([x1, y1, x2, y2]) => `<line class="tp-beam-halo" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/><line class="tp-beam-core" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/>`).join('')}</g></svg></div>`;
+  }
+  function arrowMarkup(index, id) {
+    const [x, y, turn, lean] = ARROWS[index];
+    return `<div class="tp-arrow" data-arrow-index="${index}" style="left:${x}%;top:${y}%;--tp-arrow-x:${x}%;--tp-arrow-y:${y}%;--tp-arrow-turn:${turn}deg;--tp-arrow-lean:${lean}deg;--tp-arrow-exit-x:${index % 2 ? -25 : 125}%;--tp-arrow-delay:${index * 45}ms"><div class="tp-arrow-motion"><svg viewBox="0 0 190 24" aria-hidden="true"><defs><linearGradient id="${id}-arrow-metal-${index}" x2="0" y2="1"><stop stop-color="#b2b5a8"/><stop offset=".42" stop-color="#616e70"/><stop offset=".55" stop-color="#b5b9ac"/><stop offset="1" stop-color="#354144"/></linearGradient></defs><path class="tp-arrow-fletching" d="M3 4L34 9 42 12 30 13 3 20 12 12Z"/><path class="tp-arrow-feather" d="M5 5L24 11M6 18L24 13M12 5L29 11M12 18L29 13"/><path class="tp-arrow-wood" d="M18 10L155 9 170 12 155 15 18 14Z"/><path class="tp-arrow-shaft-light" d="M32 10.5L154 10.5"/><path class="tp-arrow-head" style="fill:url(#${id}-arrow-metal-${index})" d="M153 4L187 12L153 20 161 12Z"/><path class="tp-arrow-head-light" d="M153 4L187 12 161 12Z"/></svg></div></div>`;
+  }
+
+  function create({ document: doc }) {
+    const view = doc.defaultView || window, id = 'tp-story-' + (++instance);
+    const art = Object.fromEntries(Object.entries(ASSETS).map(([key, source]) => [key, acquireImage(source, doc)]));
+    const scene = doc.createElement('div');
+    scene.className = 'story-scene story-tomb-pirate';
+    scene.hidden = true;
+    scene.setAttribute('aria-hidden', 'true');
+    scene.innerHTML = `<div class="tp-frame"><div class="tp-cave-stage">
+      <div class="tp-corridor-world"><div class="tp-corridor-fallback"></div><img class="tp-corridor-art" src="${art.corridor}" alt="" draggable="false"><div class="tp-torch-light"></div></div>
+      <div class="tp-chest-anchor"><div class="tp-chest-frame tp-chest-closed"><img src="${art.chest}" alt="" draggable="false"></div><div class="tp-chest-frame tp-chest-open"><img src="${art.chest}" alt="" draggable="false"></div><i class="tp-chest-light"></i></div>
+      <div class="tp-chest-lip"><div class="tp-chest-frame"><img src="${art.chest}" alt="" draggable="false"></div></div>
+      <div class="tp-laser-volume">${Array.from({ length: 10 }, (_, index) => laserMarkup(id, index)).join('')}</div>
+      <div class="tp-tomb-dust">${Array.from({ length: 15 }, (_, i) => `<i style="--tp-dust-x:${(i * 43 + 7) % 100}%;--tp-dust-delay:${i * 37}ms"></i>`).join('')}</div>
+    </div><div class="tp-deck-stage"><div class="tp-deck-world"><div class="tp-deck-fallback"></div><img class="tp-deck-art" src="${art.deck}" alt="" draggable="false">
+      <div class="tp-sea-drift"></div><div class="tp-sail"><img src="${art.sail}" alt="" draggable="false"></div>
+      <div class="tp-empty-coat"><img src="${art.coat}" alt="" draggable="false"></div><div class="tp-loose-hat"><img src="${art.coat}" alt="" draggable="false"></div>
+      <div class="tp-skeleton-assembly">${BONES.map((bone, index) => `<div class="tp-bone-part" data-bone-index="${index}" data-bone-name="${bone.name}" style="clip-path:polygon(${bone.polygon});--tp-bone-from-x:${index % 2 ? 190 : -190}%;--tp-bone-from-y:${index % 3 * 80 - 80}%;--tp-bone-turn:${index % 2 ? -115 : 115}deg"><img src="${art.skeleton}" alt="" draggable="false"></div>`).join('')}<img class="tp-skeleton-whole" src="${art.skeleton}" alt="" draggable="false"><i class="tp-soul-light"></i></div>
+      <div class="tp-captain"><div class="tp-captain-frame tp-captain-front"><img src="${art.captain}" alt="" draggable="false"></div><div class="tp-captain-frame tp-captain-steering"><img src="${art.captain}" alt="" draggable="false"></div></div>
+      <div class="tp-rigging-light"></div>
+    </div></div><div class="tp-map-object" style="--tp-paper-mask:url('${art.blankMap}')"><img class="tp-map-blank" src="${art.blankMap}" alt="" draggable="false">${Array.from({ length: 10 }, (_, index) => `<div class="tp-map-piece" data-map-index="${index}" style="clip-path:polygon(${mapPolygon(Math.floor(index / 5), index % 5)})"><img src="${art.completeMap}" alt="" draggable="false"></div>`).join('')}<div class="tp-map-ink-glow"></div></div>
+    <div class="tp-sea-gate"><svg viewBox="0 0 600 800" preserveAspectRatio="none" aria-hidden="true">${Array.from({ length: 12 }, (_, i) => `<path style="--tp-wave-delay:${i * -330}ms;--tp-wave-opacity:${.12 + i % 3 * .05}" d="M-90 ${200 + i * 57}Q60 ${175 + i * 57} 210 ${202 + i * 57}T510 ${201 + i * 57}T810 ${205 + i * 57}"/>`).join('')}</svg></div>
+    <div class="tp-arrow-field">${ARROWS.map((_, index) => arrowMarkup(index, id)).join('')}</div><div class="tp-sword-hand"><img src="${art.sword}" alt="" draggable="false"></div>
+    <div class="tp-parry-impact"><i></i>${Array.from({ length: 9 }, (_, i) => `<b style="--tp-spark-angle:${i * 40}deg;--tp-spark-length:${8 + i % 3 * 5}px"></b>`).join('')}</div><div class="tp-frame-shade"></div></div>`;
+    doc.body.insertBefore(scene, doc.body.firstChild);
+    const planes = Array.from(scene.querySelectorAll('.tp-laser-plane'));
+    const gaps = Array.from(scene.querySelectorAll('.tp-laser-gap'));
+    const arrows = Array.from(scene.querySelectorAll('.tp-arrow'));
+    const pieces = Array.from(scene.querySelectorAll('.tp-map-piece'));
+    const bones = Array.from(scene.querySelectorAll('.tp-bone-part'));
+    const timers = new Set(), media = view.matchMedia?.('(prefers-reduced-motion: reduce)');
+    const now = () => view.performance?.now?.() ?? Date.now();
+    const reduced = () => Boolean(media?.matches);
+    const requestFrame = fn => view.requestAnimationFrame ? view.requestAnimationFrame(fn) : view.setTimeout(() => fn(now()), 16);
+    const cancelFrame = handle => view.cancelAnimationFrame ? view.cancelAnimationFrame(handle) : view.clearTimeout(handle);
+    let currentStage, currentCount = -1, frame, generation = 0, endingUntil = 0, destroyed = false;
+    const phases = ['is-ending', 'is-chest-open', 'is-quaking', 'is-volley', 'has-arrows', 'has-sword', 'is-parrying', 'is-paper-inside', 'is-paper-held', 'is-lifting-paper', 'is-map-glowing', 'is-map-diving', 'is-sea-crossing', 'is-deck-arriving', 'is-on-deck', 'has-all-bones', 'is-inhabiting', 'is-coat-filling', 'is-hat-dropping', 'is-captain-awake', 'is-captain-turning', 'is-captain-steering', 'is-sail-open', 'is-sailing', 'is-finished'];
+
+    function cancelMotion() {
+      generation++;
+      timers.forEach(handle => view.clearTimeout(handle));
+      timers.clear();
+      if (frame != null) cancelFrame(frame);
+      frame = undefined;
+      endingUntil = 0;
+      scene.style.setProperty('--tp-step-bob', '0%');
+    }
+    function later(delay, callback) {
+      const ticket = generation;
+      const handle = view.setTimeout(() => {
+        timers.delete(handle);
+        if (!destroyed && ticket === generation) callback();
+      }, delay);
+      timers.add(handle);
+    }
+    function clearPhases() {
+      scene.classList.remove(...phases);
+      arrows.forEach(arrow => arrow.classList.remove('is-targeted', 'is-deflected'));
+      pieces.forEach(piece => piece.classList.remove('is-new'));
+      bones.forEach(bone => bone.classList.remove('is-new'));
+    }
+    function setLaserDepth(camera, passed, activeGap = -1, gapWidth = 0) {
+      scene.style.setProperty('--tp-cave-zoom', String(1 + 2.1 * Math.pow(camera / 10, 1.7)));
+      scene.style.setProperty('--tp-chest-size', (7.5 + 44.5 * Math.pow(camera / 10, 2.2)).toFixed(3) + '%');
+      scene.style.setProperty('--tp-chest-foot', (52 + 25 * Math.pow(camera / 10, 1.4)).toFixed(3) + '%');
+      scene.dataset.cameraDepth = camera.toFixed(4);
+      planes.forEach((plane, index) => {
+        const z = (camera - index) * 900 - 120;
+        // At 3× projection the opened gap already covers the complete viewport.
+        // Cull that now-invisible plane before its offscreen SVG becomes huge.
+        plane.hidden = index < passed || z > 400;
+        plane.style.transform = 'translateZ(' + z.toFixed(2) + 'px)';
+        const width = index < passed ? 30 : index === activeGap ? gapWidth : 0;
+        gaps[index].setAttribute('x', String(50 - width / 2));
+        gaps[index].setAttribute('width', String(width));
+      });
+    }
+    function walkThrough(from, to, after) {
+      const start = now(), ticket = generation, gate = to - 1;
+      function tick(time) {
+        if (ticket !== generation || destroyed) return;
+        const progress = Math.max(0, Math.min(1, (time - start) / STEP_TIME));
+        const travel = Math.max(0, Math.min(1, (progress - .09) / .91));
+        const ease = travel * travel * (3 - 2 * travel);
+        setLaserDepth(from + (to - from) * ease, from, gate, Math.min(28, progress * 175));
+        scene.style.setProperty('--tp-step-bob', (Math.sin(travel * Math.PI * 4) * .45 * Math.sin(travel * Math.PI)).toFixed(3) + '%');
+        if (progress < 1) frame = requestFrame(tick);
+        else { frame = undefined; setLaserDepth(to, to); scene.style.setProperty('--tp-step-bob', '0%'); after?.(); }
+      }
+      frame = requestFrame(tick);
+    }
+    function setArrowCount(count, shooting = -1) {
+      arrows.forEach((arrow, index) => { arrow.hidden = index < count && index !== shooting; });
+    }
+    function alignParryImpact() {
+      try {
+        const sword = scene.querySelector('.tp-sword-hand');
+        const style = view.getComputedStyle(sword);
+        const parsed = /^matrix\(([^)]+)\)$/.exec(style.transform);
+        if (!parsed) return;
+        const [a, b, c, d, tx, ty] = parsed[1].split(',').map(Number);
+        const [ox, oy] = style.transformOrigin.split(' ').map(parseFloat);
+        // The measured steel point (600,400) in the 1536×1024 photograph,
+        // including object-fit's vertical letterboxing in the square holder.
+        const dx = sword.offsetWidth * .390625 - ox;
+        const dy = sword.offsetHeight * .4270833333 - oy;
+        const x = sword.offsetLeft + ox + a * dx + c * dy + tx;
+        const y = sword.offsetTop + oy + b * dx + d * dy + ty;
+        const frameBox = scene.querySelector('.tp-frame');
+        if (!frameBox.clientWidth || !frameBox.clientHeight || !Number.isFinite(x + y)) return;
+        scene.style.setProperty('--tp-parry-x', (x / frameBox.clientWidth * 100).toFixed(3) + '%');
+        scene.style.setProperty('--tp-parry-y', (y / frameBox.clientHeight * 100).toFixed(3) + '%');
+      } catch (_) { /* Keep the bounded default contact if layout is unavailable. */ }
+    }
+    function parry(index) {
+      setArrowCount(index + 1, index);
+      scene.classList.add('is-parrying');
+      arrows[index].classList.add('is-targeted');
+      later(330, alignParryImpact);
+      later(340, () => arrows[index].classList.add('is-deflected'));
+      later(1080, () => { arrows[index].hidden = true; arrows[index].classList.remove('is-targeted', 'is-deflected'); scene.classList.remove('is-parrying'); });
+    }
+    function setParts(count) {
+      bones.forEach((bone, index) => bone.classList.toggle('is-assembled', index < count));
+      scene.classList.toggle('has-all-bones', count === 10);
+    }
+    function basePose(stage, count) {
+      scene.dataset.stage = stage;
+      scene.dataset.count = String(count);
+      scene.dataset.phase = 'progress';
+      scene.classList.remove('story-laser', 'story-arrows', 'story-map', 'story-pirate');
+      scene.classList.add('story-' + stage);
+      pieces.forEach((piece, index) => piece.classList.toggle('is-revealed', stage === 'map' && index < count));
+      setParts(stage === 'pirate' ? count : 0);
+      setLaserDepth(stage === 'laser' ? count : 10, stage === 'laser' ? count : 10);
+      setArrowCount(stage === 'arrows' ? count : 10);
+      if (stage === 'arrows') scene.classList.add('is-chest-open', 'has-arrows', 'has-sword');
+      if (stage === 'map') scene.classList.add('is-chest-open', 'is-paper-held');
+      if (stage === 'pirate') scene.classList.add('is-on-deck');
+    }
+    function terminalPose(stage) {
+      clearPhases();
+      basePose(stage, 10);
+      scene.classList.add('is-finished');
+      if (stage === 'laser') {
+        scene.classList.add('is-chest-open', 'has-arrows', 'has-sword');
+        setArrowCount(0);
+        scene.dataset.phase = 'arrows-suspended';
+      } else if (stage === 'arrows') {
+        scene.classList.remove('has-arrows', 'has-sword');
+        scene.classList.add('is-paper-held');
+        scene.dataset.phase = 'blank-map-open';
+      } else if (stage === 'map') {
+        scene.classList.remove('is-paper-held');
+        scene.classList.add('is-on-deck');
+        setParts(0);
+        scene.dataset.phase = 'empty-pirate-deck';
+      } else {
+        scene.classList.add('is-captain-awake', 'is-captain-steering', 'is-sail-open', 'is-sailing');
+        scene.dataset.phase = 'sailing';
+      }
+    }
+    function beginEnding(stage, previous) {
+      endingUntil = now() + ENDINGS[stage];
+      scene.classList.add('is-ending');
+      if (stage === 'laser') {
+        walkThrough(previous, 10);
+        later(3000, () => { scene.classList.add('is-chest-open'); scene.dataset.phase = 'chest-opens'; });
+        later(4300, () => { scene.classList.add('is-quaking'); scene.dataset.phase = 'tomb-quake'; });
+        later(5200, () => { scene.classList.add('has-arrows', 'is-volley'); setArrowCount(0); scene.dataset.phase = 'arrow-volley'; });
+        later(6500, () => { scene.classList.add('has-sword'); scene.classList.remove('is-quaking'); });
+      } else if (stage === 'arrows') {
+        parry(9);
+        later(1300, () => { scene.classList.remove('has-sword', 'has-arrows'); scene.classList.add('is-paper-inside'); scene.dataset.phase = 'map-in-chest'; });
+        later(3300, () => { scene.classList.add('is-paper-held', 'is-lifting-paper'); scene.classList.remove('is-paper-inside'); scene.dataset.phase = 'take-and-unfold-map'; });
+      } else if (stage === 'map') {
+        pieces[9].classList.add('is-new');
+        later(1400, () => { scene.classList.add('is-map-glowing'); scene.dataset.phase = 'complete-map-glows'; });
+        later(2800, () => { scene.classList.add('is-map-diving'); scene.dataset.phase = 'enter-map-sea'; });
+        later(5700, () => { scene.classList.add('is-sea-crossing'); scene.dataset.phase = 'cross-the-sea'; });
+        later(7000, () => { scene.classList.add('is-deck-arriving'); setParts(0); scene.dataset.phase = 'arrive-on-pirate-deck'; });
+      } else {
+        scene.classList.remove('has-all-bones');
+        bones[9].classList.add('is-new');
+        later(1150, () => { scene.classList.add('has-all-bones'); scene.dataset.phase = 'skeleton-complete'; });
+        later(2200, () => { scene.classList.add('is-inhabiting'); scene.dataset.phase = 'skeleton-enters-coat'; });
+        later(3600, () => { scene.classList.add('is-coat-filling'); scene.dataset.phase = 'coat-fills'; });
+        later(4700, () => { scene.classList.add('is-hat-dropping'); scene.dataset.phase = 'captain-puts-on-hat'; });
+        later(5800, () => { scene.classList.add('is-captain-awake'); scene.dataset.phase = 'captain-awakens'; });
+        later(7200, () => { scene.classList.add('is-captain-turning'); scene.dataset.phase = 'captain-takes-the-helm'; });
+        later(8200, () => scene.classList.add('is-captain-steering'));
+        later(8600, () => { scene.classList.add('is-sail-open'); scene.dataset.phase = 'sail-unfurls'; });
+        later(9700, () => { scene.classList.add('is-sailing'); scene.dataset.phase = 'ship-gets-underway'; });
+      }
+      later(ENDINGS[stage], () => { endingUntil = 0; terminalPose(stage); });
+    }
+
+    function render(stage, count, animate = false) {
+      if (destroyed) return;
+      if (!Object.hasOwn(ENDINGS, stage)) {
+        cancelMotion(); clearPhases(); scene.hidden = true; currentStage = undefined; currentCount = -1;
+        return;
+      }
+      const next = Math.max(0, Math.min(10, Math.floor(Number(count) || 0)));
+      const entered = currentStage !== stage || scene.hidden;
+      if (!entered && currentCount === next) return;
+      const previous = entered ? next : currentCount;
+      const moving = !entered && animate && next > previous && !reduced() && !doc.hidden;
+      cancelMotion(); clearPhases();
+      currentStage = stage; currentCount = next; scene.hidden = false;
+      scene.classList.toggle('is-instant', !moving);
+      basePose(stage, next);
+      if (moving && stage === 'laser') setLaserDepth(previous, previous);
+      if (next === 10) {
+        if (moving) beginEnding(stage, previous);
+        else terminalPose(stage);
+      } else if (moving) {
+        if (stage === 'laser') walkThrough(previous, next);
+        else if (stage === 'arrows') parry(next - 1);
+        else if (stage === 'map') { pieces[next - 1].classList.add('is-new'); later(1300, () => pieces[next - 1].classList.remove('is-new')); }
+        else { bones[next - 1].classList.add('is-new'); later(1200, () => bones[next - 1].classList.remove('is-new')); }
+      }
+    }
+    function playExit(stage = currentStage) {
+      if (destroyed || stage !== currentStage || currentCount !== 10) return 0;
+      return Math.max(0, endingUntil - now());
+    }
+    function resetExit() {
+      cancelMotion(); scene.classList.add('is-instant');
+      if (currentStage) {
+        if (currentCount === 10) terminalPose(currentStage);
+        else { clearPhases(); basePose(currentStage, currentCount); }
+      }
+    }
+    function onVisibility() {
+      scene.classList.toggle('is-suspended', Boolean(doc.hidden));
+      if (doc.hidden) resetExit();
+    }
+    function onPageHide() { scene.classList.add('is-suspended'); resetExit(); }
+    function onMotionChange() { if (reduced()) resetExit(); }
+    doc.addEventListener?.('visibilitychange', onVisibility);
+    view.addEventListener?.('pagehide', onPageHide);
+    view.addEventListener?.('pageshow', onVisibility);
+    media?.addEventListener?.('change', onMotionChange);
+    scene.querySelectorAll('img').forEach(img => img.addEventListener('error', () => { img.hidden = true; }));
+    function destroy() {
+      if (destroyed) return;
+      cancelMotion(); destroyed = true;
+      doc.removeEventListener?.('visibilitychange', onVisibility);
+      view.removeEventListener?.('pagehide', onPageHide);
+      view.removeEventListener?.('pageshow', onVisibility);
+      media?.removeEventListener?.('change', onMotionChange);
+      scene.remove(); Object.values(ASSETS).forEach(releaseImage);
+    }
+    return { render, playExit, resetExit, destroy, arrivalTime: (stage = currentStage) => reduced() || doc.hidden ? 0 : ENDINGS[stage] || 0, endingTimes: ENDINGS };
+  }
+
+  window.HanziTombPirateStory = Object.freeze({ create });
+})(window);
+
+</script>
+<script data-source="seed-planet-story.js">
+(function (window) {
+  'use strict';
+
+  const OPEN_MS=1300,TRAVEL_MS=10500;
+  const ASSETS=Object.freeze({
+    bench:'assets/story/seed-workbench-v1.webp',
+    walnut:'assets/story/seed-walnut-v1.webp',
+    halves:'assets/story/seed-walnut-halves-v1.webp',
+    planet:'assets/story/seed-sand-planet-v1.webp',
+    ground:'assets/story/seed-sand-rose-arrival-v1.webp'
+  });
+  const blobUrls=new Map();
+  let instances=0;
+
+  function imageUrl(source,doc) {
+    const src=String(source),comma=src.indexOf(','),header=comma<0?'':src.slice(0,comma);
+    if(!/^data:image\/[^,]+;base64$/i.test(header))return src;
+    if(blobUrls.has(src))return blobUrls.get(src);
+    try {
+      const view=doc.defaultView||window,decode=view.atob||window.atob;
+      const BlobType=view.Blob||window.Blob,urls=view.URL||window.URL;
+      if(typeof decode!=='function'||typeof BlobType!=='function'||typeof urls?.createObjectURL!=='function')return src;
+      const binary=decode.call(view,src.slice(comma+1)),bytes=new Uint8Array(binary.length);
+      for(let index=0;index<binary.length;index++)bytes[index]=binary.charCodeAt(index);
+      const url=urls.createObjectURL(new BlobType([bytes],{type:header.slice(5).split(';')[0]}));
+      if(typeof url!=='string'||!url)return src;
+      blobUrls.set(src,url);return url;
+    } catch (_) { return src; }
+  }
+
+  function kernelMarkup(art,index) {
+    return `<div class="sp-layer" data-layer-index="${index}" style="--sp-depth:${index};z-index:${20-index}">
+      <div class="sp-whole"><div class="sp-walnut-fallback"></div><img class="sp-object-art sp-walnut-art" src="${art.walnut}" alt="" draggable="false"></div>
+      <div class="sp-halves"><i class="sp-half sp-half-left"><span class="sp-half-fallback"></span><span class="sp-half-art"></span></i><i class="sp-half sp-half-right"><span class="sp-half-fallback"></span><span class="sp-half-art"></span></i></div>
+    </div>`;
+  }
+
+  function create({document:doc,onActionRequest}={}) {
+    const art=Object.fromEntries(Object.entries(ASSETS).map(([key,path])=>[key,imageUrl(path,doc)]));
+    const scene=doc.createElement('div');
+    scene.className='story-seed';scene.hidden=true;scene.setAttribute('aria-hidden','true');
+    scene.dataset.instance=String(++instances);
+    scene.style.setProperty('--sp-halves-art',`url("${art.halves}")`);
+    scene.innerHTML=`<div class="seed-frame">
+      <div class="sp-workbench"><div class="sp-bench-fallback"></div><img class="sp-scene-art sp-bench-art" src="${art.bench}" alt="" draggable="false"><div class="sp-focus-shade"></div></div>
+      <div class="sp-kernels">${Array.from({length:10},(_,index)=>kernelMarkup(art,index)).join('')}</div>
+      <div class="sp-grain"><i class="sp-grain-core"></i><i class="sp-grain-glow"></i></div>
+      <div class="sp-space"><div class="sp-space-fallback"><i></i></div><img class="sp-scene-art sp-planet-art" src="${art.planet}" alt="" draggable="false"></div>
+      <div class="sp-descent-haze"></div>
+      <div class="sp-ground"><div class="sp-ground-fallback"><div class="sp-rose-fallback"><i></i><b></b></div></div><img class="sp-scene-art sp-ground-art" src="${art.ground}" alt="" draggable="false"></div>
+      <div class="sp-frame-shade"></div>
+    </div>`;
+    doc.body.insertBefore(scene,doc.body.firstChild);
+
+    const grainButton=doc.createElement('button');
+    grainButton.type='button';grainButton.className='seed-grain-action';grainButton.hidden=true;
+    grainButton.setAttribute('aria-label','轻点这粒沙子，看看它藏着什么');
+    grainButton.title='轻点这粒沙子';
+    doc.body.appendChild(grainButton);
+    const layers=Array.from(scene.querySelectorAll('.sp-layer'));
+    const grain=scene.querySelector('.sp-grain');
+    const timers=new Set();
+    const motion=window.matchMedia?.('(prefers-reduced-motion: reduce)');
+    const reduced=()=>Boolean(motion?.matches);
+    const now=()=>window.performance?.now?.()??Date.now();
+    let stage,count=0,generation=0,phase='layers',ready=false,travelStart=0;
+
+    function cancelTimers() {
+      generation++;timers.forEach(timer=>window.clearTimeout(timer));timers.clear();
+    }
+    function later(delay,callback) {
+      const token=generation;
+      const timer=window.setTimeout(()=>{timers.delete(timer);if(token===generation)callback();},delay);
+      timers.add(timer);
+    }
+    function writingIsActive() {
+      return doc.body.dataset.herbMode==='playing'&&doc.body.classList.contains('herb-writing');
+    }
+    function positionButton() {
+      if(grainButton.hidden)return;
+      const box=grain.getBoundingClientRect();
+      grainButton.style.left=(box.left+box.width/2)+'px';
+      grainButton.style.top=(box.top+box.height/2)+'px';
+    }
+    function updateButton() {
+      const enabled=stage==='seed'&&count===10&&phase==='waiting'&&ready&&!doc.hidden&&!writingIsActive();
+      grainButton.hidden=!enabled;grainButton.disabled=!enabled;
+      positionButton();
+    }
+    function clearTravel() { scene.classList.remove('is-travelling','is-arrived'); }
+    function arrive() {
+      cancelTimers();phase='arrived';ready=false;
+      scene.classList.remove('is-travelling','is-awaiting','is-changing');
+      scene.classList.add('is-arrived');
+      layers.forEach(layer=>layer.classList.remove('is-opening'));
+      updateButton();
+    }
+    function resetExit() {
+      cancelTimers();
+      if(count===10)arrive();
+      else {phase='layers';ready=false;clearTravel();scene.classList.remove('is-awaiting','is-changing');paintLayers(count,false,false);updateButton();}
+    }
+
+    function paintLayers(next,animate,changed) {
+      if(!animate)scene.classList.add('is-setting');
+      const camera=Math.pow(1.5,next);
+      scene.style.setProperty('--sp-camera-count',String(next));
+      scene.style.setProperty('--sp-bench-zoom',String(1+next*.065));
+      scene.style.setProperty('--sp-bench-blur',(next*.13)+'px');
+      layers.forEach((layer,index)=>{
+        const width=34*Math.pow(.58,index)*camera;
+        layer.style.setProperty('--sp-width',Math.min(250,width).toFixed(5)+'%');
+        layer.classList.toggle('is-opened',index<next);
+        layer.classList.toggle('is-current',index===next);
+        layer.classList.toggle('is-unseen',index>next||index<next-3);
+        if(changed||!animate)layer.classList.remove('is-opening');
+        if(changed&&index===next-1)layer.classList.add('is-opening');
+      });
+      if(!animate){void scene.offsetWidth;scene.classList.remove('is-setting');}
+    }
+
+    function render(nextStage,nextCount,animate=false) {
+      const switched=stage!==nextStage;
+      scene.hidden=nextStage!=='seed';
+      if(nextStage!=='seed'){resetExit();stage=nextStage;updateButton();return;}
+      const next=Math.max(0,Math.min(10,Math.floor(Number(nextCount)||0)));
+      const previous=count,changed=Boolean(animate&&!switched&&next>previous);
+      if(switched||next<previous)resetExit();
+      if(next!==previous||switched)cancelTimers();
+      count=next;stage=nextStage;scene.dataset.count=String(next);
+      paintLayers(next,Boolean(animate&&!switched&&!reduced()),changed&&!reduced());
+      scene.classList.toggle('is-complete',next===10);
+      if(next<10){
+        phase='layers';ready=false;clearTravel();scene.classList.remove('is-awaiting');
+        if(changed&&!reduced()){scene.classList.add('is-changing');later(OPEN_MS,()=>scene.classList.remove('is-changing'));}
+      }else if(reduced()||doc.hidden){arrive();}
+      else if(changed){
+        phase='waiting';ready=false;clearTravel();scene.classList.add('is-awaiting','is-changing');
+        later(OPEN_MS,()=>{scene.classList.remove('is-changing');ready=true;updateButton();});
+      }else if(switched||previous!==next){arrive();}
+      updateButton();
+    }
+
+    function performAction(nextStage='seed') {
+      if(nextStage!=='seed'||stage!=='seed'||count!==10)return 0;
+      if(reduced()||doc.hidden){arrive();return 0;}
+      if(phase==='arrived')return 0;
+      if(phase==='travel')return Math.max(0,Math.ceil(TRAVEL_MS-(now()-travelStart)));
+      cancelTimers();phase='travel';ready=false;travelStart=now();
+      scene.classList.remove('is-awaiting','is-arrived','is-changing');
+      scene.classList.add('is-setting');void scene.offsetWidth;scene.classList.remove('is-setting');
+      scene.classList.add('is-travelling');updateButton();
+      later(TRAVEL_MS,arrive);
+      return TRAVEL_MS;
+    }
+    function playExit(nextStage) { return performAction(nextStage); }
+    function isEndingComplete(nextStage='seed') { return nextStage==='seed'&&count===10&&phase==='arrived'; }
+    function getAction(nextStage='seed') {
+      if(nextStage!=='seed')return null;
+      const finished=isEndingComplete();
+      return {awaiting:count===10&&phase==='waiting',disabled:count<10||phase==='travel'||doc.hidden||writingIsActive()||(phase==='waiting'&&!ready),finished,label:finished?'回到草药房':'轻点这粒沙子',duration:TRAVEL_MS};
+    }
+    grainButton.addEventListener('click',()=>{
+      if(grainButton.disabled||phase!=='waiting')return;
+      if(typeof onActionRequest==='function'){
+        try { onActionRequest('seed'); } catch (_) { /* Keep the enabled action available to retry. */ }
+      }else performAction('seed');
+    });
+
+    function watch(img,className) {
+      const update=()=>scene.classList.toggle(className,Boolean(img.complete&&img.naturalWidth));
+      img.addEventListener('load',update);img.addEventListener('error',()=>{img.hidden=true;update();});update();
+    }
+    watch(scene.querySelector('.sp-walnut-art'),'has-walnut-art');
+    watch(scene.querySelector('.sp-planet-art'),'has-planet-art');
+    watch(scene.querySelector('.sp-ground-art'),'has-ground-art');
+    const halves=doc.createElement('img');watch(halves,'has-halves-art');halves.src=art.halves;
+    scene.querySelectorAll('img').forEach(img=>img.addEventListener('error',()=>{img.hidden=true;}));
+    window.addEventListener?.('resize',positionButton);
+    if(typeof window.MutationObserver==='function'){
+      const observer=new window.MutationObserver(updateButton);
+      observer.observe(doc.body,{attributes:true,attributeFilter:['class','data-herb-mode','data-herb-stage']});
+    }
+    doc.addEventListener('visibilitychange',()=>{if(doc.hidden)resetExit();else updateButton();});
+    const reduceNow=()=>{if(reduced())resetExit();};
+    if(typeof motion?.addEventListener==='function')motion.addEventListener('change',reduceNow);
+    else motion?.addListener?.(reduceNow);
+    paintLayers(0,false,false);
+    return {render,playExit,performAction,resetExit,getAction,isEndingComplete,arrivalTime:(nextStage='seed')=>nextStage==='seed'&&!reduced()&&!doc.hidden?OPEN_MS:0};
+  }
+
+  window.HanziSeedPlanetStory=Object.freeze({create});
+})(window);
+
+</script>
 <script data-source="magic-shop-catalog.js">
 (function (root) {
   'use strict';
@@ -14418,7 +15900,79 @@ function updateArmorBindings(chains,count,changed) {
       demoHint: '帽子、外衣、裤子和两只鞋，一件一件穿齐。',
       demoFinished: '十件衣物都穿好了。两个小精灵睁眼相望，踮脚沿桌面走向窗边，悄悄溜走。',
       reward: '一件衣物穿好了，小精灵还在静静等待。', completion: '两个小精灵穿戴整齐，终于活了过来，互相看了一眼，悄悄溜走了。',
-      next: '回到草药房', nextStage: 'herbs', interval: 1500, arrival: 8800, automaticEnding: true,
+      next: '前往午夜动物园', nextStage: 'zoo', interval: 1500, arrival: 8800, automaticEnding: true,
+    },
+    zoo: {
+      number: '第十八关', title: '午夜猛兽动物园', unit: '个打开的笼子',
+      intro: '深夜的动物园里，十个笼子藏在月色中。钥匙就在眼前。',
+      task: '每通过一个字，用钥匙打开一笼，一只猛兽就跑出来。',
+      start: '打开午夜动物园', step: '打开一个笼子', auto: '播放到午夜派对', retry: '重新打开笼子',
+      demoHint: '近处的笼子大，远处的笼子小；每只动物都有自己的动作。',
+      demoFinished: '十只猛兽都出来了。灯串亮起，午夜派对开始了！',
+      reward: '钥匙转动，一只猛兽从打开的笼子里跑了出来。', completion: '十个笼子全打开了，灯光一齐亮起，猛兽们开始午夜派对！',
+      next: '前往梦中的花园', nextStage: 'butterfly', interval: 2100, arrival: 6400, automaticEnding: true,
+    },
+    butterfly: {
+      number: '第十九关', title: '梦中的蝴蝶仙子', unit: '层退去的迷障',
+      intro: '你梦见一只神奇的蝴蝶。醒来后，循着梦中的微光走进花园。',
+      task: '每通过一个字，一层迷障退去。穿过十层，就能找到它。',
+      start: '寻找梦中的蝴蝶', step: '退去一层迷障', auto: '播放到找到花朵', retry: '重新寻找仙子',
+      demoHint: '灌木、篱笆和雾幕深处，有一点蝶翼般的光。',
+      demoFinished: '这朵花一动不动。抓住这只装成花朵的小精灵吧！',
+      reward: '又一层迷障退去，花园深处更清楚了。', completion: '十层迷障都退去了。这朵花有些特别——抓住装成花的小精灵吧！',
+      next: '抓住装成花的小精灵', nextStage: 'laser', interval: 1700, arrival: 2400, interactiveEnding: true,
+      endingNext: '前往古墓光网', endingDetail: '仙子扑闪翅膀现身，指着你笑：哈哈哈，你找到我啦！',
+    },
+    laser: {
+      number: '第二十关', title: '古墓光网', unit: '道穿过的光网',
+      intro: '古墓深处的通道里，十道交叉光网挡住了藏宝箱。',
+      task: '每通过一个字，眼前的光网让出通道，你就向前穿过一层。',
+      start: '穿越古墓光网', step: '穿过一道光网', auto: '播放到打开宝箱', retry: '重新穿越光网',
+      demoHint: '看近处光束从眼前掠过，远处的石柱和宝箱逐渐靠近。',
+      demoFinished: '来到宝箱前，箱盖打开。墓穴突然巨震，箭阵从四周射来！',
+      reward: '光网短暂让开，你又向墓穴深处前进了一层。', completion: '十层光网穿过了。宝箱刚打开，墓穴便巨震起来，箭阵齐射！',
+      next: '举剑挡住箭阵', nextStage: 'arrows', interval: 1500, arrival: 8000, automaticEnding: true, continuousNext: true,
+    },
+    arrows: {
+      number: '第二十一关', title: '古墓挥剑挡箭', unit: '支挡开的箭',
+      intro: '打开的宝箱前，箭阵悬在半空。握住剑，挡开迎面而来的箭。',
+      task: '每通过一个字，挥剑挡开一支箭。安心写字，箭会等你准备好。',
+      start: '握剑挡箭', step: '挡开一支箭', auto: '播放到取出地图', retry: '重新格挡箭阵',
+      demoHint: '看看剑锋怎样迎上箭杆，把它挡向镜头两侧。',
+      demoFinished: '最后一支箭飞开，震动平息。箱里有一张地图，取出摊开竟是空白的。',
+      reward: '剑锋一闪，一支迎面而来的箭被挡飞了。', completion: '十支箭都挡开了。箱里那张地图取出摊开后，竟然一片空白。',
+      next: '解开空白地图', nextStage: 'map', interval: 1500, arrival: 6500, automaticEnding: true, continuousNext: true,
+    },
+    map: {
+      number: '第二十二关', title: '十片藏宝图', unit: '块显现的地图',
+      intro: '这就是刚从古墓宝箱取出的那张空白地图。纸面正在微微发光。',
+      task: '每通过一个字，纸上就多出一块拼图般的海图。',
+      start: '唤出藏宝图', step: '显现一块海图', auto: '播放到海盗船', retry: '重新显现海图',
+      demoHint: '同一张纸上，岛屿、海岸和航线逐块接起来。',
+      demoFinished: '十块海图齐了！发光的航线化成海面，把你带到真正的海盗船甲板。',
+      reward: '纸上又显出一块海图，航线渐渐完整了。', completion: '十块地图全部显现，航线发光，带你进入月色里的海盗船。',
+      next: '唤醒海盗船长', nextStage: 'pirate', interval: 1500, arrival: 9000, automaticEnding: true, continuousNext: true,
+    },
+    pirate: {
+      number: '第二十三关', title: '骷髅海盗船长', unit: '组拼好的骨架',
+      intro: '甲板的舵轮前，一件旧船长外套空空地垂着。骨架部件正在等待归位。',
+      task: '每通过一个字，拼上一组骨架。最后的骷髅头会唤醒船长。',
+      start: '拼回海盗船长', step: '拼上一组骨架', auto: '播放到海盗船启航', retry: '重新唤醒船长',
+      demoHint: '骨架逐组接合，外套和三角帽仍在静静等待。',
+      demoFinished: '船长苏醒，穿好外套、戴上帽子，转身掌舵。帆展开，海盗船驶入月海！',
+      reward: '一组骨架准确接上，船长渐渐完整了。', completion: '骷髅船长活过来了！他转身掌舵，扬帆带你驶向月色中的海面。',
+      next: '前往层层果核', nextStage: 'seed', interval: 1500, arrival: 12000, automaticEnding: true,
+    },
+    seed: {
+      number: '第二十四关', title: '果核里的沙粒星球', unit: '层打开的果核',
+      intro: '古老的工作台上，一枚果核藏着比它更小的秘密。',
+      task: '每通过一个字，打开一层更小的果核。十层之后，会剩下什么？',
+      start: '打开层层果核', step: '打开一层果核', auto: '播放到最后的沙粒', retry: '重新打开果核',
+      demoHint: '镜头越靠越近，内层的果核却越来越小。',
+      demoFinished: '只剩下一粒极小的沙子。轻点它，看看里面藏着什么。',
+      reward: '果核打开，里面还有更小的一层。', completion: '十层果核全部打开，只剩一粒细沙。轻点它，去看看这粒沙子里的世界。',
+      next: '轻点这粒沙子', nextStage: 'herbs', interval: 1500, arrival: 1300, interactiveEnding: true,
+      endingNext: '回到草药房', endingDetail: '细沙里竟是一颗星球！抵达沙星，眼前有一株等待照料的玫瑰花苞。沙星玫瑰的故事待续。',
     },
   };
 
@@ -14451,7 +16005,7 @@ function updateArmorBindings(chains,count,changed) {
       </div>`;
     body.insertBefore(backdrop, body.firstChild);
     function createVisual(module) {
-      try { return module?.create({ document: doc }); }
+      try { return module?.create({ document: doc, onActionRequest: requestSceneAction }); }
       catch (_) { return undefined; }
     }
     const observatory = createVisual(doc.defaultView?.HanziObservatory);
@@ -14470,6 +16024,9 @@ function updateArmorBindings(chains,count,changed) {
       { stages: ['goose'], name: 'HanziGooseStory' },
       { stages: ['clockbird'], name: 'HanziClockbirdStory' },
       { stages: ['elves'], name: 'HanziElvesStory' },
+      { stages: ['zoo', 'butterfly'], name: 'HanziWildGardenStory' },
+      { stages: ['laser', 'arrows', 'map', 'pirate'], name: 'HanziTombPirateStory' },
+      { stages: ['seed'], name: 'HanziSeedPlanetStory' },
     ];
 
     const hud = doc.createElement('div');
@@ -14567,6 +16124,7 @@ function updateArmorBindings(chains,count,changed) {
     let activeExit;
     let endingShown = false;
     let arrivalUntil = 0;
+    let finishInteractive = null;
     let autoPlaying = false;
     let writing = true;
     let storage;
@@ -14750,9 +16308,29 @@ function updateArmorBindings(chains,count,changed) {
       backdrop.classList.toggle('herb-complete', fill === ROOM_SIZE);
     }
 
+    function currentVisual() {
+      return visuals[displayStage] || additions.find(entry => entry.stages.includes(displayStage))?.visual;
+    }
+
+    function sceneEndingComplete() {
+      try { return currentVisual()?.isEndingComplete?.(displayStage) === true; }
+      catch (_) { return false; }
+    }
+
+    function requestSceneAction(requestedStage) {
+      if (requestedStage !== displayStage || !STAGES[displayStage].interactiveEnding) return;
+      if (mode !== 'demo' && mode !== 'playing') return;
+      if (mode === 'playing' && writing) return;
+      if ((mode === 'demo' ? demoFill : actualFill) !== ROOM_SIZE) return;
+      finishEnding();
+    }
+
     function renderProgress(value, animate = false) {
       const count = Math.min(ROOM_SIZE, Math.max(0, value));
-      if (renderedStage === displayStage && renderedCount === count) return;
+      if (renderedStage === displayStage && renderedCount === count) {
+        if (count === ROOM_SIZE && STAGES[displayStage].interactiveEnding && sceneEndingComplete()) endingShown = true;
+        return;
+      }
       if (renderedStage !== displayStage || count < ROOM_SIZE) arrivalUntil = 0;
       renderedStage = displayStage;
       renderedCount = count;
@@ -14776,6 +16354,7 @@ function updateArmorBindings(chains,count,changed) {
         try { entry.visual?.render(displayStage, count, animate); }
         catch (_) { /* A missing scene must not interrupt a question or saving. */ }
       });
+      if (count === ROOM_SIZE && STAGES[displayStage].interactiveEnding && sceneEndingComplete()) endingShown = true;
     }
 
     function display(next) {
@@ -14834,6 +16413,7 @@ function updateArmorBindings(chains,count,changed) {
     }
 
     function resetCurtain(keepExit = false) {
+      finishInteractive = null;
       clearTimeout(fadeTimer);
       curtain.classList.remove('herb-fade', 'herb-crossing');
       if (!keepExit) resetExit();
@@ -14872,8 +16452,10 @@ function updateArmorBindings(chains,count,changed) {
         return;
       }
       const crossingWall = displayStage === 'herbs' && nextStage === 'stars';
+      const continuous = animateExit && STAGES[displayStage].continuousNext && STAGES[displayStage].nextStage === nextStage;
       setMode('travel');
       function beginFade() {
+        if (continuous) { reveal(); return; }
         curtain.getBoundingClientRect();
         curtain.classList.add(crossingWall && animateExit ? 'herb-crossing' : 'herb-fade');
         fadeTimer = setTimeout(reveal, crossingWall && animateExit ? 704 : 245);
@@ -14894,10 +16476,13 @@ function updateArmorBindings(chains,count,changed) {
       if (!story.endingNext) return false;
       if (mode === 'travel') return true;
       if (endingShown) return false;
+      const expectedStage = displayStage;
       endingShown = true;
       const previousMode = mode;
       setMode('travel');
       function finish() {
+        finishInteractive = null;
+        if (displayStage !== expectedStage) return;
         setMode(previousMode);
         if (previousMode === 'demo') {
           updateDemoControls();
@@ -14910,6 +16495,7 @@ function updateArmorBindings(chains,count,changed) {
           restart.focus({ preventScroll: true });
         }
       }
+      if (story.interactiveEnding) finishInteractive = finish;
       function begin() {
         const duration = playExit();
         if (duration && !reducedMotion()) fadeTimer = setTimeout(finish, duration);
@@ -14920,6 +16506,23 @@ function updateArmorBindings(chains,count,changed) {
       else begin();
       return true;
     }
+
+    function settleInteractiveControls() {
+      if (finishInteractive) { clearTimeout(fadeTimer); finishInteractive(); }
+      if (!STAGES[displayStage].interactiveEnding || renderedCount !== ROOM_SIZE) return;
+      if (sceneEndingComplete()) {
+        endingShown = true;
+        if (mode === 'demo') updateDemoControls();
+        else if (mode === 'playing' && actualFill === ROOM_SIZE) get('restartBtn').textContent = STAGES[displayStage].endingNext;
+      }
+    }
+    doc.addEventListener?.('visibilitychange', () => {
+      if (doc.hidden) settleInteractiveControls();
+      else setTimeout(settleInteractiveControls, 0);
+    });
+    const storyMotion = doc.defaultView?.matchMedia?.('(prefers-reduced-motion: reduce)');
+    const onStoryMotion = () => { if (storyMotion.matches) { settleInteractiveControls(); setTimeout(settleInteractiveControls, 0); } };
+    storyMotion?.addEventListener?.('change', onStoryMotion);
 
     function surface() { return displayStage === 'sea' && finishEnding(); }
 
@@ -15030,9 +16633,13 @@ function updateArmorBindings(chains,count,changed) {
       updateMastered(masteredCount);
       actualFill = count;
       const actualFinished = !bankEmpty && count >= ROOM_SIZE;
-      get('restartBtn').textContent = actualFinished ? STAGES[stage].next : '继续练这一关';
       if (actualFinished && newlyAwarded) updateCoins(LEVEL_COIN, rewardEvent?.('complete', count));
       if (mode === 'playing' || mode === 'intro') renderProgress(actualFill);
+      get('restartBtn').textContent = actualFinished ? (endingShown && STAGES[stage].endingNext ? STAGES[stage].endingNext : STAGES[stage].next) : '继续练这一关';
+      if (actualFinished && endingShown && STAGES[stage].interactiveEnding) {
+        const detail = get('finaleDetail');
+        detail.textContent = [STAGES[stage].endingDetail, ...String(detail.textContent || '').split('\n').slice(1)].join('\n');
+      }
     }
 
     function nextLevel(nextStage) {
@@ -15129,7 +16736,7 @@ function defaultBank(){
 // set — the change would reach nobody who actually uses the game.
 const BANK_VERSION = 5;
 const ROUND_GOAL = 10;
-const GAME_VERSION = '2026.11.26.2';
+const GAME_VERSION = '2026.11.26.3';
 
 let state = {
   bank: defaultBank(),

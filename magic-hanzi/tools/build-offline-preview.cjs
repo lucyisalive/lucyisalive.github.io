@@ -66,6 +66,27 @@ const assets = [
   'assets/story/elves-dressed-v1.webp',
   'assets/story/elves-awake-v1.webp',
   'assets/story/elves-sneak-atlas-v1.webp',
+  'assets/story/midnight-menagerie-v1.webp',
+  'assets/story/butterfly-secret-garden-v1.webp',
+  'assets/story/garden-hedge-screen-v1.webp',
+  'assets/story/fairy-disguise-flower-v1.webp',
+  'assets/story/butterfly-fairy-laugh-v1.webp',
+  'assets/story/tomb-depth-corridor-v1.webp',
+  'assets/story/tomb-treasure-chest-v1.webp',
+  'assets/story/tomb-sword-hand-v1.webp',
+  'assets/story/pirate-map-blank-v1.webp',
+  'assets/story/pirate-map-complete-v1.webp',
+  'assets/story/pirate-moon-deck-v1.webp',
+  'assets/story/pirate-sail-v1.webp',
+  'assets/story/pirate-skeleton-v1.webp',
+  'assets/story/pirate-empty-coat-v1.webp',
+  'assets/story/pirate-captain-awake-v1.webp',
+  'assets/story/seed-workbench-v1.webp',
+  'assets/story/seed-walnut-v1.webp',
+  'assets/story/seed-walnut-halves-v1.webp',
+  'assets/story/seed-sand-planet-v1.webp',
+  'assets/story/seed-sand-rose-arrival-v1.webp',
+  'assets/story/fairy-found-v1.wav',
   'assets/mountain-journey/forest-trail.webp',
   'assets/mountain-journey/gate-frame.webp',
   'assets/mountain-journey/gate-doors.webp',
@@ -82,7 +103,7 @@ if (!destination) throw new Error('Usage: node tools/build-offline-preview.cjs <
 
 let { html } = buildPage(root);
 for (const file of assets) {
-  const mimeType = file.endsWith('.svg') ? 'image/svg+xml' : 'image/webp';
+  const mimeType = file.endsWith('.svg') ? 'image/svg+xml' : file.endsWith('.wav') ? 'audio/wav' : 'image/webp';
   html = html.replaceAll(file, 'data:' + mimeType + ';base64,' + read(file).toString('base64'));
 }
 const inlineGlyphs = glyphs.map(file => {
