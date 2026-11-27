@@ -6,10 +6,10 @@
   // costumes and atlas poses share the same cached short Blob URL.
   const ASSETS=Object.freeze({
     workshop:'assets/story/elves-tailor-workshop-v1.webp',
-    base:'assets/story/elves-base-v1.webp',
-    dressed:'assets/story/elves-dressed-v1.webp',
-    awake:'assets/story/elves-awake-v1.webp',
-    sneak:'assets/story/elves-sneak-atlas-v1.webp'
+    base:'assets/story/elves-puppet-base-v2.webp',
+    dressed:'assets/story/elves-puppet-dressed-v2.webp',
+    awake:'assets/story/elves-puppet-awake-v2.webp',
+    sneak:'assets/story/elves-puppet-sneak-atlas-v2.webp'
   });
   const blobUrls=new Map();
   let instances=0;
@@ -35,39 +35,41 @@
   // Two five-piece outfits, alternated between the figures. Coordinates are
   // in the common full-size artwork, so dressing never moves either body.
   const ITEMS=[
-    {elf:'left',piece:'hat',label:'第一位的帽子',origin:'31.5% 32%',mask:'polygon(23% 27.5%,40% 27.5%,40% 31.8%,37% 32.3%,33.4% 32.9%,30.6% 34%,28.7% 34.2%,26.6% 34%,27.2% 35%,28.6% 35.8%,30.1% 36.4%,28.5% 37%,27.5% 39.2%,23% 39.2%)'},
-    {elf:'right',piece:'hat',label:'第二位的帽子',origin:'64% 35%',mask:'polygon(55.8% 30.5%,72% 30.5%,72% 34.8%,68.4% 35%,65.6% 35.5%,63.4% 36.1%,61.5% 36.1%,59.6% 35.7%,60.1% 36.7%,61.5% 37.7%,63% 38.2%,60.6% 39.3%,59.4% 41.8%,55.8% 41.8%)'},
-    {elf:'left',piece:'jacket',label:'第一位的短上衣',origin:'33% 49%',mask:'polygon(28.5% 38.5%,37.7% 38.5%,43.5% 41.5%,48.2% 57.5%,46.8% 59%,43.4% 59.3%,40.8% 54.5%,38.7% 56.3%,25.4% 56.3%,23.5% 53.8%,22.8% 59.3%,18% 58.2%,22.8% 42%)'},
-    {elf:'right',piece:'jacket',label:'第二位的短上衣',origin:'65.5% 50.5%',mask:'polygon(61.8% 42.3%,57.1% 43.5%,52.2% 58.6%,57.3% 59.6%,57.9% 54%,59% 57.2%,72.8% 57.2%,73.9% 55.2%,75.8% 59.5%,79.5% 59.5%,79.8% 57.1%,74.6% 43%,69.4% 41%,64.9% 42.1%,64.5% 44.2%,64.9% 46.7%,64.4% 48%,63.7% 47.7%,63.1% 45.7%,62.7% 43.7%)'},
-    {elf:'left',piece:'trousers',label:'第一位的下装',origin:'33% 68%',mask:'polygon(23% 54.6%,43.6% 54.6%,43.6% 68%,41.6% 80.4%,36% 80.4%,33.4% 67.6%,29.2% 80.4%,22.8% 80.4%,23% 66%)'},
-    {elf:'right',piece:'trousers',label:'第二位的下装',origin:'65.5% 69%',mask:'polygon(56% 56.1%,76% 56.1%,76% 68%,74.5% 80.4%,69.2% 80.4%,65.7% 68.4%,61.8% 80.4%,56% 80.4%)'},
-    {elf:'left',piece:'left-shoe',label:'第一位的左鞋',origin:'25.5% 85%',mask:'polygon(21% 80.4%,30% 80.4%,30% 88%,21% 88%)'},
-    {elf:'right',piece:'left-shoe',label:'第二位的左鞋',origin:'58.2% 85%',mask:'polygon(54.4% 80.4%,62% 80.4%,62% 88%,54.4% 88%)'},
-    {elf:'left',piece:'right-shoe',label:'第一位的右鞋',origin:'40.5% 85%',mask:'polygon(36.3% 80.4%,46.2% 80.4%,46.2% 88%,36.3% 88%)'},
-    {elf:'right',piece:'right-shoe',label:'第二位的右鞋',origin:'73.5% 85%',mask:'polygon(69% 80.4%,77.8% 80.4%,77.8% 88%,69% 88%)'}
+    {elf:'left',piece:'hat',label:'男木偶的帽子',origin:'32% 24%',mask:'polygon(17% 17%,47% 17%,47% 30%,40% 30%,39% 26%,25% 26%,24% 30%,17% 30%)'},
+    {elf:'right',piece:'hat',label:'女木偶的帽子',origin:'68% 25%',mask:'polygon(53% 18%,83% 18%,83% 35%,78% 36%,76% 31%,75% 27%,61% 27%,59% 35%,53% 35%)'},
+    {elf:'left',piece:'jacket',label:'男木偶的外衣',origin:'32% 50%',mask:'polygon(19% 39.5%,44% 39.5%,49% 57%,46% 59%,42% 57%,42% 59.5%,23% 59.5%,22% 56%,18% 59%,14% 57%)'},
+    {elf:'right',piece:'jacket',label:'女木偶的外衣',origin:'68% 50%',mask:'polygon(54% 40%,81% 40%,85% 58%,82% 59%,78% 58%,76% 52%,78% 59.5%,57% 59.5%,58% 53%,54% 59%,51% 58%)'},
+    {elf:'left',piece:'trousers',label:'男木偶的裤子',origin:'32% 67%',mask:'polygon(20% 58%,44% 58%,44% 74%,20% 74%)'},
+    {elf:'right',piece:'trousers',label:'女木偶的裤子',origin:'68% 67%',mask:'polygon(56% 58%,80% 58%,80% 74%,56% 74%)'},
+    {elf:'left',piece:'left-shoe',label:'男木偶的左鞋',origin:'25% 90%',mask:'polygon(20% 85.5%,30.8% 85.5%,30.8% 94%,20% 94%)'},
+    {elf:'right',piece:'left-shoe',label:'女木偶的左鞋',origin:'61% 90%',mask:'polygon(56.5% 85.5%,66.6% 85.5%,66.6% 94%,56.5% 94%)'},
+    {elf:'left',piece:'right-shoe',label:'男木偶的右鞋',origin:'39% 90%',mask:'polygon(32% 85.5%,44% 85.5%,44% 94%,32% 94%)'},
+    {elf:'right',piece:'right-shoe',label:'女木偶的右鞋',origin:'74% 90%',mask:'polygon(68% 85.5%,80% 85.5%,80% 94%,68% 94%)'}
   ];
-  // Matched crops preserve each full hat, hand and shoe. Normalized coordinates
-  // are measured from the final 1536x1024, two-step-per-person atlas.
+  // Four complete wood-puppet poses, measured from the final native atlas.
+  // Ground offsets keep the planted toe at the same table perspective point.
   const SNEAK_FRAMES=[
-    {elf:'left',box:[150/1536,10/1024,400/1536,490/1024],ground:496/1024},
-    {elf:'left',box:[918/1536,10/1024,400/1536,490/1024],ground:493/1024},
-    {elf:'right',box:[155/1536,528/1024,400/1536,486/1024],ground:1009/1024},
-    {elf:'right',box:[923/1536,528/1024,400/1536,486/1024],ground:1007/1024}
+    {elf:'left',box:[180/1536,0,400/1536,496/1024],ground:489/1024},
+    {elf:'left',box:[920/1536,0,400/1536,496/1024],ground:484/1024},
+    {elf:'right',box:[180/1536,512/1024,400/1536,500/1024],ground:1003/1024},
+    {elf:'right',box:[924/1536,512/1024,400/1536,500/1024],ground:1003/1024}
   ];
 
   function fallbackFigure(elf,dressed=false) {
-    const x=elf==='left'?204:396;
-    const coat=elf==='left'?'#465b43':'#754637',cap=elf==='left'?'#803b33':'#3f5964';
-    return `<svg class="${dressed?'el-dress-fallback':'el-base-fallback'}" viewBox="0 0 600 800" preserveAspectRatio="none" aria-hidden="true"><g transform="translate(${x} -184) scale(1 1.417)">
-      ${dressed?`<path fill="${cap}" stroke="#d1aa6c" stroke-width="1.2" d="M-42 326Q-33 284 22 263L10 306 42 322 35 335-35 335Z"/>`:''}
-      <path fill="#b69a78" d="M-24 323L-45 310-32 346-22 350M24 323L45 310 32 346 22 350"/>
-      <path fill="#b49a79" d="M-23 318Q-18 297 0 299Q21 300 25 321L21 351Q14 369 0 370Q-15 367-21 352Z"/>
-      <path fill="#8d8c80" d="M-25 317Q-19 294 1 296Q27 298 27 328L18 310-8 314-23 337Z"/>
-      <path d="M-15 338Q-8 342-3 338M5 338Q11 342 17 338" fill="none" stroke="#473d37" stroke-width="1.5"/>
-      <path fill="${dressed?coat:'#b5aa90'}" stroke="#3f3b32" stroke-width="1.5" d="M-17 368L-36 375-60 442-45 455-24 411-21 487H24L23 410 47 455 61 440 37 375 17 368Z"/>
-      <path fill="${dressed?'#4a4435':'#817b69'}" stroke="#33372e" stroke-width="1.2" d="M-21 484H24L31 581 9 584 0 520-8 585-31 582Z"/>
-      <path fill="${dressed?'#473125':'#a28f74'}" d="M-31 578L-10 580-9 617-43 621-47 614-29 605Z M10 578L31 579 33 606 49 614 43 621 9 617Z"/>
-      ${dressed?'<path d="M0 376V484M-17 480H20" fill="none" stroke="#b69a63" stroke-width="2"/><path d="M-4 397H4M-4 420H4M-4 443H4" stroke="#d5bb79" stroke-width="4"/>':''}
+    const x=elf==='left'?204:396,wood='#c19459';
+    const coat=elf==='left'?'#38523b':'#813e43',cap=elf==='left'?'#415a3d':'#8b3e4a';
+    return `<svg class="${dressed?'el-dress-fallback':'el-base-fallback'}" viewBox="0 0 600 800" preserveAspectRatio="none" aria-hidden="true"><g transform="translate(${x} 0)">
+      <path d="M-23 591L-26 701M23 591L26 701M-35 447L-66 551M35 447L66 551" fill="none" stroke="${wood}" stroke-width="22" stroke-linecap="round"/>
+      ${[-1,1].map(side=>`<circle cx="${side*25}" cy="602" r="14" fill="${wood}" stroke="#7a562f"/><circle cx="${side*55}" cy="511" r="12" fill="${wood}" stroke="#7a562f"/>`).join('')}
+      <path d="M-42 430Q0 407 42 430L35 542H-35Z" fill="${dressed?coat:'#d7cbb2'}" stroke="#705c3d"/>
+      <path d="M-35 540H35L39 589H8L0 559-8 589H-39Z" fill="${dressed?(elf==='left'?'#9a582f':'#56716b'):'#d7cbb2'}"/>
+      <path d="M-38 695Q-55 705-48 713H-11V695M11 695V713H48Q55 705 38 695" fill="${dressed?'#51352c':wood}"/>
+      <path d="M-44 350L-61 334-50 374M44 350L61 334 50 374" fill="${wood}" stroke="#805d36"/>
+      <ellipse cx="0" cy="355" rx="46" ry="50" fill="${wood}" stroke="#805d36"/>
+      <path d="M-41 337Q-42 297 0 301Q46 304 43 340L17 323-10 332-28 322Z" fill="#7c502a"/>
+      <path d="M-25 357Q-16 363-7 357M7 357Q16 363 25 357M-15 379Q0 389 15 379" fill="none" stroke="#55372b" stroke-width="2.3"/>
+      ${elf==='right'?'<path d="M38 343Q66 390 38 439" stroke="#7c502a" stroke-width="13" fill="none"/>':''}
+      ${dressed?`<path d="M-44 325Q-21 282 28 286L45 329Z" fill="${cap}"/>`:''}
     </g></svg>`;
   }
 

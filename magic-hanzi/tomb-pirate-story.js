@@ -9,12 +9,12 @@
     chest: 'assets/story/tomb-treasure-chest-v1.webp',
     sword: 'assets/story/tomb-sword-hand-v1.webp',
     blankMap: 'assets/story/pirate-map-blank-v1.webp',
-    completeMap: 'assets/story/pirate-map-complete-v1.webp',
+    completeMap: 'assets/story/pirate-map-complete-v2.webp',
     deck: 'assets/story/pirate-moon-deck-v1.webp',
     sail: 'assets/story/pirate-sail-v1.webp',
-    skeleton: 'assets/story/pirate-skeleton-v1.webp',
+    skeleton: 'assets/story/pirate-bone-parts-v2.webp',
     coat: 'assets/story/pirate-empty-coat-v1.webp',
-    captain: 'assets/story/pirate-captain-awake-v1.webp'
+    captain: 'assets/story/pirate-human-captain-v2.webp'
   });
   const imageCache = new Map();
   let instance = 0;
@@ -42,22 +42,32 @@
     imageCache.delete(String(source));
   }
 
-  const ARROWS = [
-    [12, 31, 32, -48], [88, 36, 153, 48], [19, 64, -28, -35], [82, 66, -154, 35],
-    [35, 21, 66, -32], [66, 24, 115, 32], [7, 49, 8, -60], [94, 50, 174, 60],
-    [39, 77, -66, -30], [61, 75, -116, 30]
+  // The metal tip faces the camera; the short shaft/fletching recedes behind it.
+  const ARROWS = [[16,28,-23],[84,31,20],[23,67,-17],[78,68,22],[36,20,-8],[65,22,13],[10,49,-29],[90,50,26],[40,78,-11],[61,77,9]];
+  const LASERS = [
+    { y:35,angle:-6,action:'duck',x:0,dy:-14,roll:2,pitch:7 },
+    { y:74,angle:8,action:'step-over',x:0,dy:14,roll:-2,pitch:-6 },
+    { y:49,angle:63,action:'side-left',x:17,dy:0,roll:-9,pitch:0 },
+    { y:29,angle:12,action:'duck',x:-2,dy:-16,roll:-3,pitch:8 },
+    { y:77,angle:-13,action:'step-over',x:2,dy:15,roll:3,pitch:-7 },
+    { y:53,angle:-66,action:'side-right',x:-18,dy:-1,roll:9,pitch:0 },
+    { y:39,angle:-19,action:'duck',x:3,dy:-13,roll:4,pitch:7 },
+    { y:69,angle:17,action:'step-over',x:-3,dy:13,roll:-4,pitch:-6 },
+    { y:48,angle:72,action:'side-left',x:19,dy:1,roll:-10,pitch:1 },
+    { y:31,angle:4,action:'duck',x:0,dy:-16,roll:2,pitch:8 }
   ];
   const BONES = [
-    { name: '骨盆', polygon: '33% 36%,67% 36%,68% 53%,32% 53%' },
-    { name: '左侧大腿骨', polygon: '32% 50%,50% 50%,50% 71%,30% 71%' },
-    { name: '左侧小腿与脚骨', polygon: '22% 67%,50% 67%,50% 100%,20% 100%' },
-    { name: '右侧大腿骨', polygon: '50% 50%,69% 50%,70% 71%,50% 71%' },
-    { name: '右侧小腿与脚骨', polygon: '50% 67%,77% 67%,80% 100%,50% 100%' },
-    { name: '胸腔肋骨', polygon: '32% 18%,68% 18%,68% 38%,32% 38%' },
-    { name: '左侧手臂与手骨', polygon: '0% 17%,35% 17%,35% 57%,0% 57%' },
-    { name: '右侧手臂与手骨', polygon: '65% 17%,100% 17%,100% 57%,65% 57%' },
-    { name: '颈椎与肩骨', polygon: '28% 14.5%,73% 14.5%,73% 20%,28% 20%' },
-    { name: '骷髅头', polygon: '35% 0%,65% 0%,65% 14.5%,35% 14.5%' }
+    // Independent alpha components in the atlas; no piece is cut from a whole person.
+    { name:'骨盆', crop:[35,48,340,293],box:[35.5,43,29,18],z:3 },
+    { name:'脊柱',crop:[550,5,100,380],box:[44,14,12,36],z:1 },
+    { name:'胸肋肩骨',crop:[815,42,355,315],box:[31,17,38,27],z:4 },
+    { name:'左上臂',crop:[1327,8,110,365],box:[24.5,21,10,27],z:3 },
+    { name:'右上臂',crop:[1734,8,110,365],box:[65.5,21,10,27],z:3 },
+    { name:'左前臂和手',crop:[125,397,132,386],box:[20.5,45,13,28],z:4 },
+    { name:'右前臂和手',crop:[540,397,133,386],box:[64.5,45,13,28],z:4 },
+    { name:'左腿和脚',crop:[944,392,84,401],box:[36.5,58,13,42],z:2 },
+    { name:'右腿和脚',crop:[1350,392,85,401],box:[50.5,58,13,42],z:2 },
+    { name:'头骨',crop:[1660,414,242,334],box:[41.5,0,17,18],z:5 }
   ];
   const MAP_MIDDLE = [51, 48, 53, 47, 52, 50];
   function mapPolygon(row, column) {
@@ -69,15 +79,14 @@
     return [left[0], ...right, ...left.slice(1).reverse()].map(([x, y]) => x + '% ' + y + '%').join(',');
   }
   function laserMarkup(id, index) {
-    // Horizontal/vertical crossbars make each transverse plane legible. The
-    // diagonals add crossed beams without turning the whole tunnel into rays.
-    const beams = [[0, 22, 100, 22], [0, 49, 100, 49], [0, 76, 100, 76], [24, 0, 24, 100], [50, 0, 50, 100], [76, 0, 76, 100], [0, 0, 100, 100], [100, 0, 0, 100]];
-    const colors = ['#c98a62', '#83c4cc', '#ba8ea4', '#d2bc7c'];
-    return `<div class="tp-laser-plane" data-laser-index="${index}" style="--tp-beam:${colors[index % colors.length]}"><svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><defs><mask id="${id}-gap-${index}" maskUnits="userSpaceOnUse" x="-10" y="-10" width="120" height="120"><rect x="-10" y="-10" width="120" height="120" fill="white"/><rect class="tp-laser-gap" x="50" y="15" width="0" height="76" rx="3" fill="black"/></mask></defs><g mask="url(#${id}-gap-${index})" transform="rotate(${index % 3 * 4 - 4} 50 50)"><rect class="tp-beam-frame" x="4" y="4" width="92" height="92" rx=".5"/>${beams.map(([x1, y1, x2, y2]) => `<line class="tp-beam-halo" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/><line class="tp-beam-core" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/>`).join('')}</g></svg></div>`;
+    const beam = LASERS[index];
+    const colors = ['#ee873d', '#e2623d', '#eba64a', '#d96640'];
+    return `<div class="tp-laser-plane" data-laser-index="${index}" data-dodge="${beam.action}" style="--tp-beam:${colors[index%colors.length]}"><svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><g transform="rotate(${beam.angle} 50 ${beam.y})"><line class="tp-beam-aura" x1="-70" y1="${beam.y}" x2="170" y2="${beam.y}"/><line class="tp-beam-halo" x1="-70" y1="${beam.y}" x2="170" y2="${beam.y}"/><line class="tp-beam-core" x1="-70" y1="${beam.y}" x2="170" y2="${beam.y}"/></g></svg></div>`;
   }
   function arrowMarkup(index, id) {
-    const [x, y, turn, lean] = ARROWS[index];
-    return `<div class="tp-arrow" data-arrow-index="${index}" style="left:${x}%;top:${y}%;--tp-arrow-x:${x}%;--tp-arrow-y:${y}%;--tp-arrow-turn:${turn}deg;--tp-arrow-lean:${lean}deg;--tp-arrow-exit-x:${index % 2 ? -25 : 125}%;--tp-arrow-delay:${index * 45}ms"><div class="tp-arrow-motion"><svg viewBox="0 0 190 24" aria-hidden="true"><defs><linearGradient id="${id}-arrow-metal-${index}" x2="0" y2="1"><stop stop-color="#b2b5a8"/><stop offset=".42" stop-color="#616e70"/><stop offset=".55" stop-color="#b5b9ac"/><stop offset="1" stop-color="#354144"/></linearGradient></defs><path class="tp-arrow-fletching" d="M3 4L34 9 42 12 30 13 3 20 12 12Z"/><path class="tp-arrow-feather" d="M5 5L24 11M6 18L24 13M12 5L29 11M12 18L29 13"/><path class="tp-arrow-wood" d="M18 10L155 9 170 12 155 15 18 14Z"/><path class="tp-arrow-shaft-light" d="M32 10.5L154 10.5"/><path class="tp-arrow-head" style="fill:url(#${id}-arrow-metal-${index})" d="M153 4L187 12L153 20 161 12Z"/><path class="tp-arrow-head-light" d="M153 4L187 12 161 12Z"/></svg></div></div>`;
+    const [x,y,turn]=ARROWS[index];
+    const svg=`<svg viewBox="0 0 120 160" aria-hidden="true"><path class="tp-arrow-fletching" d="M54 10L35 4 43 26 58 31 70 23 79 5 63 12Z"/><path class="tp-arrow-feather" d="M39 9L55 24M76 10L63 25"/><path class="tp-arrow-wood" d="M55 21L64 21 70 104 49 104Z"/><path class="tp-arrow-shaft-light" d="M59 27L60 87"/><path class="tp-arrow-head-dark" d="M20 65L60 152L104 65 72 80 60 71 49 80Z"/><path class="tp-arrow-head" d="M18 61L60 148L102 61 71 76 60 66 49 76Z"/><path class="tp-arrow-head-light" d="M18 61L60 96 60 148 49 76Z"/><path class="tp-arrow-head-dark" d="M102 61L60 96 60 148 71 76Z"/><path class="tp-arrow-ridge" d="M18 61L60 96 102 61M60 96L60 148M49 76L60 66 71 76"/></svg>`;
+    return `<div class="tp-arrow" data-arrow-index="${index}" style="left:${x}%;top:${y}%;--tp-arrow-x:${x}%;--tp-arrow-y:${y}%;--tp-arrow-turn:${turn}deg;--tp-arrow-delay:${index*45}ms"><div class="tp-arrow-motion"><div class="tp-arrow-intact">${svg}</div><div class="tp-arrow-half tp-arrow-half-head">${svg}</div><div class="tp-arrow-half tp-arrow-half-tail">${svg}</div></div></div>`;
   }
 
   function create({ document: doc }) {
@@ -96,8 +105,8 @@
     </div><div class="tp-deck-stage"><div class="tp-deck-world"><div class="tp-deck-fallback"></div><img class="tp-deck-art" src="${art.deck}" alt="" draggable="false">
       <div class="tp-sea-drift"></div><div class="tp-sail"><img src="${art.sail}" alt="" draggable="false"></div>
       <div class="tp-empty-coat"><img src="${art.coat}" alt="" draggable="false"></div><div class="tp-loose-hat"><img src="${art.coat}" alt="" draggable="false"></div>
-      <div class="tp-skeleton-assembly">${BONES.map((bone, index) => `<div class="tp-bone-part" data-bone-index="${index}" data-bone-name="${bone.name}" style="clip-path:polygon(${bone.polygon});--tp-bone-from-x:${index % 2 ? 190 : -190}%;--tp-bone-from-y:${index % 3 * 80 - 80}%;--tp-bone-turn:${index % 2 ? -115 : 115}deg"><img src="${art.skeleton}" alt="" draggable="false"></div>`).join('')}<img class="tp-skeleton-whole" src="${art.skeleton}" alt="" draggable="false"><i class="tp-soul-light"></i></div>
-      <div class="tp-captain"><div class="tp-captain-frame tp-captain-front"><img src="${art.captain}" alt="" draggable="false"></div><div class="tp-captain-frame tp-captain-steering"><img src="${art.captain}" alt="" draggable="false"></div></div>
+      <div class="tp-skeleton-assembly">${BONES.map((bone,index)=>`<div class="tp-bone-part" data-bone-index="${index}" data-bone-name="${bone.name}" style="left:${bone.box[0]}%;top:${bone.box[1]}%;width:${bone.box[2]}%;height:${bone.box[3]}%;z-index:${bone.z};--tp-bone-from-x:${index%2?190:-190}%;--tp-bone-from-y:${index%3*80-80}%;--tp-bone-turn:${index%2?-115:115}deg"><svg viewBox="${bone.crop.join(' ')}" aria-hidden="true"><image href="${art.skeleton}" x="0" y="0" width="1983" height="793"/></svg></div>`).join('')}<i class="tp-soul-light"></i></div><div class="tp-rebirth-light"><i></i><b></b><em></em></div>
+      <div class="tp-captain"><div class="tp-captain-frame tp-captain-shirt"><img src="${art.captain}" alt="" draggable="false"></div><div class="tp-captain-frame tp-captain-front"><img src="${art.captain}" alt="" draggable="false"></div><div class="tp-captain-frame tp-captain-steering"><img src="${art.captain}" alt="" draggable="false"></div></div>
       <div class="tp-rigging-light"></div>
     </div></div><div class="tp-map-object" style="--tp-paper-mask:url('${art.blankMap}')"><img class="tp-map-blank" src="${art.blankMap}" alt="" draggable="false">${Array.from({ length: 10 }, (_, index) => `<div class="tp-map-piece" data-map-index="${index}" style="clip-path:polygon(${mapPolygon(Math.floor(index / 5), index % 5)})"><img src="${art.completeMap}" alt="" draggable="false"></div>`).join('')}<div class="tp-map-ink-glow"></div></div>
     <div class="tp-sea-gate"><svg viewBox="0 0 600 800" preserveAspectRatio="none" aria-hidden="true">${Array.from({ length: 12 }, (_, i) => `<path style="--tp-wave-delay:${i * -330}ms;--tp-wave-opacity:${.12 + i % 3 * .05}" d="M-90 ${200 + i * 57}Q60 ${175 + i * 57} 210 ${202 + i * 57}T510 ${201 + i * 57}T810 ${205 + i * 57}"/>`).join('')}</svg></div>
@@ -105,7 +114,6 @@
     <div class="tp-parry-impact"><i></i>${Array.from({ length: 9 }, (_, i) => `<b style="--tp-spark-angle:${i * 40}deg;--tp-spark-length:${8 + i % 3 * 5}px"></b>`).join('')}</div><div class="tp-frame-shade"></div></div>`;
     doc.body.insertBefore(scene, doc.body.firstChild);
     const planes = Array.from(scene.querySelectorAll('.tp-laser-plane'));
-    const gaps = Array.from(scene.querySelectorAll('.tp-laser-gap'));
     const arrows = Array.from(scene.querySelectorAll('.tp-arrow'));
     const pieces = Array.from(scene.querySelectorAll('.tp-map-piece'));
     const bones = Array.from(scene.querySelectorAll('.tp-bone-part'));
@@ -115,7 +123,7 @@
     const requestFrame = fn => view.requestAnimationFrame ? view.requestAnimationFrame(fn) : view.setTimeout(() => fn(now()), 16);
     const cancelFrame = handle => view.cancelAnimationFrame ? view.cancelAnimationFrame(handle) : view.clearTimeout(handle);
     let currentStage, currentCount = -1, frame, generation = 0, endingUntil = 0, destroyed = false;
-    const phases = ['is-ending', 'is-chest-open', 'is-quaking', 'is-volley', 'has-arrows', 'has-sword', 'is-parrying', 'is-paper-inside', 'is-paper-held', 'is-lifting-paper', 'is-map-glowing', 'is-map-diving', 'is-sea-crossing', 'is-deck-arriving', 'is-on-deck', 'has-all-bones', 'is-inhabiting', 'is-coat-filling', 'is-hat-dropping', 'is-captain-awake', 'is-captain-turning', 'is-captain-steering', 'is-sail-open', 'is-sailing', 'is-finished'];
+    const phases = ['is-ending', 'is-chest-open', 'is-quaking', 'is-volley', 'has-arrows', 'has-sword', 'is-parrying', 'is-paper-inside', 'is-paper-held', 'is-lifting-paper', 'is-map-glowing', 'is-map-diving', 'is-sea-crossing', 'is-deck-arriving', 'is-on-deck', 'has-all-bones', 'is-inhabiting', 'is-rebirth-glowing', 'is-human-reborn', 'is-coat-filling', 'is-hat-dropping', 'is-captain-awake', 'is-captain-turning', 'is-captain-steering', 'is-sail-open', 'is-sailing', 'is-finished'];
 
     function cancelMotion() {
       generation++;
@@ -125,6 +133,7 @@
       frame = undefined;
       endingUntil = 0;
       scene.style.setProperty('--tp-step-bob', '0%');
+      setCameraPose();
     }
     function later(delay, callback) {
       const ticket = generation;
@@ -140,20 +149,27 @@
       pieces.forEach(piece => piece.classList.remove('is-new'));
       bones.forEach(bone => bone.classList.remove('is-new'));
     }
-    function setLaserDepth(camera, passed, activeGap = -1, gapWidth = 0) {
+    function setCameraPose(beam, amount=0) {
+      scene.style.setProperty('--tp-pose-x', ((beam?.x||0)*amount).toFixed(3)+'%');
+      scene.style.setProperty('--tp-pose-y', ((beam?.dy||0)*amount).toFixed(3)+'%');
+      scene.style.setProperty('--tp-pose-roll', ((beam?.roll||0)*amount).toFixed(3)+'deg');
+      scene.style.setProperty('--tp-pose-pitch', ((beam?.pitch||0)*amount).toFixed(3)+'deg');
+      // Only the back wall is enlarged: the chest and individual beam depths
+      // retain their continuous world positions during a duck or side lean.
+      scene.style.setProperty('--tp-camera-cover', (1+.8*amount).toFixed(4));
+      scene.dataset.dodge = amount ? beam.action : 'steady';
+    }
+    function setLaserDepth(camera, passed) {
       scene.style.setProperty('--tp-cave-zoom', String(1 + 2.1 * Math.pow(camera / 10, 1.7)));
       scene.style.setProperty('--tp-chest-size', (7.5 + 44.5 * Math.pow(camera / 10, 2.2)).toFixed(3) + '%');
       scene.style.setProperty('--tp-chest-foot', (52 + 25 * Math.pow(camera / 10, 1.4)).toFixed(3) + '%');
       scene.dataset.cameraDepth = camera.toFixed(4);
       planes.forEach((plane, index) => {
         const z = (camera - index) * 900 - 120;
-        // At 3× projection the opened gap already covers the complete viewport.
-        // Cull that now-invisible plane before its offscreen SVG becomes huge.
+        // The body has already ducked/stepped aside at this depth. Cull the
+        // passed single beam before its offscreen SVG becomes excessively big.
         plane.hidden = index < passed || z > 400;
         plane.style.transform = 'translateZ(' + z.toFixed(2) + 'px)';
-        const width = index < passed ? 30 : index === activeGap ? gapWidth : 0;
-        gaps[index].setAttribute('x', String(50 - width / 2));
-        gaps[index].setAttribute('width', String(width));
       });
     }
     function walkThrough(from, to, after) {
@@ -163,10 +179,14 @@
         const progress = Math.max(0, Math.min(1, (time - start) / STEP_TIME));
         const travel = Math.max(0, Math.min(1, (progress - .09) / .91));
         const ease = travel * travel * (3 - 2 * travel);
-        setLaserDepth(from + (to - from) * ease, from, gate, Math.min(28, progress * 175));
+        setLaserDepth(from + (to - from) * ease, from);
+        // Anticipate the obstacle, pass it while close to the lens, then settle
+        // completely before handwriting continues. No motion runs at rest.
+        const posture=Math.pow(Math.sin(Math.PI*Math.min(1,travel*1.12)),.8);
+        setCameraPose(LASERS[gate],posture);
         scene.style.setProperty('--tp-step-bob', (Math.sin(travel * Math.PI * 4) * .45 * Math.sin(travel * Math.PI)).toFixed(3) + '%');
         if (progress < 1) frame = requestFrame(tick);
-        else { frame = undefined; setLaserDepth(to, to); scene.style.setProperty('--tp-step-bob', '0%'); after?.(); }
+        else { frame = undefined; setLaserDepth(to, to); scene.style.setProperty('--tp-step-bob', '0%'); setCameraPose(); after?.(); }
       }
       frame = requestFrame(tick);
     }
@@ -197,9 +217,9 @@
       setArrowCount(index + 1, index);
       scene.classList.add('is-parrying');
       arrows[index].classList.add('is-targeted');
-      later(330, alignParryImpact);
-      later(340, () => arrows[index].classList.add('is-deflected'));
-      later(1080, () => { arrows[index].hidden = true; arrows[index].classList.remove('is-targeted', 'is-deflected'); scene.classList.remove('is-parrying'); });
+      later(470, alignParryImpact);
+      later(500, () => arrows[index].classList.add('is-deflected'));
+      later(1220, () => { arrows[index].hidden = true; arrows[index].classList.remove('is-targeted', 'is-deflected'); scene.classList.remove('is-parrying'); });
     }
     function setParts(count) {
       bones.forEach((bone, index) => bone.classList.toggle('is-assembled', index < count));
@@ -237,7 +257,7 @@
         setParts(0);
         scene.dataset.phase = 'empty-pirate-deck';
       } else {
-        scene.classList.add('is-captain-awake', 'is-captain-steering', 'is-sail-open', 'is-sailing');
+        scene.classList.add('is-human-reborn', 'is-coat-filling', 'is-captain-awake', 'is-captain-steering', 'is-sail-open', 'is-sailing');
         scene.dataset.phase = 'sailing';
       }
     }
@@ -265,7 +285,9 @@
         bones[9].classList.add('is-new');
         later(1150, () => { scene.classList.add('has-all-bones'); scene.dataset.phase = 'skeleton-complete'; });
         later(2200, () => { scene.classList.add('is-inhabiting'); scene.dataset.phase = 'skeleton-enters-coat'; });
-        later(3600, () => { scene.classList.add('is-coat-filling'); scene.dataset.phase = 'coat-fills'; });
+        later(2600, () => { scene.classList.add('is-rebirth-glowing'); scene.dataset.phase = 'magic-envelops-skeleton'; });
+        later(3600, () => { scene.classList.add('is-human-reborn'); scene.dataset.phase = 'human-captain-reborn'; });
+        later(4300, () => { scene.classList.add('is-coat-filling'); scene.dataset.phase = 'coat-fills'; });
         later(4700, () => { scene.classList.add('is-hat-dropping'); scene.dataset.phase = 'captain-puts-on-hat'; });
         later(5800, () => { scene.classList.add('is-captain-awake'); scene.dataset.phase = 'captain-awakens'; });
         later(7200, () => { scene.classList.add('is-captain-turning'); scene.dataset.phase = 'captain-takes-the-helm'; });

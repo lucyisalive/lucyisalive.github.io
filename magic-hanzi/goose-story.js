@@ -5,11 +5,11 @@
   const JOIN_TIME = 1300;
   // One literal per artwork keeps the offline builder's asset list explicit.
   const ASSETS = Object.freeze({
-    courtyard: 'assets/story/goose-courtyard-v1.webp',
+    courtyard: 'assets/story/goose-courtyard-v2.webp',
     goose: 'assets/story/golden-goose-v1.webp',
     followersA: 'assets/story/goose-followers-a-v1.webp',
     followersB: 'assets/story/goose-followers-b-v1.webp',
-    princess: 'assets/story/goose-princess-v1.webp'
+    princess: 'assets/story/goose-princess-v2.webp'
   });
   const PEOPLE = Object.freeze([
     { name: '面包师', prop: '擀面杖', atlas: 'followersA', cell: 0, x: 20.7, y: 81.3, lean: -22, size: 19.2 },
@@ -78,7 +78,7 @@
     scene.innerHTML = `<div class="gs-frame"><div class="gs-courtyard-world">
       <div class="gs-courtyard-fallback"></div><img class="gs-courtyard-art" src="${art.courtyard}" alt="" draggable="false">
       <div class="gs-palace-light"></div>
-      <div class="gs-princess"><div class="gs-princess-crop gs-princess-calm"><img src="${art.princess}" alt="" draggable="false"></div><div class="gs-princess-crop gs-princess-laugh"><img src="${art.princess}" alt="" draggable="false"></div><i class="gs-laugh-ring"></i><i class="gs-laugh-ring"></i></div>
+      <div class="gs-princess"><div class="gs-princess-crop gs-princess-calm"><img src="${art.princess}" alt="" draggable="false"></div><div class="gs-princess-crop gs-princess-laugh"><img src="${art.princess}" alt="" draggable="false"></div></div>
       <div class="gs-balcony-front"><img src="${art.courtyard}" alt="" draggable="false"></div>
       <div class="gs-queue-world"><div class="gs-goose"><span class="gs-goose-shadow"></span><div class="gs-goose-motion"><img src="${art.goose}" alt="" draggable="false"><div class="gs-goose-sparks">${Array.from({ length: 9 }, (_, i) => `<i style="--gs-spark-x:${15 + i * 23 % 75}%;--gs-spark-y:${10 + i * 17 % 66}%;--gs-spark-delay:${i * 75}ms"></i>`).join('')}</div></div></div>
         ${PEOPLE.map((person, index) => personMarkup(person, index, art)).join('')}

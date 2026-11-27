@@ -4,8 +4,8 @@
   const OPEN_MS=1300,TRAVEL_MS=10500;
   const ASSETS=Object.freeze({
     bench:'assets/story/seed-workbench-v1.webp',
-    walnut:'assets/story/seed-walnut-v1.webp',
-    halves:'assets/story/seed-walnut-halves-v1.webp',
+    dolls:'assets/story/matryoshka-classic-dolls-v1.webp',
+    halves:'assets/story/matryoshka-classic-halves-v1.webp',
     planet:'assets/story/seed-sand-planet-v1.webp',
     ground:'assets/story/seed-sand-rose-arrival-v1.webp'
   });
@@ -28,10 +28,19 @@
     } catch (_) { return src; }
   }
 
+  // These boxes follow the actual alpha silhouettes of the generated sheets.
+  // Each wooden doll opens at its real waist joint; no bitmap is repainted.
+  const CLOSED_BOXES=[[62,16,417,695],[606,16,417,695],[1149,16,417,695],[1692,16,416,695]];
+  const UPPER_BOXES=[[55,52,365,383],[476,51,369,384],[924,50,368,385],[1354,50,367,385]];
+  const LOWER_BOXES=[[60,499,352,318],[486,500,352,317],[930,501,354,317],[1359,500,355,318]];
+  function dollPiece(source,box,width,height,className) {
+    return `<svg class="${className}" viewBox="${box.join(' ')}" preserveAspectRatio="none" aria-hidden="true"><image href="${source}" x="0" y="0" width="${width}" height="${height}"/></svg>`;
+  }
   function kernelMarkup(art,index) {
+    const variant=index%4;
     return `<div class="sp-layer" data-layer-index="${index}" style="--sp-depth:${index};z-index:${20-index}">
-      <div class="sp-whole"><div class="sp-walnut-fallback"></div><img class="sp-object-art sp-walnut-art" src="${art.walnut}" alt="" draggable="false"></div>
-      <div class="sp-halves"><i class="sp-half sp-half-left"><span class="sp-half-fallback"></span><span class="sp-half-art"></span></i><i class="sp-half sp-half-right"><span class="sp-half-fallback"></span><span class="sp-half-art"></span></i></div>
+      <div class="sp-whole"><div class="sp-doll-fallback"><i></i><b>✿</b></div>${dollPiece(art.dolls,CLOSED_BOXES[variant],2172,724,'sp-object-art sp-doll-art')}</div>
+      <div class="sp-halves"><i class="sp-half sp-half-upper"><span class="sp-half-fallback"></span>${dollPiece(art.halves,UPPER_BOXES[variant],1774,887,'sp-half-art')}</i><i class="sp-half sp-half-lower"><span class="sp-half-fallback"></span>${dollPiece(art.halves,LOWER_BOXES[variant],1774,887,'sp-half-art')}</i></div>
     </div>`;
   }
 
@@ -40,7 +49,7 @@
     const scene=doc.createElement('div');
     scene.className='story-seed';scene.hidden=true;scene.setAttribute('aria-hidden','true');
     scene.dataset.instance=String(++instances);
-    scene.style.setProperty('--sp-halves-art',`url("${art.halves}")`);
+    scene.dataset.object='matryoshka';
     scene.innerHTML=`<div class="seed-frame">
       <div class="sp-workbench"><div class="sp-bench-fallback"></div><img class="sp-scene-art sp-bench-art" src="${art.bench}" alt="" draggable="false"><div class="sp-focus-shade"></div></div>
       <div class="sp-kernels">${Array.from({length:10},(_,index)=>kernelMarkup(art,index)).join('')}</div>
@@ -103,13 +112,15 @@
 
     function paintLayers(next,animate,changed) {
       if(!animate)scene.classList.add('is-setting');
-      const camera=Math.pow(1.5,next);
+      const camera=Math.pow(1.3,next);
       scene.style.setProperty('--sp-camera-count',String(next));
       scene.style.setProperty('--sp-bench-zoom',String(1+next*.065));
       scene.style.setProperty('--sp-bench-blur',(next*.13)+'px');
       layers.forEach((layer,index)=>{
-        const width=34*Math.pow(.58,index)*camera;
+        const width=37*Math.pow(.67,index)*camera;
         layer.style.setProperty('--sp-width',Math.min(250,width).toFixed(5)+'%');
+        layer.style.setProperty('--sp-side',index%2?-1:1);
+        layer.style.setProperty('--sp-open-offset',String(Math.min(2.8,Math.max(1,next-index))));
         layer.classList.toggle('is-opened',index<next);
         layer.classList.toggle('is-current',index===next);
         layer.classList.toggle('is-unseen',index>next||index<next-3);
@@ -171,7 +182,7 @@
       const update=()=>scene.classList.toggle(className,Boolean(img.complete&&img.naturalWidth));
       img.addEventListener('load',update);img.addEventListener('error',()=>{img.hidden=true;update();});update();
     }
-    watch(scene.querySelector('.sp-walnut-art'),'has-walnut-art');
+    const dolls=doc.createElement('img');watch(dolls,'has-doll-art');dolls.src=art.dolls;
     watch(scene.querySelector('.sp-planet-art'),'has-planet-art');
     watch(scene.querySelector('.sp-ground-art'),'has-ground-art');
     const halves=doc.createElement('img');watch(halves,'has-halves-art');halves.src=art.halves;

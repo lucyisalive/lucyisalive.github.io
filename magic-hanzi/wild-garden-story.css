@@ -10,17 +10,18 @@
 .wg-zoo-world, .wg-garden-world { position: absolute; inset: 0; overflow: hidden; isolation: isolate; }
 .wg-zoo-art, .wg-garden-art { position: absolute; inset: 0; background-position: center; background-size: 100% 100%; background-repeat: no-repeat; -webkit-mask-image: linear-gradient(transparent, #000 2% 98%, transparent); mask-image: linear-gradient(transparent, #000 2% 98%, transparent); }
 .wg-zoo-art { background-image: var(--wg-zoo-art), linear-gradient(#111e32, #233235 48%, #272c27); }
+.wg-zoo-lit { position: absolute; inset: 0; background: var(--wg-zoo-lit-art) center / 100% 100% no-repeat; opacity: var(--wg-park-light, 0); }
 .wg-garden-art { background-image: var(--wg-garden-art), linear-gradient(#1e2c43, #354b43 51%, #1e342b); transform-origin: 50% 42%; }
 .wg-zoo-stage-glow { position: absolute; inset: 26% 16% 38%; opacity: var(--wg-party-glow, 0); background: radial-gradient(ellipse at 50% 53%, #efc67742, transparent 62%); mix-blend-mode: screen; }
-.wg-party-ready .wg-zoo-art { filter: brightness(1.1) saturate(1.08); }
+.wg-party-ready .wg-zoo-art { filter: none; }
 .wg-zoo-lights { position: absolute; z-index: 3; inset: 0; width: 100%; height: 100%; }
 .wg-light-string path { fill: none; stroke: #253334; stroke-width: 1.5; }
 .wg-light-string circle { fill: #e6b96b; opacity: calc(.04 + var(--wg-string-light, 0) * .96); filter: drop-shadow(0 0 4px #f6d58b); }
 .wg-zoo-cages, .wg-zoo-animals { position: absolute; inset: 0; }
 .wg-cage { position: absolute; aspect-ratio: 1.1; transform: translate(-50%, -100%) scaleX(var(--wg-cage-facing, 1)); perspective: 520px; }
 .wg-cage-shell, .wg-cage-door svg { width: 100%; height: 100%; overflow: visible; }
-.wg-cage-roof { fill: #26302e92; stroke: #717265; stroke-width: 2.6; }
-.wg-cage-side { fill: #17242039; stroke: #6d7064; stroke-width: 2.5; }
+.wg-cage-roof { fill: #26302e16; stroke: #555d4e; stroke-width: 2.6; }
+.wg-cage-side { fill: #17242012; stroke: #515f50; stroke-width: 2.5; }
 .wg-cage-back { fill: none; stroke: #58685b69; stroke-width: 1.6; }
 .wg-cage-frame { fill: none; stroke: #827960; stroke-width: 4; stroke-linejoin: round; filter: drop-shadow(1px 1px 1px #050d13); }
 .wg-cage-door { position: absolute; left: 6.3%; top: 17.5%; width: 73%; height: 79.5%; transform-origin: left center; transform: rotateY(var(--wg-door-angle, 0deg)); transform-style: preserve-3d; backface-visibility: visible; }
@@ -31,15 +32,15 @@
 .wg-lock-shackle { transform-origin: 143px 85px; }
 .wg-cage.is-unlocked .wg-lock-shackle { transform: translateY(-5px) rotate(-21deg); }
 .wg-cage.is-open .wg-cage-lock { opacity: .35; }
-.wg-cage.is-open { opacity: .48; }
+.wg-cage.is-open { opacity: .4; }
 .wg-zoo-animal { position: absolute; aspect-ratio: var(--wg-animal-ratio); transform: translate(-50%, -100%); }
 .wg-animal-ground { position: absolute; left: 2%; right: 2%; top: 87%; height: 18%; border-radius: 50%; background: radial-gradient(ellipse, #050d13b5, transparent 70%); filter: blur(4px); }
-.wg-animal-pose { position: absolute; inset: 0; transform: scaleX(var(--wg-facing, 1)); transform-origin: 50% 96%; filter: brightness(.8) drop-shadow(0 4px 3px #040d1388); }
+.wg-animal-pose { position: absolute; inset: 0; transform: scaleX(var(--wg-facing, 1)); transform-origin: 50% 96%; filter: brightness(calc(.64 + var(--wg-park-light, 0) * .47)) drop-shadow(0 4px 3px #040d1388); }
 .wg-animal-skin { position: absolute; inset: 0; background-image: var(--wg-animal-atlas); background-position: var(--wg-sprite-position); background-size: var(--wg-sprite-size); background-repeat: no-repeat; }
 .wg-animal-body { clip-path: polygon(0 0, 100% 0, 100% 76%, 0 76%); }
 .wg-animal-hind { clip-path: polygon(0 74%, 48% 74%, 48% 100%, 0 100%); transform-origin: 32% 74%; }
 .wg-animal-front { clip-path: polygon(47% 74%, 100% 74%, 100% 100%, 47% 100%); transform-origin: 73% 74%; }
-.wg-zoo-animal.is-freed .wg-animal-pose { animation: wg-beast-idle var(--wg-beast-pace) var(--wg-beast-phase) ease-in-out infinite alternate; filter: brightness(.98) drop-shadow(0 5px 3px #040d1388); }
+.wg-zoo-animal.is-freed .wg-animal-pose { animation: wg-beast-idle var(--wg-beast-pace) var(--wg-beast-phase) ease-in-out infinite alternate; filter: brightness(calc(.68 + var(--wg-park-light, 0) * .47)) drop-shadow(0 5px 3px #040d1388); }
 @keyframes wg-beast-idle { from { transform: scaleX(var(--wg-facing, 1)) translateX(-3px) rotate(-.5deg); } to { transform: scaleX(var(--wg-facing, 1)) translateX(3px) rotate(.5deg); } }
 .wg-zoo-animal.is-running .wg-animal-pose { animation: wg-beast-bound .32s ease-in-out infinite; }
 .wg-zoo-animal.is-running .wg-animal-hind { animation: wg-hind-stride .32s ease-in-out infinite alternate; }
@@ -60,7 +61,8 @@
 .wg-zoo-sparks i { position: absolute; width: 2px; height: 4px; background: #e4cc91; box-shadow: 0 0 5px #ebc56c77; animation: wg-party-spark 4s calc(var(--spark-i) * -.32s) linear infinite; }
 @keyframes wg-party-spark { 0% { opacity: 0; transform: translateY(-10px) rotate(0); } 25% { opacity: .85; } 100% { opacity: 0; transform: translate(18px, 16dvh) rotate(170deg); } }
 .wg-garden-atmosphere { position: absolute; inset: 0; background: linear-gradient(#17243b21, transparent 35% 82%, #0d201f38); }
-.wg-barrier-field { position: absolute; z-index: 3; inset: 0; overflow: hidden; }
+.wg-barrier-field { display: none; }
+.wg-maze-canvas { position: absolute; z-index: 2; inset: 0; width: 100%; height: 100%; }
 .wg-garden-barrier { position: absolute; aspect-ratio: 3 / 2; transform-origin: 50% 100%; perspective: 800px; }
 .wg-garden-barrier[hidden] { display: none !important; }
 .wg-hedge-piece { position: absolute; inset: 0; transform-style: preserve-3d; }
@@ -75,18 +77,24 @@
 .wg-barrier-kind-0 .wg-hedge-fence { opacity: .2; }
 .wg-barrier-kind-1 .wg-fence-picket { stroke: #3e4d47; stroke-width: 6; }
 .wg-barrier-kind-2 .wg-fence-picket { stroke: #71603e; stroke-width: 8; }
-.wg-flower { position: absolute; z-index: 2; left: 57%; top: 45%; width: 14%; aspect-ratio: 3 / 4; transform: translate(-50%, -100%); opacity: 0; }
+.wg-flower { position: absolute; z-index: 4; left: 79%; top: 68%; width: 9%; aspect-ratio: 3 / 4; transform: translate(-50%, -100%); opacity: 0; }
+.wg-flower-leaves { position: absolute; z-index: 5; left: 78%; top: 66.5%; width: 25%; aspect-ratio: 3 / 2; background: var(--wg-hedge-art) center / contain no-repeat; transform: rotate(-9deg); filter: brightness(.84); }
 .wg-flower img { display: block; width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 3px 3px #051d2099); }
 .wg-flower img[hidden] { display: none !important; }
-.wg-fairy { position: absolute; z-index: 5; left: 57%; top: 45%; width: 29%; aspect-ratio: 1; transform: translate(-50%, -100%); transform-origin: 50% 88%; opacity: 0; filter: drop-shadow(0 5px 5px #15353366); }
+.wg-fairy { position: absolute; z-index: 7; left: 73%; top: 67%; width: 32%; aspect-ratio: 1; transform: translate(-50%, -100%); transform-origin: 50% 88%; opacity: 0; filter: drop-shadow(0 5px 5px #15353366); }
 .wg-fairy-sprite { display: block; width: 100%; height: 100%; overflow: visible; }
 .wg-fairy-wing { transform-box: view-box; transform-origin: 50% 32%; }
 .wg-fairy-alive .wg-fairy-left-wing { animation: wg-fairy-left-beat .4s ease-in-out infinite alternate; }
 .wg-fairy-alive .wg-fairy-right-wing { animation: wg-fairy-right-beat .4s ease-in-out infinite alternate; }
 @keyframes wg-fairy-left-beat { to { transform: rotate(4deg) scaleX(.72); } }
 @keyframes wg-fairy-right-beat { to { transform: rotate(-4deg) scaleX(.72); } }
-.wg-fairy-speech { position: absolute; z-index: 7; left: 57%; top: 18%; transform: translateX(-50%); padding: 10px 16px; white-space: nowrap; border: 1px solid #d6c79c9c; border-radius: 5px 14px 14px; background: #eee6cee6; box-shadow: 0 3px 14px #13282e4d; color: #3f4438; font-family: "Songti SC", "STSong", serif; font-size: clamp(16px, 2.3dvh, 24px); letter-spacing: .05em; opacity: 0; }
-.wg-dream { position: absolute; z-index: 12; inset: 0; overflow: hidden; background: radial-gradient(ellipse at 50% 44%, #6b668849, #0c1427c9 65%); opacity: 0; }
+.wg-fairy-speech { position: absolute; z-index: 8; left: 65%; top: 34%; transform: translateX(-50%); padding: 10px 16px; white-space: nowrap; border: 1px solid #d6c79c9c; border-radius: 5px 14px 14px; background: #eee6cee6; box-shadow: 0 3px 14px #13282e4d; color: #3f4438; font-family: "Songti SC", "STSong", serif; font-size: clamp(16px, 2.3dvh, 24px); letter-spacing: .05em; opacity: 0; }
+.wg-dream { position: absolute; z-index: 12; inset: 0; overflow: hidden; background: #101d2933; opacity: 0; }
+.wg-dream-fairy { position: absolute; left: 46%; top: 69%; width: 43%; aspect-ratio: 3 / 4; transform-origin: 50% 85%; transform: translate(-50%, -100%); }
+.wg-dream-person { position: absolute; inset: 0; background-image: var(--wg-fairy-flight-art); background-size: 200% 100%; background-repeat: no-repeat; filter: drop-shadow(0 4px 6px #2531488c); }
+.wg-dream-facing { background-position: 0 0; }
+.wg-dream-away { background-position: 100% 0; opacity: 0; }
+.wg-dream-cover { position: absolute; left: 62%; top: 43%; width: 66%; aspect-ratio: 3 / 2; background: var(--wg-hedge-art) center / contain no-repeat; opacity: var(--wg-dream-cover, 0); filter: brightness(.8); }
 .wg-dream-butterfly { position: absolute; z-index: 3; left: 50%; top: 40%; width: 54%; aspect-ratio: 1; transform: translate(-50%, -50%); filter: drop-shadow(0 0 13px #d5bce682); }
 .wg-dream-butterfly svg { width: 100%; height: 100%; }
 .wg-dream-body, .wg-dream-head { fill: #786883; stroke: #d6bdde; stroke-width: 3; }

@@ -1,35 +1,41 @@
 (function (window) {
   'use strict';
 
-  const TIMES = Object.freeze({ release: 1900, zoo: 6400, barrier: 1500, flower: 2400, fairy: 4200, dream: 1800 });
+  const TIMES = Object.freeze({ release: 1900, zoo: 6400, barrier: 1500, flower: 2400, fairy: 4200, dream: 2400 });
   // One literal per image lets the offline builder embed each source once.
   const ASSETS = Object.freeze({
-    zoo: 'assets/story/midnight-menagerie-v1.webp',
+    zoo: 'assets/story/midnight-menagerie-route-v2.webp',
+    zooLit: 'assets/story/midnight-menagerie-illuminated-v2.webp',
     beastsA: 'assets/story/fierce-guards-a.webp',
     beastsB: 'assets/story/fierce-guards-b.webp',
-    garden: 'assets/story/butterfly-secret-garden-v1.webp',
+    garden: 'assets/story/butterfly-hedge-maze-v2.webp',
     hedge: 'assets/story/garden-hedge-screen-v1.webp',
+    mazeMaterial: 'assets/story/butterfly-maze-materials-v2.webp',
     flower: 'assets/story/fairy-disguise-flower-v1.webp',
-    fairy: 'assets/story/butterfly-fairy-laugh-v1.webp'
+    fairy: 'assets/story/butterfly-fairy-laugh-v1.webp',
+    fairyFlight: 'assets/story/butterfly-fairy-flight-atlas-v2.webp'
   });
   const imageUrls = new Map();
   let instance = 0;
   const clamp = value => Math.max(0, Math.min(1, value));
   const ease = value => { const n = clamp(value); return n * n * (3 - 2 * n); };
   const lerp = (a, b, n) => a + (b - a) * n;
-  const CAGE_ROWS = [[13, 90, 23], [18, 80, 19], [23, 71, 16], [29, 64, 13], [34, 58, 10]];
+  // Each gate belongs to one rock/plant habitat beside the painted winding path.
+  // They are deliberately staggered, rather than paired in rows.
+  const HABITATS = [[18, 87, 20, 1], [80, 81, 20, -1], [41, 69, 16, 1], [83, 59, 16, -1], [16, 57, 14, 1], [46, 53, 13, -1], [77, 44, 11, -1], [26, 44, 11, 1], [50, 35, 9, 1], [80, 35, 8, -1]];
   const BEASTS = [
-    { name: 'lion', title: '狮子', crop: [0, 26, 505, 454], free: [34, 86, 18.5], party: [31, 86, 17] },
-    { name: 'tiger', title: '老虎', crop: [513, 129, 504, 332], free: [66, 85, 18], party: [74, 82, 15] },
-    { name: 'wolf', title: '灰狼', crop: [1045, 27, 491, 436], free: [43, 91, 16], party: [42, 87, 15] },
-    { name: 'bear', title: '棕熊', crop: [4, 549, 500, 459], free: [59, 90, 18], party: [59, 87, 16] },
-    { name: 'panther', title: '黑豹', crop: [512, 582, 518, 400], free: [35, 76, 16], party: [35, 76, 15] },
-    { name: 'hyena', title: '鬣狗', crop: [25, 75, 483, 372], free: [66, 74, 15], party: [65, 76, 14] },
-    { name: 'crocodile', title: '鳄鱼', crop: [510, 162, 514, 248], free: [50, 81, 18], party: [50, 95, 20] },
-    { name: 'boar', title: '野猪', crop: [1038, 66, 492, 368], free: [53, 72, 15], party: [51, 76, 14] },
-    { name: 'rhinoceros', title: '犀牛', crop: [3, 579, 510, 380], free: [45, 62, 15], party: [45, 65, 14] },
-    { name: 'eagle', title: '鹰', crop: [517, 552, 506, 429], free: [56, 56, 12], party: [54, 52, 10] }
+    { name: 'lion', title: '狮子', atlas: 'A', crop: [0, 26, 505, 454], free: [27, 88, 17], party: [29, 88, 17] },
+    { name: 'crocodile', title: '鳄鱼', atlas: 'B', crop: [510, 162, 514, 248], free: [83, 82, 18], party: [82, 82, 18] },
+    { name: 'wolf', title: '灰狼', atlas: 'A', crop: [1045, 27, 491, 436], free: [51, 68, 13], party: [50, 68, 13] },
+    { name: 'bear', title: '棕熊', atlas: 'A', crop: [4, 549, 500, 459], free: [75, 60, 14], party: [76, 60, 14] },
+    { name: 'panther', title: '黑豹', atlas: 'A', crop: [512, 582, 518, 400], free: [23, 56, 12], party: [22, 56, 12] },
+    { name: 'tiger', title: '老虎', atlas: 'A', crop: [513, 129, 504, 332], free: [53, 53, 12], party: [52, 53, 12] },
+    { name: 'hyena', title: '鬣狗', atlas: 'B', crop: [25, 75, 483, 372], free: [82, 44, 10], party: [81, 44, 10] },
+    { name: 'boar', title: '野猪', atlas: 'B', crop: [1038, 66, 492, 368], free: [21, 44, 10], party: [22, 44, 10] },
+    { name: 'rhinoceros', title: '犀牛', atlas: 'B', crop: [3, 579, 510, 380], free: [45, 35, 8], party: [46, 35, 8] },
+    { name: 'eagle', title: '鹰', atlas: 'B', crop: [517, 552, 506, 429], free: [77, 32, 7], party: [77, 32, 7] }
   ];
+  const MAZE_ROUTE = [[0, 0], [0, 4], [3.5, 4], [3.5, 8], [-.5, 8], [-.5, 12], [3.5, 12], [3.5, 16], [-.5, 16], [-.5, 20], [3.5, 20]];
   const FAERY_REGIONS = {
     left: '0,0 500,0 500,650 0,650',
     right: '500,0 1000,0 1000,650 500,650',
@@ -58,8 +64,8 @@
     imageUrls.delete(source);
   }
   function cageMarkup(index) {
-    const [x, y, size] = CAGE_ROWS[Math.floor(index / 2)];
-    return `<div class="wg-cage" data-cage="${index}" style="left:${index % 2 ? 100 - x : x}%;top:${y}%;width:${size}%;z-index:${Math.round(y * 10) + 5};--wg-cage-facing:${index % 2 ? -1 : 1}">
+    const [x, y, size, facing] = HABITATS[index];
+    return `<div class="wg-cage" data-cage="${index}" data-habitat="rock-planted-terrace" style="left:${x}%;top:${y}%;width:${size}%;z-index:${Math.round(y * 10) + 5};--wg-cage-facing:${facing}">
       <svg class="wg-cage-shell" viewBox="0 0 220 200"><path class="wg-cage-roof" d="M14 35L52 8H207L174 35Z"/><path class="wg-cage-side" d="M174 35L207 8V169L174 194Z"/>
         <path class="wg-cage-back" d="M52 8V169H207M77 11V169M106 11V169M135 11V169M164 11V169M192 11V169M53 54H206M53 113H206"/>
         <path class="wg-cage-frame" d="M14 35H174V194H14ZM14 35L52 8H207V169L174 194M14 194H174M20 29H173"/></svg>
@@ -70,7 +76,7 @@
   }
   function beastMarkup(beast, index) {
     const [x, y, width, height] = beast.crop;
-    const atlas = index < 5 ? 'A' : 'B';
+    const atlas = beast.atlas;
     return `<div class="wg-zoo-animal wg-animal-${beast.name}" data-beast="${index}" data-species="${beast.name}" data-species-title="${beast.title}" style="--wg-animal-ratio:${width / height};--wg-sprite-size:${1536 / width * 100}% ${1024 / height * 100}%;--wg-sprite-position:${x / (1536 - width) * 100}% ${y / (1024 - height) * 100}%;--wg-animal-atlas:var(--wg-beasts${atlas});--wg-beast-phase:${-index * .43}s;--wg-beast-pace:${5.4 + index * .27}s">
       <i class="wg-animal-ground"></i><div class="wg-animal-pose"><div class="wg-animal-body wg-animal-skin"></div><div class="wg-animal-hind wg-animal-skin"></div><div class="wg-animal-front wg-animal-skin"></div></div></div>`;
   }
@@ -91,6 +97,100 @@
     return `<g class="wg-light-string" data-light-string="${index}"><path d="M${x0} ${y(x0)}Q${(x0 + x1) / 2} ${y((x0 + x1) / 2)} ${x1} ${y(x1)}"/>${[.13, .45, .78].map(part => { const x = lerp(x0, x1, part); return `<circle cx="${x}" cy="${y(x) + 7}" r="${4.3 + row * .5}"/>`; }).join('')}</g>`;
   }
 
+  // Project real corridor corners and hinged barriers. Textures remain original
+  // image assets; only the game camera/geometry moves, including occlusion.
+  function createMazeRenderer(canvas, doc, art, onReady) {
+    let context;
+    try { context = canvas.getContext?.('2d', { alpha: true }); } catch (_) {}
+    if (!context) { canvas.style.display = 'none'; return { draw() {}, destroy() {} }; }
+    let alive = true, material = null, materialWidth = 0, materialHeight = 0, lastDraw = -1000, lastProgress = -1;
+    canvas.dataset.renderer = 'native-perspective-ray-casting';
+    const direction = index => {
+      const n = Math.max(0, Math.min(9, index)), a = MAZE_ROUTE[n], b = MAZE_ROUTE[n + 1], length = Math.hypot(b[0] - a[0], b[1] - a[1]);
+      return [(b[0] - a[0]) / length, (b[1] - a[1]) / length];
+    };
+    const angleAt = index => { const d = direction(index); return Math.atan2(d[0], d[1]); };
+    const angleDifference = (a, b) => Math.atan2(Math.sin(b - a), Math.cos(b - a));
+    const boundary = (index, side) => {
+      const here = MAZE_ROUTE[index], previous = direction(index - 1), next = direction(index);
+      const incoming = index === 0 ? next : previous, outgoing = index === 10 ? previous : next;
+      const divisor = 1 + incoming[0] * outgoing[0] + incoming[1] * outgoing[1];
+      return [here[0] - (incoming[1] + outgoing[1]) / divisor * 1.18 * side, here[1] + (incoming[0] + outgoing[0]) / divisor * 1.18 * side];
+    };
+    const walls = [];
+    for (let leg = 0; leg < 10; leg++) [-1, 1].forEach(side => { const a = boundary(leg, side), b = boundary(leg + 1, side); walls.push({ a, b, height: 2.06, shade: side < 0 ? .13 : .035 }); });
+    const image = doc.createElement('img');
+    image.onload = () => {
+      if (!alive) return;
+      try {
+        const source = doc.createElement('canvas'); source.width = image.naturalWidth; source.height = image.naturalHeight;
+        const surface = source.getContext('2d'); surface.drawImage(image, 0, 0); material = surface.getImageData(0, 0, source.width, source.height).data;
+        materialWidth = source.width; materialHeight = source.height; onReady();
+      } catch (_) { canvas.style.display = 'none'; }
+    };
+    image.onerror = () => { canvas.style.display = 'none'; };
+    image.src = art.mazeMaterial;
+    const wrap = value => value - Math.floor(value);
+    function draw(progress) {
+      if (!alive) return;
+      const now = doc.defaultView?.performance?.now?.() ?? Date.now();
+      if (progress !== Math.floor(progress) && Math.abs(progress - lastProgress) < .1 && now - lastDraw < 34) return;
+      lastDraw = now; lastProgress = progress;
+      const box = canvas.getBoundingClientRect(), width = Math.max(160, Math.min(400, Math.round(box.width || 400))), height = Math.round(width / Math.max(.3, (box.width || 750) / (box.height || 1000)));
+      if (canvas.width !== width || canvas.height !== height) { canvas.width = width; canvas.height = height; }
+      const travel = Math.min(9.999, progress + .4), index = Math.floor(travel), fraction = travel - index, a = MAZE_ROUTE[index], b = MAZE_ROUTE[index + 1];
+      const cx = lerp(a[0], b[0], fraction), cz = lerp(a[1], b[1], fraction) - .12;
+      const angle = angleAt(index), turn = angleDifference(angle, angleAt(Math.min(9, index + 1))), laterTurn = angleDifference(angleAt(Math.min(9, index + 1)), angleAt(Math.min(9, index + 2)));
+      const yaw = angle + turn * (.28 + .72 * ease((fraction - .4) / .6)) + laterTurn * .28 * ease((fraction - .85) / .15), sine = Math.sin(yaw), cosine = Math.cos(yaw);
+      canvas.dataset.x = cx.toFixed(3); canvas.dataset.z = cz.toFixed(3); canvas.dataset.yaw = (yaw * 180 / Math.PI).toFixed(2);
+      context.clearRect(0, 0, width, height); canvas.style.opacity = String(1 - ease((progress - 9.5) / .5));
+      if (!material || progress >= 10) return;
+      const segments = walls.slice();
+      for (let leg = 0; leg < 10; leg++) {
+        if (progress >= leg + .95) continue;
+        const start = MAZE_ROUTE[leg], end = MAZE_ROUTE[leg + 1], along = direction(leg), normal = [-along[1], along[0]], middle = [lerp(start[0], end[0], .78), lerp(start[1], end[1], .78)];
+        const swing = ease((progress - leg - .02) / .30) * Math.PI * .48;
+        [-1, 1].forEach(side => {
+          const hinge = [middle[0] + normal[0] * 1.18 * side, middle[1] + normal[1] * 1.18 * side];
+          const tip = [hinge[0] - normal[0] * 1.18 * side * Math.cos(swing) + along[0] * 1.18 * Math.sin(swing), hinge[1] - normal[1] * 1.18 * side * Math.cos(swing) + along[1] * 1.18 * Math.sin(swing)];
+          segments.push({ a: hinge, b: tip, height: side < 0 ? .88 : 1.02, shade: .025 });
+        });
+      }
+      const frame = context.createImageData(width, height), output = frame.data, focal = width * .72, horizon = height * .38, half = materialWidth / 2;
+      function pixel(offset, u, v, kind, shade) {
+        const tx = Math.min(half - 1, Math.floor(wrap(u) * half)) + kind * half, ty = Math.min(materialHeight - 1, Math.floor(wrap(v) * materialHeight)), from = (ty * materialWidth + tx) * 4;
+        output[offset] = material[from] * shade; output[offset + 1] = material[from + 1] * shade; output[offset + 2] = material[from + 2] * shade; output[offset + 3] = 255;
+      }
+      for (let x = 0; x < width; x++) {
+        const ray = (x - width / 2) / focal, dx = sine + cosine * ray, dz = cosine - sine * ray, hits = [];
+        segments.forEach(segment => {
+          const sx = segment.b[0] - segment.a[0], sz = segment.b[1] - segment.a[1], px = segment.a[0] - cx, pz = segment.a[1] - cz, denominator = dx * sz - dz * sx;
+          if (Math.abs(denominator) < .00001) return;
+          const distance = (px * sz - pz * sx) / denominator, u = (px * dz - pz * dx) / denominator;
+          if (distance > .1 && distance < 30 && u >= 0 && u <= 1) hits.push({ ...segment, distance, u, length: Math.hypot(sx, sz) });
+        });
+        hits.sort((a, b) => a.distance - b.distance).forEach(hit => {
+          const worldHeight = hit.height + Math.sin(hit.u * hit.length * 54) * .013 + Math.sin(hit.u * hit.length * 31) * .012;
+          const top = Math.max(0, Math.ceil(horizon - (worldHeight - 1.32) / hit.distance * focal)), bottom = Math.min(height - 1, Math.floor(horizon + 1.32 / hit.distance * focal));
+          const shade = 1 - hit.shade - Math.min(.25, hit.distance * .009);
+          const tx = Math.min(half - 1, Math.floor(wrap(hit.u * hit.length / 1.55) * half));
+          const step = hit.distance / focal / 2.06; let v = 1 - (1.32 - (top - horizon) * hit.distance / focal) / 2.06;
+          for (let y = top; y <= bottom; y++, v += step) { const offset = (y * width + x) * 4; if (output[offset + 3]) continue; const from = (Math.floor(wrap(v) * materialHeight) * materialWidth + tx) * 4; output[offset] = material[from] * shade; output[offset + 1] = material[from + 1] * shade; output[offset + 2] = material[from + 2] * shade; output[offset + 3] = 255; }
+        });
+      }
+      // Only exposed ground is sampled, once, at its real world coordinates.
+      for (let y = Math.ceil(horizon + 1); y < height; y++) {
+        const distance = 1.32 * focal / (y - horizon), shade = 1 - Math.min(.3, distance * .013);
+        let wx = cx + (sine - cosine * width / 2 / focal) * distance, wz = cz + (cosine + sine * width / 2 / focal) * distance;
+        const stepX = cosine / focal * distance, stepZ = -sine / focal * distance;
+        for (let x = 0; x < width; x++, wx += stepX, wz += stepZ) { const offset = (y * width + x) * 4; if (output[offset + 3] || progress > 8.8 && wx > 3.5) continue; pixel(offset, wx / 1.7, wz / 2.1, 1, shade); }
+      }
+      context.putImageData(frame, 0, 0);
+      canvas.dataset.drawMs = ((doc.defaultView?.performance?.now?.() ?? Date.now()) - now).toFixed(2);
+    }
+    return { draw, destroy() { alive = false; image.onload = null; image.onerror = null; material = null; } };
+  }
+
   function create({ document: doc, onActionRequest } = {}) {
     const id = `wild-garden-${++instance}`;
     const art = Object.fromEntries(Object.entries(ASSETS).map(([key, source]) => [key, acquireImage(source, doc)]));
@@ -100,12 +200,15 @@
     garden.className = 'story-scene story-butterfly';
     [zoo, garden].forEach(scene => { scene.hidden = true; scene.setAttribute('aria-hidden', 'true'); });
     zoo.style.setProperty('--wg-zoo-art', `url("${art.zoo}")`);
+    zoo.style.setProperty('--wg-zoo-lit-art', `url("${art.zooLit}")`);
     zoo.style.setProperty('--wg-beastsA', `url("${art.beastsA}")`);
     zoo.style.setProperty('--wg-beastsB', `url("${art.beastsB}")`);
     garden.style.setProperty('--wg-garden-art', `url("${art.garden}")`);
     garden.style.setProperty('--wg-hedge-art', `url("${art.hedge}")`);
+    garden.style.setProperty('--wg-fairy-flight-art', `url("${art.fairyFlight}")`);
+    garden.style.setProperty('--wg-maze-material-art', `url("${art.mazeMaterial}")`);
     zoo.innerHTML = `<div class="wg-frame wg-zoo-frame"><div class="wg-ambience wg-zoo-ambience"></div><div class="wg-world-position"><div class="wg-zoo-world">
-      <div class="wg-zoo-art"></div><div class="wg-zoo-stage-glow"></div>
+      <div class="wg-zoo-art"></div><div class="wg-zoo-lit"></div><div class="wg-zoo-stage-glow"></div>
       <svg class="wg-zoo-lights" viewBox="0 0 1000 1400" preserveAspectRatio="none">${Array.from({ length: 10 }, (_, index) => lightStringMarkup(index)).join('')}</svg>
       <div class="wg-zoo-cages">${BEASTS.map((_, index) => cageMarkup(index)).join('')}</div>
       <div class="wg-zoo-animals">${BEASTS.map(beastMarkup).join('')}</div>
@@ -113,15 +216,15 @@
       <div class="wg-zoo-sparks">${Array.from({ length: 12 }, (_, index) => `<i style="--spark-i:${index};left:${13 + index * 6.7}%;top:${30 + index % 3 * 5}%"></i>`).join('')}</div>
     </div></div><div class="wg-frame-shade"></div></div>`;
     garden.innerHTML = `<div class="wg-frame wg-garden-frame"><div class="wg-ambience wg-garden-ambience"></div><div class="wg-world-position"><div class="wg-garden-world">
-      <div class="wg-garden-art"></div><div class="wg-garden-atmosphere"></div>
-      <div class="wg-flower"><img src="${art.flower}" alt="" draggable="false"></div>
+      <div class="wg-garden-art"></div><div class="wg-garden-atmosphere"></div><canvas class="wg-maze-canvas" aria-hidden="true"></canvas>
+      <div class="wg-flower"><img src="${art.flower}" alt="" draggable="false"></div><div class="wg-flower-leaves"></div>
       <div class="wg-barrier-field">${Array.from({ length: 10 }, (_, index) => barrierMarkup(index)).join('')}</div>
       <div class="wg-fairy"><svg class="wg-fairy-sprite" viewBox="0 0 1000 1000"><defs>${Object.entries(FAERY_REGIONS).map(([key, points]) => `<mask id="${id}-fairy-${key}" maskUnits="userSpaceOnUse" x="0" y="0" width="1000" height="1000" style="mask-type:luminance"><polygon points="${points}" fill="white"/>${key === 'body' ? '' : `<polygon points="${FAERY_REGIONS.body}" fill="black"/>`}</mask>`).join('')}<mask id="${id}-dream-wing" maskUnits="userSpaceOnUse" x="0" y="0" width="1000" height="1000" style="mask-type:luminance"><polygon points="120,0 340,55 430,190 470,320 420,370 365,450 295,530 170,545 140,450 170,335 140,250" fill="white"/><polygon points="${FAERY_REGIONS.body}" fill="black"/></mask></defs>
         <g class="wg-fairy-wing wg-fairy-left-wing"><image href="${art.fairy}" width="1000" height="1000" preserveAspectRatio="xMidYMid meet" mask="url(#${id}-fairy-left)"/></g>
         <g class="wg-fairy-wing wg-fairy-right-wing"><image href="${art.fairy}" width="1000" height="1000" preserveAspectRatio="xMidYMid meet" mask="url(#${id}-fairy-right)"/></g>
         <image href="${art.fairy}" width="1000" height="1000" preserveAspectRatio="xMidYMid meet" mask="url(#${id}-fairy-body)"/></svg></div>
       <div class="wg-fairy-speech">你找到我啦！</div>
-      <div class="wg-dream"><div class="wg-dream-butterfly"><svg viewBox="0 0 1000 1000"><g class="wg-dream-wing wg-dream-left"><g transform="translate(35 0)"><image href="${art.fairy}" width="1000" height="1000" preserveAspectRatio="xMidYMid meet" mask="url(#${id}-dream-wing)"/></g></g><g class="wg-dream-wing wg-dream-right"><g transform="translate(1000 0) scale(-1 1)"><g transform="translate(35 0)"><image href="${art.fairy}" width="1000" height="1000" preserveAspectRatio="xMidYMid meet" mask="url(#${id}-dream-wing)"/></g></g></g><path class="wg-dream-body" d="M500 252C484 340 483 470 500 607C517 470 515 340 500 252Z"/><circle class="wg-dream-head" cx="500" cy="263" r="11"/><path class="wg-dream-antennae" d="M496 267Q479 229 466 218M504 267Q521 229 534 218"/></svg></div><i class="wg-dream-eyelid wg-dream-eyelid-top"></i><i class="wg-dream-eyelid wg-dream-eyelid-bottom"></i></div>
+      <div class="wg-dream"><div class="wg-dream-fairy"><div class="wg-dream-person wg-dream-facing"></div><div class="wg-dream-person wg-dream-away"></div></div><div class="wg-dream-cover"></div></div>
     </div></div><div class="wg-frame-shade"></div></div>`;
     doc.body.insertBefore(zoo, doc.body.firstChild);
     doc.body.insertBefore(garden, doc.body.firstChild);
@@ -142,6 +245,11 @@
     const speech = garden.querySelector('.wg-fairy-speech');
     const dream = garden.querySelector('.wg-dream');
     const gardenArt = garden.querySelector('.wg-garden-art');
+    const dreamFairy = garden.querySelector('.wg-dream-fairy');
+    const dreamFacing = garden.querySelector('.wg-dream-facing');
+    const dreamAway = garden.querySelector('.wg-dream-away');
+    const mazeCanvas = garden.querySelector('.wg-maze-canvas');
+    const maze = createMazeRenderer(mazeCanvas, doc, art, () => { if (!destroyed && currentStage === 'butterfly') drawGardenCamera(camera); });
     const preference = window.matchMedia?.('(prefers-reduced-motion: reduce)');
     const reduced = () => Boolean(preference?.matches);
     const clock = () => window.performance?.now?.() ?? Date.now();
@@ -194,8 +302,8 @@
       hitTarget.style.height = `${height}px`;
     }
     function cagePosition(index) {
-      const [x, y, size] = CAGE_ROWS[Math.floor(index / 2)];
-      return [index % 2 ? 100 - x : x, y - size * .035, size * .79];
+      const [x, y, size] = HABITATS[index];
+      return [x, y - size * .035, size * .79];
     }
     function drawZoo(time = clock(), settled = false) {
       const partyElapsed = zooPartyStart === null ? counts.zoo === 10 ? TIMES.zoo : -1 : Math.max(0, time - zooPartyStart);
@@ -233,11 +341,10 @@
       const keyElapsed = newest >= 0 && releaseStarts[newest] !== null && !settled ? time - releaseStarts[newest] : TIMES.release;
       key.hidden = newest < 0 || keyElapsed > 1000;
       if (!key.hidden) {
-        const [rowX, cageY, size] = CAGE_ROWS[Math.floor(newest / 2)];
-        const cx = newest % 2 ? 100 - rowX : rowX;
+        const [cx, cageY, size, facing] = HABITATS[newest];
         // The key's tip, not its centre, lands on the closed door's keyhole.
         // Turning completes before the door starts moving away on its hinge.
-        const holeX = cx + size * .141 * (newest % 2 ? -1 : 1);
+        const holeX = cx + size * .141 * facing;
         const holeY = cageY - size * .269;
         const flying = ease(keyElapsed / 430);
         key.style.left = `${lerp(50, holeX, flying)}%`;
@@ -251,6 +358,7 @@
         string.style.setProperty('--wg-string-light', String(light));
       });
       zoo.style.setProperty('--wg-party-glow', String(party ? ease((partyElapsed - 2100) / 1300) : 0));
+      zoo.style.setProperty('--wg-park-light', String(party ? ease((partyElapsed - 1950) / 1800) : 0));
       zoo.classList.toggle('wg-party-ready', party && partyElapsed >= 2900);
       if (party && partyElapsed >= 2200 && !partySound && zooPartyStart !== null && !settled) { partySound = true; sound('playZooParty'); }
       if (party && partyElapsed < TIMES.zoo && !settled) { moving = true; setPhase('zoo', partyElapsed < 2000 ? 'last-release' : partyElapsed < 3800 ? 'lights-on' : 'party'); }
@@ -260,21 +368,12 @@
     function drawGardenCamera(progress) {
       camera = progress;
       garden.dataset.camera = progress.toFixed(3);
-      gardenArt.style.transform = `translateY(${progress * .45}%) scale(${1 + progress * .018})`;
-      barriers.forEach((barrier, index) => {
-        const distance = Math.max(.22, (index - progress) * 1.6 + 1.1);
-        const scale = Math.min(3, 1.45 / (.68 * distance + .6));
-        const base = .4 + .55 / (.5 * distance + .6);
-        const opened = ease(progress - index);
-        const opacity = 1 - ease((opened - .36) / .64);
-        barrier.hidden = opened >= .999;
-        barrier.style.width = `${123 * scale}%`;
-        barrier.style.left = `${50 + (index % 2 ? 1 : -1) * 1.2 / distance}%`;
-        barrier.style.top = `${base * 100}%`;
-        barrier.style.opacity = String(opacity);
-        barrier.style.transform = `translate(-50%, -100%) rotate(${(index % 3 - 1) * 1.3}deg)`;
-        barrier.style.setProperty('--wg-hedge-opening', String(opened));
-      });
+      const leg = Math.min(9, Math.floor(progress));
+      const direction = MAZE_ROUTE[leg + 1][0] - MAZE_ROUTE[leg][0];
+      garden.dataset.turn = direction === 0 ? 'forward' : direction > 0 ? 'right' : 'left';
+      gardenArt.style.transform = `translateX(${direction * .7}%) scale(${1.04 + progress * .003})`;
+      barriers.forEach((barrier, index) => { barrier.hidden = progress >= index + .95; });
+      maze.draw(progress);
     }
     function flowerPose(progress) {
       const p = ease(progress);
@@ -328,8 +427,15 @@
       else {
         if (dreamStart !== null) {
           const p = clamp((time - dreamStart) / TIMES.dream);
-          dream.style.opacity = String(1 - ease((p - .58) / .42));
-          dream.style.setProperty('--wg-waking', String(ease((p - .3) / .7)));
+          const turn = ease((p - .23) / .16), retreat = ease((p - .35) / .54);
+          dreamFacing.style.opacity = String(1 - turn);
+          dreamAway.style.opacity = String(turn);
+          dreamFairy.style.left = `${lerp(46, 77, retreat)}%`;
+          dreamFairy.style.top = `${lerp(69, 55, retreat) - Math.sin(retreat * Math.PI) * 8}%`;
+          dreamFairy.style.transform = `translate(-50%, -100%) scale(${1 - retreat * .72}) rotate(${retreat * -9}deg)`;
+          dream.style.setProperty('--wg-dream-cover', String(ease((p - .52) / .22)));
+          dream.style.opacity = String(1 - ease((p - .83) / .17));
+          dream.dataset.pose = p < .28 ? 'human-facing' : p < .48 ? 'looking-back' : 'escaping-behind-hedge';
           if (p < 1) moving = true;
           else { dreamStart = null; setPhase('butterfly', 'garden'); }
         }
@@ -453,7 +559,8 @@
     hitTarget.addEventListener('click', handleFlower);
     doc.addEventListener('visibilitychange', onVisibility);
     preference?.addEventListener?.('change', onPreference);
-    window.addEventListener('resize', syncHit);
+    function onResize() { if (currentStage === 'butterfly') drawGardenCamera(camera); syncHit(); }
+    window.addEventListener('resize', onResize);
     const flowerImage = flower.querySelector('img');
     flowerImage.addEventListener('load', syncHit);
     flowerImage.addEventListener('error', () => { flowerImage.hidden = true; syncHit(); });
@@ -474,7 +581,8 @@
         hitTarget.removeEventListener('click', handleFlower);
         doc.removeEventListener('visibilitychange', onVisibility);
         preference?.removeEventListener?.('change', onPreference);
-        window.removeEventListener('resize', syncHit);
+        window.removeEventListener('resize', onResize);
+        maze.destroy();
         Object.values(ASSETS).forEach(releaseImage);
         zoo.remove(); garden.remove(); hitTarget.remove();
       }

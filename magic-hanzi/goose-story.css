@@ -21,13 +21,15 @@
   box-shadow: 0 0 100px 30px #0009;
 }
 .gs-courtyard-world,.gs-courtyard-art,.gs-courtyard-fallback { position: absolute; inset: 0; width: 100%; height: 100%; }
+.gs-courtyard-world { transform-origin: 74.5% 24%; }
+.is-ending .gs-courtyard-world { animation: gs-courtyard-story 9s ease-in-out both; }
 .gs-courtyard-art { object-fit: fill; user-select: none; -webkit-user-drag: none; }
 .gs-courtyard-fallback { background: radial-gradient(ellipse at 72% 30%,#7c624138,transparent 30%),linear-gradient(#172333 0%,#252c38 45%,#524b43 67%,#292c31 100%); }
 .gs-palace-light { position: absolute; z-index: 1; inset: 0; background: radial-gradient(ellipse at 73% 30%,#f4d58d20,transparent 24%),radial-gradient(ellipse at 42% 68%,#e7bc7010,transparent 48%); mix-blend-mode: screen; }
 .gs-frame img { user-select: none; -webkit-user-drag: none; }
 .gs-frame img[hidden] { display: none !important; }
-.gs-princess { position: absolute; z-index: 4; left: 83%; top: 17.7%; width: 18%; aspect-ratio: 3 / 4; transform: translateX(-50%); transform-origin: 50% 87%; }
-.gs-balcony-front { position: absolute; z-index: 5; inset: 0; clip-path: polygon(67% 28.1%,98.6% 26.2%,100% 28.2%,100% 35.8%,67% 36.4%); }
+.gs-princess { position: absolute; z-index: 4; left: 74.5%; top: 17.6%; width: 18.5%; aspect-ratio: 3 / 4; transform: translateX(-50%); transform-origin: 50% 87%; }
+.gs-balcony-front { position: absolute; z-index: 5; inset: 0; clip-path: polygon(50.2% 27.8%,97.8% 27.3%,99% 37.7%,50.2% 38.4%); }
 .gs-balcony-front img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: fill; }
 .gs-princess-crop { position: absolute; inset: 0; overflow: hidden; }
 .gs-princess-crop img { position: absolute; top: 0; left: 0; width: 200%; height: 100%; max-width: none; }
@@ -71,6 +73,12 @@
 .is-goose-cheering .gs-goose-sparks i { animation: gs-goose-spark .6s ease-out var(--gs-spark-delay) both; }
 .gs-near-haze { position: absolute; z-index: 45; inset: 90% 0 -8%; background: linear-gradient(transparent,#10202c59); filter: blur(6px); }
 .gs-frame-shade { position: absolute; z-index: 50; inset: 0; background: linear-gradient(#070d1848,transparent 26% 78%,#0b142270),linear-gradient(90deg,#11182633,transparent 14% 87%,#11182633); }
+/* The balcony, door, rail and princess share one camera transform. */
+@keyframes gs-courtyard-story {
+  0%,35% { transform: none; }
+  50%,60% { transform: translate(-24.5%,16%) scale(2.4); }
+  66.667%,100% { transform: none; }
+}
 @keyframes gs-person-join {
   0% { transform: translate(var(--gs-arrive-x),-8%) rotate(6deg); opacity: 0; }
   9% { opacity: 1; }
@@ -83,7 +91,7 @@
 @keyframes gs-linked-step { 0%,100% { transform: translateY(0); } 25% { transform: translate(-1%,-2.5%); } 50% { transform: translateY(0); } 75% { transform: translate(1%,-2%); } }
 @keyframes gs-linked-sway { from { transform: rotate(calc(var(--gs-lean) - 4deg)); } to { transform: rotate(calc(var(--gs-lean) + 4deg)); } }
 @keyframes gs-goose-waddle { 0%,100% { transform: rotate(-3deg); } 50% { transform: translateY(-4%) rotate(4deg); } }
-@keyframes gs-princess-laugh { 0%,100% { transform: translateX(-50%) rotate(0); } 25% { transform: translate(-50%,-2%) rotate(-2deg); } 50% { transform: translate(-50%,1%) rotate(1.8deg); } 75% { transform: translate(-50%,-1%) rotate(-1deg); } }
+@keyframes gs-princess-laugh { 0%,100% { transform: translateX(-50%) rotate(0); } 25% { transform: translate(-50%,-1%) rotate(-1deg); } 50% { transform: translate(-50%,.6%) rotate(.8deg); } 75% { transform: translate(-50%,-.5%) rotate(-.5deg); } }
 @keyframes gs-laughter-air { from { opacity: .65; transform: scale(.65); } to { opacity: 0; transform: translate(12%,-16%) scale(1.5); } }
 @keyframes gs-gentle-release { 0% { transform: none; } 28% { transform: translate(calc(var(--gs-release-x) * .4),-9%) rotate(-5deg); } 55% { transform: translate(var(--gs-release-x),calc(var(--gs-release-y) + 2%)) rotate(3deg); } 78% { transform: translate(var(--gs-release-x),calc(var(--gs-release-y) - 4%)) rotate(-1deg); } 100% { transform: translate(var(--gs-release-x),var(--gs-release-y)); } }
 @keyframes gs-goose-cheer { 0% { transform: none; } 22% { transform: translateY(-12%) rotate(-8deg); } 45% { transform: translateY(0) rotate(5deg); } 68% { transform: translateY(-7%) rotate(-6deg); } 100% { transform: rotate(-5deg); } }

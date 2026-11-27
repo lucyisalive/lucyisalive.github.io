@@ -26,6 +26,7 @@
 .el-room-fallback::after { content: '';position: absolute;inset: 63% -3% -4%;background: repeating-linear-gradient(1deg,#3c3023 0 3px,#55422d 4px 7px,#443524 8px 29px);transform: perspective(450px) rotateX(13deg);border-top: 2px solid #b2906059;box-shadow: 0 -8px 22px #070a10a3; }
 .el-frame-shade { position: absolute;z-index: 20;inset: 0;background: linear-gradient(#06101b70,transparent 28% 81%,#0610189c); }
 .el-actor { z-index: 4;transform-origin: 50% 87%; }
+.el-still-figure { transform: translateY(-4%) scale(.8);transform-origin: 50% 87%; }
 .el-actor-left { transform-origin: 34% 87%; }
 .el-actor-right { transform-origin: 66% 87%; }
 /* Figures, hair, eyes, and previously placed clothes have no idle animation. */
@@ -52,8 +53,8 @@
 .story-elves.is-awake:not(.is-sneaking) .el-actor-right { animation: el-wake-right 1.6s ease-in-out both; }
 .story-elves.is-sneaking .el-still-figure { opacity: 0;transition: opacity .18s ease; }
 .el-runner { position: absolute;z-index: 7;bottom: 13%;height: 63%;aspect-ratio: var(--el-step-aspect,2 / 3);opacity: 0;transform: translateX(-50%);transform-origin: 50% 100%; }
-.el-runner-left { left: 34%;height: 45%; }
-.el-runner-right { left: 66%;height: 45%; }
+.el-runner-left { left: 34%;height: 50%; }
+.el-runner-right { left: 66%;height: 50%; }
 .el-step-pose { position: absolute;inset: 0;background: var(--el-atlas-image) var(--el-step-x) var(--el-step-y) / var(--el-step-size) no-repeat;transform: translateY(var(--el-foot-offset,0%)); }
 .el-walk-shadow { position: absolute;z-index: 0;left: 12%;bottom: -.7%;width: 76%;height: 2.7%;border-radius: 50%;background: radial-gradient(ellipse,#101015a8,transparent 70%);filter: blur(2px); }
 .el-step-pose { z-index: 1; }

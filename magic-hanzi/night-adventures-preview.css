@@ -1,5 +1,5 @@
-:is(.story-zoo,.story-butterfly,.story-tomb-pirate,.story-seed) { left:var(--preview-panel);bottom:var(--preview-bottom); }
-:is(.wg-frame,.tp-frame,.seed-frame) { width:min(100%,calc(var(--preview-height) * .75)); }
+:is(.story-zoo,.story-butterfly,.story-tomb-pirate,.story-seed,.story-goose,.story-clockbird,.story-elves) { left:var(--preview-panel);bottom:var(--preview-bottom); }
+:is(.wg-frame,.tp-frame,.seed-frame,.gs-frame,.clockbird-frame,.elves-frame) { width:min(100%,calc(var(--preview-height) * .75)); }
 .wg-world-position { width:min(100%,calc(var(--preview-height) * .75)); }
 .preview-scenes { grid-template-columns:repeat(2,minmax(0,1fr));gap:5px; }
 .preview-scenes button { padding:8px 5px;min-height:36px;font-size:14px;text-align:center; }
@@ -11,8 +11,8 @@
 .preview-status { min-height:62px;font-size:13px; }
 #previewChain { grid-column:1 / -1; }
 @media(max-width:720px) {
- :root { --preview-bottom:310px;--preview-height:calc(100dvh - 310px); }
- .preview-panel { height:310px;padding:9px 12px;gap:4px 10px; }
+ :root { --preview-bottom:340px;--preview-height:calc(100dvh - 340px); }
+ .preview-panel { height:340px;padding:9px 12px;gap:4px 10px; }
  .preview-scenes { grid-template-columns:repeat(4,minmax(0,1fr)); }
  .preview-scenes button { min-height:33px;padding:5px 1px;font-size:12px; }
  .preview-status { min-height:40px;font-size:12px; }

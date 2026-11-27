@@ -153,7 +153,7 @@ async function run() {
     method === 'finale' && !bankEmpty && count === 10 && newlyAwarded === true).length;
   const routes = ['herbs', 'stars', 'giant', 'bridge', 'train', 'tomb', 'sea', 'dunes', 'library', 'ice', 'armor', 'beans', 'rose', 'bagua', 'goose', 'clockbird', 'elves', 'zoo', 'butterfly', 'laser', 'arrows', 'map', 'pirate', 'seed'];
   assert.deepEqual(Array.from(game.run('Object.keys(HERBALIST_STAGES)')), routes, 'The formal game exposes all twenty-four story rooms');
-  assert.equal(game.run('GAME_VERSION'),'2026.11.26.3');
+  assert.equal(game.run('GAME_VERSION'),'2026.11.27.1');
   for(const [stage,arrival] of [['beans',13700],['rose',3800],['bagua',5200],['goose',9000],['clockbird',11000],['elves',8800],['zoo',6400],['laser',8000],['arrows',6500],['map',9000],['pirate',12000]]) {
     assert.equal(game.run(`HERBALIST_STAGES.${stage}.arrival`),arrival,stage+' waits only for its remaining scenery');
     assert.equal(game.run(`HERBALIST_STAGES.${stage}.automaticEnding`),true,stage+' must not replay its automatic ending during travel');
@@ -239,11 +239,11 @@ async function run() {
     ['elves', 'zoo', /衣物|小精灵/, /小精灵|苏醒|溜走/],
     ['zoo', 'butterfly', /钥匙|猛兽|笼/, /派对|灯/],
     ['butterfly', 'laser', /迷障|花园/, /仙子|花/],
-    ['laser', 'arrows', /光网|古墓/, /宝箱|箭阵/],
+    ['laser', 'arrows', /激光/, /宝箱|箭阵/],
     ['arrows', 'map', /箭|剑/, /地图|空白/],
     ['map', 'pirate', /海图|航线/, /地图|海盗船/],
     ['pirate', 'seed', /骨架|船长/, /船长|扬帆/],
-    ['seed', 'herbs', /果核/, /细沙|沙子/],
+    ['seed', 'herbs', /套娃/, /细沙|沙子/],
   ];
   for (const [stage, next, passMessage, finishedMessage] of remainingStages) {
     const addedRoom = ['dunes', 'library', 'ice', 'armor', 'beans', 'rose', 'bagua', 'goose', 'clockbird', 'elves', 'zoo', 'butterfly', 'laser', 'arrows', 'map', 'pirate', 'seed'].includes(stage);
